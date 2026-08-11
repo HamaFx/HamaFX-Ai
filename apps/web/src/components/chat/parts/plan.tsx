@@ -97,6 +97,7 @@ export function PlanPart({ plan, streaming = false }: PlanPartProps) {
         </span>
         <span className="text-fg-subtle">·</span>
         <span className="text-fg-subtle line-clamp-1 flex-1">{plan.rationale}</span>
+        {streaming ? <span className="text-brand ml-auto shrink-0 text-caption uppercase">working</span> : null}
       </button>
 
       {/* Streaming progress bar */}

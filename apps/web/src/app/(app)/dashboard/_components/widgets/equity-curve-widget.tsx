@@ -10,6 +10,10 @@
 
 import type { JournalEntry } from '@hamafx/shared';
 
+import { IconChartLine } from '@tabler/icons-react';
+
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { PerformanceChart } from '@/components/chart/performance-chart';
 
 interface EquityCurveWidgetProps {
@@ -18,14 +22,15 @@ interface EquityCurveWidgetProps {
 
 export function EquityCurveWidget({ entries }: EquityCurveWidgetProps) {
   return (
-    <section
-      aria-label="Equity curve"
-      className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-sm border p-4"
-    >
+    <Card as="section" aria-label="Equity curve">
       <header className="flex items-center justify-between gap-2">
-        <span className="text-fg text-body-sm font-semibold">Equity curve</span>
+        <div className="flex items-center gap-2">
+          <IconChartLine className="text-fg-subtle size-4" aria-hidden="true" />
+          <div><h2 className="text-fg text-body-sm font-semibold">Performance</h2><p className="text-fg-subtle text-caption">Cumulative R-multiple</p></div>
+        </div>
+        <Badge tone="neutral">Closed trades</Badge>
       </header>
-      <PerformanceChart entries={[...entries]} height={200} />
-    </section>
+      <div className="border-divider border-t pt-3"><PerformanceChart entries={[...entries]} height={200} /></div>
+    </Card>
   );
 }

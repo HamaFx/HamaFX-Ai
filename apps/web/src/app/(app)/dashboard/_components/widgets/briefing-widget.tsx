@@ -33,6 +33,7 @@ import { useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
+import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { formatRelative } from '@/lib/format';
 import { cn } from '@/lib/cn';
@@ -72,7 +73,7 @@ export function BriefingWidget({ briefing }: BriefingWidgetProps) {
 
   if (!briefing) {
     return (
-      <div className="border-border bg-bg-elev-1 rounded-sm border p-2">
+      <Card as="section" className="p-2">
         <EmptyState
           icon={<IconBolt className="size-6" />}
           title="No briefing yet"
@@ -81,7 +82,7 @@ export function BriefingWidget({ briefing }: BriefingWidgetProps) {
           bare
           className="py-6"
         />
-      </div>
+      </Card>
     );
   }
 
@@ -89,11 +90,7 @@ export function BriefingWidget({ briefing }: BriefingWidgetProps) {
   const Icon = meta.icon;
 
   return (
-    <article
-      role="status"
-      aria-label={meta.label}
-      className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-sm border p-4"
-    >
+    <Card as="article" aria-label={meta.label}>
       <header className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Icon className="text-fg size-4" />
@@ -131,18 +128,19 @@ export function BriefingWidget({ briefing }: BriefingWidgetProps) {
         </p>
       ) : null}
 
-      <div className="md-prose text-fg-muted text-body-sm flex flex-col gap-2 leading-[1.4]">
+      <div className="border-divider border-y py-1 md-prose text-fg-muted text-body-sm flex flex-col gap-2 leading-[1.4]">
         {markdownContent}
       </div>
 
-      <footer className="mt-auto flex items-center justify-end">
+      <footer className="mt-auto flex items-center justify-between gap-2">
+        {briefing.symbol ? <span className="text-fg-subtle text-caption uppercase">Focus · {briefing.symbol}</span> : <span />}
         <Link
           href="/chat"
-          className="text-fg text-body-sm hover:underline inline-flex items-center gap-1"
+          className="text-fg text-body-sm hover:underline inline-flex min-h-10 items-center gap-1"
         >
           Dig deeper in chat <IconArrowRight className="size-3.5" />
         </Link>
       </footer>
-    </article>
+    </Card>
   );
 }

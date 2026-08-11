@@ -29,7 +29,7 @@ export function WizardStepSymbols({
       <div>
         <h2 className="text-xl font-semibold text-fg mb-1">Select Preferred Symbols</h2>
         <p className="text-sm text-fg-subtle">Choose the instruments you want in your default watchlist. Select at least one.</p>
-        {symbolsError && <p className="mt-1 text-xs text-danger">{symbolsError}</p>}
+        {symbolsError && <p id="onboarding-symbols-error" role="alert" className="mt-1 text-xs text-danger">{symbolsError}</p>}
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-72 overflow-y-auto pr-1">
         {symbolsCatalog.map((sym) => {
@@ -53,7 +53,9 @@ export function WizardStepSymbols({
                   setSelectedSymbols([...selectedSymbols, sym.symbol]);
                 }
               }}
-              className={`text-left rounded-sm border p-4 transition-all hover:bg-bg-elev-2 flex items-center justify-between cursor-pointer relative ${
+              aria-pressed={active}
+              aria-describedby={symbolsError ? 'onboarding-symbols-error' : undefined}
+              className={`min-h-11 text-left rounded-sm border p-4 transition-all hover:bg-bg-elev-2 flex items-center justify-between cursor-pointer relative ${
                 active
                   ? 'border-border bg-bg-elev-1 ring-1 ring-fg'
                   : 'border-border bg-bg-elev-1 hover:border-fg-muted'
@@ -75,9 +77,10 @@ export function WizardStepSymbols({
 
       {selectedSymbols.length > 0 && (
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-fg">Default Chart Symbol</label>
+          <label className="text-sm font-medium text-fg" htmlFor="onboarding-default-symbol">Default Chart Symbol</label>
           <select
-            className="h-10 w-full rounded-sm border border-border bg-bg-elev-1 px-3 py-2 text-sm text-fg focus:outline-none focus:ring-1 focus:ring-fg cursor-pointer"
+            id="onboarding-default-symbol"
+            className="h-11 w-full rounded-sm border border-border bg-bg-elev-1 px-3 py-2 text-sm text-fg focus:outline-none focus:ring-1 focus:ring-fg cursor-pointer"
             value={defaultSymbol}
             onChange={(e) => setDefaultSymbol(e.target.value)}
           >

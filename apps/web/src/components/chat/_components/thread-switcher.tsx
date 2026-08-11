@@ -195,9 +195,10 @@ export function ThreadSwitcher({ open, onOpenChange, threadId, threads, onPickNe
                       onOpenChange(false);
                       if (!isActive) router.push(`/chat/${t.id}`);
                     }}
-                    aria-pressed={selectMode ? isSelected : undefined}
+                    aria-checked={selectMode ? isSelected : undefined}
+                    role={selectMode ? 'checkbox' : undefined}
                     className={cn(
-                      'flex min-h-[56px] w-full items-center gap-3 rounded-sm px-3 py-3 text-left text-sm transition-colors',
+                      'flex min-h-14 w-full items-center gap-3 rounded-sm px-3 py-3 text-left text-sm transition-colors focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none',
                       isActive && !selectMode
                         ? 'bg-bg-elev-3 text-fg'
                         : 'text-fg-muted hover:bg-bg-elev-2 hover:text-fg',
@@ -208,13 +209,13 @@ export function ThreadSwitcher({ open, onOpenChange, threadId, threads, onPickNe
                       <span
                         aria-hidden="true"
                         className={cn(
-                          'inline-flex size-5 shrink-0 items-center justify-center rounded-md border',
+                          'inline-flex size-11 shrink-0 items-center justify-center rounded-sm border',
                           isSelected ? 'bg-fg border-border text-black' : 'border-border/80 bg-bg-elev-1',
                         )}
                       >
-                        {isSelected ? (
-                          <IconCheck className="size-3" strokeWidth={3} />
-                        ) : null}
+                        <span className="inline-flex size-5 items-center justify-center rounded-sm border border-border/80 bg-bg-elev-1">
+                          {isSelected ? <IconCheck className="size-3" strokeWidth={3} /> : null}
+                        </span>
                       </span>
                     ) : null}
                     <div className="min-w-0 flex-1">

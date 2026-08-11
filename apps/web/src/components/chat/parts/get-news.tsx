@@ -12,10 +12,13 @@
 // hasn't yet populated the DB on a fresh deploy — we surface a quiet status
 // line instead of an empty list (which would look like a bug).
 
+import { IconAlertTriangle, IconClock, IconNews } from '@tabler/icons-react';
 import type { GetNewsOutput, NewsSentiment } from '@hamafx/shared';
 import { Link } from 'next-view-transitions';
 
 import { cleanNewsText } from '@/lib/clean-news-text';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { formatStamp } from '@/lib/datetime';
 
 interface GetNewsPartProps {
@@ -38,24 +41,28 @@ export function GetNewsPart({ output, state, errorMessage }: GetNewsPartProps) {
 
   if (output.pipelinePending) {
     return (
-      <div className="border-border bg-bg-elev-1 rounded-sm border p-3">
-        <p className="text-fg-muted text-sm">News pipeline hasn&apos;t ingested yet.</p>
-      </div>
+      <Card as="section" aria-label="News status" className="p-3">
+        <p className="text-fg-muted flex items-center gap-2 text-body-sm"><IconClock className="size-4" aria-hidden="true" /> News pipeline hasn&apos;t ingested yet.</p>
+      </Card>
     );
   }
 
   if (output.items.length === 0) {
     return (
-      <div className="border-border bg-bg-elev-1 rounded-sm border p-3">
-        <p className="text-fg-muted text-sm">No matching news.</p>
-      </div>
+      <Card as="section" aria-label="News status" className="p-3">
+        <p className="text-fg-muted flex items-center gap-2 text-body-sm"><IconNews className="size-4" aria-hidden="true" /> No matching news.</p>
+      </Card>
     );
   }
 
   const items = output.items.slice(0, MAX_ROWS);
 
   return (
-    <div className="border-border bg-bg-elev-1 rounded-sm border p-3">
+    <Card as="section" aria-label={`News results: ${items.length} of ${output.items.length} articles`}>
+      <header className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2"><IconNews className="text-fg-subtle size-4" aria-hidden="true" /><h3 className="text-fg text-body-sm font-semibold">News</h3></div>
+        <Badge tone="neutral">{items.length}{items.length !== output.items.length ? ` of ${output.items.length}` : ''} result{output.items.length === 1 ? '' : 's'}</Badge>
+      </header>
       <ul className="divide-border divide-y">
         {items.map((item) => {
           const iso = new Date(item.publishedAt).toISOString();
@@ -69,7 +76,7 @@ export function GetNewsPart({ output, state, errorMessage }: GetNewsPartProps) {
                   <SentimentDot sentiment={item.sentiment} />
                   <span className="text-fg line-clamp-2 font-medium">{cleanNewsText(item.title)}</span>
                 </div>
-                <div className="text-fg-muted flex items-center gap-1.5 text-xs">
+                <div className="text-fg-muted flex items-center gap-1.5 text-caption">
                   <span className="truncate">
                     {item.publisher ? `${item.source} · ${cleanNewsText(item.publisher)}` : item.source}
                   </span>
@@ -83,7 +90,7 @@ export function GetNewsPart({ output, state, errorMessage }: GetNewsPartProps) {
           );
         })}
       </ul>
-    </div>
+    </Card>
   );
 }
 
@@ -102,8 +109,10 @@ function SentimentDot({ sentiment }: { sentiment: NewsSentiment | null }) {
 
 function NewsCardSkeleton() {
   return (
-    <div
-      className="border-border bg-bg-elev-1 rounded-sm border p-3"
+    <Card
+      as="section"
+      role="status"
+      className="p-3"
       aria-busy="true"
       aria-label="Loading news"
     >
@@ -115,18 +124,15 @@ function NewsCardSkeleton() {
           </li>
         ))}
       </ul>
-    </div>
+    </Card>
   );
 }
 
 function NewsCardError({ message }: { message?: string }) {
   return (
-    <div
-      role="alert"
-      className="border-danger/30 bg-bg-elev-1 text-danger rounded-sm border p-3 text-sm"
-    >
-      News unavailable{message ? ` · ${message}` : ''}
-    </div>
+    <Card as="section" role="alert" aria-label={message ? `News unavailable: ${message}` : 'News unavailable'} className="border-danger/30 p-3 text-sm">
+      <p className="text-danger flex items-start gap-2"><IconAlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden="true" /><span><span className="font-semibold">News unavailable</span>{message ? <span className="text-fg-muted"> · {message}</span> : null}</span></p>
+    </Card>
   );
 }
 

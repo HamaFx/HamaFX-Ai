@@ -17,6 +17,7 @@ import { useMemo, useState } from 'react';
 import {IconChevronLeft, IconChevronRight} from '@tabler/icons-react';
 import type { JournalEntry } from '@hamafx/shared';
 
+import { Card } from '@/components/ui/card';
 import {
   Drawer,
   DrawerClose,
@@ -171,10 +172,9 @@ export function PnLHeatmapWidget({ entries }: PnLHeatmapWidgetProps) {
   }
 
   return (
-    <section
-      role="img"
+    <Card
+      as="section"
       aria-label={`P&L heatmap. ${totals.count} trades, total ${totals.r >= 0 ? '+' : ''}${totals.r.toFixed(1)}R`}
-      className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-sm border p-4"
     >
       <header className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
@@ -300,7 +300,7 @@ export function PnLHeatmapWidget({ entries }: PnLHeatmapWidgetProps) {
           ) : null}
         </DrawerContent>
       </Drawer>
-    </section>
+    </Card>
   );
 }
 

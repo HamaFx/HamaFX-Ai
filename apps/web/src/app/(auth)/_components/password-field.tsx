@@ -101,9 +101,9 @@ export function PasswordField({
         <button
           type="button"
           onClick={() => setShow(!show)}
-          className="text-fg-muted hover:text-fg absolute right-2 top-1/2 -translate-y-1/2"
-          tabIndex={-1}
+          className="text-fg-muted hover:text-fg absolute right-2 top-1/2 -translate-y-1/2 focus-visible:ring-2 focus-visible:ring-fg focus-visible:outline-none rounded-sm"
           aria-label={show ? 'Hide password' : 'Show password'}
+          aria-pressed={show}
         >
           {show ? <IconEyeOff className="size-4" /> : <IconEye className="size-4" />}
         </button>

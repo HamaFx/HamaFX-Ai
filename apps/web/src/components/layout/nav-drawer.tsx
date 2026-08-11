@@ -126,6 +126,7 @@ export function NavDrawer({ userName, userEmail, userId: _userId, isAdmin }: { u
       <DrawerPrimitive.Portal>
         <DrawerPrimitive.Overlay className="bg-overlay fixed inset-0 z-[60] " />
         <DrawerPrimitive.Content
+          id="sidebar-nav"
           aria-label="Primary navigation"
           className={cn(
             'surface-elevated fixed inset-y-0 left-0 z-[60] flex w-[88vw] max-w-[340px] flex-col',
@@ -195,7 +196,7 @@ export function NavDrawer({ userName, userEmail, userId: _userId, isAdmin }: { u
             <button
               type="button"
               onClick={() => void logout()}
-              className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 flex min-h-[48px] w-full items-center gap-3 rounded-sm px-3 text-left text-sm font-medium transition-colors"
+              className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 flex min-h-[48px] w-full items-center gap-3 rounded-sm px-3 text-left text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none"
             >
             <span
               aria-hidden="true"
@@ -235,7 +236,7 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
         href={item.href}
         aria-current={active ? 'page' : undefined}
         className={cn(
-          'group/nav relative flex min-h-[56px] items-center gap-3 rounded-sm px-3 transition-all',
+          'group/nav relative flex min-h-[56px] items-center gap-3 rounded-sm px-3 transition-all focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none',
           active
             ? 'bg-brand/8 ring-1 ring-brand/22 text-brand'
             : 'text-fg-muted hover:bg-bg-elev-2 hover:text-fg',

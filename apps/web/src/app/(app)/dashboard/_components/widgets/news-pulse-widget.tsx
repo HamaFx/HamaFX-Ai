@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { IconNews } from '@tabler/icons-react';
 import type { NewsArticle } from '@hamafx/shared';
 
+import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/cn';
 
 interface NewsPulseWidgetProps {
@@ -44,10 +45,7 @@ export function NewsPulseWidget({ articles }: NewsPulseWidgetProps) {
   const bottom = ranked[ranked.length - 1];
 
   return (
-    <section
-      aria-labelledby="news-pulse-heading"
-      className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-sm border p-4"
-    >
+    <Card as="section" aria-labelledby="news-pulse-heading">
       <header className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <IconNews className="text-fg-subtle size-4" />
@@ -126,6 +124,6 @@ export function NewsPulseWidget({ articles }: NewsPulseWidgetProps) {
           ) : null}
         </ul>
       ) : null}
-    </section>
+    </Card>
   );
 }

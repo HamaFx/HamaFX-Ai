@@ -284,13 +284,18 @@ export function EntryForm({ onCreated }: EntryFormProps) {
         <label className="text-fg-subtle text-body-sm uppercase tracking-wide" htmlFor="notes">
           Notes (optional)
         </label>
-        <Input
+        <textarea
           id="notes"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="thesis, news context, levels of interest…"
           maxLength={5000}
+          rows={4}
+          className="bg-bg-elev-1/60 text-fg placeholder:text-fg-subtle border-border focus:bg-bg-elev-1/80 w-full resize-y rounded-sm border px-4 py-3 text-base leading-[1.4] transition-all duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-fg/30"
         />
+        <p className="text-fg-subtle text-caption tabular-nums text-right">
+          {notes.length.toLocaleString()} / 5,000
+        </p>
       </div>
 
       {/* Screenshot attachment */}

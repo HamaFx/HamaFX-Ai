@@ -56,12 +56,16 @@ function LoginForm() {
             <label htmlFor="email" className="text-fg text-sm font-semibold">Email</label>
             <Input id="email" name="email" type="email" autoComplete="email"
               autoFocus={!requires2FA} required disabled={success}
-              readOnly={pending || requires2FA} />
+              readOnly={pending || requires2FA}
+              aria-invalid={state?.error ? true : undefined}
+              aria-describedby={state?.error ? 'form-error' : undefined} />
           </div>
 
           <PasswordField value={password} onChange={(e) => setPassword(e.target.value)}
             autoComplete="current-password" required disabled={success}
-            readOnly={pending || requires2FA} />
+            readOnly={pending || requires2FA}
+            error={!!state?.error}
+            errorId={state?.error ? 'form-error' : undefined} />
 
           {requires2FA && (
             <div className="flex flex-col gap-2">
@@ -175,7 +179,7 @@ function ResendVerification() {
           Verification email sent — check your inbox.
         </p>
       )}
-      {error && <FormError message={error} />}
+      {error && <FormError id="resend-error" message={error} />}
     </div>
   );
 }

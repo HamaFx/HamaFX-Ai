@@ -3,6 +3,7 @@
 // Shared skeleton and error card components for chat tool parts (CC-10).
 // Import from here instead of redefining per-file SkeletonCard/ErrorCard.
 
+import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/cn';
 
@@ -21,8 +22,9 @@ export interface SharedSkeletonCardProps {
  */
 export function PartSkeletonCard({ label = 'Loading', rows = 3, className }: SharedSkeletonCardProps) {
   return (
-    <div
-      className={cn('border-border bg-bg-elev-1 rounded-sm border p-3', className)}
+    <Card
+      role="status"
+      className={cn('p-3', className)}
       aria-busy="true"
       aria-label={label}
     >
@@ -36,7 +38,7 @@ export function PartSkeletonCard({ label = 'Loading', rows = 3, className }: Sha
           />
         ))}
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -52,11 +54,19 @@ export interface SharedErrorCardProps {
  */
 export function PartErrorCard({ message, label = 'Tool failed' }: SharedErrorCardProps) {
   return (
-    <div
+    <Card
+      as="section"
       role="alert"
-      className="border-danger/30 bg-bg-elev-1 text-danger rounded-sm border p-3 text-sm"
+      aria-label={message ? `${label}: ${message}` : label}
+      className="border-danger/30 p-3 text-sm"
     >
-      {label}{message ? ` · ${message}` : ''}
-    </div>
+      <div className="flex items-start gap-2">
+        <span className="mt-0.5 size-1.5 shrink-0 rounded-full bg-danger" aria-hidden="true" />
+        <p className="text-danger min-w-0">
+          <span className="font-semibold">{label}</span>
+          {message ? <span className="text-fg-muted"> · {message}</span> : null}
+        </p>
+      </div>
+    </Card>
   );
 }

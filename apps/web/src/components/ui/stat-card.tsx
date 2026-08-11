@@ -46,10 +46,11 @@ const TONE_TINT: Record<StatTone, string> = {
 export function StatCard({ icon, label, value, tone = 'fg', sparkline }: StatCardProps) {
   return (
     <div
+      role="group"
       aria-label={`${label}: ${value}`}
       className={cn(
         'relative flex flex-col gap-2 overflow-hidden rounded-sm',
-        'border border-border border-l-2 bg-bg-elev-1 p-4',
+        'border border-border border-l-2 bg-bg-elev-1 p-3 sm:p-4',
         TONE_TINT[tone],
       )}
     >

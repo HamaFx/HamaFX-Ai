@@ -424,9 +424,9 @@ export function Composer({
         />
 
         {/* Textarea & Actions Row */}
-        <div className="flex items-end gap-2 px-2 pb-2 pt-2">
+        <div className="flex items-end gap-2 px-2 pb-2 pt-2 min-w-0">
           {/* Left Actions (Attach, Voice) */}
-          <div className="flex items-center gap-1 pb-0.5">
+          <div className="flex shrink-0 items-center gap-1 pb-0.5">
             <button
               type="button"
               aria-label="Attach image"
@@ -514,7 +514,7 @@ export function Composer({
           </div>
 
           {/* Right Actions (Submit, Stop, Char Count) */}
-          <div className="flex items-center gap-3 pb-0.5 pr-1">
+          <div className="flex shrink-0 items-center gap-2 pb-0.5 pr-1 sm:gap-3">
             {/*
               Char count — visible always per UX_UPGRADE_PLAN.md item 2.
               Tone shifts at the SOFT_LIMIT_CHARS threshold so the

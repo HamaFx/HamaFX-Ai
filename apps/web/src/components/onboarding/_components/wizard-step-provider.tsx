@@ -63,7 +63,8 @@ export function WizardStepProvider({
               onClick={() => {
                 setSelectedProvider(p.id);
               }}
-              className={`text-left rounded-sm border p-3 transition-colors ${
+              aria-pressed={selected}
+              className={`min-h-11 text-left rounded-sm border p-3 transition-colors ${
                 selected
                   ? 'border-border bg-bg-elev-2 ring-1 ring-fg'
                   : 'border-border bg-bg-elev-1 hover:border-fg-subtle'
@@ -86,11 +87,12 @@ export function WizardStepProvider({
 
       {selectedProvider && (
         <div className="flex flex-col gap-3 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-2">
-          <label className="text-sm font-medium text-fg">
+          <label className="text-sm font-medium text-fg" htmlFor="onboarding-api-key">
             API Key for {providers.find((p) => p.id === selectedProvider)?.displayName}
           </label>
           <div className="relative">
             <Input
+              id="onboarding-api-key"
               type={revealed ? 'text' : 'password'}
               value={apiKey}
               onChange={(e) => {
@@ -135,7 +137,9 @@ export function WizardStepProvider({
               </span>
             )}
             {testState.kind === 'err' && (
-              <span className="text-xs text-danger">{testState.message}</span>
+              <span role="alert" className="text-xs text-danger">
+                {testState.message}
+              </span>
             )}
           </div>
         </div>

@@ -7,8 +7,12 @@
 // `partial: true` surfaces a single line at the top so the user knows a tf
 // was dropped due to a fetch failure.
 
+import { IconActivity, IconAlertTriangle, IconChartCandle } from '@tabler/icons-react';
 import type { AnalyzeTechnicalOutput, PerTimeframeReading } from '@hamafx/shared';
 import { Link } from 'next-view-transitions';
+
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 import type { ToolPartProps } from './registry';
 
@@ -25,28 +29,40 @@ export function AnalyzeTechnicalPart({
   }
 
   return (
-    <div className="border-border bg-bg-elev-1 rounded-sm border p-3">
-      <header className="mb-2 flex items-baseline justify-between gap-2">
-        <h3 className="text-fg text-sm font-semibold">
-          {output.symbol} · technical
-        </h3>
-        <span className="text-fg-muted font-mono text-caption">
+    <Card as="section" aria-label={`${output.symbol} technical analysis`}>
+      <header className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-start gap-2">
+          <span className="bg-bg-elev-2 text-bull mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-sm">
+            <IconChartCandle className="size-4" aria-hidden="true" />
+          </span>
+          <div className="min-w-0">
+            <h3 className="text-fg text-body-sm font-semibold">{output.symbol} · technical</h3>
+            <p className="text-fg-muted text-caption">Answer across {output.perTimeframe.length} timeframe{output.perTimeframe.length === 1 ? '' : 's'}</p>
+          </div>
+        </div>
+        <time dateTime={new Date(output.asOf).toISOString()} className="text-fg-subtle shrink-0 font-mono text-caption">
           {new Date(output.asOf).toISOString().slice(0, 16).replace('T', ' ')}Z
-        </span>
+        </time>
       </header>
 
-      {output.partial ? (
-        <p className="text-warn mb-2 text-body-sm">⚠ Some timeframes unavailable.</p>
-      ) : null}
+      <div className="border-divider flex items-start gap-2 border-y py-2">
+        <IconActivity className="text-brand mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
+        <p className="text-fg text-body-sm leading-snug">{output.summary}</p>
+      </div>
 
-      <p className="text-fg-muted mb-3 text-xs leading-snug">{output.summary}</p>
+      {output.partial ? (
+        <p className="text-warn flex items-center gap-1.5 text-caption">
+          <IconAlertTriangle className="size-3.5" aria-hidden="true" />
+          Some timeframes unavailable.
+        </p>
+      ) : null}
 
       <ul className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         {output.perTimeframe.map((r) => (
           <TfCard key={r.tf} symbol={output.symbol} reading={r} />
         ))}
       </ul>
-    </div>
+    </Card>
   );
 }
 
@@ -71,12 +87,10 @@ function TfCard({
         : 'text-fg-muted';
 
   return (
-    <li className="border-border bg-bg-elev-2 flex flex-col gap-1.5 rounded-sm border p-2.5">
-      <div className="flex items-baseline justify-between gap-2">
-        <span className="text-fg text-xs font-semibold uppercase tracking-wide">
-          {reading.tf}
-        </span>
-        <span className={`text-body-sm font-medium ${trendTone}`}>{reading.trend}</span>
+    <li className="border-border bg-bg-elev-2 flex flex-col gap-2 rounded-sm border p-2.5">
+      <div className="flex items-center justify-between gap-2">
+        <Badge tone="neutral" className="text-caption">{reading.tf}</Badge>
+        <span className={`text-caption font-semibold uppercase ${trendTone}`}>{reading.trend}</span>
       </div>
 
       <dl className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-body-sm tabular-nums">
@@ -128,8 +142,10 @@ function TfCard({
 
 function SkeletonCard() {
   return (
-    <div
-      className="border-border bg-bg-elev-1 rounded-sm border p-3"
+    <Card
+      as="section"
+      role="status"
+      className="p-3"
       aria-busy="true"
       aria-label="Analyzing technical posture"
     >
@@ -140,17 +156,17 @@ function SkeletonCard() {
           <li key={i} className="bg-bg-elev-2 h-24 animate-pulse rounded-sm" />
         ))}
       </ul>
-    </div>
+    </Card>
   );
 }
 
 function ErrorCard({ message }: { message?: string }) {
   return (
-    <div
-      role="alert"
-      className="border-danger/30 bg-bg-elev-1 text-danger rounded-sm border p-3 text-sm"
-    >
-      Technical analysis failed{message ? ` · ${message}` : ''}
-    </div>
+    <Card as="section" role="alert" aria-label={message ? `Technical analysis failed: ${message}` : 'Technical analysis failed'} className="border-danger/30 p-3 text-sm">
+      <div className="flex items-start gap-2">
+        <span className="mt-0.5 size-1.5 shrink-0 rounded-full bg-danger" aria-hidden="true" />
+        <p className="text-danger"><span className="font-semibold">Technical analysis failed</span>{message ? <span className="text-fg-muted"> · {message}</span> : null}</p>
+      </div>
+    </Card>
   );
 }

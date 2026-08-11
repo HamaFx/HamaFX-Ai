@@ -91,18 +91,18 @@ export function JournalView() {
 
           <button
             onClick={() => setImportOpen(true)}
-            className="bg-bg-elev-1 border-border text-fg-muted hover:text-fg flex size-10 cursor-pointer items-center justify-center rounded-sm border transition-all"
-            title="Import trades"
+            aria-label="Import trades"
+            className="bg-bg-elev-1 border-border text-fg-muted hover:text-fg flex size-10 cursor-pointer items-center justify-center rounded-sm border transition-all focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none"
           >
-            <IconUpload className="size-4" />
+            <IconUpload aria-hidden="true" className="size-4" />
           </button>
 
           <button
             onClick={refresh}
-            className="bg-bg-elev-1 border-border text-fg-muted hover:text-fg flex size-10 cursor-pointer items-center justify-center rounded-sm border transition-all"
-            title="Refresh logs"
+            aria-label="Refresh logs"
+            className="bg-bg-elev-1 border-border text-fg-muted hover:text-fg flex size-10 cursor-pointer items-center justify-center rounded-sm border transition-all focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none"
           >
-            <IconRefresh className={cn('size-4', isFetching && 'animate-spin')} />
+            <IconRefresh aria-hidden="true" className={cn('size-4', isFetching && 'animate-spin')} />
           </button>
 
           <button
@@ -117,8 +117,8 @@ export function JournalView() {
 
       {/* Main Responsive Grid Layout */}
       {isLoading ? (
-        <div className="flex h-[350px] flex-col items-center justify-center gap-2.5">
-          <IconActivity className="text-fg size-6 animate-pulse" />
+        <div role="status" className="flex h-[350px] flex-col items-center justify-center gap-2.5">
+          <IconActivity aria-hidden="true" className="text-fg size-6 animate-pulse" />
           <p className="text-fg-muted text-xs font-bold tracking-wider uppercase">
             Loading your metrics...
           </p>

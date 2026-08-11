@@ -222,7 +222,7 @@ export function CommandPalette({ onNewChat }: CommandPaletteProps) {
 
           <div className="px-4 pb-3">
             <label htmlFor={inputId} className="sr-only">
-              IconSearch commands
+              Search commands
             </label>
             <div className="relative">
               <IconSearch
@@ -252,9 +252,12 @@ export function CommandPalette({ onNewChat }: CommandPaletteProps) {
             </div>
           </div>
 
-          <div id="command-listbox" role="listbox" className="scrollbar-hide flex max-h-[50svh] flex-col overflow-y-auto px-2 pb-4">
+          <div id="command-listbox" role="listbox" aria-label="Command results" aria-describedby="command-result-count" className="scrollbar-hide flex max-h-[50svh] flex-col overflow-y-auto px-2 pb-4">
+            <p id="command-result-count" className="sr-only" role="status" aria-live="polite">
+              {flatRows.length} command{flatRows.length === 1 ? '' : 's'} available
+            </p>
             {flatRows.length === 0 ? (
-              <p className="text-fg-subtle px-3 py-6 text-center text-sm">
+              <p className="text-fg-subtle px-3 py-6 text-center text-sm" role="status" aria-live="polite">
                 No commands match.
               </p>
             ) : (
@@ -326,7 +329,7 @@ export function CommandPalette({ onNewChat }: CommandPaletteProps) {
           type="button"
           onClick={() => setOpen(true)}
           aria-label="Open command palette"
-          className="bg-bg-elev-2 text-fg-muted border-border hover:bg-bg-elev-3 hover:text-fg fixed right-4 bottom-24 z-30 inline-flex size-12 items-center justify-center rounded-sm border shadow-md"
+          className="bg-bg-elev-2 text-fg-muted border-border hover:bg-bg-elev-3 hover:text-fg fixed right-4 bottom-24 z-30 inline-flex size-12 items-center justify-center rounded-sm border shadow-md focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none"
           style={{ bottom: 'calc(env(safe-area-inset-bottom) + 96px)' }}
         >
           <IconCommand className="size-5" aria-hidden="true" />

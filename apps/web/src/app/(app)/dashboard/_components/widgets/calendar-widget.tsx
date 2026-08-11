@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { IconCalendar } from '@tabler/icons-react';
 import type { EconomicEvent } from '@hamafx/shared';
 
+import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useTime } from '@/components/providers/time-provider';
 import { formatCountdown } from '@/lib/datetime';
@@ -32,10 +33,7 @@ export function CalendarWidget({ events, limit = 3 }: CalendarWidgetProps) {
     .slice(0, limit);
 
   return (
-    <section
-      aria-label="Upcoming events"
-      className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-sm border p-4"
-    >
+    <Card as="section" aria-label="Upcoming events">
       <header className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <IconCalendar className="text-fg-subtle size-4" />
@@ -100,7 +98,7 @@ export function CalendarWidget({ events, limit = 3 }: CalendarWidgetProps) {
           })}
         </ul>
       )}
-    </section>
+    </Card>
   );
 }
 

@@ -9,13 +9,17 @@ import type { HTMLAttributes } from 'react';
 
 import { cn } from '@/lib/cn';
 
-type SkeletonProps = HTMLAttributes<HTMLDivElement>;
+interface SkeletonProps extends HTMLAttributes<HTMLDivElement> {
+  /** Hide decorative placeholders from assistive technology. */
+  decorative?: boolean;
+}
 
-export function Skeleton({ className, ...rest }: SkeletonProps) {
+export function Skeleton({ className, decorative = false, ...rest }: SkeletonProps) {
   return (
     <div
-      role="status"
-      aria-label="Loading content"
+      {...(decorative
+        ? { 'aria-hidden': true }
+        : { role: 'status', 'aria-label': 'Loading content' })}
       className={cn('shimmer rounded-sm', className)}
       {...rest}
     />
@@ -32,6 +36,7 @@ export function SkeletonCard({ className, lines = 2, ...rest }: SkeletonCardProp
   return (
     <div
       role="status"
+      aria-busy="true"
       aria-label="Loading content"
       className={cn(
         'border-border bg-bg-elev-1/60 flex flex-col gap-2 overflow-hidden rounded-sm border p-4 fade-in',
@@ -42,6 +47,8 @@ export function SkeletonCard({ className, lines = 2, ...rest }: SkeletonCardProp
       {Array.from({ length: lines }).map((_, i) => (
         <Skeleton
           key={i}
+          decorative
+
           className="h-3"
           style={{ width: `${100 - i * 18}%` }}
         />

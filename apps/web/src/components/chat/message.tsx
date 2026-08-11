@@ -171,6 +171,18 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
             onChange={(e) => setEditValue(e.target.value)}
             maxLength={MAX_TEXT_CHARS}
             autoFocus
+            aria-label="Edit message"
+            onKeyDown={(e) => {
+              // Escape cancels, Cmd/Ctrl+Enter saves — keyboard-first editing.
+              if (e.key === 'Escape') {
+                e.preventDefault();
+                setIsEditing(false);
+              } else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                e.preventDefault();
+                setIsEditing(false);
+                onEdit?.(message.id, editValue);
+              }
+            }}
           />
           <div className="mt-1 flex justify-end gap-2">
             <button
@@ -226,9 +238,10 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
               !isUser && !isSystem ? 'py-1' : 'py-3',
             )}
           >
-            {/* Phase 1.3 — aria-live so screen readers announce the final
-                assistant message when streaming completes. */}
-            <div aria-live={isUser ? undefined : 'polite'}>
+            {/* Phase 1.3 — streamed assistant text is announced by the
+                debounced sr-only <StreamingLiveRegion> in message-list.tsx;
+                a live region here would re-announce the entire history. */}
+            <div>
             {message.parts.map((part, idx) => {
               if (part.type === 'text') {
                 return (

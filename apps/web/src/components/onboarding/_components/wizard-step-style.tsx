@@ -36,7 +36,8 @@ export function WizardStepStyle({
               key={style.id}
               type="button"
               onClick={() => setTradingStyle(style.id)}
-              className={`text-left rounded-sm border p-4 transition-all hover:bg-bg-elev-2 flex flex-col gap-1.5 cursor-pointer relative ${
+              aria-pressed={active}
+              className={`min-h-11 text-left rounded-sm border p-4 transition-all hover:bg-bg-elev-2 flex flex-col gap-1.5 cursor-pointer relative ${
                 active
                   ? 'border-border bg-bg-elev-1 ring-1 ring-fg'
                   : 'border-border bg-bg-elev-1 hover:border-fg-muted'

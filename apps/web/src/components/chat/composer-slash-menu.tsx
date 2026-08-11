@@ -54,11 +54,16 @@ export function ComposerSlashMenu({
       id="slash-command-listbox"
       role="listbox"
       aria-label="Slash commands"
-      className="border-t border-border bg-bg-elev-2 px-2 py-1.5"
+      className="border-t border-border bg-bg-elev-2 px-2 py-1.5 max-h-[min(18rem,40dvh)] overflow-y-auto overscroll-contain"
     >
-      <p className="text-caption text-fg-subtle px-2 pb-1 font-mono uppercase tracking-wider">
-        Commands
-      </p>
+      <div className="flex items-center justify-between gap-2 px-2 pb-1">
+        <p className="text-caption text-fg-subtle font-mono uppercase tracking-wider">
+          Commands
+        </p>
+        <span className="text-fg-subtle text-caption" aria-live="polite">
+          {commands.length} available
+        </span>
+      </div>
       {commands.map((cmd, i) => {
         const orig = allCommands.find((c) => c.command === cmd.command);
         const isActive = activeIndex === i;
@@ -75,7 +80,7 @@ export function ComposerSlashMenu({
             }}
             onMouseEnter={() => onHover(i)}
             className={cn(
-              'flex w-full items-center gap-3 rounded-sm px-2 py-2 text-left text-sm transition-colors',
+              'flex min-h-11 w-full items-center gap-3 rounded-sm px-2 py-2 text-left text-sm transition-colors',
               isActive
                 ? 'bg-brand text-brand-fg'
                 : 'text-fg-muted hover:bg-bg-elev-3 hover:text-fg',

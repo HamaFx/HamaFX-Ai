@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { IconBell } from '@tabler/icons-react';
 import type { Alert } from '@hamafx/shared';
 
+import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/cn';
 
@@ -36,10 +37,7 @@ export function AlertsWidget({ alerts, limit = 5 }: AlertsWidgetProps) {
   const rows = alerts.slice(0, limit);
 
   return (
-    <section
-      aria-label="Active alerts"
-      className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-sm border p-4"
-    >
+    <Card as="section" aria-label="Active alerts">
       <header className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <IconBell className="text-fg-subtle size-4" />
@@ -91,6 +89,6 @@ export function AlertsWidget({ alerts, limit = 5 }: AlertsWidgetProps) {
           ))}
         </ul>
       )}
-    </section>
+    </Card>
   );
 }

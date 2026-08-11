@@ -8,10 +8,13 @@
 // touching the message-list code.
 
 import { useState, useId } from 'react';
-import { m } from 'motion/react';
+import { motion } from 'motion/react';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 
+import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/cn';
+
+const MotionCard = motion.create(Card);
 
 interface ToolCardProps {
   name: string;
@@ -44,13 +47,11 @@ export function ToolCard({ name, state, input, output, errorText }: ToolCardProp
       : oneLiner(label, output);
 
   return (
-    <m.div
+    <MotionCard
+      as="section"
       layout
       initial={false}
-      className={cn(
-        'border-border bg-bg-elev-1 rounded-sm border',
-        failed && 'border-danger/30',
-      )}
+      className={cn('p-0', failed && 'border-danger/30')}
     >
       <button
         type="button"
@@ -71,11 +72,10 @@ export function ToolCard({ name, state, input, output, errorText }: ToolCardProp
       </button>
 
       {expanded ? (
-        <m.div
+        <motion.div
           key="tool-card-content"
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
-          exit={{ opacity: 0, height: 0 }}
           transition={{ duration: 0.2 }}
           id={contentId}
           className="border-divider mt-0 space-y-2 px-3 py-3 font-mono tabular-nums text-sm overflow-hidden"
@@ -86,9 +86,9 @@ export function ToolCard({ name, state, input, output, errorText }: ToolCardProp
           ) : output !== undefined ? (
             <Section label="output" data={output} />
           ) : null}
-        </m.div>
+        </motion.div>
       ) : null}
-    </m.div>
+    </MotionCard>
   );
 }
 

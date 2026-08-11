@@ -26,19 +26,23 @@ export function WizardStepProfile({
         <p className="text-sm text-fg-subtle">Profile settings for your AI trading workspace.</p>
       </div>
       <div className="flex flex-col gap-2">
-        <label className="text-sm font-medium text-fg">Display Name</label>
+        <label className="text-sm font-medium text-fg" htmlFor="onboarding-display-name">Display Name</label>
         <Input
+          id="onboarding-display-name"
           value={name}
           onChange={(e) => { setName(e.target.value); }}
           placeholder="Satoshi Nakamoto"
+          aria-invalid={nameError ? true : undefined}
+          aria-describedby={nameError ? 'onboarding-name-error' : undefined}
           autoFocus
         />
-        {nameError && <p className="text-xs text-danger">{nameError}</p>}
+        {nameError && <p id="onboarding-name-error" role="alert" className="text-xs text-danger">{nameError}</p>}
       </div>
       <div className="flex flex-col gap-2">
-        <label className="text-sm font-medium text-fg">Timezone</label>
+        <label className="text-sm font-medium text-fg" htmlFor="onboarding-timezone">Timezone</label>
         <select
-          className="h-10 w-full rounded-sm border border-border bg-bg-elev-1 px-3 py-2 text-sm text-fg focus:outline-none focus:ring-1 focus:ring-fg cursor-pointer"
+          id="onboarding-timezone"
+          className="h-11 w-full rounded-sm border border-border bg-bg-elev-1 px-3 py-2 text-sm text-fg focus:outline-none focus:ring-1 focus:ring-fg cursor-pointer"
           value={timezone}
           onChange={(e) => setTimezone(e.target.value)}
         >

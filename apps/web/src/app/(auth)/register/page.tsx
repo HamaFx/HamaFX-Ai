@@ -70,9 +70,10 @@ export default function RegisterPage() {
             disabled={pending || success}
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            error={confirmTouched && !passwordsMatch} />
+            error={confirmTouched && !passwordsMatch}
+            aria-describedby={confirmTouched && !passwordsMatch ? 'confirm-password-error' : undefined} />
           {confirmTouched && !passwordsMatch && (
-            <p role="alert" className="text-danger text-xs mt-1">Passwords do not match</p>
+            <p id="confirm-password-error" role="alert" className="text-danger text-xs mt-1">Passwords do not match</p>
           )}
         </div>
 

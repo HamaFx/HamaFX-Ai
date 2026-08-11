@@ -34,6 +34,8 @@ import { useId, useState } from 'react';
 
 import type { CitationWarningPart } from '@hamafx/shared';
 
+import { Card } from '@/components/ui/card';
+
 interface CitationWarningProps {
   part: CitationWarningPart;
 }
@@ -64,7 +66,7 @@ export function CitationWarningPartView({ part }: CitationWarningProps) {
       }));
 
   return (
-    <div className={`flex flex-col gap-1 rounded-sm border px-3 py-2 ${tone}`}>
+    <Card as="section" aria-label="Citation review" className={`gap-1 p-2 ${tone}`}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -104,6 +106,6 @@ export function CitationWarningPartView({ part }: CitationWarningProps) {
           ))}
         </ul>
       ) : null}
-    </div>
+    </Card>
   );
 }

@@ -107,6 +107,7 @@ export function AlertList() {
           <Segmented<'all' | 'active' | 'past'>
             value={filter}
             onChange={setFilter}
+            ariaLabel="Filter alerts"
             options={[
               { value: 'all', label: 'All' },
               { value: 'active', label: 'Active' },
@@ -126,7 +127,7 @@ export function AlertList() {
       </div>
 
       {isLoading ? (
-        <p className="text-fg-muted text-sm px-1">Loading…</p>
+        <p role="status" className="text-fg-muted text-sm px-1">Loading alerts…</p>
       ) : isError ? (
         <p className="text-danger text-sm px-1" role="alert">Failed to load: {(error as Error)?.message}</p>
       ) : data?.alerts.length === 0 ? (
@@ -143,7 +144,7 @@ export function AlertList() {
           }
         />
       ) : filteredAlerts?.length === 0 ? (
-        <div className="py-12 text-center text-sm text-fg-muted">
+        <div role="status" className="py-12 text-center text-sm text-fg-muted">
           No {filter} alerts found.
         </div>
       ) : (

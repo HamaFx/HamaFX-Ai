@@ -137,14 +137,15 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
         <div className="flex p-0.5 rounded-sm bg-bg-elev-2 border border-border/40 self-start">
           <button
             onClick={() => setTab('active')}
+            aria-pressed={tab === 'active'}
             className={cn(
-              'px-3.5 py-1.5 text-xs font-semibold rounded-sm transition-all relative flex items-center gap-1.5 cursor-pointer',
+              'px-3.5 py-1.5 text-xs font-semibold rounded-sm transition-all relative flex items-center gap-1.5 cursor-pointer focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none',
               tab === 'active' ? 'bg-fg text-black shadow-sm' : 'text-fg-muted hover:text-fg'
             )}
           >
             Active Positions
             {activeCount > 0 && (
-              <span className={cn(
+              <span aria-hidden="true" className={cn(
                 'size-2 rounded-sm',
                 tab === 'active' ? 'bg-fg animate-ping' : 'bg-fg animate-pulse'
               )} />
@@ -152,8 +153,9 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
           </button>
           <button
             onClick={() => setTab('closed')}
+            aria-pressed={tab === 'closed'}
             className={cn(
-              'px-3.5 py-1.5 text-xs font-semibold rounded-sm transition-all cursor-pointer',
+              'px-3.5 py-1.5 text-xs font-semibold rounded-sm transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none',
               tab === 'closed' ? 'bg-fg text-black shadow-sm' : 'text-fg-muted hover:text-fg'
             )}
           >
@@ -162,8 +164,9 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
           </button>
           <button
             onClick={() => setTab('all')}
+            aria-pressed={tab === 'all'}
             className={cn(
-              'px-3.5 py-1.5 text-xs font-semibold rounded-sm transition-all cursor-pointer',
+              'px-3.5 py-1.5 text-xs font-semibold rounded-sm transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none',
               tab === 'all' ? 'bg-fg text-black shadow-sm' : 'text-fg-muted hover:text-fg'
             )}
           >
@@ -178,6 +181,7 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
             <input
               type="text"
               placeholder="Search notes, tags, symbol..."
+              aria-label="Search trades"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-9 pr-4 py-2 text-xs rounded-sm bg-bg-elev-2/45 border border-border/40 focus:outline-none focus:border-border/70 transition-all text-fg"
@@ -185,27 +189,33 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
           </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
+            aria-label="Toggle advanced filters"
+            aria-expanded={showFilters}
+            aria-controls="entry-filter-panel"
             className={cn(
-              'p-2.5 rounded-sm border border-border/40 bg-bg-elev-2/45 text-fg-muted hover:text-fg transition-all cursor-pointer',
+              'p-2.5 rounded-sm border border-border/40 bg-bg-elev-2/45 text-fg-muted hover:text-fg transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none',
               showFilters && 'border-border text-fg bg-bg-elev-1'
             )}
-            title="Toggle advanced filters"
           >
-            <IconAdjustmentsHorizontal className="size-4" />
+            <IconAdjustmentsHorizontal aria-hidden="true" className="size-4" />
           </button>
         </div>
       </div>
 
       {/* Advanced IconFilter Panel */}
       {showFilters && (
-        <div className="border border-border bg-bg-elev-1 rounded-sm p-4 grid grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-200">
+        <div
+          id="entry-filter-panel"
+          className="border border-border bg-bg-elev-1 rounded-sm p-4 grid grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-200"
+        >
           <div className="flex flex-col gap-1.5">
-            <label className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Asset Class</label>
+            <span className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Asset Class</span>
               <div className="flex flex-wrap gap-1">
                 {(['ALL', ...availableSymbols] as const).map((sym) => (
                 <button
                   key={sym}
                   onClick={() => setSymbolFilter(sym)}
+                  aria-pressed={symbolFilter === sym}
                   className={cn(
                     'px-2.5 py-1 text-xs font-semibold rounded-sm border border-border bg-bg-elev-3/50 hover:bg-bg-elev-3 cursor-pointer',
                     symbolFilter === sym && 'border-border bg-bg-elev-2 text-fg'
@@ -218,12 +228,13 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Direction</label>
+            <span className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Direction</span>
             <div className="flex flex-wrap gap-1">
               {(['ALL', 'long', 'short'] as const).map((side) => (
                 <button
                   key={side}
                   onClick={() => setSideFilter(side)}
+                  aria-pressed={sideFilter === side}
                   className={cn(
                     'px-2.5 py-1 text-xs font-semibold rounded-sm border border-border bg-bg-elev-3/50 hover:bg-bg-elev-3 cursor-pointer',
                     sideFilter === side && 'border-border bg-bg-elev-2 text-fg'
@@ -236,12 +247,13 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
           </div>
 
           <div className="flex flex-col gap-1.5 col-span-2">
-            <label className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Tag</label>
+            <span className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Tag</span>
             <div className="flex flex-wrap gap-1">
               {(['ALL', ...availableTags] as const).map((tag) => (
                 <button
                   key={tag}
                   onClick={() => setTagFilter(tag)}
+                  aria-pressed={tagFilter === tag}
                   className={cn(
                     'px-2.5 py-1 text-xs font-semibold rounded-sm border border-border bg-bg-elev-3/50 hover:bg-bg-elev-3 cursor-pointer',
                     tagFilter === tag && 'border-border bg-bg-elev-2 text-fg'

@@ -13,6 +13,7 @@ import {IconActivity, IconArrowUpRight, IconArrowDownRight} from '@tabler/icons-
 import type { JournalEntry } from '@hamafx/shared';
 import { priceDecimals } from '@hamafx/shared';
 
+import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { formatRelative } from '@/lib/format';
 import { cn } from '@/lib/cn';
@@ -30,10 +31,7 @@ export function OpenPositionsWidget({
   const open = entries.filter((e) => e.outcome === 'open').slice(0, limit);
 
   return (
-    <section
-      aria-label="Open positions"
-      className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-sm border p-4"
-    >
+    <Card as="section" aria-label="Open positions">
       <header className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <IconActivity className="text-fg-subtle size-4" />
@@ -103,6 +101,6 @@ export function OpenPositionsWidget({
           ))}
         </ul>
       )}
-    </section>
+    </Card>
   );
 }

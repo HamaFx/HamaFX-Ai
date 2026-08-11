@@ -11,7 +11,11 @@
 // Server component on purpose — purely presentational, no state or events.
 
 import Link from 'next/link';
+import { IconAlertTriangle, IconCalendarEvent } from '@tabler/icons-react';
 import type { GetCalendarOutput, ToolCalendarItem } from '@hamafx/shared';
+
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface GetCalendarPartProps {
   /** Tool output, or `null` while streaming / before completion. */
@@ -44,11 +48,9 @@ export function GetCalendarPart({ output, state, errorMessage }: GetCalendarPart
 
   if (output.pipelinePending) {
     return (
-      <div className="border-border bg-bg-elev-1 text-fg-muted rounded-sm border p-3 text-sm">
-        Calendar pipeline hasn&apos;t populated the DB yet. Trigger the{' '}
-        <code className="bg-bg-elev-2 rounded-sm px-1 py-0.5 text-caption">/api/cron/calendar</code>{' '}
-        cron once and try again.
-      </div>
+      <Card as="section" aria-label="Calendar status" className="p-3 text-body-sm">
+        <p className="text-fg-muted flex items-start gap-2"><IconCalendarEvent className="mt-0.5 size-4 shrink-0" aria-hidden="true" /> Calendar pipeline hasn&apos;t populated the DB yet. Trigger the <code className="bg-bg-elev-2 rounded-sm px-1 py-0.5 text-caption">/api/cron/calendar</code> cron once and try again.</p>
+      </Card>
     );
   }
 
@@ -56,14 +58,18 @@ export function GetCalendarPart({ output, state, errorMessage }: GetCalendarPart
 
   if (items.length === 0) {
     return (
-      <div className="border-border bg-bg-elev-1 text-fg-muted rounded-sm border p-3 text-sm">
-        No calendar events in the requested window.
-      </div>
+      <Card as="section" aria-label="Calendar status" className="p-3 text-body-sm">
+        <p className="text-fg-muted flex items-center gap-2"><IconCalendarEvent className="size-4" aria-hidden="true" /> No calendar events in the requested window.</p>
+      </Card>
     );
   }
 
   return (
-    <div className="border-border bg-bg-elev-1 rounded-sm border">
+    <Card as="section" aria-label={`Calendar results: ${items.length} events`} className="p-0">
+      <header className="flex items-center justify-between gap-2 border-b border-divider px-3 py-3">
+        <div className="flex items-center gap-2"><IconCalendarEvent className="text-fg-subtle size-4" aria-hidden="true" /><h3 className="text-fg text-body-sm font-semibold">Economic calendar</h3></div>
+        <Badge tone="neutral">{items.length} event{items.length === 1 ? '' : 's'}</Badge>
+      </header>
       <ul className="divide-border divide-y">
         {items.map((item) => (
           <li key={item.id}>
@@ -71,7 +77,7 @@ export function GetCalendarPart({ output, state, errorMessage }: GetCalendarPart
           </li>
         ))}
       </ul>
-    </div>
+    </Card>
   );
 }
 
@@ -94,12 +100,12 @@ function CalendarRow({ item }: { item: ToolCalendarItem }) {
 
       <span className="text-fg min-w-0 flex-1 truncate font-medium">{item.title}</span>
 
-      <span
-        className={`shrink-0 text-caption uppercase ${IMPACT_TEXT[item.importance]}`}
-        title={`${item.importance} impact`}
+      <Badge
+        tone={item.importance === 'high' ? 'danger' : item.importance === 'medium' ? 'warn' : 'neutral'}
+        className={`shrink-0 ${IMPACT_TEXT[item.importance]}`}
       >
         {IMPACT_LABEL[item.importance]}
-      </span>
+      </Badge>
 
       {(item.forecast !== null || item.previous !== null) && (
         <span className="text-fg-muted hidden shrink-0 items-baseline gap-2 text-xs tabular-nums sm:flex">
@@ -123,8 +129,10 @@ function CalendarRow({ item }: { item: ToolCalendarItem }) {
 
 function CalendarSkeleton() {
   return (
-    <div
-      className="border-border bg-bg-elev-1 rounded-sm border"
+    <Card
+      as="section"
+      role="status"
+      className="p-0"
       aria-busy="true"
       aria-label="Loading calendar"
     >
@@ -137,18 +145,15 @@ function CalendarSkeleton() {
           </li>
         ))}
       </ul>
-    </div>
+    </Card>
   );
 }
 
 function CalendarError({ message }: { message?: string }) {
   return (
-    <div
-      role="alert"
-      className="border-danger/30 bg-bg-elev-1 text-danger rounded-sm border p-3 text-sm"
-    >
-      Calendar unavailable{message ? ` · ${message}` : ''}
-    </div>
+    <Card as="section" role="alert" aria-label={message ? `Calendar unavailable: ${message}` : 'Calendar unavailable'} className="border-danger/30 p-3 text-sm">
+      <p className="text-danger flex items-start gap-2"><IconAlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden="true" /><span><span className="font-semibold">Calendar unavailable</span>{message ? <span className="text-fg-muted"> · {message}</span> : null}</span></p>
+    </Card>
   );
 }
 

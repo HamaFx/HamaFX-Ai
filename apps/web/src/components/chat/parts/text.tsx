@@ -42,17 +42,22 @@ export function TextPart({ text, role, isStreaming }: TextPartProps) {
 
   // While streaming, skip expensive ReactMarkdown + Shiki parsing.
   // Upgrade to full markdown rendering once streaming finishes.
+  // `whitespace-pre-line` keeps the model's paragraph breaks visible so
+  // the layout doesn't jump when the finished markdown render swaps in.
   if (isStreaming) {
     return (
-      <div aria-live="polite" aria-atomic="true" className="md-prose text-sm leading-[1.4] tracking-tight space-y-2 text-fg">
+      <div className="md-prose text-sm leading-[1.4] tracking-tight space-y-2 text-fg whitespace-pre-line">
         {text}
-        <span className="inline-block w-[2px] h-[1em] bg-fg animate-pulse ml-[1px] align-middle" />
+        <span
+          aria-hidden="true"
+          className="inline-block w-[2px] h-[1em] bg-fg animate-pulse ml-[1px] align-middle"
+        />
       </div>
     );
   }
 
   return (
-    <div aria-live="polite" aria-atomic="true" className="md-prose text-sm leading-[1.4] tracking-tight space-y-2 text-fg">
+    <div className="md-prose text-sm leading-[1.4] tracking-tight space-y-2 text-fg">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{

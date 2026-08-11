@@ -19,6 +19,9 @@ import { IconEye, IconRefresh, IconAlertTriangle } from '@tabler/icons-react';
 import type { Symbol, Tick } from '@hamafx/shared';
 import { priceDecimals } from '@hamafx/shared';
 
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { SparklineCanvas } from '@/components/ui/sparkline-canvas';
 import { usePrices } from '@/hooks/use-prices';
 import { cn } from '@/lib/cn';
@@ -67,14 +70,12 @@ export function WatchlistWidget({
   }, [data]);
 
   return (
-    <section
-      aria-label="Watchlist"
-      className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-sm border p-4"
-    >
+    <Card as="section"      aria-label="Market overview">
       <header className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <IconEye className="text-fg-subtle size-4" />
-          <span className="text-fg text-body-sm font-semibold">Watchlist</span>
+          <span className="text-fg text-body-sm font-semibold">Market overview</span>
+          <Badge tone="brand" className="hidden sm:inline-flex">Live</Badge>
         </div>
         <Link
           href={`/chart/${list[0] ?? 'XAUUSD'}`}
@@ -88,17 +89,17 @@ export function WatchlistWidget({
         {(() => {
           if (isError) {
             return (
-              <li className="flex flex-col items-center gap-2 py-4 text-center">
-                <IconAlertTriangle className="size-5 text-danger" />
+              <li role="alert" className="flex flex-col items-center gap-2 py-4 text-center">
+                <IconAlertTriangle className="size-5 text-danger" aria-hidden="true" />
                 <p className="text-danger text-xs">
                   {error instanceof Error ? error.message : 'Failed to load prices'}
                 </p>
                 <button
                   type="button"
                   onClick={() => refetch()}
-                  className="inline-flex items-center gap-1 text-fg-subtle hover:text-fg text-caption"
+                  className="inline-flex min-h-10 items-center gap-1 rounded-sm border border-border px-3 text-fg-subtle hover:text-fg text-caption"
                 >
-                  <IconRefresh className="size-3" />
+                  <IconRefresh className="size-3" aria-hidden="true" />
                   Retry
                 </button>
               </li>
@@ -110,8 +111,8 @@ export function WatchlistWidget({
                 key={i}
                 className="border-divider flex items-center justify-between border-b py-2 last:border-0"
               >
-                <div className="bg-bg-elev-2 h-3 w-16 animate-pulse rounded-sm" />
-                <div className="bg-bg-elev-2 h-3 w-12 animate-pulse rounded-sm" />
+                <Skeleton decorative className="h-3 w-16" />
+                <Skeleton decorative className="h-3 w-12" />
               </li>
             ));
           }
@@ -125,7 +126,7 @@ export function WatchlistWidget({
           ));
         })()}
       </ul>
-    </section>
+    </Card>
   );
 }
 
@@ -168,6 +169,7 @@ function WatchRow({
             'text-caption tabular-nums',
             isBull ? 'text-bull' : 'text-bear',
           )}
+          aria-label={isBull ? 'Trending up' : 'Trending down'}
         >
           {isBull ? '▲' : '▼'}
         </span>
