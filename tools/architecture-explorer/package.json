@@ -7,6 +7,7 @@
   "scripts": {
     "scan": "tsx src/index.ts",
     "build": "tsc",
+    "test": "tsx --test test/**/*.test.ts",
     "start": "node dist/index.js"
   },
   "dependencies": {
@@ -14,7 +15,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
-    "ts-node": "^10.9.2",
+    "tsx": "^4.22.4",
     "typescript": "^7.0.2"
   }
 }

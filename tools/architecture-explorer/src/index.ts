@@ -104,12 +104,22 @@ async function main(): Promise<void> {
   // 3. Build the graph model
   console.log('🔗 Building relationship graph...');
   const analyzer = new Analyzer();
-  const graph = analyzer.analyze(scanResult.files, parsedFiles, scanResult.packageNames);
+  const graph = analyzer.analyze(
+    scanResult.files,
+    parsedFiles,
+    scanResult.packageNames,
+    scanResult.packagePaths,
+  );
   console.log(`   Graph: ${graph.getNodeCount()} nodes, ${graph.getEdgeCount()} edges`);
 
   // 4. Generate the architecture JSON
   console.log('📊 Generating architecture model...');
-  const model = generateArchitectureJson(graph, scanResult.packageNames, opts.rootDir);
+  const model = generateArchitectureJson(
+    graph,
+    scanResult.packageNames,
+    opts.rootDir,
+    scanResult.packagePaths,
+  );
   console.log(`   Model complete with ${Object.keys(model.views).length} views`);
   console.log(`   Analysis: ${model.analysis.summary.totalCycles} cycles, ${model.analysis.summary.hotspotCount} hotspots, ${model.analysis.summary.deadOrOrphanCount} dead/orphans`);
 

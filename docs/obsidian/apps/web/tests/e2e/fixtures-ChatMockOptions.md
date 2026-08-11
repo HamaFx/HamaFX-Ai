@@ -47,6 +47,7 @@ Module: apps/web/tests/e2e/fixtures.ts
 - `FULL_MODE_SSE`
 - `QUICK_MODE_SSE`
 - `test`
+- `expect`
 
 
 ## 🔍 Explore

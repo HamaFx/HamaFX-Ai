@@ -32,7 +32,7 @@ Module: apps/web/src/app/(app)/settings/_components/data/data-card.tsx
 
 
 ### 📤 Depends On (4)
-[[actions]] · [[settings-row-SettingsRow]] · [[row-divider-RowDivider]] · [[@hamafx-web]]
+[[actions-setupTwoFactorAction]] · [[settings-row-SettingsRow]] · [[row-divider-RowDivider]] · [[@hamafx-web]]
 
 
 ### 📥 Depended On By (1)

@@ -32,7 +32,7 @@ Module: packages/ai/src/planner.ts
 
 
 ### 📤 Depends On (8)
-[[@hamafx-db]] · [[db-getDb]] · [[@hamafx-shared]] · [[model]] · [[tool-context-ToolEnv]] · [[telemetry-telemetryConfig]] · [[routing-RoutingDomain]] · [[@hamafx-ai]]
+[[@hamafx-db]] · [[db-getDb]] · [[@hamafx-shared]] · [[model-resolveModel]] · [[tool-context-ToolEnv]] · [[telemetry-telemetryConfig]] · [[routing-RoutingDomain]] · [[@hamafx-ai]]
 
 
 ### 📥 Depended On By (2)

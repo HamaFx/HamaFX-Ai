@@ -32,7 +32,7 @@ Module: packages/ai/src/model-strategy.ts
 
 
 ### 📤 Depends On (5)
-[[@hamafx-db]] · [[vertex-factory-ResolveModelEnv]] · [[byok-providers]] · [[model-chat-ChatModelResolution]] · [[@hamafx-ai]]
+[[@hamafx-db]] · [[vertex-factory-ResolveModelEnv]] · [[byok-providers-BYOK_PROVIDERS]] · [[model-chat-ChatModelResolution]] · [[@hamafx-ai]]
 
 
 

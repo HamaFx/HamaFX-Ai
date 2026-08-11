@@ -36,7 +36,7 @@ Fetch OHLC candles for one symbol at one timeframe (e.g. XAUUSD 1h). Use to conf
 
 
 ### 📥 Depended On By (3)
-[[market]] · [[get-candles.test]] · [[ai-data.integration.test]]
+[[market-toolRegistry]] · [[get-candles.test]] · [[ai-data.integration.test]]
 
 
 

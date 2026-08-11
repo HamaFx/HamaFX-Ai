@@ -32,7 +32,7 @@ Module: packages/ai/src/agent.ts
 
 
 ### 📤 Depends On (29)
-[[@hamafx-shared]] · [[telemetry-telemetryConfig]] · [[context-buildLiveSnapshot]] · [[cost-DEFAULT_TURN_ESTIMATE_USD]] · [[fallback-FallbackReason]] · [[token-estimate-TokenEstimateResult]] · [[thread-summary-CompactResult]] · [[model]] · [[persistence]] · [[planner-PlannerEnv]] · [[system-LiveSnapshot]] · [[message-text-sanitizeUserInput]] · [[routing-RoutingDomain]] · [[tool-context-ToolEnv]] · [[verification-CitationFinding]] · [[wait-until-waitUntil]] · [[@hamafx-db]] · [[by-domain-RoutingDomain]] · [[types-RunChatArgs]] · [[rate-limits-RateLimitData]]
+[[@hamafx-shared]] · [[telemetry-telemetryConfig]] · [[context-buildLiveSnapshot]] · [[cost-DEFAULT_TURN_ESTIMATE_USD]] · [[fallback-FallbackReason]] · [[token-estimate-TokenEstimateResult]] · [[thread-summary-CompactResult]] · [[model-resolveModel]] · [[persistence-listThreads]] · [[planner-PlannerEnv]] · [[system-LiveSnapshot]] · [[message-text-sanitizeUserInput]] · [[routing-RoutingDomain]] · [[tool-context-ToolEnv]] · [[verification-CitationFinding]] · [[wait-until-waitUntil]] · [[@hamafx-db]] · [[by-domain-RoutingDomain]] · [[types-RunChatArgs]] · [[rate-limits-RateLimitData]]
 > ... and 9 more
 
 

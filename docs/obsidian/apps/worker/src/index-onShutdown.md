@@ -32,7 +32,7 @@ Module: apps/worker/src/index.ts
 
 
 ### 📤 Depends On (17)
-[[@hamafx-db]] · [[@hamafx-ai]] · [[candle-1m-ClosedCandle]] · [[http-server-HealthServerDeps]] · [[env-WorkerEnv]] · [[healthchecks-PingStatus]] · [[log-Logger]] · [[candles-1m-FlushClosedCandleArgs]] · [[live-ticks-LiveTicksWriterArgs]] · [[sd-notify-notifyWatchdog]] · [[sentry-initSentry]] · [[index_tool-architecture-explorer|index]] · [[consumer-NormalizedTick]] · [[tick-buffer-TickBuffer]] · [[symbol-manager-SymbolChangeEvent]] · [[scheduler-startScheduler]] · [[@hamafx-worker]]
+[[@hamafx-db]] · [[@hamafx-ai]] · [[candle-1m-ClosedCandle]] · [[http-server-HealthServerDeps]] · [[env-WorkerEnv]] · [[healthchecks-PingStatus]] · [[log-Logger]] · [[candles-1m-FlushClosedCandleArgs]] · [[live-ticks-LiveTicksWriterArgs]] · [[sd-notify-notifyWatchdog]] · [[sentry-initSentry]] · [[index-BinanceStreamConsumer]] · [[consumer-NormalizedTick]] · [[tick-buffer-TickBuffer]] · [[symbol-manager-SymbolChangeEvent]] · [[scheduler-startScheduler]] · [[@hamafx-worker]]
 
 
 

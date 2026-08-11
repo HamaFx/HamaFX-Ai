@@ -62,7 +62,7 @@ dv.table(
 - [[defaults.test]] *(0↖ 3↗)*
 - [[fixtures-makeCandles]] *(6↖ 3↗)*
 - [[eslint.config-config]] *(0↖ 2↗)*
-- [[index_tool-architecture-explorer|index]] *(0↖ 1↗)*
+- [[index-sma]] *(0↖ 1↗)*
 - [[vitest.config-defineConfig]] *(0↖ 1↗)*
 
 ### 📦 Package (1)

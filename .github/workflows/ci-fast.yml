@@ -27,6 +27,11 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm turbo run lint
       - run: pnpm turbo run typecheck
+      # Knip is report-only until its baseline is fully reviewed; it must not
+      # block application delivery on framework/dynamic-entrypoint findings.
+      - name: Knip Report
+        run: pnpm knip --no-progress
+        continue-on-error: true
       # L-2: Audit dependencies for known vulnerabilities at PR time.
       # Blocks the build on CRITICAL severity advisories.
       # Once existing advisories are addressed, raise to --audit-level=high.

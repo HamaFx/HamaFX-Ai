@@ -32,7 +32,7 @@ Module: packages/ai/src/chat/auto-title.ts
 
 
 ### 📤 Depends On (7)
-[[@hamafx-shared]] · [[@hamafx-db]] · [[types-RunChatArgs]] · [[model]] · [[persistence]] · [[title-GenerateTitleArgs]] · [[@hamafx-ai]]
+[[@hamafx-shared]] · [[@hamafx-db]] · [[types-RunChatArgs]] · [[model-resolveModel]] · [[persistence-listThreads]] · [[title-GenerateTitleArgs]] · [[@hamafx-ai]]
 
 
 ### 📥 Depended On By (1)

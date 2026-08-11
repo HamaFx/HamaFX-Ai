@@ -38,7 +38,7 @@ dv.table(
 - [[threads-MockThread]] *(1↖ 1↗)*
 - [[users-MockUser]] *(1↖ 1↗)*
 - [[vitest-base-createProjectConfig]] *(0↖ 1↗)*
-- [[index_tool-architecture-explorer|index]] *(0↖ 1↗)*
+- [[index-makeCandles]] *(0↖ 1↗)*
 - [[db-TestDbHandle]] *(0↖ 1↗)*
 - [[fetch-MockFetchHandler]] *(1↖ 1↗)*
 - [[llm-MockLlmResponse]] *(1↖ 1↗)*

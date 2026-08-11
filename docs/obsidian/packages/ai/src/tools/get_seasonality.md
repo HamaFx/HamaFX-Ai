@@ -36,7 +36,7 @@ Per-month / per-weekday / per-hour return seasonality for a symbol. Returns medi
 
 
 ### 📥 Depended On By (1)
-[[market]]
+[[market-toolRegistry]]
 
 
 

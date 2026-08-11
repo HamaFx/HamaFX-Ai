@@ -32,7 +32,7 @@ Module: packages/ai/src/tools/market.ts
 
 
 ### 📤 Depends On (12)
-[[get_price]] · [[get_candles]] · [[get_indicators]] · [[get_market_structure]] · [[get_correlation]] · [[get_co_t]] · [[get_intermarket]] · [[get_intermarket_resonance]] · [[get_session_levels]] · [[get_seasonality]] · [[registry-ToolPlugin]] · [[@hamafx-ai]]
+[[get_price]] · [[get_candles]] · [[get_indicators]] · [[get_market_structure]] · [[get_correlation]] · [[get_cot]] · [[get_intermarket]] · [[get_intermarket_resonance]] · [[get_session_levels]] · [[get_seasonality]] · [[registry-ToolPlugin]] · [[@hamafx-ai]]
 
 
 

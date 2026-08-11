@@ -45,6 +45,17 @@ Module: packages/data/src/cache/index.ts
 - `getDefaultCacheSync`
 - `setDefaultCache`
 - `clearAllTenantCaches`
+- `MemoryCache`
+- `RedisCache`
+- `cacheKey`
+- `cacheTag`
+- `type CacheResource`
+- `type KeyParts`
+- `PRICE_TTL`
+- `candleTtl`
+- `NEWS_LIST_TTL`
+- `NEWS_ARTICLE_TTL`
+- `CALENDAR_DAY_TTL`
 
 
 ## 🔍 Explore

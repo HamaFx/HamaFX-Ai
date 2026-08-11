@@ -2,9 +2,9 @@
 type: package
 package: "tool:architecture-explorer"
 path: "tools/architecture-explorer"
-incoming: 16
+incoming: 17
 outgoing: 0
-connections: 16
+connections: 17
 risk: medium
 layer: package
 tags: [type/package, tool:architecture-explorer, layer/package, risk/medium]
@@ -23,17 +23,17 @@ Package: tool:architecture-explorer
 
 | | Count |
 |---|---|
-| Incoming dependencies | 16 |
+| Incoming dependencies | 17 |
 | Outgoing dependencies | 0 |
-| Total connections | 16 |
+| Total connections | 17 |
 | Risk level | **MEDIUM** |
 | Layer | `package` |
 | Package tag | `#tool:architecture-explorer` |
 
 
 
-### 📥 Depended On By (16)
-[[advanced-features-analyzeImpact]] · [[analysis-analyzeArchitecture]] · [[analyzer-Analyzer]] · [[extractor-extractFile]] · [[git-history-scanGitHistory]] · [[graph-model-GraphModel]] · [[html-generator-generateHtml]] · [[html-template-getHtmlTemplate]] · [[index_tool-architecture-explorer|index]] · [[json-generator-generateArchitectureJson]] · [[knowledge-generator-KnowledgeOutput]] · [[obsidian-generator-generateObsidianVault]] · [[scanner-ScannedFile]] · [[scripts-getScripts]] · [[styles-getStyles]] · [[types-NodeType]]
+### 📥 Depended On By (17)
+[[advanced-features-analyzeImpact]] · [[analysis-analyzeArchitecture]] · [[analyzer-Analyzer]] · [[extractor-extractFile]] · [[git-history-scanGitHistory]] · [[graph-model-GraphModel]] · [[html-generator-generateHtml]] · [[html-template-getHtmlTemplate]] · [[index_tool-architecture-explorer|index]] · [[json-generator-generateArchitectureJson]] · [[knowledge-generator-KnowledgeOutput]] · [[obsidian-generator-generateObsidianVault]] · [[scanner-ScannedFile]] · [[scripts-getScripts]] · [[styles-getStyles]] · [[types-NodeType]] · [[extractor.test-TOOL_NAMES]]
 
 
 

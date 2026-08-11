@@ -32,7 +32,7 @@ Module: packages/ai/src/multi-agent/agents/base-agent.ts
 
 
 ### 📤 Depends On (9)
-[[model]] · [[cost-DEFAULT_TURN_ESTIMATE_USD]] · [[tool-context-ToolEnv]] · [[db-getDb]] · [[telemetry-telemetryConfig]] · [[types-AnalysisMode]] · [[context-BuildContextArgs]] · [[agent-model-tierToDomain]] · [[@hamafx-ai]]
+[[model-resolveModel]] · [[cost-DEFAULT_TURN_ESTIMATE_USD]] · [[tool-context-ToolEnv]] · [[db-getDb]] · [[telemetry-telemetryConfig]] · [[types-AnalysisMode]] · [[context-BuildContextArgs]] · [[agent-model-tierToDomain]] · [[@hamafx-ai]]
 
 
 ### 📥 Depended On By (6)

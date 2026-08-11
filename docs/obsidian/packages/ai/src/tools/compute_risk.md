@@ -36,7 +36,7 @@ Copyright 2026 HamaFX
 
 
 ### 📥 Depended On By (4)
-[[analysis]] · [[convene_committee]] · [[compute-risk.test]] · [[ai-data.integration.test]]
+[[analysis-toolRegistry]] · [[convene_committee]] · [[compute-risk.test]] · [[ai-data.integration.test]]
 
 
 

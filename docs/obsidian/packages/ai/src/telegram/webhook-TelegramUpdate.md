@@ -32,7 +32,7 @@ Module: packages/ai/src/telegram/webhook.ts
 
 
 ### 📤 Depends On (9)
-[[@hamafx-shared]] · [[agent-runChat]] · [[@hamafx-db]] · [[db-getDb]] · [[index_tool-architecture-explorer|index]] · [[client-TelegramApiError]] · [[idempotency-isDuplicateUpdate]] · [[rate-limiter-RateLimitResult]] · [[@hamafx-ai]]
+[[@hamafx-shared]] · [[agent-runChat]] · [[@hamafx-db]] · [[db-getDb]] · [[index-BotDispatcher]] · [[client-TelegramApiError]] · [[idempotency-isDuplicateUpdate]] · [[rate-limiter-RateLimitResult]] · [[@hamafx-ai]]
 
 
 

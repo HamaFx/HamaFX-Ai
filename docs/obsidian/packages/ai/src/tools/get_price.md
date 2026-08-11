@@ -36,7 +36,7 @@ Copyright 2026 HamaFX
 
 
 ### 📥 Depended On By (3)
-[[market]] · [[get-price.test]] · [[ai-data.integration.test]]
+[[market-toolRegistry]] · [[get-price.test]] · [[ai-data.integration.test]]
 
 
 

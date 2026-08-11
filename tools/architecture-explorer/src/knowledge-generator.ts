@@ -5,11 +5,8 @@
 // Generates: architecture.json, features.json, dependencies.json,
 // api.json, database.json, ai.json, flows.json, knowledge.md
 
-import * as fs from 'node:fs';
-import * as path from 'node:path';
 import { GraphModel } from './graph-model.js';
 import type { ArchitectureModel, ParsedFile } from './types.js';
-import type { ScannedFile } from './scanner.js';
 
 export interface KnowledgeOutput {
   architecture: object;
@@ -52,11 +49,11 @@ function generateArchitecture(model: ArchitectureModel, nodes: ReturnType<GraphM
   }));
 
   const layers = [
-    { name: 'Presentation', packages: ['@hamafx/web'], responsibility: 'Next.js 16 PWA, React 19 UI, TradingView charts, 96 API routes' },
+    { name: 'Presentation', packages: ['@hamafx/web'], responsibility: `Next.js 16 PWA, React 19 UI, TradingView charts, ${nodes.filter(n => n.type === 'api_route').length} API routes` },
     { name: 'API Gateway', packages: ['@hamafx/web'], responsibility: 'NextAuth JWT, CSRF, rate limiting, request proxy' },
     { name: 'AI Agent', packages: ['@hamafx/ai'], responsibility: 'Chat routing, registered tools, multi-agent committee, memory, citations' },
     { name: 'Data', packages: ['@hamafx/data'], responsibility: 'Provider failover, caching (SWR), throttling, BiQuote→Finnhub' },
-    { name: 'Persistence', packages: ['@hamafx/db'], responsibility: 'Drizzle ORM, 48+ tables, Postgres + PGlite' },
+    { name: 'Persistence', packages: ['@hamafx/db'], responsibility: `Drizzle ORM, ${nodes.filter(n => n.type === 'table').length} tables, Postgres + PGlite` },
     { name: 'Indicators', packages: ['@hamafx/indicators'], responsibility: 'SMA, EMA, RSI, MACD, Bollinger, SMC concepts' },
     { name: 'Worker', packages: ['@hamafx/worker'], responsibility: 'SignalR consumer, TickBuffer, Candle1mAggregator, 7+ cron jobs' },
     { name: 'Shared', packages: ['@hamafx/shared'], responsibility: 'Zod schemas, types, env validation, encryption, logging, DI container' },
@@ -113,7 +110,7 @@ function generateFeatures() {
     { name: 'Background Jobs', package: '@hamafx/worker', modules: ['scheduler.ts', 'jobs/'], description: '7+ cron jobs: briefings, snapshots, COT, weekly review, embedding backfill, candle flush' },
     { name: 'Push Notifications', package: '@hamafx/ai', modules: ['push/send.ts', 'push/persistence.ts'], description: 'Web Push API with VAPID, subscription management' },
     { name: 'Bot Platform', package: '@hamafx/ai', modules: ['bot/', 'telegram/'], description: 'Telegram bot with commands, link codes, idempotency, rate limiting' },
-    { name: 'BYOK Provider Registry', package: '@hamafx/ai', modules: ['byok-providers.ts', '_providers/'], description: '9 AI providers with Bring-Your-Own-Key support, fallback chain, model catalog' },
+    { name: 'BYOK Provider Registry', package: '@hamafx/ai', modules: ['byok-providers.ts', '_providers/'], description: 'Bring-Your-Own-Key support for the live provider registry, fallback chain, and model catalog' },
     { name: 'Social Sentiment', package: '@hamafx/ai', modules: ['sentiment/'], description: 'Social media sentiment integration for contrarian signals' },
   ];
 
@@ -142,7 +139,7 @@ function generateApi(parsedFiles: Map<string, ParsedFile>) {
   for (const [, parsed] of parsedFiles) {
     if (!parsed.isApiRoute || !parsed.routePath) continue;
     routes.push({
-      methods: (parsed.httpMethod || 'GET').split(',').map(m => m.trim()).filter(Boolean),
+      methods: parsed.httpMethods.length > 0 ? parsed.httpMethods : ['GET'],
       path: parsed.routePath,
       handler: parsed.relativePath,
       package: parsed.pkg,
@@ -329,7 +326,7 @@ function generateKnowledgeMarkdown(
 **HamaFX-Ai** is an open-source (Apache-2.0), single-user BYOK, chat-driven AI trading copilot for gold, forex, and supported crypto instruments: **XAUUSD** (primary), canonical forex pairs, and Binance crypto pairs.
 
 - **Stack**: Next.js 16 (App Router) + React 19 + TypeScript (strict)
-- **AI**: Vercel AI SDK v5, Google Vertex AI + 10-provider BYOK registry
+- **AI**: Vercel AI SDK v5, Google Vertex AI + the live BYOK provider registry
 - **Database**: PostgreSQL (Supabase) + pgvector, Drizzle ORM (${tableNodes.length}+ tables)
 - **Auth**: NextAuth.js v5 (Credentials provider, JWT strategy; owner-first single-user OSS mode)
 - **Charts**: TradingView lightweight-charts v5

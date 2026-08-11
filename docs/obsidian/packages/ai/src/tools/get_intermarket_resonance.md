@@ -36,7 +36,7 @@ Evaluate Gold (XAUUSD) or major currencies
 
 
 ### 📥 Depended On By (2)
-[[market]] · [[get-macro-resonance.test]]
+[[market-toolRegistry]] · [[get-macro-resonance.test]]
 
 
 

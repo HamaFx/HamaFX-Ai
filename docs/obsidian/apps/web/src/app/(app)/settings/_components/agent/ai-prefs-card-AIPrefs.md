@@ -32,7 +32,7 @@ Module: apps/web/src/app/(app)/settings/_components/agent/ai-prefs-card.tsx
 
 
 ### 📤 Depends On (2)
-[[actions]] · [[@hamafx-web]]
+[[actions-setupTwoFactorAction]] · [[@hamafx-web]]
 
 
 ### 📥 Depended On By (2)

@@ -32,7 +32,7 @@ Module: packages/ai/src/journal/review.ts
 
 
 ### 📤 Depends On (7)
-[[@hamafx-shared]] · [[@hamafx-db]] · [[persistence-CreateJournalInput]] · [[model]] · [[telemetry-telemetryConfig]] · [[cost-DEFAULT_TURN_ESTIMATE_USD]] · [[@hamafx-ai]]
+[[@hamafx-shared]] · [[@hamafx-db]] · [[persistence-CreateJournalInput]] · [[model-resolveModel]] · [[telemetry-telemetryConfig]] · [[cost-DEFAULT_TURN_ESTIMATE_USD]] · [[@hamafx-ai]]
 
 
 

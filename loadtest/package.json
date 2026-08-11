@@ -22,6 +22,9 @@
     "soak:write": "k6 run tests/soak-write-mix.ts",
     "seed": "node lib/seed/seed-users.mjs"
   },
+  "dependencies": {
+    "bcryptjs": "^3.0.3"
+  },
   "devDependencies": {
     "@types/k6": "^0.57.0",
     "typescript": "^7.0.2"

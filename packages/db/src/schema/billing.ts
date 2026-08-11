@@ -24,8 +24,8 @@
 //   billing_webhook_dlq — replayable failures after signature verification
 //   billing_checkout_attempts — tenant-scoped checkout idempotency claims
 //
-// See docs/review/10-billing-nowpayments-integration-plan.md for the full
-// integration design and acceptance criteria.
+// See docs/BILLING-WEBHOOK-SAFETY-GATE.md for the live operational
+// acceptance criteria.
 
 import { sql } from 'drizzle-orm';
 import {

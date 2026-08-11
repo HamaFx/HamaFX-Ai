@@ -32,7 +32,7 @@ Module: apps/web/src/app/(app)/settings/_components/appearance/appearance-card.t
 
 
 ### 📤 Depends On (3)
-[[actions]] · [[settings-row-SettingsRow]] · [[@hamafx-web]]
+[[actions-setupTwoFactorAction]] · [[settings-row-SettingsRow]] · [[@hamafx-web]]
 
 
 ### 📥 Depended On By (1)

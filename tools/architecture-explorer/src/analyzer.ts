@@ -7,7 +7,7 @@
 import * as path from 'node:path';
 import type { ArchNode, EdgeType } from './types.js';
 import type { ParsedFile, ImportInfo } from './types.js';
-import type { ScannedFile } from './scanner.js';
+import { getScannedPackagePath, type ScannedFile } from './scanner.js';
 import { GraphModel } from './graph-model.js';
 
 export class Analyzer {
@@ -21,6 +21,7 @@ export class Analyzer {
     scannedFiles: ScannedFile[],
     parsedFiles: Map<string, ParsedFile>,
     packageNames: Set<string>,
+    packagePaths: ReadonlyMap<string, string>,
   ): GraphModel {
     this.graph.clear();
     this.nodeByPath.clear();
@@ -34,7 +35,7 @@ export class Analyzer {
         type: 'package',
         name: pkgName,
         pkg: pkgName,
-        path: pkgName.replace('@hamafx/', 'packages/').replace('tool:', 'tools/'),
+        path: getScannedPackagePath(packagePaths, pkgName),
         description: `Package: ${pkgName}`,
       });
       this.pkgNodeIds.set(pkgName, id);
@@ -63,7 +64,7 @@ export class Analyzer {
       if (parsed.toolName) this.nodeByName.set(parsed.toolName, id);
       if (parsed.agentName) this.nodeByName.set(parsed.agentName, id);
       if (parsed.isApiRoute && parsed.routePath) {
-        this.nodeByName.set(`${parsed.httpMethod ?? 'GET'} ${parsed.routePath}`, id);
+        this.nodeByName.set(`${parsed.httpMethods.join(',')} ${parsed.routePath}`, id);
       }
     }
 
@@ -103,17 +104,17 @@ export class Analyzer {
       if (!parsed.isApiRoute || !parsed.routePath) continue;
       const routeNodeId = this.graph.addNode({
         type: 'api_route',
-        name: `${parsed.httpMethod ?? 'GET'} ${parsed.routePath}`,
+        name: `${parsed.httpMethods.join(',')} ${parsed.routePath}`,
         pkg: parsed.pkg,
         path: parsed.relativePath,
-        description: `API Route: ${parsed.httpMethod ?? 'GET'} ${parsed.routePath}`,
+        description: `API Route: ${parsed.httpMethods.join(',')} ${parsed.routePath}`,
         metadata: {
-          httpMethod: parsed.httpMethod,
+          httpMethods: parsed.httpMethods,
           routePath: parsed.routePath,
           exports: parsed.exports.map((e) => e.name),
         },
       });
-      this.nodeByName.set(`${parsed.httpMethod ?? 'GET'} ${parsed.routePath}`, routeNodeId);
+      this.nodeByName.set(`${parsed.httpMethods.join(',')} ${parsed.routePath}`, routeNodeId);
 
       // Link route to its handler file
       const handlerId = this.moduleNodeIds.get(parsed.relativePath);
@@ -262,7 +263,7 @@ function determineNodeType(file: ScannedFile, parsed: ParsedFile): 'module' | 'a
 
 function getDisplayName(file: ScannedFile, parsed: ParsedFile): string {
   if (parsed.isApiRoute && parsed.routePath) {
-    return `${parsed.httpMethod ?? 'GET'} ${parsed.routePath}`;
+    return `${parsed.httpMethods.join(',')} ${parsed.routePath}`;
   }
   if (parsed.toolName) return parsed.toolName;
   if (parsed.agentName) return parsed.agentName;
@@ -275,7 +276,7 @@ function getDisplayName(file: ScannedFile, parsed: ParsedFile): string {
 
 function getNodeDescription(file: ScannedFile, parsed: ParsedFile): string {
   if (parsed.toolDescription) return parsed.toolDescription;
-  if (parsed.isApiRoute) return `API ${parsed.httpMethod ?? 'handler'} at ${parsed.routePath ?? file.relativePath}`;
+  if (parsed.isApiRoute) return `API ${parsed.httpMethods.join(',')} at ${parsed.routePath ?? file.relativePath}`;
   if (parsed.isAgent) return `Multi-agent specialist: ${parsed.agentName ?? file.name}`;
   if (parsed.isComponent) return `React component: ${path.basename(file.relativePath, file.ext)}`;
   if (parsed.isDrizzleSchema) return `Database schema (${parsed.tableDefs.length} tables)`;
@@ -291,7 +292,7 @@ function getNodeMetadata(file: ScannedFile, parsed: ParsedFile): Record<string, 
   if (parsed.toolName) meta.toolName = parsed.toolName;
   if (parsed.agentName) meta.agentName = parsed.agentName;
   if (parsed.routePath) meta.routePath = parsed.routePath;
-  if (parsed.httpMethod) meta.httpMethod = parsed.httpMethod;
+  if (parsed.httpMethods.length > 0) meta.httpMethods = parsed.httpMethods;
   if (parsed.tableDefs.length > 0) meta.tableCount = parsed.tableDefs.length;
   return meta;
 }

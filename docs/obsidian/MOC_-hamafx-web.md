@@ -256,7 +256,7 @@ dv.table(
 - [[next.config-withSentryConfig]] *(0↖ 1↗)*
 - [[postcss.config-default]] *(0↖ 1↗)*
 - [[d3.v7.min]] *(0↖ 1↗)*
-- [[bundle-size-guard]] *(0↖ 1↗)*
+- [[bundle-size-guard-matchesPattern]] *(0↖ 1↗)*
 - [[generate-icons]] *(0↖ 1↗)*
 - [[generate-sw-TEMPLATE_FILE]] *(0↖ 1↗)*
 - [[migrate-runtime]] *(0↖ 1↗)*
@@ -306,7 +306,7 @@ dv.table(
 - [[sortable-symbol-row-SymbolItem]] *(1↖ 1↗)*
 - [[telegram-link-card-TelegramLinkCard]] *(1↖ 1↗)*
 - [[test-telegram-button-TestTelegramButton]] *(1↖ 1↗)*
-- [[actions]] *(17↖ 1↗)*
+- [[actions-setupTwoFactorAction]] *(17↖ 1↗)*
 - [[agent-model-override-form-AgentModelOverrideForm]] *(1↖ 1↗)*
 - [[analysis-mode-form-AnalysisModeForm]] *(1↖ 1↗)*
 - [[loading-AgentLoading]] *(0↖ 1↗)*
@@ -434,7 +434,7 @@ dv.table(
 - [[POST--api-admin-test-telegram]] *(1↖ 2↗)*
 - [[POST--api-billing-checkout]] *(1↖ 2↗)*
 - [[GET--api-billing-portal]] *(1↖ 2↗)*
-- [[GET--api-billing-webhook]] *(1↖ 2↗)*
+- [[POST--api-billing-webhook]] *(1↖ 2↗)*
 - [[POST--api-bot-link-code]] *(1↖ 2↗)*
 - [[GET--api-bot-status]] *(1↖ 2↗)*
 - [[POST--api-bot-unlink]] *(1↖ 2↗)*
@@ -457,7 +457,7 @@ dv.table(
 - [[DELETE--api-settings-symbols--symbol]] *(1↖ 2↗)*
 - [[POST--api-settings-test-market-provider]] *(1↖ 2↗)*
 - [[GET--api-settings-usage-by-provider]] *(1↖ 2↗)*
-- [[GET--api-telegram-webhook]] *(1↖ 2↗)*
+- [[GET,POST--api-telegram-webhook]] *(1↖ 2↗)*
 - [[GET--api-admin-architecture-explorer]] *(1↖ 1↗)*
 - [[GET,POST--api-admin-features]] *(1↖ 1↗)*
 - [[GET--api-admin-impersonate-probe]] *(1↖ 1↗)*
@@ -467,10 +467,10 @@ dv.table(
 - [[POST--api-alerts-preview]] *(1↖ 1↗)*
 - [[GET--api-alerts-preview-digest]] *(1↖ 1↗)*
 - [[GET,POST--api-alerts]] *(1↖ 1↗)*
-- [[GET--api-auth--nextauth-]] *(1↖ 1↗)*
+- [[GET,POST--api-auth--nextauth-]] *(1↖ 1↗)*
 - [[GET--api-calendar]] *(1↖ 1↗)*
 - [[GET,DELETE,PATCH--api-chat-threads--id]] *(1↖ 1↗)*
-- [[GET--api-chat-threads]] *(1↖ 1↗)*
+- [[GET,POST--api-chat-threads]] *(1↖ 1↗)*
 - [[GET--api-cron-cleanup-uploads]] *(1↖ 1↗)*
 - [[GET,PATCH,DELETE--api-journal--id]] *(1↖ 1↗)*
 - [[GET,POST--api-journal]] *(1↖ 1↗)*
@@ -507,11 +507,11 @@ dv.table(
 - [[POST--api-alerts-preview]] *(0↖ 1↗)*
 - [[GET--api-alerts-preview-digest]] *(0↖ 1↗)*
 - [[GET,POST--api-alerts]] *(0↖ 1↗)*
-- [[GET--api-auth--nextauth-]] *(0↖ 1↗)*
+- [[GET,POST--api-auth--nextauth-]] *(0↖ 1↗)*
 - [[GET--api-auth-verify-email]] *(0↖ 1↗)*
 - [[POST--api-billing-checkout]] *(0↖ 1↗)*
 - [[GET--api-billing-portal]] *(0↖ 1↗)*
-- [[GET--api-billing-webhook]] *(0↖ 1↗)*
+- [[POST--api-billing-webhook]] *(0↖ 1↗)*
 - [[POST--api-bot-link-code]] *(0↖ 1↗)*
 - [[GET--api-bot-status]] *(0↖ 1↗)*
 - [[POST--api-bot-unlink]] *(0↖ 1↗)*
@@ -524,7 +524,7 @@ dv.table(
 - [[GET--api-chat-threads--id-summary]] *(0↖ 1↗)*
 - [[POST--api-chat-threads-bulk-delete]] *(0↖ 1↗)*
 - [[POST--api-chat-threads-fork]] *(0↖ 1↗)*
-- [[GET--api-chat-threads]] *(0↖ 1↗)*
+- [[GET,POST--api-chat-threads]] *(0↖ 1↗)*
 - [[GET--api-cron-alerts]] *(0↖ 1↗)*
 - [[GET--api-cron-billing-dlq]] *(0↖ 1↗)*
 - [[GET--api-cron-briefings]] *(0↖ 1↗)*
@@ -577,7 +577,7 @@ dv.table(
 - [[GET--api-settings-usage-by-agent]] *(0↖ 1↗)*
 - [[GET--api-settings-usage-by-provider]] *(0↖ 1↗)*
 - [[GET,PUT,DELETE--api-settings-vision-model]] *(0↖ 1↗)*
-- [[GET--api-telegram-webhook]] *(0↖ 1↗)*
+- [[GET,POST--api-telegram-webhook]] *(0↖ 1↗)*
 - [[POST--api-upload]] *(0↖ 1↗)*
 
 ### 🧩 Component (105)
@@ -671,7 +671,7 @@ dv.table(
 - [[animated-number-AnimatedNumber]] *(0↖ 1↗)*
 - [[badge-BadgeTone]] *(0↖ 1↗)*
 - [[button-ButtonProps]] *(1↖ 1↗)*
-- [[drawer]] *(0↖ 1↗)*
+- [[drawer-Drawer]] *(0↖ 1↗)*
 - [[empty-state-EmptyState]] *(0↖ 1↗)*
 - [[field-Field]] *(0↖ 1↗)*
 - [[input-InputProps]] *(0↖ 1↗)*

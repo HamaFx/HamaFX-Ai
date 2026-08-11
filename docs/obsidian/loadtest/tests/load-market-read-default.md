@@ -40,6 +40,7 @@ Module: loadtest/tests/load-market-read.ts
 ## 📦 Exports
 - `options`
 - `setup`
+- `handleSummary`
 - `default`
 
 

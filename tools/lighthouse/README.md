@@ -67,7 +67,7 @@ node tools/lighthouse/run.mjs \
 
 ## Waivers
 
-Routes that genuinely cannot reach the thresholds are documented in [`docs/lighthouse/waivers.md`](../../docs/lighthouse/waivers.md) with a one-paragraph justification per waived route-and-category pair. While any route is below threshold and not covered by a waiver, Phase 1 completion remains blocked.
+The runner reports every threshold miss directly in its timestamped summary. No waiver file is currently part of the live repository; treat any miss as an actionable failure rather than assuming it is waived.
 
 ## CI
 

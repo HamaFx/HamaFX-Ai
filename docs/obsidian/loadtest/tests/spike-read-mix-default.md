@@ -40,6 +40,7 @@ Module: loadtest/tests/spike-read-mix.ts
 ## 📦 Exports
 - `options`
 - `setup`
+- `handleSummary`
 - `default`
 
 

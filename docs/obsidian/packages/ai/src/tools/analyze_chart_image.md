@@ -32,11 +32,11 @@ Copyright 2026 HamaFX
 
 
 ### 📤 Depends On (8)
-[[@hamafx-db]] · [[db-getDb]] · [[@hamafx-shared]] · [[model]] · [[tool-context-ToolEnv]] · [[telemetry-telemetryConfig]] · [[@hamafx-ai]] · [[registry-ToolPlugin]]
+[[@hamafx-db]] · [[db-getDb]] · [[@hamafx-shared]] · [[model-resolveModel]] · [[tool-context-ToolEnv]] · [[telemetry-telemetryConfig]] · [[@hamafx-ai]] · [[registry-ToolPlugin]]
 
 
 ### 📥 Depended On By (1)
-[[analysis]]
+[[analysis-toolRegistry]]
 
 
 

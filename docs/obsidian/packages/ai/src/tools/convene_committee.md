@@ -32,11 +32,11 @@ Convene a Multi-Agent Trading Committee (Economist, Technician, Risk Manager) to
 
 
 ### 📤 Depends On (10)
-[[@hamafx-shared]] · [[model]] · [[tool-context-ToolEnv]] · [[telemetry-telemetryConfig]] · [[analyze_fundamental]] · [[analyze_technical]] · [[get_journal_stats]] · [[compute_risk]] · [[@hamafx-ai]] · [[registry-ToolPlugin]]
+[[@hamafx-shared]] · [[model-resolveModel]] · [[tool-context-ToolEnv]] · [[telemetry-telemetryConfig]] · [[analyze_fundamental]] · [[analyze_technical]] · [[get_journal_stats]] · [[compute_risk]] · [[@hamafx-ai]] · [[registry-ToolPlugin]]
 
 
 ### 📥 Depended On By (1)
-[[system]]
+[[system-toolRegistry]]
 
 
 

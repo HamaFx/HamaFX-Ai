@@ -32,7 +32,7 @@ Module: packages/ai/src/model-chat.ts
 
 
 ### 📤 Depends On (7)
-[[@hamafx-db]] · [[@hamafx-shared]] · [[model-circuit-breaker-recordModelSuccess]] · [[byok-providers]] · [[vertex-factory-ResolveModelEnv]] · [[model-helpers-PROVIDER_PRIORITY]] · [[@hamafx-ai]]
+[[@hamafx-db]] · [[@hamafx-shared]] · [[model-circuit-breaker-recordModelSuccess]] · [[byok-providers-BYOK_PROVIDERS]] · [[vertex-factory-ResolveModelEnv]] · [[model-helpers-PROVIDER_PRIORITY]] · [[@hamafx-ai]]
 
 
 ### 📥 Depended On By (1)

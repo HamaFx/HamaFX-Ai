@@ -32,7 +32,7 @@ Module: apps/web/src/app/(app)/settings/_components/data/preferences-card.tsx
 
 
 ### 📤 Depends On (5)
-[[@hamafx-shared]] · [[settings-row-SettingsRow]] · [[row-divider-RowDivider]] · [[actions]] · [[@hamafx-web]]
+[[@hamafx-shared]] · [[settings-row-SettingsRow]] · [[row-divider-RowDivider]] · [[actions-setupTwoFactorAction]] · [[@hamafx-web]]
 
 
 ### 📥 Depended On By (1)

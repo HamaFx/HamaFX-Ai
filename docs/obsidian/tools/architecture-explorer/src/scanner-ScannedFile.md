@@ -2,9 +2,9 @@
 type: module
 package: "tool:architecture-explorer"
 path: "tools/architecture-explorer/src/scanner.ts"
-incoming: 7
+incoming: 5
 outgoing: 3
-connections: 10
+connections: 8
 risk: low
 layer: core
 tags: [type/module, tool:architecture-explorer, layer/core]
@@ -23,9 +23,9 @@ Module: tools/architecture-explorer/src/scanner.ts
 
 | | Count |
 |---|---|
-| Incoming dependencies | 7 |
+| Incoming dependencies | 5 |
 | Outgoing dependencies | 3 |
-| Total connections | 10 |
+| Total connections | 8 |
 | Risk level | **LOW** |
 | Layer | `core` |
 | Package tag | `#tool:architecture-explorer` |
@@ -36,13 +36,15 @@ Module: tools/architecture-explorer/src/scanner.ts
 
 
 ### 📥 Depended On By (4)
-[[analyzer-Analyzer]] · [[extractor-extractFile]] · [[index_tool-architecture-explorer|index]] · [[knowledge-generator-KnowledgeOutput]]
+[[analyzer-Analyzer]] · [[extractor-extractFile]] · [[index_tool-architecture-explorer|index]] · [[json-generator-generateArchitectureJson]]
 
 
 
 ## 📦 Exports
 - `ScannedFile`
 - `getPackageName`
+- `getPackagePath`
+- `getScannedPackagePath`
 - `ScanResult`
 - `scanProject`
 - `filterByExt`

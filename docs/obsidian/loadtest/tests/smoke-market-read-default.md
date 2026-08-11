@@ -40,6 +40,7 @@ Module: loadtest/tests/smoke-market-read.ts
 ## 📦 Exports
 - `options`
 - `setup`
+- `handleSummary`
 - `default`
 
 

@@ -7,6 +7,7 @@ import { GraphModel } from './graph-model.js';
 import { analyzeArchitecture } from './analysis.js';
 import { type ViewSummary, generateSmartSummaries, generateRecommendations, getPluginHooks } from './advanced-features.js';
 import { scanGitHistory, buildEvolutionTimeline, buildNodePathMap } from './git-history.js';
+import { getScannedPackagePath } from './scanner.js';
 
 const ALL_NODE_TYPES = [
   'package', 'app', 'module', 'api_route', 'component', 'tool',
@@ -149,6 +150,7 @@ export function generateArchitectureJson(
   graph: GraphModel,
   packageNames: Set<string>,
   rootDir: string,
+  packagePaths: ReadonlyMap<string, string>,
 ): ArchitectureModel {
   const analysis = analyzeArchitecture(graph);
   const packages = [...packageNames].map((name) => {
@@ -157,7 +159,7 @@ export function generateArchitectureJson(
     return {
       id: `pkg:${name.replace(/[@/]/g, '_')}`,
       name,
-      path: name.replace('@hamafx/', 'packages/').replace('tool:', 'tools/'),
+      path: getScannedPackagePath(packagePaths, name),
       type: 'package',
       description: `Package: ${name} (${allNodes.length} nodes)`,
       dependsOn: allNodes

@@ -36,7 +36,7 @@ Module: packages/ai/src/tools/registry.ts
 
 
 ### 📥 Depended On By (36)
-[[analysis]] · [[journal]] · [[market]] · [[system]] · [[analyze_chart_image]] · [[analyze_fundamental]] · [[analyze_technical]] · [[annotate_chart]] · [[compute_position_health]] · [[compute_risk]] · [[convene_committee]] · [[forecast_volatility]] · [[get_calendar]] · [[get_candles]] · [[get_correlation]] · [[get_co_t]] · [[get_indicators]] · [[get_intermarket_resonance]] · [[get_intermarket]] · [[get_journal_stats]]
+[[analysis-toolRegistry]] · [[journal-toolRegistry]] · [[market-toolRegistry]] · [[system-toolRegistry]] · [[analyze_chart_image]] · [[analyze_fundamental]] · [[analyze_technical]] · [[annotate_chart]] · [[compute_position_health]] · [[compute_risk]] · [[convene_committee]] · [[forecast_volatility]] · [[get_calendar]] · [[get_candles]] · [[get_correlation]] · [[get_cot]] · [[get_indicators]] · [[get_intermarket_resonance]] · [[get_intermarket]] · [[get_journal_stats]]
 > ... and 16 more
 
 

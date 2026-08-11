@@ -32,7 +32,7 @@ Module: packages/shared/test/schemas.test.ts
 
 
 ### 📤 Depends On (3)
-[[vitest-installServerOnlyStub]] · [[index_tool-architecture-explorer|index]] · [[@hamafx-shared]]
+[[vitest-installServerOnlyStub]] · [[index-isTextPart]] · [[@hamafx-shared]]
 
 
 

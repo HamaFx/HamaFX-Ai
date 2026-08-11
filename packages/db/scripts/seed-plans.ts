@@ -16,8 +16,8 @@
 
 // Seed the three billing plans: Free ($0), Pro ($15/mo), Enterprise ($49/mo).
 //
-// Amounts are placeholders — the owner must confirm actual pricing
-// (see docs/review/10-billing-nowpayments-integration-plan.md §7 Open Questions #1).
+// Amounts are placeholders — the owner must confirm actual pricing before
+// enabling paid plans. See docs/BILLING-WEBHOOK-SAFETY-GATE.md.
 //
 // Run with:
 //   pnpm --filter @hamafx/db tsx scripts/seed-plans.ts

@@ -40,6 +40,7 @@ Module: loadtest/tests/stress-write-mix.ts
 ## 📦 Exports
 - `options`
 - `setup`
+- `handleSummary`
 - `default`
 
 

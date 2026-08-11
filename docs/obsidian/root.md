@@ -1,7 +1,7 @@
 ---
 type: package
 package: "root"
-path: "root"
+path: "."
 incoming: 2
 outgoing: 0
 connections: 2
@@ -13,7 +13,7 @@ aliases: [root]
 
 # 📦 root
 
-> **Package** · `root` · `root`
+> **Package** · `root` · `.`
 
 
 Package: root

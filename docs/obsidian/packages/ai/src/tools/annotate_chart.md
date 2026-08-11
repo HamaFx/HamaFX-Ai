@@ -36,7 +36,7 @@ Compute chart annotations (swings, BOS/CHoCH, FVG, order blocks, liquidity sweep
 
 
 ### 📥 Depended On By (1)
-[[analysis]]
+[[analysis-toolRegistry]]
 
 
 

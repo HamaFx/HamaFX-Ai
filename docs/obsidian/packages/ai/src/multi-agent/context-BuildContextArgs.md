@@ -44,6 +44,7 @@ Module: packages/ai/src/multi-agent/context.ts
 - `BuildContextArgs`
 - `buildSharedContext`
 - `buildSharedSystemPrompt`
+- `extractUserMessageText`
 
 
 ## 🔍 Explore

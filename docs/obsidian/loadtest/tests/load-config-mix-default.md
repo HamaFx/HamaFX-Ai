@@ -40,6 +40,7 @@ Module: loadtest/tests/load-config-mix.ts
 ## 📦 Exports
 - `options`
 - `setup`
+- `handleSummary`
 - `default`
 
 

@@ -53,6 +53,7 @@ Module: packages/db/src/client.ts
 - `checkDbHealth`
 - `getAdminDb`
 - `closeAdminDb`
+- `schema`
 
 
 ## 🔍 Explore

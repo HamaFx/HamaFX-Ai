@@ -31,7 +31,7 @@
 | Charts | TradingView lightweight-charts v5 |
 | Tests | Vitest (228 test files). Playwright E2E (16 spec files). |
 | Lint | ESLint flat config in `packages/config/eslint` |
-| TypeScript | Strict mode. `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess` |
+| TypeScript | Strict mode with `noUncheckedIndexedAccess`; the web app currently opts out of `exactOptionalPropertyTypes` for compatibility |
 | AI Tools | 32 registered tool definitions in `packages/ai/src/tools/` |
 | Architecture Explorer | `tools/architecture-explorer/` — auto-generates interactive HTML, JSON model, Obsidian vault, and AI knowledge artifacts |
 | Request proxy | 190 lines. Handles auth, CSRF, CSP, request-id |
@@ -427,4 +427,4 @@ The project uses **auto-generated documentation** wherever possible. Manual docs
 | `docs/10-security.md` | Security practices & rationale |
 | `docs/INCIDENT-RESPONSE.md` | Incident runbook |
 | `docs/BILLING-WEBHOOK-SAFETY-GATE.md` | Operational safety procedure |
-| `docs/audit/solid-findings.md` | Historical audit record |
+| `cleanup-audit.md` | Historical audit record |

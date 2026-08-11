@@ -32,7 +32,7 @@ Module: packages/ai/src/catalogue.ts
 
 
 ### 📤 Depends On (4)
-[[@hamafx-db]] · [[@hamafx-shared]] · [[index_tool-architecture-explorer|index]] · [[@hamafx-ai]]
+[[@hamafx-db]] · [[@hamafx-shared]] · [[index-toolRegistry]] · [[@hamafx-ai]]
 
 
 

@@ -58,7 +58,7 @@
       "file": "packages/ai/src/tools/get-correlation.ts"
     },
     {
-      "name": "get_co_t",
+      "name": "get_cot",
       "description": "Last N weeks of CFTC Commitment-of-Traders rows for one symbol (default XAUUSD). Use to answer",
       "file": "packages/ai/src/tools/get-cot.ts"
     },

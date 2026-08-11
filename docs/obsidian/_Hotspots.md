@@ -31,7 +31,7 @@ Files with the highest connectivity — changes here may cascade across the syst
 - 🔥 [[tool-context-ToolEnv]] — score: **69.1** *(in: 33, out: 7)*
 - 🔥 [[types-BotPlatform]] — score: **63.8** *(in: 32, out: 1)*
 - 🔥 [[symbols-SYMBOLS]] — score: **62.8** *(in: 31, out: 2)*
-- 🔥 [[model]] — score: **60.5** *(in: 30, out: 1)*
+- 🔥 [[model-resolveModel]] — score: **60.5** *(in: 30, out: 1)*
 - 🔥 [[auth-users]] — score: **60.5** *(in: 30, out: 1)*
 - 🔥 [[loadtest]] — score: **59.9** *(in: 30, out: 0)*
 - 🔥 [[environments-SessionCtx]] — score: **53.9** *(in: 26, out: 1)*
@@ -43,7 +43,7 @@ Files with the highest connectivity — changes here may cascade across the syst
 - 🔥 [[consumer-NormalizedTick]] — score: **41.6** *(in: 17, out: 5)*
 - 🔥 [[@hamafx-test-utils]] — score: **39.7** *(in: 18, out: 0)*
 - 🔥 [[agent-runChat]] — score: **38.9** *(in: 4, out: 34)*
-- 🔥 [[actions]] — score: **38.7** *(in: 17, out: 1)*
+- 🔥 [[actions-setupTwoFactorAction]] — score: **38.7** *(in: 17, out: 1)*
 
 ## DataviewJS — Live View
 ```dataviewjs

@@ -32,7 +32,7 @@ Module: packages/ai/src/title.ts
 
 
 ### 📤 Depends On (5)
-[[@hamafx-shared]] · [[model]] · [[tool-context-ToolEnv]] · [[telemetry-telemetryConfig]] · [[@hamafx-ai]]
+[[@hamafx-shared]] · [[model-resolveModel]] · [[tool-context-ToolEnv]] · [[telemetry-telemetryConfig]] · [[@hamafx-ai]]
 
 
 ### 📥 Depended On By (2)

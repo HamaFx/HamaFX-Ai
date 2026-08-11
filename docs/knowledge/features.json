@@ -107,7 +107,7 @@
         "byok-providers.ts",
         "_providers/"
       ],
-      "description": "9 AI providers with Bring-Your-Own-Key support, fallback chain, model catalog"
+      "description": "Bring-Your-Own-Key support for the live provider registry, fallback chain, and model catalog"
     },
     {
       "name": "Social Sentiment",

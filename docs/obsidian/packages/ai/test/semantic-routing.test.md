@@ -32,7 +32,7 @@ Module: packages/ai/test/semantic-routing.test.ts
 
 
 ### 📤 Depends On (4)
-[[vitest-installServerOnlyStub]] · [[semantic-routing-SemanticRoutingDomain]] · [[model]] · [[@hamafx-ai]]
+[[vitest-installServerOnlyStub]] · [[semantic-routing-SemanticRoutingDomain]] · [[model-resolveModel]] · [[@hamafx-ai]]
 
 
 

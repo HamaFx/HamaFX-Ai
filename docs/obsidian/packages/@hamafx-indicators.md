@@ -33,7 +33,7 @@ Package: @hamafx/indicators
 
 
 ### 📥 Depended On By (48)
-[[market-CandleResultDTO]] · [[evaluator-parseIndicatorSpec]] · [[compute-DailySnapshot]] · [[analyze_technical]] · [[annotate_chart]] · [[forecast_volatility]] · [[get_indicators]] · [[get_market_structure]] · [[replay_setup]] · [[verify_call]] · [[eslint.config-config]] · [[atr-atr]] · [[bollinger-BollingerPoint]] · [[index_tool-architecture-explorer|index]] · [[indicator-registry-IndicatorPlugin]] · [[macd-MacdPoint]] · [[moving-averages-sma]] · [[pivots-ClassicPivots]] · [[registry-ComputeArgs]] · [[rsi-rsi]]
+[[market-CandleResultDTO]] · [[evaluator-parseIndicatorSpec]] · [[compute-DailySnapshot]] · [[analyze_technical]] · [[annotate_chart]] · [[forecast_volatility]] · [[get_indicators]] · [[get_market_structure]] · [[replay_setup]] · [[verify_call]] · [[eslint.config-config]] · [[atr-atr]] · [[bollinger-BollingerPoint]] · [[index-sma]] · [[indicator-registry-IndicatorPlugin]] · [[macd-MacdPoint]] · [[moving-averages-sma]] · [[pivots-ClassicPivots]] · [[registry-ComputeArgs]] · [[rsi-rsi]]
 > ... and 28 more
 
 

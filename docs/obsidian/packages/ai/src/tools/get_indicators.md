@@ -36,7 +36,7 @@ Compute indicators (sma, ema, rsi, macd, atr, bollinger, pivots) on a (symbol, t
 
 
 ### 📥 Depended On By (1)
-[[market]]
+[[market-toolRegistry]]
 
 
 

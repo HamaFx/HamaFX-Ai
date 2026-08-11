@@ -32,7 +32,7 @@ Module: packages/ai/src/memory/thread-summary.ts
 
 
 ### 📤 Depends On (9)
-[[@hamafx-db]] · [[db-getDb]] · [[@hamafx-shared]] · [[cost-DEFAULT_TURN_ESTIMATE_USD]] · [[model]] · [[tool-context-ToolEnv]] · [[telemetry-telemetryConfig]] · [[persistence]] · [[@hamafx-ai]]
+[[@hamafx-db]] · [[db-getDb]] · [[@hamafx-shared]] · [[cost-DEFAULT_TURN_ESTIMATE_USD]] · [[model-resolveModel]] · [[tool-context-ToolEnv]] · [[telemetry-telemetryConfig]] · [[persistence-listThreads]] · [[@hamafx-ai]]
 
 
 ### 📥 Depended On By (1)

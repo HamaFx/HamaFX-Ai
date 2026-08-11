@@ -16,18 +16,24 @@ const NAMESPACE_IMPORT_RE = /import\s+(?:type\s+)?\*\s+as\s+(\w+)\s+from\s+['"](
 const TYPE_IMPORT_RE = /import\s+type\s+\{([^}]+)\}\s+from\s+['"]([^'"]+)['"]/g;
 
 const EXPORT_RE = /export\s+(?:const|let|var|function|class|interface|type|enum|async\s+function)\s+(\w+)/g;
+const DESTRUCTURED_EXPORT_RE = /export\s+(?:const|let|var)\s*\{([^}]+)\}\s*=/g;
 const EXPORT_DEFAULT_RE = /export\s+default\s+(?:function|class|const|let|var)?\s*(\w+)?/g;
 const CLASS_RE = /(?:export\s+)?class\s+(\w+)(?:\s+extends\s+(\w+))?(?:\s+implements\s+([^{]+))?\s*\{/g;
 const FUNCTION_RE = /(?:export\s+)?(?:async\s+)?function\s+(\w+)/g;
 const ASYNC_FUNCTION_RE = /export\s+async\s+function\s+(\w+)/g;
 
 const TABLE_RE = /export\s+const\s+(\w+)\s*=\s*pgTable\s*\(\s*(?:'([^']+)')?\s*,/g;
-const HTTP_METHOD_RE = /export\s+const\s+(GET|POST|PUT|PATCH|DELETE|OPTIONS|HEAD)\s*[=:]/g;
+const HTTP_METHOD_RE = /export\s+(?:const\s+)?(GET|POST|PUT|PATCH|DELETE|OPTIONS|HEAD)\s*[=:]|export\s+(?:async\s+)?function\s+(GET|POST|PUT|PATCH|DELETE|OPTIONS|HEAD)\b/g;
+const DESTRUCTURED_HANDLER_EXPORT_RE = /export\s+const\s*\{([^}]+)\}\s*=\s*[^;]+/g;
+const REEXPORT_HANDLER_RE = /export\s*\{([^}]+)\}(?:\s*from\s+['"][^'"]+['"])?\s*;/g;
+const HTTP_METHODS = new Set(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD']);
 const TOOL_REGISTER_RE = /toolRegistry\.register\s*\(\s*['"](\w+)['"]/;
 const TOOL_EXPORT_RE = /export\s+const\s+(\w+Tool)\s*[=:]/;
-const TOOL_REGISTER_ARRAY_RE = /\['(\w+)',\s*(\w+Tool)\]/g;
 const AGENT_CLASS_RE = /export\s+class\s+(\w*Agent)\s+extends\s+(\w+)/;
 const AGENT_NAME_RE = /readonly\s+name:\s*AgentName\s*=\s*['"](\w+)['"]/;
+
+const canonicalToolNamesByRoot = new Map<string, Set<string>>();
+const registeredToolNamesByRoot = new Map<string, Map<string, string>>();
 
 /** Read and parse a single source file. */
 export function extractFile(file: ScannedFile, rootDir: string): ParsedFile {
@@ -47,6 +53,7 @@ export function extractFile(file: ScannedFile, rootDir: string): ParsedFile {
     classes: extractClasses(content),
     functions: extractFunctions(content),
     isApiRoute: false,
+    httpMethods: [],
     isDrizzleSchema: false,
     tableDefs: [],
     isAiTool: false,
@@ -54,42 +61,42 @@ export function extractFile(file: ScannedFile, rootDir: string): ParsedFile {
     isComponent: false,
   };
 
-  // API route detection
   if (file.relativePath.includes('/api/') && file.name === 'route.ts') {
     result.isApiRoute = true;
     result.routePath = deriveRoutePath(file.relativePath);
-    result.httpMethod = extractHttpMethod(content);
+    result.httpMethods = extractHttpMethods(content);
   }
 
-  // Drizzle schema detection
   if (file.relativePath.includes('/schema/') && file.ext === '.ts') {
     result.isDrizzleSchema = true;
     result.tableDefs = extractTables(content);
   }
 
-  // AI tool detection — check for tool export or registration
-  if (file.relativePath.includes('/tools/') && file.name !== 'index.ts' && file.name !== 'registry.ts' && file.name !== 'by-domain.ts' && file.name !== 'with-telemetry.ts' && file.name !== 'mutation-guard.ts') {
-    // Check for direct tool export
+  if (
+    file.relativePath.includes('/tools/') &&
+    file.name !== 'index.ts' &&
+    file.name !== 'registry.ts' &&
+    file.name !== 'by-domain.ts' &&
+    file.name !== 'with-telemetry.ts' &&
+    file.name !== 'mutation-guard.ts'
+  ) {
     const toolExportMatch = content.match(TOOL_EXPORT_RE);
     if (toolExportMatch) {
       result.isAiTool = true;
-      // Derive tool name from the export name (e.g., getPriceTool → get_price)
-      const exportName = toolExportMatch[1]!.replace('Tool', '');
-      result.toolName = exportName.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '');
+      result.toolName = resolveCanonicalToolName(toolExportMatch[1]!, rootDir);
       result.toolDescription = extractToolDescription(content);
     }
-    // Check for registration in category files
+
     if (!result.isAiTool) {
       const registerMatch = content.match(TOOL_REGISTER_RE);
       if (registerMatch) {
         result.isAiTool = true;
-        result.toolName = registerMatch[1]!;
+        result.toolName = resolveCanonicalToolName(registerMatch[1]!, rootDir);
         result.toolDescription = extractToolDescription(content);
       }
     }
   }
 
-  // Agent detection
   if (file.relativePath.includes('/agents/') && file.name.endsWith('-agent.ts')) {
     const agentMatch = content.match(AGENT_CLASS_RE);
     if (agentMatch) {
@@ -97,12 +104,9 @@ export function extractFile(file: ScannedFile, rootDir: string): ParsedFile {
       result.agentName = agentMatch[1]!;
     }
     const nameMatch = content.match(AGENT_NAME_RE);
-    if (nameMatch && !result.agentName) {
-      result.agentName = nameMatch[1]!;
-    }
+    if (nameMatch && !result.agentName) result.agentName = nameMatch[1]!;
   }
 
-  // Component detection
   if (file.ext === '.tsx' && file.relativePath.includes('/components/')) {
     result.isComponent = true;
   }
@@ -120,6 +124,7 @@ function emptyParsedFile(file: ScannedFile): ParsedFile {
     classes: [],
     functions: [],
     isApiRoute: false,
+    httpMethods: [],
     isDrizzleSchema: false,
     tableDefs: [],
     isAiTool: false,
@@ -130,15 +135,14 @@ function emptyParsedFile(file: ScannedFile): ParsedFile {
 
 function extractImports(content: string, relPath: string): ImportInfo[] {
   const imports: ImportInfo[] = [];
-
-  // Named imports
   let match: RegExpExecArray | null;
+
   const namedRe = new RegExp(NAMED_IMPORT_RE.source, 'g');
   while ((match = namedRe.exec(content)) !== null) {
-    const symbols = match[1]!.split(',').map((s) => {
-      const trimmed = s.trim();
-      const asIdx = trimmed.lastIndexOf(' as ');
-      return asIdx >= 0 ? trimmed.substring(asIdx + 4).trim() : trimmed;
+    const symbols = match[1]!.split(',').map((symbol) => {
+      const trimmed = symbol.trim();
+      const asIndex = trimmed.lastIndexOf(' as ');
+      return asIndex >= 0 ? trimmed.substring(asIndex + 4).trim() : trimmed;
     });
     imports.push({
       source: normalizeImportPath(match[2]!, relPath),
@@ -148,13 +152,12 @@ function extractImports(content: string, relPath: string): ImportInfo[] {
     });
   }
 
-  // Type-only imports
   const typeRe = new RegExp(TYPE_IMPORT_RE.source, 'g');
   while ((match = typeRe.exec(content)) !== null) {
-    const symbols = match[1]!.split(',').map((s) => {
-      const trimmed = s.trim();
-      const asIdx = trimmed.lastIndexOf(' as ');
-      return asIdx >= 0 ? trimmed.substring(asIdx + 4).trim() : trimmed;
+    const symbols = match[1]!.split(',').map((symbol) => {
+      const trimmed = symbol.trim();
+      const asIndex = trimmed.lastIndexOf(' as ');
+      return asIndex >= 0 ? trimmed.substring(asIndex + 4).trim() : trimmed;
     });
     imports.push({
       source: normalizeImportPath(match[2]!, relPath),
@@ -164,7 +167,6 @@ function extractImports(content: string, relPath: string): ImportInfo[] {
     });
   }
 
-  // Default imports
   const defaultRe = new RegExp(DEFAULT_IMPORT_RE.source, 'g');
   while ((match = defaultRe.exec(content)) !== null) {
     imports.push({
@@ -175,9 +177,8 @@ function extractImports(content: string, relPath: string): ImportInfo[] {
     });
   }
 
-  // Namespace imports
-  const nsRe = new RegExp(NAMESPACE_IMPORT_RE.source, 'g');
-  while ((match = nsRe.exec(content)) !== null) {
+  const namespaceRe = new RegExp(NAMESPACE_IMPORT_RE.source, 'g');
+  while ((match = namespaceRe.exec(content)) !== null) {
     imports.push({
       source: normalizeImportPath(match[2]!, relPath),
       symbols: [match[1]!],
@@ -190,30 +191,18 @@ function extractImports(content: string, relPath: string): ImportInfo[] {
 }
 
 function normalizeImportPath(importPath: string, currentRelPath: string): string {
-  // Keep external packages as-is
-  if (!importPath.startsWith('.') && !importPath.startsWith('@hamafx')) {
-    return importPath;
-  }
+  if (!importPath.startsWith('.') && !importPath.startsWith('@hamafx')) return importPath;
+  if (importPath.startsWith('@hamafx')) return importPath;
 
-  // Resolve relative paths to package-relative paths
-  if (importPath.startsWith('@hamafx')) {
-    return importPath;
-  }
-
-  const currentDir = path.dirname(currentRelPath);
-  const resolved = path.join(currentDir, importPath);
-  const normalized = resolved.replace(/\\/g, '/');
-
-  // Strip extensions and /index
-  return normalized.replace(/\.(ts|tsx|js|jsx|mjs|mts)$/, '').replace(/\/index$/, '');
+  const resolved = path.join(path.dirname(currentRelPath), importPath).replace(/\\/g, '/');
+  return resolved.replace(/\.(ts|tsx|js|jsx|mjs|mts)$/, '').replace(/\/index$/, '');
 }
 
 function extractExports(content: string): ExportInfo[] {
   const exports: ExportInfo[] = [];
   const seen = new Set<string>();
-
-  // Named exports
   let match: RegExpExecArray | null;
+
   const namedRe = new RegExp(EXPORT_RE.source, 'g');
   while ((match = namedRe.exec(content)) !== null) {
     const name = match[1]!;
@@ -230,11 +219,29 @@ function extractExports(content: string): ExportInfo[] {
           : beforeExport.includes('type')
             ? 'type' as const
             : 'const' as const;
-
     exports.push({ name, kind, isDefault: false });
   }
 
-  // Default exports
+  const destructuredRe = new RegExp(DESTRUCTURED_EXPORT_RE.source, 'g');
+  while ((match = destructuredRe.exec(content)) !== null) {
+    for (const exported of match[1]!.split(',')) {
+      const name = exported.trim().split(/\s*:\s*/)[0]?.trim();
+      if (!name || seen.has(name)) continue;
+      seen.add(name);
+      exports.push({ name, kind: 'const', isDefault: false });
+    }
+  }
+
+  const reexportRe = new RegExp(REEXPORT_HANDLER_RE.source, 'g');
+  while ((match = reexportRe.exec(content)) !== null) {
+    for (const exported of match[1]!.split(',')) {
+      const name = exported.trim().split(/\s+as\s+/).pop()?.trim();
+      if (!name || seen.has(name)) continue;
+      seen.add(name);
+      exports.push({ name, kind: 'const', isDefault: false });
+    }
+  }
+
   const defaultRe = new RegExp(EXPORT_DEFAULT_RE.source, 'g');
   while ((match = defaultRe.exec(content)) !== null) {
     const name = match[1] || 'default';
@@ -255,7 +262,7 @@ function extractClasses(content: string): ClassInfo[] {
       name: match[1]!,
       extendsName: match[2] || undefined,
       implementsNames: match[3]
-        ? match[3].split(',').map((s) => s.trim()).filter(Boolean)
+        ? match[3].split(',').map((name) => name.trim()).filter(Boolean)
         : [],
       methods: [],
     });
@@ -264,31 +271,29 @@ function extractClasses(content: string): ClassInfo[] {
 }
 
 function extractFunctions(content: string): FunctionInfo[] {
-  const funcs: FunctionInfo[] = [];
+  const functions: FunctionInfo[] = [];
   const seen = new Set<string>();
-
-  // Async exported functions
   let match: RegExpExecArray | null;
+
   const asyncRe = new RegExp(ASYNC_FUNCTION_RE.source, 'g');
   while ((match = asyncRe.exec(content)) !== null) {
     if (seen.has(match[1]!)) continue;
     seen.add(match[1]!);
-    funcs.push({ name: match[1]!, isAsync: true, isExported: true });
+    functions.push({ name: match[1]!, isAsync: true, isExported: true });
   }
 
-  // Regular exported functions
-  const funcRe = new RegExp(FUNCTION_RE.source, 'g');
-  while ((match = funcRe.exec(content)) !== null) {
+  const functionRe = new RegExp(FUNCTION_RE.source, 'g');
+  while ((match = functionRe.exec(content)) !== null) {
     if (seen.has(match[1]!)) continue;
     seen.add(match[1]!);
-    funcs.push({
+    functions.push({
       name: match[1]!,
       isAsync: content.substring(Math.max(0, match.index - 10), match.index).includes('async'),
       isExported: content.substring(Math.max(0, match.index - 20), match.index).includes('export'),
     });
   }
 
-  return funcs;
+  return functions;
 }
 
 function extractTables(content: string): TableInfo[] {
@@ -298,55 +303,113 @@ function extractTables(content: string): TableInfo[] {
   while ((match = tableRe.exec(content)) !== null) {
     const varName = match[1]!;
     const tableName = match[2] || varName;
-
-    // Extract columns by finding the object keys in the table definition
     const columns: string[] = [];
-    const startIdx = match.index + match[0].length;
-    const block = content.substring(startIdx, Math.min(startIdx + 5000, content.length));
-    const colRe = /^\s*(\w+)\s*:/gm;
-    let colMatch: RegExpExecArray | null;
-    while ((colMatch = colRe.exec(block)) !== null) {
-      const colName = colMatch[1]!;
-      if (!['type', 'enum', 'notNull', 'default', 'primaryKey', 'unique', 'references'].includes(colName)) {
-        columns.push(colName);
+    const block = content.substring(match.index + match[0].length, Math.min(match.index + match[0].length + 5000, content.length));
+    const columnRe = /^\s*(\w+)\s*:/gm;
+    let columnMatch: RegExpExecArray | null;
+    while ((columnMatch = columnRe.exec(block)) !== null) {
+      const columnName = columnMatch[1]!;
+      if (!['type', 'enum', 'notNull', 'default', 'primaryKey', 'unique', 'references'].includes(columnName)) {
+        columns.push(columnName);
       }
     }
-
     tables.push({ name: tableName, columns });
   }
   return tables;
 }
 
-function extractHttpMethod(content: string): string | undefined {
-  const methods: string[] = [];
+function extractHttpMethods(content: string): string[] {
+  const methods = new Set<string>();
   let match: RegExpExecArray | null;
   const methodRe = new RegExp(HTTP_METHOD_RE.source, 'g');
   while ((match = methodRe.exec(content)) !== null) {
-    methods.push(match[1]!);
+    const method = match[1] ?? match[2];
+    if (method) methods.add(method);
   }
-  return methods.join(',') || undefined;
+
+  for (const pattern of [DESTRUCTURED_HANDLER_EXPORT_RE, REEXPORT_HANDLER_RE]) {
+    const exportRe = new RegExp(pattern.source, 'g');
+    while ((match = exportRe.exec(content)) !== null) {
+      for (const exported of match[1]!.split(',')) {
+        const parts = exported.trim().split(/\s+as\s+|\s*:\s*/);
+        const candidates = pattern === REEXPORT_HANDLER_RE ? parts.reverse() : parts;
+        const method = candidates[0]?.trim();
+        if (method && HTTP_METHODS.has(method)) methods.add(method);
+      }
+    }
+  }
+
+  return methods.size > 0 ? [...methods] : ['GET'];
 }
 
 function deriveRoutePath(filePath: string): string {
-  // e.g., apps/web/src/app/api/chat/threads/[id]/route.ts → /api/chat/threads/:id
-  const apiIdx = filePath.indexOf('/api/');
-  if (apiIdx < 0) return filePath;
+  const apiIndex = filePath.indexOf('/api/');
+  if (apiIndex < 0) return filePath;
 
-  let route = filePath.substring(apiIdx);
-  // Remove /route.ts or /route.tsx
-  route = route.replace(/\/route\.(ts|tsx)$/, '');
-  // Convert [param] to :param
-  route = route.replace(/\[(\w+)\]/g, ':$1');
-  // Convert [...param] to :param*
+  let route = filePath.substring(apiIndex).replace(/\/route\.(ts|tsx)$/, '');
   route = route.replace(/\[\.\.\.(\w+)\]/g, ':$1*');
-
+  route = route.replace(/\[(\w+)\]/g, ':$1');
   return route || '/';
 }
 
+function canonicalizeToolName(name: string): string {
+  return name
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1_$2')
+    .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
+    .toLowerCase();
+}
+
+function resolveCanonicalToolName(name: string, rootDir: string): string {
+  const canonicalToolNames = getCanonicalToolNames(rootDir);
+  const registeredName = getRegisteredToolNames(rootDir).get(name);
+  if (registeredName) return registeredName;
+
+  const normalizedName = canonicalizeToolName(name.replace(/Tool$/, ''));
+  if (canonicalToolNames.has(normalizedName)) return normalizedName;
+  const compactName = normalizedName.replaceAll('_', '');
+  return [...canonicalToolNames].find(
+    (canonicalName) => canonicalName.replaceAll('_', '') === compactName,
+  ) ?? normalizedName;
+}
+
+function getCanonicalToolNames(rootDir: string): Set<string> {
+  const cached = canonicalToolNamesByRoot.get(rootDir);
+  if (cached) return cached;
+
+  let names = new Set<string>();
+  try {
+    const source = fs.readFileSync(path.join(rootDir, 'packages/shared/src/ai/tool-names.ts'), 'utf-8');
+    names = new Set([...source.matchAll(/[\'"]([a-z0-9_]+)[\'"]/g)].map((match) => match[1]!));
+  } catch {
+    // Partial scans may omit the shared canonical list.
+  }
+  canonicalToolNamesByRoot.set(rootDir, names);
+  return names;
+}
+
+function getRegisteredToolNames(rootDir: string): Map<string, string> {
+  const cached = registeredToolNamesByRoot.get(rootDir);
+  if (cached) return cached;
+
+  const registrations = new Map<string, string>();
+  for (const category of ['market', 'analysis', 'journal', 'system']) {
+    try {
+      const source = fs.readFileSync(path.join(rootDir, 'packages/ai/src/tools', `${category}.ts`), 'utf-8');
+      const registrationRe = /\[['"]([^'"\]]+)["'],\s*(\w+Tool)\s*\]/g;
+      for (const match of source.matchAll(registrationRe)) {
+        registrations.set(match[2]!, match[1]!);
+      }
+    } catch {
+      // Category files are optional for partial scans.
+    }
+  }
+  registeredToolNamesByRoot.set(rootDir, registrations);
+  return registrations;
+}
+
 function extractToolDescription(content: string): string {
-  // Try to find a JSDoc comment or description string near the tool registration
-  const descMatch = content.match(/description:\s*['"]([^'"]{10,200})['"]/);
-  if (descMatch) return descMatch[1]!.trim();
+  const descriptionMatch = content.match(/description:\s*['"]([^'"]{10,200})['"]/);
+  if (descriptionMatch) return descriptionMatch[1]!.trim();
 
   const jsDocMatch = content.match(/\/\*\*\s*\n?\s*\*\s*([^\n*]{10,200})/);
   if (jsDocMatch) return jsDocMatch[1]!.trim();

@@ -32,9 +32,9 @@ Package: @hamafx/ai
 
 
 
-### 📥 Depended On By (338)
+### 📥 Depended On By (345)
 [[page-async]] · [[_actions-api-keys-updateApiKeysAction]] · [[_actions-data-clearChatHistoryAction]] · [[_actions-preferences-updateProfileAction]] · [[agent-card-AgentCard]] · [[system-status-card-SystemStatusCard]] · [[usage-glance-UsageGlance]] · [[actions-sanitizeNext]] · [[POST--api-bot-link-code]] · [[GET--api-bot-status]] · [[POST--api-bot-unlink]] · [[POST--api-chat]] · [[GET--api-chat-threads--id-export]] · [[GET--api-chat-threads--id-opinions]] · [[GET--api-chat-threads--id-summary]] · [[POST--api-chat-threads-fork]] · [[GET--api-cron-alerts]] · [[GET--api-cron-briefings]] · [[GET--api-cron-calendar]] · [[GET--api-cron-cot]]
-> ... and 318 more
+> ... and 325 more
 
 
 

@@ -32,11 +32,11 @@ Get a snapshot of the user\
 
 
 ### 📤 Depends On (4)
-[[index_tool-architecture-explorer|index]] · [[tool-context-ToolEnv]] · [[@hamafx-ai]] · [[registry-ToolPlugin]]
+[[index-createPosition]] · [[tool-context-ToolEnv]] · [[@hamafx-ai]] · [[registry-ToolPlugin]]
 
 
 ### 📥 Depended On By (1)
-[[system]]
+[[system-toolRegistry]]
 
 
 

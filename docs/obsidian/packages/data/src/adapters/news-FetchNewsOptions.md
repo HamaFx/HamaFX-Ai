@@ -31,8 +31,8 @@ Module: packages/data/src/adapters/news.ts
 | Package tag | `#hamafx-data` |
 
 
-### 📤 Depends On (5)
-[[@hamafx-shared]] · [[errors-DataErrorCode]] · [[failover-ProviderAttempt]] · [[index_tool-architecture-explorer|index]] · [[@hamafx-data]]
+### 📤 Depends On (6)
+[[@hamafx-shared]] · [[errors-DataErrorCode]] · [[failover-ProviderAttempt]] · [[index-fetchPrice]] · [[index-fetchLatest]] · [[@hamafx-data]]
 
 
 ### 📥 Depended On By (1)

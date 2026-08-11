@@ -32,11 +32,11 @@ One-paragraph synopsis of the active chat thread plus three durable insights. Us
 
 
 ### 📤 Depends On (8)
-[[@hamafx-shared]] · [[memory-index-MemoryKind]] · [[model]] · [[persistence]] · [[tool-context-ToolEnv]] · [[telemetry-telemetryConfig]] · [[@hamafx-ai]] · [[registry-ToolPlugin]]
+[[@hamafx-shared]] · [[memory-index-MemoryKind]] · [[model-resolveModel]] · [[persistence-listThreads]] · [[tool-context-ToolEnv]] · [[telemetry-telemetryConfig]] · [[@hamafx-ai]] · [[registry-ToolPlugin]]
 
 
 ### 📥 Depended On By (1)
-[[journal]]
+[[journal-toolRegistry]]
 
 
 

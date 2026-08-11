@@ -324,12 +324,16 @@
     },
     {
       "methods": [
-        "GET"
+        "GET",
+        "POST"
       ],
       "path": "/api/auth/:nextauth*",
       "handler": "apps/web/src/app/api/auth/[...nextauth]/route.ts",
       "package": "@hamafx/web",
-      "exports": []
+      "exports": [
+        "GET",
+        "POST"
+      ]
     },
     {
       "methods": [
@@ -370,7 +374,7 @@
     },
     {
       "methods": [
-        "GET"
+        "POST"
       ],
       "path": "/api/billing/webhook",
       "handler": "apps/web/src/app/api/billing/webhook/route.ts",
@@ -548,7 +552,8 @@
     },
     {
       "methods": [
-        "GET"
+        "GET",
+        "POST"
       ],
       "path": "/api/chat/threads",
       "handler": "apps/web/src/app/api/chat/threads/route.ts",
@@ -1282,7 +1287,8 @@
     },
     {
       "methods": [
-        "GET"
+        "GET",
+        "POST"
       ],
       "path": "/api/telegram/webhook",
       "handler": "apps/web/src/app/api/telegram/webhook/route.ts",
@@ -1636,12 +1642,16 @@
     "auth": [
       {
         "methods": [
-          "GET"
+          "GET",
+          "POST"
         ],
         "path": "/api/auth/:nextauth*",
         "handler": "apps/web/src/app/api/auth/[...nextauth]/route.ts",
         "package": "@hamafx/web",
-        "exports": []
+        "exports": [
+          "GET",
+          "POST"
+        ]
       },
       {
         "methods": [
@@ -1684,7 +1694,7 @@
       },
       {
         "methods": [
-          "GET"
+          "POST"
         ],
         "path": "/api/billing/webhook",
         "handler": "apps/web/src/app/api/billing/webhook/route.ts",
@@ -1868,7 +1878,8 @@
       },
       {
         "methods": [
-          "GET"
+          "GET",
+          "POST"
         ],
         "path": "/api/chat/threads",
         "handler": "apps/web/src/app/api/chat/threads/route.ts",
@@ -2630,7 +2641,8 @@
     "telegram": [
       {
         "methods": [
-          "GET"
+          "GET",
+          "POST"
         ],
         "path": "/api/telegram/webhook",
         "handler": "apps/web/src/app/api/telegram/webhook/route.ts",

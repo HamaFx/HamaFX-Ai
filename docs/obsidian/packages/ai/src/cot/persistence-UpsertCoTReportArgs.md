@@ -36,7 +36,7 @@ Module: packages/ai/src/cot/persistence.ts
 
 
 ### 📥 Depended On By (1)
-[[get_co_t]]
+[[get_cot]]
 
 
 

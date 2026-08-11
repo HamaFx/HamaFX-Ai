@@ -114,7 +114,7 @@ export interface ParsedFile {
   classes: ClassInfo[];
   functions: FunctionInfo[];
   isApiRoute: boolean;
-  httpMethod?: string;
+  httpMethods: string[];
   routePath?: string;
   isDrizzleSchema: boolean;
   tableDefs: TableInfo[];

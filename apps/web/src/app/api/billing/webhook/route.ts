@@ -105,6 +105,12 @@ export async function POST(req: Request): Promise<Response> {
 
   const isValid = await verifyIpnSignature(rawBody, signature, ipnSecret);
   if (!isValid) {
+    // Sentry Metrics aggregates this across serverless instances. Configure a
+    // metric alert for >= 3 events in 5 minutes to page the operator; do not
+    // use a process-local counter for this distributed security signal.
+    Sentry.metrics.count('billing_webhook_signature_failure', 1, {
+      attributes: { component: 'billing-webhook', provider: 'nowpayments' },
+    });
     Sentry.captureMessage('Invalid NOWPayments IPN signature', {
       level: 'warning',
       tags: { component: 'billing-webhook', kind: 'signature-failure' },

@@ -36,7 +36,7 @@ Copyright 2026 HamaFX
 
 
 ### 📥 Depended On By (1)
-[[analysis]]
+[[analysis-toolRegistry]]
 
 
 

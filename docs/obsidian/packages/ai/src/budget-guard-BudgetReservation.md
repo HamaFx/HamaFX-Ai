@@ -45,6 +45,7 @@ Module: packages/ai/src/budget-guard.ts
 - `reserveBudget`
 - `reconcileBudget`
 - `releaseBudget`
+- `BudgetExceededError`
 
 
 ## 🔍 Explore

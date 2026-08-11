@@ -36,7 +36,7 @@ Multi-timeframe technical readout (trend, bias, momentum, structure, levels) for
 
 
 ### 📥 Depended On By (3)
-[[analysis]] · [[convene_committee]] · [[analyze-technical.test]]
+[[analysis-toolRegistry]] · [[convene_committee]] · [[analyze-technical.test]]
 
 
 

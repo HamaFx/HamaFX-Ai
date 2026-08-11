@@ -27,7 +27,7 @@ tags: [dashboard, timeline]
 - 📅 [[tool-context-ToolEnv]] — **69.1** connections · `@hamafx/ai`
 - 📅 [[types-BotPlatform]] — **63.8** connections · `@hamafx/ai`
 - 📅 [[symbols-SYMBOLS]] — **62.8** connections · `@hamafx/shared`
-- 📅 [[model]] — **60.5** connections · `@hamafx/ai`
+- 📅 [[model-resolveModel]] — **60.5** connections · `@hamafx/ai`
 - 📅 [[auth-users]] — **60.5** connections · `@hamafx/db`
 - 📅 [[loadtest]] — **59.9** connections · `loadtest`
 

@@ -3,8 +3,8 @@ type: module
 package: "tool:architecture-explorer"
 path: "tools/architecture-explorer/src/knowledge-generator.ts"
 incoming: 1
-outgoing: 6
-connections: 7
+outgoing: 4
+connections: 5
 risk: low
 layer: core
 tags: [type/module, tool:architecture-explorer, layer/core]
@@ -24,15 +24,15 @@ Module: tools/architecture-explorer/src/knowledge-generator.ts
 | | Count |
 |---|---|
 | Incoming dependencies | 1 |
-| Outgoing dependencies | 6 |
-| Total connections | 7 |
+| Outgoing dependencies | 4 |
+| Total connections | 5 |
 | Risk level | **LOW** |
 | Layer | `core` |
 | Package tag | `#tool:architecture-explorer` |
 
 
-### 📤 Depends On (4)
-[[graph-model-GraphModel]] · [[types-NodeType]] · [[scanner-ScannedFile]] · [[tool-architecture-explorer]]
+### 📤 Depends On (3)
+[[graph-model-GraphModel]] · [[types-NodeType]] · [[tool-architecture-explorer]]
 
 
 ### 📥 Depended On By (1)

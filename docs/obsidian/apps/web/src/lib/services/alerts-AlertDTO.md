@@ -48,6 +48,9 @@ Module: apps/web/src/lib/services/alerts.ts
 - `deleteAlertService`
 - `previewAlertRuleService`
 - `previewDigestService`
+- `AlertCreateSchema`
+- `AlertPatchSchema`
+- `AlertPreviewBodySchema`
 
 
 ## 🔍 Explore

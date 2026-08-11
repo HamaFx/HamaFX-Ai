@@ -47,6 +47,8 @@ Module: packages/ai/src/alerts/evaluator.ts
 - `EvaluationResult`
 - `evaluateAlerts`
 - `describeRule`
+- `decideMatch`
+- `decideCross`
 
 
 ## 🔍 Explore

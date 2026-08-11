@@ -32,7 +32,7 @@ Module: packages/ai/src/multi-agent/agents/agent-model.ts
 
 
 ### 📤 Depends On (4)
-[[model]] · [[@hamafx-shared]] · [[types-AnalysisMode]] · [[@hamafx-ai]]
+[[model-resolveModel]] · [[@hamafx-shared]] · [[types-AnalysisMode]] · [[@hamafx-ai]]
 
 
 ### 📥 Depended On By (2)

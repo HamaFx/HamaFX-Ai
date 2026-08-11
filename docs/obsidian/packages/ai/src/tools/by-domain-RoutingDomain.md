@@ -32,7 +32,7 @@ Module: packages/ai/src/tools/by-domain.ts
 
 
 ### 📤 Depends On (2)
-[[index_tool-architecture-explorer|index]] · [[@hamafx-ai]]
+[[index-toolRegistry]] · [[@hamafx-ai]]
 
 
 ### 📥 Depended On By (2)

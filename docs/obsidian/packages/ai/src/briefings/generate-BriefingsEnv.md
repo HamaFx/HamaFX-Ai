@@ -32,7 +32,7 @@ Module: packages/ai/src/briefings/generate.ts
 
 
 ### 📤 Depends On (11)
-[[@hamafx-db]] · [[db-getDb]] · [[@hamafx-shared]] · [[cost-DEFAULT_TURN_ESTIMATE_USD]] · [[persistence-CreateJournalInput]] · [[memory-index-MemoryKind]] · [[model]] · [[persistence]] · [[telemetry-telemetryConfig]] · [[persistence-getOrCreateBriefingsThread]] · [[@hamafx-ai]]
+[[@hamafx-db]] · [[db-getDb]] · [[@hamafx-shared]] · [[cost-DEFAULT_TURN_ESTIMATE_USD]] · [[persistence-CreateJournalInput]] · [[memory-index-MemoryKind]] · [[model-resolveModel]] · [[persistence-listThreads]] · [[telemetry-telemetryConfig]] · [[persistence-getOrCreateBriefingsThread]] · [[@hamafx-ai]]
 
 
 ### 📥 Depended On By (1)

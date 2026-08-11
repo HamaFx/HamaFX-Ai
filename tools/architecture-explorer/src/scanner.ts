@@ -100,8 +100,8 @@ export interface ScannedFile {
   size: number;
 }
 
-export function getPackageName(filePath: string, rootDir: string): string {
-  // Derive package name from path relative to root
+function getPackageName(filePath: string, rootDir: string): string {
+  // Derive package name from path relative to root.
   const rel = path.relative(rootDir, filePath);
   const parts = rel.split(path.sep);
 
@@ -116,10 +116,45 @@ export function getPackageName(filePath: string, rootDir: string): string {
   return 'root';
 }
 
+function getPackagePath(pkg: string): string {
+  if (pkg === 'root') return '.';
+  if (pkg.startsWith('@hamafx/')) return `packages/${pkg.slice('@hamafx/'.length)}`;
+  if (pkg.startsWith('tool:')) return `tools/${pkg.slice('tool:'.length)}`;
+  return pkg;
+}
+
+/**
+ * Resolve the path from the scanner's filesystem provenance. Package names
+ * are intentionally not enough to distinguish an app from a library (for
+ * example, both use the @hamafx/* namespace).
+ */
+export function getScannedPackagePath(
+  packagePaths: ReadonlyMap<string, string>,
+  pkg: string,
+): string {
+  const pathFromScan = packagePaths.get(pkg);
+  if (pathFromScan) return pathFromScan;
+  throw new Error(`Missing filesystem provenance for package ${pkg}`);
+}
+function findWorkspacePackageJson(startDir: string, rootDir: string): string | undefined {
+  let current = startDir;
+  while (current.startsWith(rootDir)) {
+    const candidate = path.join(current, 'package.json');
+    if (fs.existsSync(candidate)) return candidate;
+    if (current === rootDir) break;
+    const parent = path.dirname(current);
+    if (parent === current) break;
+    current = parent;
+  }
+  return undefined;
+}
+
 export interface ScanResult {
   files: ScannedFile[];
   rootDir: string;
   packageNames: Set<string>;
+  /** Filesystem path for each discovered workspace package. */
+  packagePaths: Map<string, string>;
 }
 
 export function scanProject(opts: ScanOptions): ScanResult {
@@ -127,6 +162,7 @@ export function scanProject(opts: ScanOptions): ScanResult {
   const ig = loadGitignore(rootDir);
   const files: ScannedFile[] = [];
   const packageNames = new Set<string>();
+  const packagePaths = new Map<string, string>();
 
   function walk(dir: string): void {
     let entries: fs.Dirent[];
@@ -151,6 +187,15 @@ export function scanProject(opts: ScanOptions): ScanResult {
 
         const pkg = getPackageName(fullPath, rootDir);
         packageNames.add(pkg);
+        // Preserve the actual workspace root rather than reconstructing it
+        // from the package name. This keeps apps/* and packages/* distinct.
+        const packageJson = pkg.startsWith('@hamafx/') || pkg.startsWith('tool:')
+          ? findWorkspacePackageJson(path.dirname(fullPath), rootDir)
+          : undefined;
+        const packageRoot = packageJson
+          ? path.relative(rootDir, path.dirname(packageJson))
+          : getPackagePath(pkg);
+        packagePaths.set(pkg, packageRoot || '.');
 
         let size = 0;
         try {
@@ -179,14 +224,14 @@ export function scanProject(opts: ScanOptions): ScanResult {
     }
   }
 
-  return { files, rootDir, packageNames };
+  return { files, rootDir, packageNames, packagePaths };
 }
 
-export function filterByExt(files: ScannedFile[], exts: string[]): ScannedFile[] {
+function filterByExt(files: ScannedFile[], exts: string[]): ScannedFile[] {
   return files.filter((f) => exts.includes(f.ext));
 }
 
-export function filterByPkg(files: ScannedFile[], pkg: string): ScannedFile[] {
+function filterByPkg(files: ScannedFile[], pkg: string): ScannedFile[] {
   return files.filter((f) => f.pkg === pkg);
 }
 

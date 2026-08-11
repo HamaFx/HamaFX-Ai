@@ -68,7 +68,7 @@ dv.table(
 - [[POST--api-admin-test-telegram]] · `@hamafx/web` · `apps/web/src/app/api/admin/test-telegram/route.ts`  *(↖1 ↗2 = 3)*
 - [[POST--api-billing-checkout]] · `@hamafx/web` · `apps/web/src/app/api/billing/checkout/route.ts`  *(↖1 ↗2 = 3)*
 - [[GET--api-billing-portal]] · `@hamafx/web` · `apps/web/src/app/api/billing/portal/route.ts`  *(↖1 ↗2 = 3)*
-- [[GET--api-billing-webhook]] · `@hamafx/web` · `apps/web/src/app/api/billing/webhook/route.ts`  *(↖1 ↗2 = 3)*
+- [[POST--api-billing-webhook]] · `@hamafx/web` · `apps/web/src/app/api/billing/webhook/route.ts`  *(↖1 ↗2 = 3)*
 - [[POST--api-bot-link-code]] · `@hamafx/web` · `apps/web/src/app/api/bot/link-code/route.ts`  *(↖1 ↗2 = 3)*
 - [[GET--api-bot-status]] · `@hamafx/web` · `apps/web/src/app/api/bot/status/route.ts`  *(↖1 ↗2 = 3)*
 - [[POST--api-bot-unlink]] · `@hamafx/web` · `apps/web/src/app/api/bot/unlink/route.ts`  *(↖1 ↗2 = 3)*
@@ -91,7 +91,7 @@ dv.table(
 - [[DELETE--api-settings-symbols--symbol]] · `@hamafx/web` · `apps/web/src/app/api/settings/symbols/[symbol]/route.ts`  *(↖1 ↗2 = 3)*
 - [[POST--api-settings-test-market-provider]] · `@hamafx/web` · `apps/web/src/app/api/settings/test-market-provider/route.ts`  *(↖1 ↗2 = 3)*
 - [[GET--api-settings-usage-by-provider]] · `@hamafx/web` · `apps/web/src/app/api/settings/usage-by-provider/route.ts`  *(↖1 ↗2 = 3)*
-- [[GET--api-telegram-webhook]] · `@hamafx/web` · `apps/web/src/app/api/telegram/webhook/route.ts`  *(↖1 ↗2 = 3)*
+- [[GET,POST--api-telegram-webhook]] · `@hamafx/web` · `apps/web/src/app/api/telegram/webhook/route.ts`  *(↖1 ↗2 = 3)*
 - [[GET--api-admin-architecture-explorer]] · `@hamafx/web` · `apps/web/src/app/api/admin/architecture-explorer/route.ts`  *(↖1 ↗1 = 2)*
 - [[GET,POST--api-admin-features]] · `@hamafx/web` · `apps/web/src/app/api/admin/features/route.ts`  *(↖1 ↗1 = 2)*
 - [[GET--api-admin-impersonate-probe]] · `@hamafx/web` · `apps/web/src/app/api/admin/impersonate/probe/route.ts`  *(↖1 ↗1 = 2)*
@@ -101,10 +101,10 @@ dv.table(
 - [[POST--api-alerts-preview]] · `@hamafx/web` · `apps/web/src/app/api/alerts/preview/route.ts`  *(↖1 ↗1 = 2)*
 - [[GET--api-alerts-preview-digest]] · `@hamafx/web` · `apps/web/src/app/api/alerts/preview-digest/route.ts`  *(↖1 ↗1 = 2)*
 - [[GET,POST--api-alerts]] · `@hamafx/web` · `apps/web/src/app/api/alerts/route.ts`  *(↖1 ↗1 = 2)*
-- [[GET--api-auth--nextauth-]] · `@hamafx/web` · `apps/web/src/app/api/auth/[...nextauth]/route.ts`  *(↖1 ↗1 = 2)*
+- [[GET,POST--api-auth--nextauth-]] · `@hamafx/web` · `apps/web/src/app/api/auth/[...nextauth]/route.ts`  *(↖1 ↗1 = 2)*
 - [[GET--api-calendar]] · `@hamafx/web` · `apps/web/src/app/api/calendar/route.ts`  *(↖1 ↗1 = 2)*
 - [[GET,DELETE,PATCH--api-chat-threads--id]] · `@hamafx/web` · `apps/web/src/app/api/chat/threads/[id]/route.ts`  *(↖1 ↗1 = 2)*
-- [[GET--api-chat-threads]] · `@hamafx/web` · `apps/web/src/app/api/chat/threads/route.ts`  *(↖1 ↗1 = 2)*
+- [[GET,POST--api-chat-threads]] · `@hamafx/web` · `apps/web/src/app/api/chat/threads/route.ts`  *(↖1 ↗1 = 2)*
 - [[GET--api-cron-cleanup-uploads]] · `@hamafx/web` · `apps/web/src/app/api/cron/cleanup-uploads/route.ts`  *(↖1 ↗1 = 2)*
 - [[GET,PATCH,DELETE--api-journal--id]] · `@hamafx/web` · `apps/web/src/app/api/journal/[id]/route.ts`  *(↖1 ↗1 = 2)*
 - [[GET,POST--api-journal]] · `@hamafx/web` · `apps/web/src/app/api/journal/route.ts`  *(↖1 ↗1 = 2)*
@@ -141,11 +141,11 @@ dv.table(
 - [[POST--api-alerts-preview]] · `@hamafx/web` · `apps/web/src/app/api/alerts/preview/route.ts`  *(↖0 ↗1 = 1)*
 - [[GET--api-alerts-preview-digest]] · `@hamafx/web` · `apps/web/src/app/api/alerts/preview-digest/route.ts`  *(↖0 ↗1 = 1)*
 - [[GET,POST--api-alerts]] · `@hamafx/web` · `apps/web/src/app/api/alerts/route.ts`  *(↖0 ↗1 = 1)*
-- [[GET--api-auth--nextauth-]] · `@hamafx/web` · `apps/web/src/app/api/auth/[...nextauth]/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET,POST--api-auth--nextauth-]] · `@hamafx/web` · `apps/web/src/app/api/auth/[...nextauth]/route.ts`  *(↖0 ↗1 = 1)*
 - [[GET--api-auth-verify-email]] · `@hamafx/web` · `apps/web/src/app/api/auth/verify-email/route.ts`  *(↖0 ↗1 = 1)*
 - [[POST--api-billing-checkout]] · `@hamafx/web` · `apps/web/src/app/api/billing/checkout/route.ts`  *(↖0 ↗1 = 1)*
 - [[GET--api-billing-portal]] · `@hamafx/web` · `apps/web/src/app/api/billing/portal/route.ts`  *(↖0 ↗1 = 1)*
-- [[GET--api-billing-webhook]] · `@hamafx/web` · `apps/web/src/app/api/billing/webhook/route.ts`  *(↖0 ↗1 = 1)*
+- [[POST--api-billing-webhook]] · `@hamafx/web` · `apps/web/src/app/api/billing/webhook/route.ts`  *(↖0 ↗1 = 1)*
 - [[POST--api-bot-link-code]] · `@hamafx/web` · `apps/web/src/app/api/bot/link-code/route.ts`  *(↖0 ↗1 = 1)*
 - [[GET--api-bot-status]] · `@hamafx/web` · `apps/web/src/app/api/bot/status/route.ts`  *(↖0 ↗1 = 1)*
 - [[POST--api-bot-unlink]] · `@hamafx/web` · `apps/web/src/app/api/bot/unlink/route.ts`  *(↖0 ↗1 = 1)*
@@ -158,7 +158,7 @@ dv.table(
 - [[GET--api-chat-threads--id-summary]] · `@hamafx/web` · `apps/web/src/app/api/chat/threads/[id]/summary/route.ts`  *(↖0 ↗1 = 1)*
 - [[POST--api-chat-threads-bulk-delete]] · `@hamafx/web` · `apps/web/src/app/api/chat/threads/bulk-delete/route.ts`  *(↖0 ↗1 = 1)*
 - [[POST--api-chat-threads-fork]] · `@hamafx/web` · `apps/web/src/app/api/chat/threads/fork/route.ts`  *(↖0 ↗1 = 1)*
-- [[GET--api-chat-threads]] · `@hamafx/web` · `apps/web/src/app/api/chat/threads/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET,POST--api-chat-threads]] · `@hamafx/web` · `apps/web/src/app/api/chat/threads/route.ts`  *(↖0 ↗1 = 1)*
 - [[GET--api-cron-alerts]] · `@hamafx/web` · `apps/web/src/app/api/cron/alerts/route.ts`  *(↖0 ↗1 = 1)*
 - [[GET--api-cron-billing-dlq]] · `@hamafx/web` · `apps/web/src/app/api/cron/billing-dlq/route.ts`  *(↖0 ↗1 = 1)*
 - [[GET--api-cron-briefings]] · `@hamafx/web` · `apps/web/src/app/api/cron/briefings/route.ts`  *(↖0 ↗1 = 1)*
@@ -211,5 +211,5 @@ dv.table(
 - [[GET--api-settings-usage-by-agent]] · `@hamafx/web` · `apps/web/src/app/api/settings/usage-by-agent/route.ts`  *(↖0 ↗1 = 1)*
 - [[GET--api-settings-usage-by-provider]] · `@hamafx/web` · `apps/web/src/app/api/settings/usage-by-provider/route.ts`  *(↖0 ↗1 = 1)*
 - [[GET,PUT,DELETE--api-settings-vision-model]] · `@hamafx/web` · `apps/web/src/app/api/settings/vision-model/route.ts`  *(↖0 ↗1 = 1)*
-- [[GET--api-telegram-webhook]] · `@hamafx/web` · `apps/web/src/app/api/telegram/webhook/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET,POST--api-telegram-webhook]] · `@hamafx/web` · `apps/web/src/app/api/telegram/webhook/route.ts`  *(↖0 ↗1 = 1)*
 - [[POST--api-upload]] · `@hamafx/web` · `apps/web/src/app/api/upload/route.ts`  *(↖0 ↗1 = 1)*

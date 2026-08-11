@@ -32,7 +32,7 @@ Module: packages/ai/src/model-vision.ts
 
 
 ### 📤 Depends On (6)
-[[@hamafx-db]] · [[@hamafx-shared]] · [[byok-providers]] · [[vertex-factory-ResolveModelEnv]] · [[model-helpers-PROVIDER_PRIORITY]] · [[@hamafx-ai]]
+[[@hamafx-db]] · [[@hamafx-shared]] · [[byok-providers-BYOK_PROVIDERS]] · [[vertex-factory-ResolveModelEnv]] · [[model-helpers-PROVIDER_PRIORITY]] · [[@hamafx-ai]]
 
 
 

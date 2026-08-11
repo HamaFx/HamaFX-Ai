@@ -36,7 +36,7 @@ Pearson correlation matrix over close-to-close returns for the legacy CFTC/inter
 
 
 ### 📥 Depended On By (1)
-[[market]]
+[[market-toolRegistry]]
 
 
 

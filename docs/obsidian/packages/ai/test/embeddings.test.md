@@ -32,7 +32,7 @@ Module: packages/ai/test/embeddings.test.ts
 
 
 ### 📤 Depends On (4)
-[[vitest-installServerOnlyStub]] · [[embeddings-EmbedTextsArgs]] · [[model]] · [[@hamafx-ai]]
+[[vitest-installServerOnlyStub]] · [[embeddings-EmbedTextsArgs]] · [[model-resolveModel]] · [[@hamafx-ai]]
 
 
 

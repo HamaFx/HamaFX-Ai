@@ -46,6 +46,9 @@ Module: apps/web/src/lib/api-client.ts
 - `ApiFetchOptions`
 - `apiFetch`
 - `apiMutate`
+- `fetchCsrf`
+- `withCsrf`
+- `parseErrorBody`
 
 
 ## 🔍 Explore

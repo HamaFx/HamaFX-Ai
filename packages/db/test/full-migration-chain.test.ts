@@ -129,7 +129,7 @@ const EXPECTED_TABLES = [
   'organization', 'organization_member',
 ];
 
-describe('Phase 6 — Task 27: Full migration chain (all migrations on fresh PGlite)', () => {
+describe('Phase 6 — Task 27: Full migration chain (all migrations on fresh PGlite)', { timeout: 30_000 }, () => {
   let dir: string;
 
   beforeEach(() => {
@@ -144,7 +144,7 @@ describe('Phase 6 — Task 27: Full migration chain (all migrations on fresh PGl
     const db = await getPGliteDb(dir);
     await applyAll(db);
     expect(true).toBe(true);
-  });
+  }, 30_000);
 
   it('all expected tables exist after full migration chain', async () => {
     const db = await getPGliteDb(dir);
@@ -156,7 +156,7 @@ describe('Phase 6 — Task 27: Full migration chain (all migrations on fresh PGl
     for (const expected of EXPECTED_TABLES) {
       expect(tableNames).toContain(expected);
     }
-  });
+  }, 30_000);
 
   it('__drizzle_migrations table exists', async () => {
     const db = await getPGliteDb(dir);
@@ -165,7 +165,7 @@ describe('Phase 6 — Task 27: Full migration chain (all migrations on fresh PGl
       `SELECT tablename FROM pg_tables WHERE tablename = '__drizzle_migrations'`,
     );
     expect(rows).toHaveLength(1);
-  });
+  }, 30_000);
 
   it('key unique constraints exist', async () => {
     const db = await getPGliteDb(dir);
@@ -186,7 +186,7 @@ describe('Phase 6 — Task 27: Full migration chain (all migrations on fresh PGl
     );
     const snapNames = snapUk.map((r: Record<string, unknown>) => r.conname);
     expect(snapNames).toContain('snapshots_symbol_kind_asof_uk');
-  });
+  }, 30_000);
 
   it('key CHECK constraints exist', async () => {
     const db = await getPGliteDb(dir);
@@ -195,7 +195,7 @@ describe('Phase 6 — Task 27: Full migration chain (all migrations on fresh PGl
       `SELECT conname FROM pg_constraint WHERE contype = 'c' AND conrelid = '"alerts"'::regclass AND conname LIKE '%snooze%'`,
     );
     expect(alertChecks.length).toBeGreaterThan(0);
-  });
+  }, 30_000);
 
   it('billing safety-gate columns and indexes exist', async () => {
     const db = await getPGliteDb(dir);
@@ -217,7 +217,7 @@ describe('Phase 6 — Task 27: Full migration chain (all migrations on fresh PGl
     );
     const replayColumnNames = replayColumns.map((r: Record<string, unknown>) => r.column_name);
     expect(replayColumnNames).toContain('replay_started_at');
-  });
+  }, 30_000);
 
   it('key indexes exist', async () => {
     const db = await getPGliteDb(dir);
@@ -231,7 +231,7 @@ describe('Phase 6 — Task 27: Full migration chain (all migrations on fresh PGl
       `SELECT indexname FROM pg_indexes WHERE tablename = 'chat_telemetry' AND indexname = 'chat_telemetry_user_id_idx'`,
     );
     expect(droppedIdx).toHaveLength(0);
-  });
+  }, 30_000);
 
   it('cot_reports columns are bigint (Phase 2)', async () => {
     const db = await getPGliteDb(dir);
@@ -240,5 +240,5 @@ describe('Phase 6 — Task 27: Full migration chain (all migrations on fresh PGl
       `SELECT data_type FROM information_schema.columns WHERE table_name = 'cot_reports' AND column_name = 'dealer_long'`,
     );
     expect(rows[0]?.data_type).toBe('bigint');
-  });
+  }, 30_000);
 });

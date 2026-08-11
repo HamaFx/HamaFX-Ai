@@ -31,8 +31,8 @@ Module: packages/data/src/providers/provider-adapters.ts
 | Package tag | `#hamafx-data` |
 
 
-### 📤 Depends On (8)
-[[@hamafx-shared]] · [[errors-DataErrorCode]] · [[provider-registry-ProviderFetchOptions]] · [[index-FetchLiveTickArgs]] · [[index-FetchCandles1mArgs]] · [[to-candle-StandardBar]] · [[index_tool-architecture-explorer|index]] · [[@hamafx-data]]
+### 📤 Depends On (10)
+[[@hamafx-shared]] · [[errors-DataErrorCode]] · [[provider-registry-ProviderFetchOptions]] · [[index-FetchLiveTickArgs]] · [[index-FetchCandles1mArgs]] · [[to-candle-StandardBar]] · [[index-fetchTick]] · [[index-fetchCandles]] · [[index-fetchPrice]] · [[@hamafx-data]]
 
 
 

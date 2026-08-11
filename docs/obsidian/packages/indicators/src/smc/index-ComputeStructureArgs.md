@@ -40,6 +40,12 @@ Module: packages/indicators/src/smc/index.ts
 ## 📦 Exports
 - `ComputeStructureArgs`
 - `computeStructure`
+- `findSwings`
+- `detectStructure`
+- `detectFvgs`
+- `detectOrderBlocks`
+- `detectLiquiditySweeps`
+- `defaultSwingLookback`
 
 
 ## 🔍 Explore

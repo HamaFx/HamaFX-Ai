@@ -111,7 +111,7 @@ dv.table(
 - [[list-tables]] *(0↖ 1↗)*
 - [[migrate-status]] *(0↖ 1↗)*
 - [[rotate-encryption-secret]] *(0↖ 1↗)*
-- [[index_tool-architecture-explorer|index]] *(2↖ 1↗)*
+- [[index-getDb]] *(2↖ 1↗)*
 - [[index_tool-architecture-explorer|index]] *(0↖ 1↗)*
 - [[_extensions]] *(0↖ 1↗)*
 - [[auth-users]] *(30↖ 1↗)*

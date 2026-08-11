@@ -36,7 +36,7 @@ Aggregate the upcoming high/medium-impact macro events for a symbol
 
 
 ### 📥 Depended On By (3)
-[[analysis]] · [[convene_committee]] · [[analyze-fundamental.test]]
+[[analysis-toolRegistry]] · [[convene_committee]] · [[analyze-fundamental.test]]
 
 
 

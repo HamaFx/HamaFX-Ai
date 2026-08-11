@@ -32,7 +32,7 @@ Module: packages/ai/test/byok-providers.test.ts
 
 
 ### 📤 Depends On (4)
-[[vitest-installServerOnlyStub]] · [[byok-providers]] · [[@hamafx-shared]] · [[@hamafx-ai]]
+[[vitest-installServerOnlyStub]] · [[byok-providers-BYOK_PROVIDERS]] · [[@hamafx-shared]] · [[@hamafx-ai]]
 
 
 

@@ -40,6 +40,7 @@ Module: loadtest/tests/soak-read-mix.ts
 ## 📦 Exports
 - `options`
 - `setup`
+- `handleSummary`
 - `default`
 
 

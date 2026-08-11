@@ -49,6 +49,9 @@ Module: packages/shared/src/encryption.ts
 - `decryptWithPassword`
 - `encryptSecret`
 - `decryptSecret`
+- `PROVIDER_IDS`
+- `type ByokPayload`
+- `type ProviderId`
 
 
 ## 🔍 Explore

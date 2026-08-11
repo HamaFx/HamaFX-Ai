@@ -3,8 +3,8 @@ type: module
 package: "tool:architecture-explorer"
 path: "tools/architecture-explorer/src/analyzer.ts"
 incoming: 1
-outgoing: 8
-connections: 9
+outgoing: 7
+connections: 8
 risk: low
 layer: core
 tags: [type/module, tool:architecture-explorer, layer/core]
@@ -24,8 +24,8 @@ Module: tools/architecture-explorer/src/analyzer.ts
 | | Count |
 |---|---|
 | Incoming dependencies | 1 |
-| Outgoing dependencies | 8 |
-| Total connections | 9 |
+| Outgoing dependencies | 7 |
+| Total connections | 8 |
 | Risk level | **LOW** |
 | Layer | `core` |
 | Package tag | `#tool:architecture-explorer` |

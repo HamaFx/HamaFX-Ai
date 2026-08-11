@@ -42,6 +42,10 @@ Module: apps/web/src/auth.ts
 
 ## 📦 Exports
 - `generateImpersonationChallenge`
+- `handlers`
+- `auth`
+- `signIn`
+- `signOut`
 
 
 ## 🔍 Explore

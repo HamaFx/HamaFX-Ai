@@ -32,7 +32,7 @@ Module: packages/ai/src/bot/commands/positions.ts
 
 
 ### 📤 Depends On (3)
-[[types-BotPlatform]] · [[index_tool-architecture-explorer|index]] · [[@hamafx-ai]]
+[[types-BotPlatform]] · [[index-createPosition]] · [[@hamafx-ai]]
 
 
 ### 📥 Depended On By (1)

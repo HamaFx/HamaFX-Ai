@@ -43,6 +43,8 @@ Module: apps/web/src/lib/logger.ts
 ## 📦 Exports
 - `createRequestLogger`
 - `createScopedLoggerWithContext`
+- `createCategorizedLogger`
+- `type CategorizedLogger`
 
 
 ## 🔍 Explore

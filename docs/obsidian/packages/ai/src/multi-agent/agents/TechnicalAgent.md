@@ -32,7 +32,7 @@ Multi-agent specialist: TechnicalAgent
 
 
 ### 📤 Depends On (4)
-[[base-agent-baseOpinionSchema]] · [[index_tool-architecture-explorer|index]] · [[types-AnalysisMode]] · [[@hamafx-ai]]
+[[base-agent-baseOpinionSchema]] · [[index-toolRegistry]] · [[types-AnalysisMode]] · [[@hamafx-ai]]
 
 
 ### 📥 Depended On By (2)

@@ -32,7 +32,7 @@ Module: packages/ai/src/routing.ts
 
 
 ### 📤 Depends On (4)
-[[model]] · [[semantic-routing-SemanticRoutingDomain]] · [[routing-keywords-RoutingKeywordPattern]] · [[@hamafx-ai]]
+[[model-resolveModel]] · [[semantic-routing-SemanticRoutingDomain]] · [[routing-keywords-RoutingKeywordPattern]] · [[@hamafx-ai]]
 
 
 ### 📥 Depended On By (6)

@@ -36,7 +36,7 @@ Query the real-time operational health, connection latency, database record volu
 
 
 ### 📥 Depended On By (2)
-[[system]] · [[get-system-diagnostics.test]]
+[[system-toolRegistry]] · [[get-system-diagnostics.test]]
 
 
 

@@ -32,9 +32,9 @@ Package: @hamafx/shared
 
 
 
-### 📥 Depended On By (407)
+### 📥 Depended On By (408)
 [[alert-form-AlertForm]] · [[alert-list-ALERTS_QUERY_KEY]] · [[calendar-hero-CalendarHero]] · [[calendar-toolbar-ImportanceFilter]] · [[calendar-view-CalendarView]] · [[pro-chart-view-ProChartView]] · [[tradingview-widget-TradingViewWidget]] · [[page-async]] · [[dashboard-canvas-DashboardCanvas]] · [[alerts-widget-AlertsWidget]] · [[calendar-widget-CalendarWidget]] · [[equity-curve-widget-EquityCurveWidget]] · [[news-pulse-widget-NewsPulseWidget]] · [[open-positions-widget-OpenPositionsWidget]] · [[pnl-heatmap-widget-PnLHeatmapWidget]] · [[stats-widget-StatsWidget]] · [[today-glance-widget-TodayGlanceWidget]] · [[watchlist-widget-WatchlistWidget]] · [[ai-review-panel-AiReviewPanel]] · [[drawdown-chart-DrawdownChart]]
-> ... and 387 more
+> ... and 388 more
 
 
 

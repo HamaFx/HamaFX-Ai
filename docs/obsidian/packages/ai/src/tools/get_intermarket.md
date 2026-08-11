@@ -36,7 +36,7 @@ Cross-asset pulse for the legacy CFTC/intermarket trio: USD-strength proxy + 24h
 
 
 ### 📥 Depended On By (1)
-[[market]]
+[[market-toolRegistry]]
 
 
 

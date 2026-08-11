@@ -32,7 +32,7 @@ Module: packages/ai/src/provider-tester.ts
 
 
 ### 📤 Depends On (6)
-[[@hamafx-shared]] · [[byok-providers]] · [[rate-limits-RateLimitData]] · [[llm-throttle-noteLlmRateLimit]] · [[telemetry-telemetryConfig]] · [[@hamafx-ai]]
+[[@hamafx-shared]] · [[byok-providers-BYOK_PROVIDERS]] · [[rate-limits-RateLimitData]] · [[llm-throttle-noteLlmRateLimit]] · [[telemetry-telemetryConfig]] · [[@hamafx-ai]]
 
 
 

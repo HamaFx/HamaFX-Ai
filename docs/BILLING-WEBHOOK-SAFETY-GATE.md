@@ -1,16 +1,13 @@
 # Billing Webhook Safety Gate (Phase 5.8)
 
-> **HARD GATE — not optional.** This document defines the requirements
-> that MUST be met before paid plans can be enabled. The billing webhook
-> (when Phase 8.3 lands) must ship with dead-letter handling + Sentry
-> capture + paging on signature-verify/5xx failure **in the same PR**.
->
-> Reference: `docs/review/07-observability-monitoring-review.md` §OBS-10
+> **HARD GATE — not optional.** This document records the operational
+> requirements that must be met before paid plans are enabled. The live
+> implementation is the source of truth; this document must not describe
+> controls that are absent from code or operator configuration.
 
 ## Requirements
 
-When the billing/payment integration is added (Phase 8.3), the following
-MUST be implemented in the same PR that introduces the webhook:
+The live billing/payment integration must satisfy the following controls:
 
 ### 1. Webhook Signature Verification
 
@@ -19,8 +16,9 @@ MUST be implemented in the same PR that introduces the webhook:
 - Reject unsigned or invalid-signature requests with HTTP 401.
 - Capture signature-verification failures to Sentry with
   `tags: { component: 'billing-webhook', kind: 'signature-failure' }`.
-- Page the on-call when signature failures exceed 3 in 5 minutes
-  (possible webhook secret compromise or replay attack).
+- Emit the `billing_webhook_signature_failure` Sentry count metric for every
+  invalid signature. Configure a Sentry metric alert for at least 3 events
+  in 5 minutes and route that alert to the operator's paging system.
 
 ### 2. Dead-Letter Queue
 
@@ -54,10 +52,13 @@ MUST be implemented in the same PR that introduces the webhook:
     extra: { webhookId, eventId },
   });
   ```
-- Configure a Sentry alert rule: `component:billing-webhook` events
-  with level >= error → page on-call via Better Stack.
-- The signature-verification failure alert (§1) should be a separate
-  Sentry alert rule with a lower threshold (3 in 5 min).
+- Configure a Sentry alert rule for `component:billing-webhook` errors
+  and route it to the operator's paging system.
+- Configure a separate Sentry metric alert for
+  `billing_webhook_signature_failure` at 3 events in 5 minutes.
+- These Sentry rules are operator configuration, not represented in this
+  repository; paid plans remain disabled until they are verified in the
+  active Sentry project.
 
 ### 4. Idempotency
 
@@ -82,7 +83,7 @@ Before enabling paid plans:
 - [ ] Send a webhook with an invalid signature → verify 401 + Sentry event
 - [ ] Send a webhook that causes a processing error → verify DLQ entry + Sentry event
 - [ ] Send the same webhook twice → verify idempotent (no double processing)
-- [ ] Simulate 3 signature failures in 5 min → verify on-call is paged
+- [ ] Simulate 3 signature failures in 5 min → verify the Sentry metric alert and paging integration
 - [ ] Verify the DLQ cron alert fires for entries >1 hour old
 
 **Paid plans MUST NOT be enabled until all acceptance tests pass.**

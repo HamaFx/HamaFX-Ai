@@ -3,8 +3,8 @@ type: module
 package: "tool:architecture-explorer"
 path: "tools/architecture-explorer/src/json-generator.ts"
 incoming: 1
-outgoing: 7
-connections: 8
+outgoing: 8
+connections: 9
 risk: low
 layer: core
 tags: [type/module, tool:architecture-explorer, layer/core]
@@ -24,15 +24,15 @@ Module: tools/architecture-explorer/src/json-generator.ts
 | | Count |
 |---|---|
 | Incoming dependencies | 1 |
-| Outgoing dependencies | 7 |
-| Total connections | 8 |
+| Outgoing dependencies | 8 |
+| Total connections | 9 |
 | Risk level | **LOW** |
 | Layer | `core` |
 | Package tag | `#tool:architecture-explorer` |
 
 
-### 📤 Depends On (6)
-[[types-NodeType]] · [[graph-model-GraphModel]] · [[analysis-analyzeArchitecture]] · [[advanced-features-analyzeImpact]] · [[git-history-scanGitHistory]] · [[tool-architecture-explorer]]
+### 📤 Depends On (7)
+[[types-NodeType]] · [[graph-model-GraphModel]] · [[analysis-analyzeArchitecture]] · [[advanced-features-analyzeImpact]] · [[git-history-scanGitHistory]] · [[scanner-ScannedFile]] · [[tool-architecture-explorer]]
 
 
 ### 📥 Depended On By (1)

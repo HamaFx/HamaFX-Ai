@@ -19,7 +19,7 @@ tags: [dashboard, overview]
 | @hamafx/indicators | 39 | 101 | 159 | package, core |
 | loadtest | 31 | 144 | 143 | package, core |
 | @hamafx/test-utils | 19 | 289 | 36 | package, core |
-| tool:architecture-explorer | 17 | 66 | 66 | package, core |
+| tool:architecture-explorer | 18 | 65 | 65 | package, core |
 | scripts | 8 | 7 | 7 | package, core |
 | @hamafx/config | 4 | 12 | 4 | package, core |
 | root | 3 | 2 | 2 | package, core |

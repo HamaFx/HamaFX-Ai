@@ -32,7 +32,7 @@ Module: packages/ai/src/model-resolution.ts
 
 
 ### 📤 Depends On (5)
-[[model]] · [[routing-RoutingDomain]] · [[@hamafx-shared]] · [[byok-providers]] · [[@hamafx-ai]]
+[[model-resolveModel]] · [[routing-RoutingDomain]] · [[@hamafx-shared]] · [[byok-providers-BYOK_PROVIDERS]] · [[@hamafx-ai]]
 
 
 ### 📥 Depended On By (3)

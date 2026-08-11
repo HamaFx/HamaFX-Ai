@@ -1,14 +1,22 @@
 {
-  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "$schema": "https://unpkg.com/knip@6/schema.json",
   "workspaces": {
     ".": {
-      "entry": ["scripts/*.{mjs,ts}", "tools/**/*.{mjs,ts}"],
-      "project": ["scripts/**/*", "tools/**/*", "*.json", "*.mjs"]
+      "entry": ["scripts/*.{mjs,ts}", "tools/lighthouse/run.mjs"],
+      "project": ["scripts/**/*", "tools/lighthouse/**/*.mjs", "*.json", "*.mjs"]
+    },
+    "tools/architecture-explorer": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts", "test/**/*.ts"]
     },
     "apps/web": {
-      "entry": ["src/**/*.{ts,tsx}", "next.config.mjs"],
-      "project": ["src/**/*.{ts,tsx}"],
-      "ignore": ["src/**/*.test.{ts,tsx}"]
+      "entry": [
+        "src/**/*.{ts,tsx}",
+        "test/**/*.{ts,tsx}",
+        "test/vitest.setup.ts",
+        "next.config.mjs"
+      ],
+      "project": ["src/**/*.{ts,tsx}", "test/**/*.{ts,tsx}"]
     },
     "apps/worker": {
       "entry": ["src/**/*.ts", "test/**/*.ts"],
@@ -27,8 +35,8 @@
       "project": ["src/**/*.ts", "scripts/**/*.ts"]
     },
     "packages/indicators": {
-      "entry": ["src/**/*.ts"],
-      "project": ["src/**/*.ts"]
+      "entry": ["src/**/*.ts", "test/**/*.ts"],
+      "project": ["src/**/*.ts", "test/**/*.ts"]
     },
     "packages/shared": {
       "entry": ["src/**/*.ts"],
@@ -36,15 +44,23 @@
     },
     "packages/config": {
       "entry": ["eslint/index.js"],
-      "project": ["**/*.js"]
+      "project": ["**/*.js"],
+      "ignoreUnresolved": ["next"]
     },
     "packages/test-utils": {
       "entry": ["src/**/*.ts"],
       "project": ["src/**/*.ts"]
     }
   },
+  "ignoreBinaries": ["systemd-notify", "where", "xdg-open"],
+  "vitest": false,
+  "playwright": false,
+  "drizzle": false,
   "ignoreDependencies": [
     "@ianvs/prettier-plugin-sort-imports",
-    "prettier-plugin-tailwindcss"
+    "prettier-plugin-tailwindcss",
+    "@vitest/coverage-v8",
+    "@vitejs/plugin-react",
+    "tailwindcss"
   ]
 }

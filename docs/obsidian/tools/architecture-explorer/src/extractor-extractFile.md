@@ -42,7 +42,6 @@ Module: tools/architecture-explorer/src/extractor.ts
 
 ## 📦 Exports
 - `extractFile`
-- `toolExportMatch`
 - `parsePackageJson`
 
 

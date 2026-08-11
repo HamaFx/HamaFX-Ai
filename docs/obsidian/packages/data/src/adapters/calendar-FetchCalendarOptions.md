@@ -32,7 +32,7 @@ Module: packages/data/src/adapters/calendar.ts
 
 
 ### 📤 Depends On (4)
-[[@hamafx-shared]] · [[errors-DataErrorCode]] · [[index_tool-architecture-explorer|index]] · [[@hamafx-data]]
+[[@hamafx-shared]] · [[errors-DataErrorCode]] · [[index-fetchReleaseDates]] · [[@hamafx-data]]
 
 
 ### 📥 Depended On By (1)

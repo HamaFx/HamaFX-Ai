@@ -32,7 +32,7 @@ Module: packages/ai/src/briefings/persistence.ts
 
 
 ### 📤 Depends On (5)
-[[@hamafx-db]] · [[db-getDb]] · [[persistence]] · [[@hamafx-shared]] · [[@hamafx-ai]]
+[[@hamafx-db]] · [[db-getDb]] · [[persistence-listThreads]] · [[@hamafx-shared]] · [[@hamafx-ai]]
 
 
 ### 📥 Depended On By (1)

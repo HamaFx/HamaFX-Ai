@@ -35,7 +35,7 @@ dv.table(
 - [[bug-report.test]] *(0↖ 4↗)*
 - [[env.test]] *(0↖ 4↗)*
 - [[error-patterns.test]] *(0↖ 4↗)*
-- [[index_tool-architecture-explorer|index]] *(8↖ 3↗)*
+- [[index-isTextPart]] *(8↖ 3↗)*
 - [[alerts-AlertChannelSchema]] *(0↖ 3↗)*
 - [[candle-CandleSchema]] *(1↖ 3↗)*
 - [[indicator-IndicatorKindSchema]] *(1↖ 3↗)*

@@ -32,11 +32,11 @@ Copyright 2026 HamaFX
 
 
 ### 📤 Depends On (5)
-[[index_tool-architecture-explorer|index]] · [[tool-context-ToolEnv]] · [[@hamafx-shared]] · [[@hamafx-ai]] · [[registry-ToolPlugin]]
+[[index-SocialSentimentService]] · [[tool-context-ToolEnv]] · [[@hamafx-shared]] · [[@hamafx-ai]] · [[registry-ToolPlugin]]
 
 
 ### 📥 Depended On By (1)
-[[system]]
+[[system-toolRegistry]]
 
 
 

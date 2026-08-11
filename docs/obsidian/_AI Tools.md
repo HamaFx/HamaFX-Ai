@@ -46,7 +46,7 @@ dv.table(
 - [[verify_call]] · `@hamafx/ai` · `packages/ai/src/tools/verify-call.ts`  *(↖3 ↗5 = 8)*
 - [[get_candles]] · `@hamafx/ai` · `packages/ai/src/tools/get-candles.ts`  *(↖3 ↗4 = 7)*
 - [[get_correlation]] · `@hamafx/ai` · `packages/ai/src/tools/get-correlation.ts`  *(↖1 ↗4 = 5)*
-- [[get_co_t]] · `@hamafx/ai` · `packages/ai/src/tools/get-cot.ts`  *(↖1 ↗4 = 5)*
+- [[get_cot]] · `@hamafx/ai` · `packages/ai/src/tools/get-cot.ts`  *(↖1 ↗4 = 5)*
 - [[get_intermarket]] · `@hamafx/ai` · `packages/ai/src/tools/get-intermarket.ts`  *(↖1 ↗4 = 5)*
 - [[get_portfolio_snapshot]] · `@hamafx/ai` · `packages/ai/src/tools/get-portfolio-snapshot.ts`  *(↖1 ↗4 = 5)*
 - [[get_price]] · `@hamafx/ai` · `packages/ai/src/tools/get-price.ts`  *(↖3 ↗4 = 7)*

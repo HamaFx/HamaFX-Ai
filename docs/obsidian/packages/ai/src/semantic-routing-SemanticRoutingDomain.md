@@ -32,7 +32,7 @@ Module: packages/ai/src/semantic-routing.ts
 
 
 ### 📤 Depends On (2)
-[[model]] · [[@hamafx-ai]]
+[[model-resolveModel]] · [[@hamafx-ai]]
 
 
 ### 📥 Depended On By (2)

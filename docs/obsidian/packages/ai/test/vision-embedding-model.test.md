@@ -32,7 +32,7 @@ Module: packages/ai/test/vision-embedding-model.test.ts
 
 
 ### 📤 Depends On (3)
-[[vitest-installServerOnlyStub]] · [[model]] · [[@hamafx-ai]]
+[[vitest-installServerOnlyStub]] · [[model-resolveModel]] · [[@hamafx-ai]]
 
 
 

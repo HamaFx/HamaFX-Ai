@@ -53,6 +53,10 @@ Module: packages/shared/src/symbols.ts
 - `CURRENCY_TAGS`
 - `CurrencyTag`
 - `CurrencyTagSchema`
+- `BUILTIN_SYMBOLS`
+- `SYMBOL_MAP`
+- `isKnownSymbol`
+- `normalizeSymbol`
 
 
 ## 🔍 Explore

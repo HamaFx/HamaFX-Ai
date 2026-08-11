@@ -36,7 +36,7 @@ Copyright 2026 HamaFX
 
 
 ### 📥 Depended On By (2)
-[[journal]] · [[mutation-tools.test]]
+[[journal-toolRegistry]] · [[mutation-tools.test]]
 
 
 

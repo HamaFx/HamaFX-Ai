@@ -73,8 +73,8 @@ The NOWPayments billing webhook (`/api/billing/webhook`) verifies HMAC-SHA512 si
 **Safety gate requirements** (must be met before enabling paid plans):
 1. Webhook signature verification on every request ✅
 2. Dead-letter queue for failed processing (`ipn_events` table) ✅
-3. Sentry capture of webhook errors ⚠️ verify implementation
-4. Paging on signature failure threshold ⚠️ verify implementation
+3. Sentry capture of webhook errors ✅
+4. Signature-failure metric emitted in code; Sentry threshold alert and paging integration remain operator configuration ⚠️ verify in the active Sentry project
 
 ### CSRF Protection
 

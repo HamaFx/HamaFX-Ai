@@ -32,7 +32,7 @@ Module: apps/web/src/app/(app)/settings/_components/security/two-factor-setup.ts
 
 
 ### 📤 Depends On (2)
-[[actions]] · [[@hamafx-web]]
+[[actions-setupTwoFactorAction]] · [[@hamafx-web]]
 
 
 ### 📥 Depended On By (1)

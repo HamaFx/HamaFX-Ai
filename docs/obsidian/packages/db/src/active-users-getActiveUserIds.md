@@ -32,7 +32,7 @@ Module: packages/db/src/active-users.ts
 
 
 ### 📤 Depends On (2)
-[[index_tool-architecture-explorer|index]] · [[@hamafx-db]]
+[[index-getDb]] · [[@hamafx-db]]
 
 
 

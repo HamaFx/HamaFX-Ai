@@ -32,7 +32,7 @@ Multi-agent specialist: RiskAgent
 
 
 ### 📤 Depends On (5)
-[[base-agent-baseOpinionSchema]] · [[index_tool-architecture-explorer|index]] · [[@hamafx-shared]] · [[types-AnalysisMode]] · [[@hamafx-ai]]
+[[base-agent-baseOpinionSchema]] · [[index-toolRegistry]] · [[@hamafx-shared]] · [[types-AnalysisMode]] · [[@hamafx-ai]]
 
 
 ### 📥 Depended On By (2)

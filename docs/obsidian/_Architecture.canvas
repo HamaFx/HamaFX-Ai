@@ -12,7 +12,7 @@
     {
       "id": "n2",
       "type": "file",
-      "file": "packages/@hamafx-web.md",
+      "file": "apps/@hamafx-web.md",
       "x": 500,
       "y": 50,
       "width": 320,
@@ -21,7 +21,7 @@
     {
       "id": "n3",
       "type": "file",
-      "file": "packages/@hamafx-worker.md",
+      "file": "apps/@hamafx-worker.md",
       "x": 950,
       "y": 50,
       "width": 320,
@@ -138,7 +138,7 @@
     {
       "id": "n16",
       "type": "file",
-      "file": "tools/tool-lighthouse.md",
+      "file": "./tool-lighthouse.md",
       "x": 1400,
       "y": 1400,
       "width": 320,

@@ -32,7 +32,7 @@ Module: packages/ai/src/embeddings.ts
 
 
 ### 📤 Depends On (4)
-[[@hamafx-shared]] · [[@hamafx-db]] · [[model]] · [[@hamafx-ai]]
+[[@hamafx-shared]] · [[@hamafx-db]] · [[model-resolveModel]] · [[@hamafx-ai]]
 
 
 ### 📥 Depended On By (4)

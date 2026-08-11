@@ -36,7 +36,7 @@ Trigger the operator-only FRED resonance historical sync. This tool is only for 
 
 
 ### 📥 Depended On By (2)
-[[system]] · [[run-system-action.test]]
+[[system-toolRegistry]] · [[run-system-action.test]]
 
 
 

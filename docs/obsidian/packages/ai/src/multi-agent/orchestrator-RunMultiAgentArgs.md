@@ -32,7 +32,7 @@ Module: packages/ai/src/multi-agent/orchestrator.ts
 
 
 ### 📤 Depends On (18)
-[[cost-DEFAULT_TURN_ESTIMATE_USD]] · [[model]] · [[context-BuildContextArgs]] · [[concurrency-limitConcurrency]] · [[modes-selectAgents]] · [[persistence-SaveOpinionsArgs]] · [[persistence]] · [[verification-CitationFinding]] · [[@hamafx-shared]] · [[TechnicalAgent]] · [[FundamentalAgent]] · [[RiskAgent]] · [[SentimentAgent]] · [[decision]] · [[base-agent-baseOpinionSchema]] · [[types-AnalysisMode]] · [[@hamafx-db]] · [[@hamafx-ai]]
+[[cost-DEFAULT_TURN_ESTIMATE_USD]] · [[model-resolveModel]] · [[context-BuildContextArgs]] · [[concurrency-limitConcurrency]] · [[modes-selectAgents]] · [[persistence-SaveOpinionsArgs]] · [[persistence-listThreads]] · [[verification-CitationFinding]] · [[@hamafx-shared]] · [[TechnicalAgent]] · [[FundamentalAgent]] · [[RiskAgent]] · [[SentimentAgent]] · [[decision]] · [[base-agent-baseOpinionSchema]] · [[types-AnalysisMode]] · [[@hamafx-db]] · [[@hamafx-ai]]
 
 
 

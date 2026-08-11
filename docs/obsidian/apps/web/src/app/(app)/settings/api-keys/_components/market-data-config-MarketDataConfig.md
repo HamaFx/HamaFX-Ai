@@ -32,7 +32,7 @@ Module: apps/web/src/app/(app)/settings/api-keys/_components/market-data-config.
 
 
 ### 📤 Depends On (2)
-[[actions]] · [[@hamafx-web]]
+[[actions-setupTwoFactorAction]] · [[@hamafx-web]]
 
 
 ### 📥 Depended On By (1)

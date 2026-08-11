@@ -32,7 +32,7 @@ Module: packages/ai/test/tools.test.ts
 
 
 ### 📤 Depends On (3)
-[[vitest-installServerOnlyStub]] · [[index_tool-architecture-explorer|index]] · [[@hamafx-ai]]
+[[vitest-installServerOnlyStub]] · [[index-toolRegistry]] · [[@hamafx-ai]]
 
 
 

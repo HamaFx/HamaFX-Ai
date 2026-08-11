@@ -501,7 +501,7 @@ export const DEFAULT_WATCHLIST_SYMBOLS = Object.freeze([
 ] as const);
 
 /** Default active stream set before the database catalog is reconciled. */
-export const DEFAULT_STREAM_SYMBOLS = ALL_SYMBOLS;
+export const DEFAULT_STREAM_SYMBOLS = Object.freeze([...ALL_SYMBOLS]);
 
 /** Symbols with a direct CFTC Commitment-of-Traders mapping. */
 export const CFTC_SUPPORTED_SYMBOLS = Object.freeze(['XAUUSD', 'EURUSD', 'GBPUSD'] as const);

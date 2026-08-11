@@ -32,7 +32,7 @@ Module: apps/web/src/app/(app)/settings/agent/_components/disabled-tools-form.ts
 
 
 ### 📤 Depends On (3)
-[[actions]] · [[@hamafx-shared]] · [[@hamafx-web]]
+[[actions-setupTwoFactorAction]] · [[@hamafx-shared]] · [[@hamafx-web]]
 
 
 ### 📥 Depended On By (1)

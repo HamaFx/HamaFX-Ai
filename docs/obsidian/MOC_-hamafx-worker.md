@@ -75,7 +75,7 @@ dv.table(
 - [[log-Logger]] *(36↖ 2↗)*
 - [[scheduler.test]] *(0↖ 2↗)*
 - [[build]] *(0↖ 1↗)*
-- [[index_tool-architecture-explorer|index]] *(1↖ 1↗)*
+- [[index-BinanceStreamConsumer]] *(1↖ 1↗)*
 - [[env-WorkerEnv]] *(7↖ 1↗)*
 - [[healthchecks-PingStatus]] *(3↖ 1↗)*
 - [[sd-notify-notifyWatchdog]] *(1↖ 1↗)*

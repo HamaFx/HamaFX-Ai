@@ -40,6 +40,7 @@ Module: loadtest/tests/load-chat.ts
 ## 📦 Exports
 - `options`
 - `setup`
+- `handleSummary`
 - `default`
 
 

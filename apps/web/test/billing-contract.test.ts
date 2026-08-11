@@ -25,6 +25,7 @@ const mockReleaseBillingWebhookReplay = vi.hoisted(() => vi.fn());
 const mockCountStaleBillingWebhookFailures = vi.hoisted(() => vi.fn());
 const mockCaptureException = vi.hoisted(() => vi.fn());
 const mockCaptureMessage = vi.hoisted(() => vi.fn());
+const mockMetricsCount = vi.hoisted(() => vi.fn());
 
 vi.mock('@/auth', () => ({ auth: mockAuth }));
 vi.mock('@/lib/admin-auth', () => ({
@@ -40,6 +41,7 @@ vi.mock('@/lib/nowpayments', () => ({
 vi.mock('@sentry/nextjs', () => ({
   captureException: mockCaptureException,
   captureMessage: mockCaptureMessage,
+  metrics: { count: mockMetricsCount },
 }));
 vi.mock('@hamafx/db', () => ({
   schema: {},
@@ -250,6 +252,13 @@ describe('billing P1 safety gate', () => {
     );
 
     expect(response.status).toBe(401);
+    expect(mockMetricsCount).toHaveBeenCalledWith(
+      'billing_webhook_signature_failure',
+      1,
+      expect.objectContaining({
+        attributes: expect.objectContaining({ component: 'billing-webhook', provider: 'nowpayments' }),
+      }),
+    );
     expect(mockCaptureMessage).toHaveBeenCalledWith(
       'Invalid NOWPayments IPN signature',
       expect.objectContaining({ tags: expect.objectContaining({ kind: 'signature-failure' }) }),

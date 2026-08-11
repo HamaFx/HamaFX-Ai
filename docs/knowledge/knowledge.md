@@ -1,6 +1,6 @@
 # HamaFX-Ai Architecture Knowledge Base
 
-> **Auto-generated**: 2026-08-10T19:59:22.439Z
+> **Auto-generated**: 2026-08-10T21:39:58.779Z
 > **Schema version**: 1.0
 > **Purpose**: AI-agent-optimized architecture overview for rapid project understanding
 
@@ -11,7 +11,7 @@
 **HamaFX-Ai** is an open-source (Apache-2.0), single-user BYOK, chat-driven AI trading copilot for gold, forex, and supported crypto instruments: **XAUUSD** (primary), canonical forex pairs, and Binance crypto pairs.
 
 - **Stack**: Next.js 16 (App Router) + React 19 + TypeScript (strict)
-- **AI**: Vercel AI SDK v5, Google Vertex AI + 10-provider BYOK registry
+- **AI**: Vercel AI SDK v5, Google Vertex AI + the live BYOK provider registry
 - **Database**: PostgreSQL (Supabase) + pgvector, Drizzle ORM (52+ tables)
 - **Auth**: NextAuth.js v5 (Credentials provider, JWT strategy; owner-first single-user OSS mode)
 - **Charts**: TradingView lightweight-charts v5
@@ -21,9 +21,9 @@
 
 | Package | Path | Type | Purpose |
 |---------|------|------|---------|
-| **root** | `root` | package | Package: root (3 nodes) |
-| **@hamafx/web** | `packages/web` | package | Package: @hamafx/web (657 nodes) |
-| **@hamafx/worker** | `packages/worker` | package | Package: @hamafx/worker (58 nodes) |
+| **root** | `.` | package | Package: root (3 nodes) |
+| **@hamafx/web** | `apps/web` | package | Package: @hamafx/web (657 nodes) |
+| **@hamafx/worker** | `apps/worker` | package | Package: @hamafx/worker (58 nodes) |
 | **docs** | `docs` | package | Package: docs (1 nodes) |
 | **infra** | `infra` | package | Package: infra (1 nodes) |
 | **loadtest** | `loadtest` | package | Package: loadtest (31 nodes) |
@@ -35,12 +35,12 @@
 | **@hamafx/shared** | `packages/shared` | package | Package: @hamafx/shared (85 nodes) |
 | **@hamafx/test-utils** | `packages/test-utils` | package | Package: @hamafx/test-utils (19 nodes) |
 | **scripts** | `scripts` | package | Package: scripts (8 nodes) |
-| **tool:architecture-explorer** | `tools/architecture-explorer` | package | Package: tool:architecture-explorer (17 nodes) |
-| **tool:lighthouse** | `tools/lighthouse` | package | Package: tool:lighthouse (2 nodes) |
+| **tool:architecture-explorer** | `tools/architecture-explorer` | package | Package: tool:architecture-explorer (18 nodes) |
+| **tool:lighthouse** | `.` | package | Package: tool:lighthouse (2 nodes) |
 
 **Dependency chain**: `config → shared → db + indicators → data → ai → web + worker`
 
-**Total**: 16 packages, **1426** architecture nodes
+**Total**: 16 packages, **1427** architecture nodes
 
 ## OSS Runtime Boundary
 
@@ -87,7 +87,7 @@ User Message → Rate Limit → Thread Check → Budget Guard → History Load �
 - **get_calendar** — Copyright 2026 HamaFX
 - **get_candles** — Fetch OHLC candles for one symbol at one timeframe (e.g. XAUUSD 1h). Use to confirm a recent swing high/low or to feed a pattern read. For RSI/MACD/EMA/etc. prefer get_indicators.
 - **get_correlation** — Pearson correlation matrix over close-to-close returns for the legacy CFTC/intermarket trio XAUUSD/EURUSD/GBPUSD at the given timeframe + window, plus a USD-strength proxy (
-- **get_co_t** — Last N weeks of CFTC Commitment-of-Traders rows for one symbol (default XAUUSD). Use to answer
+- **get_cot** — Last N weeks of CFTC Commitment-of-Traders rows for one symbol (default XAUUSD). Use to answer
 - **get_indicators** — Compute indicators (sma, ema, rsi, macd, atr, bollinger, pivots) on a (symbol, timeframe) window. Returns the last 30 points of each series — enough for
 - **get_intermarket_resonance** — Evaluate Gold (XAUUSD) or major currencies
 - **get_intermarket** — Cross-asset pulse for the legacy CFTC/intermarket trio: USD-strength proxy + 24h change, gold
@@ -149,7 +149,7 @@ User Message → Rate Limit → Thread Check → Budget Guard → History Load �
 
 - **Circular Dependencies**: 6
 - **Architecture Hotspots**: 50
-- **Dead Code / Orphans**: 1178
+- **Dead Code / Orphans**: 1168
 - **Shared Utilities**: 40
 - **Average Coupling**: 0.22
 - **Max Dependency Chain**: 3 hops

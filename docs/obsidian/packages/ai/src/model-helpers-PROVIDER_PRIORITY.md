@@ -32,7 +32,7 @@ Module: packages/ai/src/model-helpers.ts
 
 
 ### 📤 Depends On (4)
-[[@hamafx-shared]] · [[byok-providers]] · [[vertex-factory-ResolveModelEnv]] · [[@hamafx-ai]]
+[[@hamafx-shared]] · [[byok-providers-BYOK_PROVIDERS]] · [[vertex-factory-ResolveModelEnv]] · [[@hamafx-ai]]
 
 
 ### 📥 Depended On By (4)

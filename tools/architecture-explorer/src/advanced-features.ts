@@ -23,7 +23,7 @@ import type {
  * - Direct vs transitive
  * - Risk score
  */
-export function analyzeImpact(
+function analyzeImpact(
   nodeId: string,
   model: ArchitectureModel,
 ): ImpactAnalysis | null {
@@ -314,7 +314,7 @@ export function generateRecommendations(model: ArchitectureModel): Recommendatio
 /**
  * Creates a snapshot of the current graph state.
  */
-export function createSnapshot(
+function createSnapshot(
   id: string,
   name: string,
   description: string,
@@ -339,7 +339,7 @@ export function createSnapshot(
 /**
  * Computes the diff between two snapshots.
  */
-export function compareSnapshots(
+function compareSnapshots(
   snapA: GraphSnapshot,
   snapB: GraphSnapshot,
   model: ArchitectureModel,
@@ -381,9 +381,9 @@ export function compareSnapshots(
 // EXTENSIBILITY — Plugin hook registry
 // ═══════════════════════════════════════════════════════════════════════
 
-export type PluginHookName = 'onNodeClick' | 'onViewSwitch' | 'onLayoutChange' | 'onSearch' | 'onExport';
+type PluginHookName = 'onNodeClick' | 'onViewSwitch' | 'onLayoutChange' | 'onSearch' | 'onExport';
 
-export interface PluginHook {
+interface PluginHook {
   name: string;
   description: string;
   /** Hook registration point so the HTML can call registered plugins. */

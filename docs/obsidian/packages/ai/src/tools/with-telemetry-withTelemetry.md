@@ -32,7 +32,7 @@ Module: packages/ai/src/tools/with-telemetry.ts
 
 
 ### 📤 Depends On (4)
-[[persistence]] · [[tool-context-ToolEnv]] · [[index_tool-architecture-explorer|index]] · [[@hamafx-ai]]
+[[persistence-listThreads]] · [[tool-context-ToolEnv]] · [[index-withDiagnostics]] · [[@hamafx-ai]]
 
 
 ### 📥 Depended On By (2)

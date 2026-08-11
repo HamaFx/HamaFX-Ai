@@ -32,7 +32,7 @@ Module: packages/ai/src/chat/resolve-model.ts
 
 
 ### 📤 Depends On (8)
-[[types-RunChatArgs]] · [[@hamafx-db]] · [[@hamafx-shared]] · [[cost-DEFAULT_TURN_ESTIMATE_USD]] · [[model]] · [[model-resolution-toModelDomain]] · [[routing-RoutingDomain]] · [[@hamafx-ai]]
+[[types-RunChatArgs]] · [[@hamafx-db]] · [[@hamafx-shared]] · [[cost-DEFAULT_TURN_ESTIMATE_USD]] · [[model-resolveModel]] · [[model-resolution-toModelDomain]] · [[routing-RoutingDomain]] · [[@hamafx-ai]]
 
 
 ### 📥 Depended On By (1)

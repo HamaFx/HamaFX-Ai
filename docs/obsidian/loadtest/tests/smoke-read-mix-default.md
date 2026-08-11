@@ -40,6 +40,7 @@ Module: loadtest/tests/smoke-read-mix.ts
 ## 📦 Exports
 - `options`
 - `setup`
+- `handleSummary`
 - `default`
 
 

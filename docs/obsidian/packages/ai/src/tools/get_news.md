@@ -36,7 +36,7 @@ Copyright 2026 HamaFX
 
 
 ### 📥 Depended On By (2)
-[[journal]] · [[get-news.test]]
+[[journal-toolRegistry]] · [[get-news.test]]
 
 
 

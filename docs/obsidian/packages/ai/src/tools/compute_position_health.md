@@ -36,7 +36,7 @@ For each currently-open journal entry, compute live P/L in pips and R-multiples 
 
 
 ### 📥 Depended On By (2)
-[[analysis]] · [[compute-position-health.test]]
+[[analysis-toolRegistry]] · [[compute-position-health.test]]
 
 
 
