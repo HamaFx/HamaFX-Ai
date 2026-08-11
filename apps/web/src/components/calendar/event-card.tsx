@@ -28,7 +28,7 @@
 //   │                                         │
 //   │ actual 0.3 · forecast 0.2 · prev 0.2    │  data row (only when present)
 //   │                                         │
-//   │              [Ask AI]  [Remind me]      │  hover-reveal actions (always-visible on touch)
+//   │              [Ask AI]  [Remind me]      │  action row
 //   └────────────────────────────────────────┘
 //
 // Vertical accent ribbon on the left encodes importance: red = high,
@@ -85,12 +85,6 @@ export function EventCard({ event }: EventCardProps) {
     `What does ${event.title} (${event.currency ?? event.country}) at ${date.toUTCString()} usually mean for ${event.currency ?? 'USD'} and gold?`,
   );
 
-  const overlayVisibility =
-    'opacity-0 transition-opacity duration-150 ' +
-    'group-hover:pointer-events-auto group-hover:opacity-100 ' +
-    'group-focus-within:pointer-events-auto group-focus-within:opacity-100 ' +
-    '[@media(hover:none)]:opacity-100 [@media(hover:none)]:pointer-events-auto';
-
   return (
     <article
       className={cn(
@@ -110,7 +104,7 @@ export function EventCard({ event }: EventCardProps) {
         />
       ) : null}
 
-      <div className="flex flex-col gap-2.5 px-4 py-3.5 pl-5">
+      <div className="flex flex-col gap-2.5 px-4 py-3.5 pl-5 pb-5">
         {/* Meta strip — currency glyph + country + time + countdown */}
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-body-sm tabular-nums">
           <span
@@ -153,19 +147,19 @@ export function EventCard({ event }: EventCardProps) {
         )}
       </div>
 
-      {/* Action overlay — hover/focus on pointer devices, always visible on
-       * touch. Sits over the bottom of the card so it doesn't push content. */}
+      {/* Actions stay in normal flow so they can never cover the event title
+       * or data. They fade in on pointer hover and remain visible on touch. */}
       {isFuture ? (
         <div
           className={cn(
-            'pointer-events-none absolute inset-x-0 bottom-0',
-            'flex items-center justify-between gap-1 px-3 pb-2',
-            overlayVisibility,
+            'flex items-center justify-between gap-2 border-t border-border/70 px-3 py-2',
+            'bg-bg-elev-1 transition-colors duration-150',
+            'hover:bg-bg-elev-2',
           )}
         >
           <Link
             href={`/chat?prompt=${askPrompt}`}
-            className="bg-bg-elev-2 text-fg-muted hover:text-fg pointer-events-auto inline-flex items-center gap-1 rounded-sm px-3 py-1.5 text-body-sm font-medium transition-colors"
+            className="bg-bg-elev-2 text-fg-muted hover:text-fg inline-flex min-h-8 items-center gap-1 rounded-sm px-3 py-1.5 text-body-sm font-medium transition-colors"
           >
             <IconBolt className="size-3.5" />
             Ask AI

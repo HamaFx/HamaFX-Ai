@@ -32,37 +32,21 @@
 // green = bullish, red = bearish, no ribbon = neutral. Kept as the
 // "scannable at a glance" signal even before the user reads the title.
 //
-// Action row (Ask AI, IconBookmark, Open) lives in a hover overlay on desktop
-// (revealed on card hover or keyboard focus). On touch devices, the row
-// is permanently visible — touch affordances don't have hover. This keeps
-// the resting card body to three clean zones without losing the three
-// primary actions.
+// Action row stays in normal flow at every breakpoint, so variable-length
+// provider content can never be hidden underneath the controls.
 //
-// Action overlay is memoized to avoid re-rendering untouched cards when bookmark updates.
+// The card is memoized to avoid re-rendering untouched cards when bookmark updates.
 
 import type { NewsArticle } from '@hamafx/shared';
 import {IconBookmark, IconExternalLink, IconBolt} from '@tabler/icons-react';
 import { m } from 'motion/react';
 import { memo } from 'react';
 
+import { cleanNewsText } from '@/lib/clean-news-text';
 import { cn } from '@/lib/cn';
 import { formatRelative } from '@/lib/format';
 
 import { useBookmarks } from './use-bookmarks';
-
-function cleanNewsText(raw: string): string {
-  return raw
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&apos;/g, "'")
-    .replace(/&#x27;/g, "'")
-    .replace(/&nbsp;/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
 
 interface ArticleCardProps {
   article: NewsArticle;
@@ -91,18 +75,14 @@ const ArticleCardInner = memo(
           ? 'var(--color-bear)'
           : null;
 
+    const title = cleanNewsText(article.title);
+    const summary = article.summary ? cleanNewsText(article.summary) : '';
     const askPrompt = encodeURIComponent(
-      `What does this headline mean for my trading?\n\nTitle: ${article.title}\n${article.summary ? `Summary: ${article.summary}\n` : ''}${article.url}`,
+      `What does this headline mean for my trading?\n\nTitle: ${title}\n${summary ? `Summary: ${summary}\n` : ''}${article.url}`,
     );
 
     const totalTags = article.symbols.length + article.topics.length;
     const showTagsInline = totalTags > 0 && totalTags <= 4;
-
-    const overlayVisibility =
-      'opacity-0 transition-opacity duration-150 ' +
-      'group-hover:pointer-events-auto group-hover:opacity-100 ' +
-      'group-focus-within:pointer-events-auto group-focus-within:opacity-100 ' +
-      '[@media(hover:none)]:opacity-100 [@media(hover:none)]:pointer-events-auto';
 
     return (
       <article
@@ -124,10 +104,10 @@ const ArticleCardInner = memo(
           href={article.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="block px-4 py-4 pl-5"
+          className="block px-4 py-4 pl-5 pb-5"
         >
           <h3 className="text-fg line-clamp-3 text-body font-semibold leading-snug">
-            {cleanNewsText(article.title)}
+            {title}
           </h3>
 
           <div className="text-fg-subtle mt-2 flex flex-wrap items-center gap-x-2 text-body-sm tabular-nums">
@@ -160,31 +140,29 @@ const ArticleCardInner = memo(
               : null}
           </div>
 
-          {article.summary ? (
+          {summary ? (
             <p className="text-fg-muted mt-2 line-clamp-2 text-body-sm leading-[1.4]">
-              {cleanNewsText(article.summary)}
+              {summary}
             </p>
           ) : null}
         </a>
 
         <div
           className={cn(
-            'pointer-events-none absolute inset-x-0 bottom-0',
-            'flex items-center justify-between gap-1 px-3 pb-2 pt-3',
-            'bg-gradient-to-t from-bg-elev-1 via-bg-elev-1/90 to-transparent',
-            'md:group-hover:from-bg-elev-2 md:group-hover:via-bg-elev-2/90',
-            overlayVisibility,
+            'flex items-center justify-between gap-2 border-t border-border/70 px-3 py-2',
+            'bg-bg-elev-1 transition-colors duration-150',
+            'hover:bg-bg-elev-2',
           )}
         >
           <a
             href={`/chat?prompt=${askPrompt}`}
             onClick={(e) => e.stopPropagation()}
-            className="bg-bg-elev-2 text-fg-muted hover:text-fg pointer-events-auto inline-flex items-center gap-1 rounded-sm px-3 py-1.5 text-body-sm font-medium transition-colors"
+            className="bg-bg-elev-2 text-fg-muted hover:text-fg inline-flex min-h-8 items-center gap-1 rounded-sm px-3 py-1.5 text-body-sm font-medium transition-colors"
           >
             <IconBolt className="size-3.5" />
             Ask AI
           </a>
-          <div className="pointer-events-auto flex items-center gap-0.5">
+          <div className="flex items-center gap-0.5">
             <m.button
               type="button"
               whileTap={{ scale: 0.97 }}
@@ -220,10 +198,22 @@ const ArticleCardInner = memo(
     );
   },
   (prev, next) => {
-    if (prev.article.id !== next.article.id) return false;
-    if (prev.article.title !== next.article.title) return false;
     if (prev.saved !== next.saved) return false;
-    return true;
+    const previous = prev.article;
+    const current = next.article;
+    return (
+      previous.id === current.id &&
+      previous.title === current.title &&
+      previous.summary === current.summary &&
+      previous.url === current.url &&
+      previous.source === current.source &&
+      previous.publisher === current.publisher &&
+      previous.publishedAt === current.publishedAt &&
+      previous.sentiment === current.sentiment &&
+      previous.sentimentScore === current.sentimentScore &&
+      previous.symbols.join('|') === current.symbols.join('|') &&
+      previous.topics.join('|') === current.topics.join('|')
+    );
   },
 );
 

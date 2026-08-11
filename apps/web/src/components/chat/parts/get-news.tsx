@@ -15,6 +15,7 @@
 import type { GetNewsOutput, NewsSentiment } from '@hamafx/shared';
 import { Link } from 'next-view-transitions';
 
+import { cleanNewsText } from '@/lib/clean-news-text';
 import { formatStamp } from '@/lib/datetime';
 
 interface GetNewsPartProps {
@@ -26,20 +27,6 @@ interface GetNewsPartProps {
 
 /** Maximum rows rendered per card. The model can re-query for more. */
 const MAX_ROWS = 8;
-
-function cleanNewsText(raw: string): string {
-  return raw
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&apos;/g, "'")
-    .replace(/&#x27;/g, "'")
-    .replace(/&nbsp;/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
 
 export function GetNewsPart({ output, state, errorMessage }: GetNewsPartProps) {
   if (state === 'error') {
