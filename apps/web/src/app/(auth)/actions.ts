@@ -65,7 +65,7 @@ export async function loginAction(prevState: unknown, formData: FormData) {
   }
 
   // P2-7: Centralized redirect sanitizer
-  const safeNext = sanitizeNext(next);
+  const safeNext = await sanitizeNext(next);
 
   // P0-4: Capture device info for session management.
   // L-7: User-Agent is truncated to 255 chars and only stored in the
@@ -194,16 +194,11 @@ export async function registerAction(prevState: unknown, formData: FormData) {
 
   // HIGH-04: Generate email verification token
   try {
+    const baseUrl = getAuthEmailBaseUrl();
     const { raw, hashed } = generateToken();
     const verifyExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
     await createVerificationToken(normalizedEmail, hashed, 'email_verify', verifyExpires);
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const verifyUrl = `${baseUrl}/api/auth/verify-email?token=${encodeURIComponent(raw)}`;
-    if (process.env.NODE_ENV !== 'production') {
-      createScopedLoggerWithContext({ component: 'auth-actions', action: 'register-verification-token' }).info(
-        `verify link: ${verifyUrl}`,
-      );
-    }
     // P0-5: Actually send the verification email
     await sendVerificationEmail(normalizedEmail, verifyUrl);
   } catch (err) {
@@ -243,13 +238,42 @@ export async function registerAction(prevState: unknown, formData: FormData) {
 
 // HIGH-05: Password reset flow
 
+function getAuthEmailBaseUrl(): string {
+  const configured = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  const candidate = configured || (process.env.NODE_ENV !== 'production' ? 'http://localhost:3000' : '');
+  if (!candidate) throw new Error('NEXT_PUBLIC_APP_URL must be configured in production');
+
+  let url: URL;
+  try {
+    url = new URL(candidate);
+  } catch {
+    throw new Error('NEXT_PUBLIC_APP_URL must be a valid HTTP(S) URL');
+  }
+  if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.hash || url.search) {
+    throw new Error('NEXT_PUBLIC_APP_URL must be a public HTTP(S) URL without credentials, queries, or fragments');
+  }
+  return candidate.replace(/\/+$/, '');
+}
+
+function logEmailLinkForDevelopment(action: string, url: string): void {
+  if (process.env.NODE_ENV === 'production' || process.env.AUTH_DEBUG_EMAIL_LINKS !== 'true') return;
+  createScopedLoggerWithContext({ component: 'auth-actions', action }).info(`development email link: ${url}`);
+}
+
 async function sendPasswordResetEmail(to: string, resetUrl: string) {
   const apiKey = process.env.RESEND_API_KEY;
   const fromEmail = process.env.ALERT_FROM_EMAIL;
   if (!apiKey || !fromEmail) {
-    createScopedLoggerWithContext({ component: 'auth-actions', action: 'send-reset-email' }).warn(
-      `RESEND_API_KEY or ALERT_FROM_EMAIL not set — logging reset link instead: ${resetUrl}`,
-    );
+    if (process.env.NODE_ENV !== 'production') {
+      logEmailLinkForDevelopment('send-reset-email', resetUrl);
+    } else {
+      const error = new Error('Password reset email is not configured');
+      createScopedLoggerWithContext({ component: 'auth-actions', action: 'send-reset-email' }).errorContext(
+        error,
+        'Password reset email is not configured; refusing to log the reset token.',
+      );
+      Sentry.captureException(error, { tags: { component: 'auth-actions', action: 'send-reset-email' } });
+    }
     return;
   }
   try {
@@ -284,9 +308,16 @@ async function sendVerificationEmail(to: string, verifyUrl: string) {
   const apiKey = process.env.RESEND_API_KEY;
   const fromEmail = process.env.ALERT_FROM_EMAIL;
   if (!apiKey || !fromEmail) {
-    createScopedLoggerWithContext({ component: 'auth-actions', action: 'send-verify-email' }).warn(
-      `RESEND_API_KEY or ALERT_FROM_EMAIL not set — logging verify link instead: ${verifyUrl}`,
-    );
+    if (process.env.NODE_ENV !== 'production') {
+      logEmailLinkForDevelopment('send-verify-email', verifyUrl);
+    } else {
+      const error = new Error('Verification email is not configured');
+      createScopedLoggerWithContext({ component: 'auth-actions', action: 'send-verify-email' }).errorContext(
+        error,
+        'Verification email is not configured; refusing to log the verification token.',
+      );
+      Sentry.captureException(error, { tags: { component: 'auth-actions', action: 'send-verify-email' } });
+    }
     return;
   }
   try {
@@ -342,14 +373,8 @@ export async function forgotPasswordAction(prevState: unknown, formData: FormDat
           purpose: 'password_reset',
           expires: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
         });
-        // BUG-10: use a consistent localhost fallback to avoid sending prod URLs in non-prod envs
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+        const baseUrl = getAuthEmailBaseUrl();
         const resetUrl = `${baseUrl}/reset-password?token=${encodeURIComponent(raw)}`;
-        if (process.env.NODE_ENV !== 'production') {
-          createScopedLoggerWithContext({ component: 'auth-actions', action: 'forgot-password' }).info(
-            `reset link: ${resetUrl}`,
-          );
-        }
         await sendPasswordResetEmail(email, resetUrl);
       } catch (err) {
         createScopedLoggerWithContext({ component: 'auth-actions', action: 'forgot-password' }).error(
@@ -467,6 +492,7 @@ export async function resendVerificationAction(email: string) {
   }
 
   try {
+    const baseUrl = getAuthEmailBaseUrl();
     const { raw, hashed } = generateToken();
     const verifyExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
     await db.insert(schema.verificationTokens).values({
@@ -475,13 +501,7 @@ export async function resendVerificationAction(email: string) {
       purpose: 'email_verify',
       expires: verifyExpires,
     });
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const verifyUrl = `${baseUrl}/api/auth/verify-email?token=${encodeURIComponent(raw)}`;
-    if (process.env.NODE_ENV !== 'production') {
-      createScopedLoggerWithContext({ component: 'auth-actions', action: 'resend-verify' }).info(
-        `verify link: ${verifyUrl}`,
-      );
-    }
     await sendVerificationEmail(normalizedEmail, verifyUrl);
   } catch (err) {
     createScopedLoggerWithContext({ component: 'auth-actions', action: 'resend-verify' }).error(

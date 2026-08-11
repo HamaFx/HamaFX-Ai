@@ -21,7 +21,7 @@
 // Wraps DefaultChatTransport and smooths over the three backend modes:
 //   1. single-agent / quick / standard  -> AI SDK data stream (passthrough)
 //   2. legacy multi-agent SSE           -> converted to AI SDK data stream
-//   3. full-mode background job         -> JSON queued response is intercepted,
+//   3. full-mode background job          -> JSON queued response is intercepted,
 //      polled, and synthesized into a normal text stream.
 //
 // The UI only sees one `useChat` with status/messages/stop.
@@ -60,7 +60,10 @@ export interface HamaFxChatTransportOptions {
 const encoder = new TextEncoder();
 
 function encodeChunk(chunk: object): Uint8Array {
-  return encoder.encode(`${JSON.stringify(chunk)}\n`);
+  // DefaultChatTransport parses JSON event streams using SSE framing.
+  // Keep adapted legacy/job streams on the same wire format as the server's
+  // native multi-agent response (`data: <json>\n\n`).
+  return encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`);
 }
 
 function getContentType(res: Response): string {
@@ -71,11 +74,14 @@ function getContentType(res: Response): string {
 function transformSseToDataStream(res: Response, onProgress: (p: AgentProgress | null) => void): Response {
   const id = crypto.randomUUID();
   let started = false;
+  let ended = false;
+  let activeTextId: string | null = null;
   let pendingFlush: ReturnType<typeof setTimeout> | null = null;
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       if (!res.body) {
+        onProgress(null);
         controller.close();
         return;
       }
@@ -120,26 +126,35 @@ function transformSseToDataStream(res: Response, onProgress: (p: AgentProgress |
             switch (event.type) {
               case 'text-start': {
                 started = true;
+                activeTextId = event.id;
                 controller.enqueue(encodeChunk({ type: 'text-start', id: event.id }));
                 break;
               }
               case 'text-delta': {
                 if (!started) {
                   started = true;
+                  activeTextId = event.id;
                   controller.enqueue(encodeChunk({ type: 'text-start', id: event.id }));
                 }
-                controller.enqueue(encodeChunk({ type: 'text-delta', id: event.id, delta: event.delta }));
+                const textId = activeTextId ?? event.id;
+                controller.enqueue(encodeChunk({ type: 'text-delta', id: textId, delta: event.delta }));
                 break;
               }
               case 'text-end': {
-                started = true;
-                controller.enqueue(encodeChunk({ type: 'text-end', id: event.id }));
+                const textId = activeTextId ?? event.id;
+                if (!started) {
+                  started = true;
+                  activeTextId = textId;
+                  controller.enqueue(encodeChunk({ type: 'text-start', id: textId }));
+                }
+                controller.enqueue(encodeChunk({ type: 'text-end', id: textId }));
+                ended = true;
                 break;
               }
               case 'data-multi-agent-meta': {
                 controller.enqueue(
                   encodeChunk({
-                    type: 'data',
+                    type: event.type,
                     id: event.id,
                     data: event.data,
                     transient: event.transient,
@@ -160,22 +175,70 @@ function transformSseToDataStream(res: Response, onProgress: (p: AgentProgress |
                 break;
               }
             }
-            // metadata and [DONE] are intentionally ignored on the legacy SSE path.
+          }
+        }
+
+        // A well-formed SSE response ends events with a blank line, but
+        // flush the decoder and process a final unterminated line as a
+        // defensive measure so the last event is not silently dropped.
+        buffer += decoder.decode();
+        if (buffer.startsWith('data: ')) {
+          const raw = buffer.slice(6).trim();
+          if (raw && raw !== '[DONE]') {
+            try {
+              const parsed = JSON.parse(raw) as Record<string, unknown>;
+              const streamEvent = ChatStreamEventSchema.safeParse(parsed);
+              if (streamEvent.success) {
+                const event = streamEvent.data;
+                if (event.type === 'text-end') {
+                  const textId = activeTextId ?? event.id;
+                  if (!started) {
+                    started = true;
+                    activeTextId = textId;
+                    controller.enqueue(encodeChunk({ type: 'text-start', id: textId }));
+                  }
+                  controller.enqueue(encodeChunk({ type: 'text-end', id: textId }));
+                  ended = true;
+                } else if (event.type === 'text-start') {
+                  started = true;
+                  activeTextId = event.id;
+                  controller.enqueue(encodeChunk({ type: 'text-start', id: event.id }));
+                } else if (event.type === 'text-delta') {
+                  if (!started) {
+                    started = true;
+                    activeTextId = event.id;
+                    controller.enqueue(encodeChunk({ type: 'text-start', id: event.id }));
+                  }
+                  controller.enqueue(encodeChunk({ type: 'text-delta', id: activeTextId ?? event.id, delta: event.delta }));
+                } else if (event.type === 'data-agent-progress') {
+                  const progress = (event.data ?? event) as AgentProgress;
+                  onProgress(progress);
+                  controller.enqueue(encodeChunk({ type: 'data-agent-progress', id, data: progress, transient: true }));
+                } else if (event.type === 'data-multi-agent-meta') {
+                  controller.enqueue(encodeChunk({ type: event.type, id: event.id, data: event.data, transient: event.transient }));
+                } else if (event.type === 'error') {
+                  controller.enqueue(encodeChunk({ type: 'error', errorText: event.errorText }));
+                }
+              }
+            } catch {
+              // Ignore a malformed unterminated final line.
+            }
           }
         }
       } catch {
         // Reader cancelled (e.g. stop pressed) — close quietly.
       } finally {
         flush();
-        if (started) {
-          controller.enqueue(encodeChunk({ type: 'text-end', id }));
+        if (started && !ended) {
+          controller.enqueue(encodeChunk({ type: 'text-end', id: activeTextId ?? id }));
         }
+        onProgress(null);
         controller.close();
       }
     },
   });
 
-  return new Response(stream, { headers: { 'content-type': 'text/plain; charset=utf-8' } });
+  return new Response(stream, { headers: { 'content-type': 'text/event-stream; charset=utf-8' } });
 }
 
 /** Poll a background analysis job and synthesize an AI SDK data stream. */
@@ -252,10 +315,13 @@ function pollJobToStreamResponse(
             }
           }
 
-          if (pollJson.status === 'complete' && pollJson.result?.finalText) {
-            const finalId = pollJson.result.messageId ?? id;
+          if (pollJson.status === 'complete') {
+            const finalId = pollJson.result?.messageId ?? id;
+            const finalText = pollJson.result?.finalText ?? '';
             controller.enqueue(encodeChunk({ type: 'text-start', id: finalId }));
-            controller.enqueue(encodeChunk({ type: 'text-delta', id: finalId, delta: pollJson.result.finalText }));
+            if (finalText) {
+              controller.enqueue(encodeChunk({ type: 'text-delta', id: finalId, delta: finalText }));
+            }
             controller.enqueue(encodeChunk({ type: 'text-end', id: finalId }));
             onProgress(null);
             return;
@@ -281,7 +347,7 @@ function pollJobToStreamResponse(
     },
   });
 
-  return new Response(stream, { headers: { 'content-type': 'text/plain; charset=utf-8' } });
+  return new Response(stream, { headers: { 'content-type': 'text/event-stream; charset=utf-8' } });
 }
 
 /** fetch wrapper that bridges queued jobs and legacy SSE into the AI SDK data stream. */

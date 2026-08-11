@@ -79,6 +79,20 @@ describe('useLocalStorage', () => {
     expect(result.current[0]).toBe('synced');
   });
 
+  it('restores the initial value when another tab removes the key', () => {
+    window.localStorage.setItem('deleted-key', '\"stored\"');
+    const { result } = renderHook(() => useLocalStorage('deleted-key', 'default'));
+    expect(result.current[0]).toBe('stored');
+
+    const listener = (window.addEventListener as ReturnType<typeof vi.fn>).mock
+      .calls.find(([e]: [string]) => e === 'storage')?.[1];
+    expect(listener).toBeDefined();
+    act(() => {
+      listener({ key: 'deleted-key', newValue: null });
+    });
+    expect(result.current[0]).toBe('default');
+  });
+
   it('removes the storage event listener on unmount', () => {
     const { unmount } = renderHook(() => useLocalStorage('key', 'val'));
     unmount();

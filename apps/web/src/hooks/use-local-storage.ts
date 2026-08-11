@@ -56,15 +56,22 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
     [key],
   );
 
-  // Cross-tab sync via "storage" event listener
+  // Cross-tab sync via "storage" event listener.
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === key && e.newValue !== null) {
-        try {
-          setStoredValue(JSON.parse(e.newValue) as T);
-        } catch (error) {
-          console.warn(`Error parsing storage sync event for key "${key}":`, error);
-        }
+      if (e.key !== key) return;
+
+      // Removing a key in another tab emits newValue === null. Restore the
+      // hook's configured default instead of leaving stale state behind.
+      if (e.newValue === null) {
+        setStoredValue(initialValueRef.current);
+        return;
+      }
+
+      try {
+        setStoredValue(JSON.parse(e.newValue) as T);
+      } catch (error) {
+        console.warn(`Error parsing storage sync event for key "${key}":`, error);
       }
     };
     window.addEventListener('storage', handleStorageChange);

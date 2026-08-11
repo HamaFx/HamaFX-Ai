@@ -233,6 +233,7 @@ export function CommandPalette({ onNewChat }: CommandPaletteProps) {
                 ref={inputRef}
                 id={inputId}
                 role="combobox"
+                aria-autocomplete="list"
                 aria-expanded={open}
                 aria-controls="command-listbox"
                 aria-activedescendant={activeIdx >= 0 && flatRows.length > 0 ? `command-option-${activeIdx}` : undefined}
@@ -274,9 +275,13 @@ export function CommandPalette({ onNewChat }: CommandPaletteProps) {
                         const isActive = flatIndex === activeIdx;
                         const Icon = command.icon;
                         return (
-                          <li key={command.id} id={`command-option-${flatIndex}`} role="option" aria-selected={activeIdx === flatIndex}>
+                          <li key={command.id} role="presentation">
                             <button
+                              id={`command-option-${flatIndex}`}
                               type="button"
+                              role="option"
+                              aria-selected={activeIdx === flatIndex}
+                              tabIndex={-1}
                               data-command-idx={flatIndex}
                               onClick={() => runCommand(command)}
                               onMouseEnter={() => setActiveIdx(flatIndex)}
