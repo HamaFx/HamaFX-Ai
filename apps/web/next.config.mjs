@@ -1,5 +1,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+import bundleAnalyzer from '@next/bundle-analyzer';
 import { withSentryConfig } from '@sentry/nextjs';
 
 const workspaceRoot = path.resolve(fileURLToPath(new URL('../..', import.meta.url)));
@@ -73,7 +75,8 @@ const nextConfig = {
             // L-4: Tightened img-src and connect-src from wildcards to known
             // domains: Supabase Storage, TradingView CDN, and Vercel analytics.
             // The proxy CSP (with nonce) also uses these directives.
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' https://s3.tradingview.com https://d3js.org; style-src 'self' 'unsafe-inline' https://s3.tradingview.com; img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in https://s3.tradingview.com https://api.dicebear.com; font-src 'self' data:; connect-src 'self' wss: https://*.supabase.co https://*.biquote.io https://*.binance.com https://api.resend.com https://*.nowpayments.io https://*.tradingview.com https://api.dicebear.com;",
+            value:
+              "default-src 'self'; script-src 'self' 'unsafe-inline' https://s3.tradingview.com https://d3js.org; style-src 'self' 'unsafe-inline' https://s3.tradingview.com; img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in https://s3.tradingview.com https://api.dicebear.com; font-src 'self' data:; connect-src 'self' wss: https://*.supabase.co https://*.biquote.io https://*.binance.com https://api.resend.com https://*.nowpayments.io https://*.tradingview.com https://api.dicebear.com; frame-src 'self' https://*.tradingview.com https://*.s3.tradingview.com https://s.tradingview.com;",
           },
         ],
       },
@@ -100,8 +103,6 @@ const nextConfig = {
     removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error'] } : undefined,
   },
 };
-
-import bundleAnalyzer from '@next/bundle-analyzer';
 
 const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',

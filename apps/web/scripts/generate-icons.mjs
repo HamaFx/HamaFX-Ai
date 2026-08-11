@@ -33,8 +33,8 @@ const WEB_ROOT = resolve(__dirname, '..');
 const ICONS_DIR = resolve(WEB_ROOT, 'public/icons');
 
 /** Brand colors from the design system (placeholder, replaced in task 13.5). */
-const BRAND_BG = '#0b0d10';
-const BRAND_FG = '#d4af37';
+const BRAND_BG = '#0A0A0A';
+const BRAND_FG = '#F56E0F';
 
 /**
  * @typedef {Object} IconTarget

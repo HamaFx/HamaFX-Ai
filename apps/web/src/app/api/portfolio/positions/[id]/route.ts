@@ -3,9 +3,9 @@
 // PF-22 — /api/portfolio/positions/[id] — get / close / delete (thin controller).
 
 import { errorResponse, withAuth } from '@/lib/api';
-import { AppError } from '@hamafx/shared';
+import { AppError } from '@/lib/services/portfolio';
 import { getPositionService, closePositionService, deletePositionService } from '@/lib/services/portfolio';
-import { ClosePositionInputSchema } from '@hamafx/shared';
+import { ClosePositionInputSchema } from '@/lib/services/portfolio';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';

@@ -8,8 +8,8 @@
 //
 // Gated by the request proxy auth gate.
 
-import { deletePushSubscriptionByEndpoint } from '@hamafx/ai';
-import { AppError } from '@hamafx/shared';
+import { deletePushSubscriptionByEndpoint } from '@/lib/services/api-boundary';
+import { AppError } from '@/lib/services/api-boundary';
 import { z } from 'zod';
 
 import { errorResponse, withAuth } from '@/lib/api';

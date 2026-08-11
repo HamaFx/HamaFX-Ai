@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { listRecentArticles } from '@hamafx/ai';
+import { listRecentArticles } from '@/lib/services/api-boundary';
 import { compose, authMiddleware, errorResponse, type RequestUser } from '@/lib/api';
-import { withRateLimit } from '@hamafx/db';
+import { withRateLimit } from '@/lib/services/api-boundary';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';

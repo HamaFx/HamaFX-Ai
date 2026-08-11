@@ -19,10 +19,10 @@
 // the last 24 hours so the system-status card can detect stuck jobs.
 
 import { NextResponse } from 'next/server';
-import { withRateLimit } from '@hamafx/db';
-import { getDb } from '@hamafx/ai';
+import { withRateLimit } from '@/lib/services/api-boundary';
+import { getDb } from '@/lib/services/api-boundary';
 import { sql } from 'drizzle-orm';
-import { REQUIRED_HEALTH_ENV_VARS } from '@hamafx/shared/env-secrets';
+import { REQUIRED_HEALTH_ENV_VARS } from '@/lib/services/api-boundary';
 
 import { withAuth } from '@/lib/api';
 

@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 
-import { deleteOldCronRuns } from '@hamafx/db';
+import { deleteOldCronRuns } from '@/lib/services/api-boundary';
 
 import { withAdminAuth } from '@/lib/admin-auth';
 import { parseJsonBody } from '@/lib/api';

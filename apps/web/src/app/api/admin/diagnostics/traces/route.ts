@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 
-import { listDiagnosticTraces } from '@hamafx/db';
+import { listDiagnosticTraces } from '@/lib/services/api-boundary';
 
 import { withAdminAuth } from '@/lib/admin-auth';
 import { parseSearchParams } from '@/lib/api';

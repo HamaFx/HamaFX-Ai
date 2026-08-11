@@ -3,9 +3,9 @@
 // /api/sentiment — get aggregated social sentiment for a symbol.
 // GET /api/sentiment?symbol=XAUUSD
 
-import { getSentimentService } from '@hamafx/ai';
-import { SymbolSchema, AppError } from '@hamafx/shared';
-import { withRateLimit } from '@hamafx/db';
+import { getSentimentService } from '@/lib/services/api-boundary';
+import { SymbolSchema, AppError } from '@/lib/services/api-boundary';
+import { withRateLimit } from '@/lib/services/api-boundary';
 
 import { errorResponse, withAuth } from '@/lib/api';
 

@@ -3,7 +3,7 @@
 // GET /api/billing/portal — returns the user's subscription, plans, and payments.
 // Auth required.
 
-import { listActivePlans, getUserSubscription, getUserPayments } from '@hamafx/db';
+import { listActivePlans, getUserSubscription, getUserPayments } from '@/lib/services/api-boundary';
 
 import { errorResponse, withAuth } from '@/lib/api';
 

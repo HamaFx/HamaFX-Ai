@@ -12,8 +12,8 @@
 // Auth: same NextAuth session gate as the rest of /api/chat.
 // IDOR: scoped by userId; non-owned threads return 404.
 
-import { getThread, listMessages } from '@hamafx/ai';
-import { withRateLimit } from '@hamafx/db';
+import { getThread, listMessages } from '@/lib/services/api-boundary';
+import { withRateLimit } from '@/lib/services/api-boundary';
 
 import { errorResponse, withAuth } from '@/lib/api';
 import {

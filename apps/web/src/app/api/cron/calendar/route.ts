@@ -8,8 +8,8 @@
 // actionable signal. Treat ProviderError as a "skip this tick" event:
 // the next tick will retry, the data we already have stays valid.
 
-import { upsertEvents } from '@hamafx/ai';
-import { fetchUpcomingEvents, ProviderError } from '@hamafx/data';
+import { upsertEvents } from '@/lib/services/api-boundary';
+import { fetchUpcomingEvents, ProviderError } from '@/lib/services/api-boundary';
 
 import { withCronAuth } from '@/lib/cron';
 import { createScopedLoggerWithContext } from '@/lib/logger';

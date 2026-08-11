@@ -21,7 +21,7 @@
 // via `withRateLimit` because forking triggers a follow-up
 // /api/chat call to stream the assistant response.
 
-import { forkThread } from '@hamafx/ai';
+import { forkThread } from '@/lib/services/api-boundary';
 import { z } from 'zod';
 
 import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';

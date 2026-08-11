@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { withAuth, errorResponse } from '@/lib/api';
-import { removeUserSymbol } from '@hamafx/db';
+import { removeUserSymbol } from '@/lib/services/api-boundary';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';

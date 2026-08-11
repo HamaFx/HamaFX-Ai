@@ -3,7 +3,7 @@
 // /api/bot/status — Get the current bot linking status for the user.
 // GET /api/bot/status
 
-import { getBotLink } from '@hamafx/ai';
+import { getBotLink } from '@/lib/services/api-boundary';
 
 import { errorResponse, withAuth } from '@/lib/api';
 

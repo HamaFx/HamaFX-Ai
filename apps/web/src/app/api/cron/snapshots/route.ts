@@ -16,9 +16,9 @@
 // (so the OHLC math has real bars) but coarse enough that 240 bars fit
 // comfortably in the data layer's free-tier quotas.
 
-import { computeDailySnapshot, previousUtcMidnight, upsertSnapshot } from '@hamafx/ai';
-import { getCandles } from '@hamafx/data';
-import { SYMBOLS } from '@hamafx/shared';
+import { computeDailySnapshot, previousUtcMidnight, upsertSnapshot } from '@/lib/services/api-boundary';
+import { getCandles } from '@/lib/services/api-boundary';
+import { SYMBOLS } from '@/lib/services/api-boundary';
 import * as Sentry from '@sentry/nextjs';
 
 import { withCronAuth } from '@/lib/cron';

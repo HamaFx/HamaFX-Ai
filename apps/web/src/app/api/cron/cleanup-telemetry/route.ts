@@ -8,7 +8,7 @@
 //
 // Schedule: daily via Vercel cron or the GCE VM systemd timer.
 
-import { runRetentionCleanup } from '@hamafx/db';
+import { runRetentionCleanup } from '@/lib/services/api-boundary';
 
 import { withCronAuth } from '@/lib/cron';
 import { createScopedLoggerWithContext } from '@/lib/logger';

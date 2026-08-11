@@ -6,7 +6,7 @@
 // Schedule: daily via the GCE VM systemd timer or Vercel cron.
 
 import { withCronAuth } from '@/lib/cron';
-import { lazyPurgeExpiredTokens } from '@hamafx/db';
+import { lazyPurgeExpiredTokens } from '@/lib/services/api-boundary';
 import { createScopedLoggerWithContext } from '@/lib/logger';
 
 export const runtime = 'nodejs';

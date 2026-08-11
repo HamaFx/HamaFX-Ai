@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 
-import { getUserById } from '@hamafx/db';
+import { getUserById } from '@/lib/services/api-boundary';
 import { signIn, generateImpersonationChallenge } from '@/auth';
 
 import { withAdminAuth } from '@/lib/admin-auth';

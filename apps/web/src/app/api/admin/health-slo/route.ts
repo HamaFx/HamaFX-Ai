@@ -7,7 +7,7 @@
 
 import { z } from 'zod';
 
-import { getDb } from '@hamafx/db';
+import { getDb } from '@/lib/services/api-boundary';
 
 import { withAdminAuth } from '@/lib/admin-auth';
 import { parseSearchParams } from '@/lib/api';

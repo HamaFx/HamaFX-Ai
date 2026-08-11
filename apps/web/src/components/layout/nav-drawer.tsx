@@ -29,7 +29,7 @@
 //     a footer "Sign out" action.
 //   - User identity display + nav item badges.
 
-import { IconBell,  IconBook,  IconCalendar,  IconSettings,  IconLayoutDashboard,  IconChartLine,  IconLogout,  IconMessageCircle,  IconNews,  IconTarget,  IconShield } from '@tabler/icons-react';
+import { IconBell,  IconBook,  IconCalendar,  IconSettings,  IconLayoutDashboard,  IconChartLine,  IconLogout,  IconMessageCircle,  IconNews,  IconShield } from '@tabler/icons-react';
 import { Link } from 'next-view-transitions';
 import { usePathname } from 'next/navigation';
 import { useEffect, useMemo } from 'react';
@@ -85,7 +85,6 @@ const PRIMARY: readonly NavItem[] = [
 ];
 
 const SECONDARY: readonly NavItem[] = [
-  { href: '/signals', label: 'Signals', icon: IconTarget, description: 'AI track record' },
   { href: '/alerts', label: 'Alerts', icon: IconBell, description: 'Price triggers' },
   { href: '/journal', label: 'Journal', icon: IconBook, description: 'Trades & R-multiples' },
   { href: '/settings', label: 'Settings',    icon: IconSettings, description: 'Notifications, usage' },

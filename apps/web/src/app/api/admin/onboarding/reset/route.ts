@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 
-import { getUserById, resetOnboarding } from '@hamafx/db';
+import { getUserById, resetOnboarding } from '@/lib/services/api-boundary';
 
 import { withAdminAuth } from '@/lib/admin-auth';
 import { parseJsonBody } from '@/lib/api';

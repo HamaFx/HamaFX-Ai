@@ -17,7 +17,7 @@
 //   429 — rate limited
 
 import { NextResponse } from 'next/server';
-import { getDb } from '@hamafx/ai';
+import { getDb } from '@/lib/services/api-boundary';
 import { sql } from 'drizzle-orm';
 
 export const runtime = 'nodejs';

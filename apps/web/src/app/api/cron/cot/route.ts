@@ -9,9 +9,9 @@
 // Idempotent: each `(symbol, report_date)` row is keyed by a deterministic
 // `cftc:<symbol>:<YYYY-MM-DD>` PK and upserted with ON CONFLICT DO UPDATE.
 
-import { upsertCoTReport } from '@hamafx/ai';
-import { fetchLatestRows, parseCftcInt, toCftcName } from '@hamafx/data/providers/cftc';
-import { SYMBOLS, type Symbol } from '@hamafx/shared';
+import { upsertCoTReport } from '@/lib/services/api-boundary';
+import { fetchLatestRows, parseCftcInt, toCftcName } from '@/lib/services/api-boundary';
+import { SYMBOLS, type Symbol } from '@/lib/services/api-boundary';
 import * as Sentry from '@sentry/nextjs';
 
 import { withCronAuth } from '@/lib/cron';

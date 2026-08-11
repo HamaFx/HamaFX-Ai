@@ -2,8 +2,8 @@
 
 import { z } from 'zod';
 
-import { getUserWithSettings, listUserSymbols } from '@hamafx/db';
-import { DEFAULT_WATCHLIST_SYMBOLS } from '@hamafx/shared';
+import { getUserWithSettings, listUserSymbols } from '@/lib/services/api-boundary';
+import { DEFAULT_WATCHLIST_SYMBOLS } from '@/lib/services/api-boundary';
 
 import { withAdminAuth } from '@/lib/admin-auth';
 import { parseSearchParams } from '@/lib/api';

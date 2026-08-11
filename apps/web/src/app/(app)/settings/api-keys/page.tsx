@@ -1,27 +1,22 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { auth } from '@/auth';
-import { redirect } from 'next/navigation';
-import { buildCatalogForUser } from '@/lib/catalog-server';
-import { getUserWithSettings, getDb, schema } from '@hamafx/db';
+import { BYOK_PROVIDERS_LIST, computeUsage, type ProviderBreakdown } from '@hamafx/ai';
+import { getDb, getUserWithSettings, schema } from '@hamafx/db';
+import { decryptByok, type ProviderId } from '@hamafx/shared/encryption';
 import { eq } from 'drizzle-orm';
+import { redirect } from 'next/navigation';
+
+import { auth } from '@/auth';
+import { buildCatalogForUser } from '@/lib/catalog-server';
 import { formatRelative } from '@/lib/format';
-import {
-  decryptByok,
-  type ProviderId,
-} from '@hamafx/shared/encryption';
-import {
-  computeUsage,
-  BYOK_PROVIDERS_LIST,
-  type ProviderBreakdown,
-} from '@hamafx/ai';
+
 import { updateApiKeysAction } from '../actions';
 import { ApiKeyCard } from './_components/api-key-card';
 import { ApiKeysLandingBanner } from './_components/api-keys-landing-banner';
 import { BulkTestButton } from './_components/bulk-test-button';
-import { SaveBar } from './_components/save-bar';
-import { MarketDataConfig } from './_components/market-data-config';
 import { ExportImportKeys } from './_components/export-import-keys';
+import { MarketDataConfig } from './_components/market-data-config';
+import { SaveBar } from './_components/save-bar';
 
 export const dynamic = 'force-dynamic';
 
@@ -117,47 +112,45 @@ export default async function ApiKeysSettingsPage({
   const lastTestedStr = lastTestedTime ? new Date(lastTestedTime).toISOString() : null;
 
   return (
-    <div className="flex flex-col gap-6 max-w-2xl">
+    <div className="flex max-w-2xl min-w-0 flex-col gap-6">
       {fromChat ? (
-        <ApiKeysLandingBanner
-          {...(preservedPrompt ? { prompt: preservedPrompt } : {})}
-        />
+        <ApiKeysLandingBanner {...(preservedPrompt ? { prompt: preservedPrompt } : {})} />
       ) : null}
 
       {/* Header */}
       <div>
-        <h2 className="text-lg font-semibold text-fg">API Keys</h2>
-        <p className="text-sm text-fg-subtle">
-          HamaFX-Ai is BYOK. Provide your own keys for the AI models you want to
-          use. Keys are encrypted at rest with AES-256-GCM.
+        <h2 className="text-fg text-lg font-semibold">API Keys</h2>
+        <p className="text-fg-subtle text-sm">
+          HamaFX-Ai is BYOK. Provide your own keys for the AI models you want to use. Keys are
+          encrypted at rest with AES-256-GCM.
         </p>
       </div>
 
       {/* Premium Provider Health Dashboard */}
-      <div className="border border-border bg-bg-elev-1 rounded-sm p-5 flex flex-col gap-4 shadow-sm">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
+      <div className="border-border bg-bg-elev-1 flex flex-col gap-4 rounded-sm border p-5 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             {totalConfigured === 0 ? (
-              <span className="size-3 rounded-sm bg-fg-muted/40 animate-pulse" />
+              <span className="bg-fg-muted/40 size-3 animate-pulse rounded-sm" />
             ) : totalFailed > 0 ? (
-              <span className="size-3 rounded-sm bg-danger animate-pulse" />
+              <span className="bg-danger size-3 animate-pulse rounded-sm" />
             ) : (
-              <span className="size-3 rounded-sm bg-success" />
+              <span className="bg-success size-3 rounded-sm" />
             )}
             <div>
-              <h3 className="text-sm font-semibold text-fg">
+              <h3 className="text-fg text-sm font-semibold">
                 {totalConfigured === 0
                   ? 'No API Keys Configured'
                   : totalFailed > 0
-                  ? `${totalFailed} Connection Issues Detected`
-                  : 'All Configured Providers Functional'}
+                    ? `${totalFailed} Connection Issues Detected`
+                    : 'All Configured Providers Functional'}
               </h3>
               <p className="text-caption text-fg-subtle mt-0.5">
                 {totalConfigured === 0
                   ? 'Please set up at least one provider to start chatting.'
                   : lastTestedStr
-                  ? `Last checked: ${formatRelative(lastTestedStr)}`
-                  : 'Test connection below to verify setup.'}
+                    ? `Last checked: ${formatRelative(lastTestedStr)}`
+                    : 'Test connection below to verify setup.'}
               </p>
             </div>
           </div>
@@ -165,9 +158,9 @@ export default async function ApiKeysSettingsPage({
         </div>
 
         {totalFailed > 0 && (
-          <div className="border border-danger/20 bg-danger/5 rounded-sm p-3 text-caption text-danger flex flex-col gap-1.5">
+          <div className="border-danger/20 bg-danger/5 text-caption text-danger flex flex-col gap-1.5 rounded-sm border p-3">
             <span className="font-semibold">Failing Connections:</span>
-            <ul className="list-disc pl-4 space-y-1">
+            <ul className="list-disc space-y-1 pl-4">
               {configured
                 .filter((p) => {
                   const health = healthByProvider.get(p.id);
@@ -177,7 +170,8 @@ export default async function ApiKeysSettingsPage({
                   const health = healthByProvider.get(p.id);
                   return (
                     <li key={p.id}>
-                      <span className="font-semibold">{p.displayName}</span>: {health?.error || 'Unknown error'}
+                      <span className="font-semibold">{p.displayName}</span>:{' '}
+                      {health?.error || 'Unknown error'}
                     </li>
                   );
                 })}
@@ -185,22 +179,22 @@ export default async function ApiKeysSettingsPage({
           </div>
         )}
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 border-t border-border pt-4 text-caption">
+        <div className="border-border text-caption grid grid-cols-2 gap-3 border-t pt-4 sm:grid-cols-3">
           <div className="flex flex-col">
             <span className="text-fg-muted">Configured</span>
-            <span className="text-base font-semibold text-fg tabular-nums mt-0.5">
+            <span className="text-fg mt-0.5 text-base font-semibold tabular-nums">
               {totalConfigured} / {BYOK_PROVIDERS_LIST.length}
             </span>
           </div>
           <div className="flex flex-col">
             <span className="text-fg-muted">Turns (30d)</span>
-            <span className="text-base font-semibold text-fg tabular-nums mt-0.5">
+            <span className="text-fg mt-0.5 text-base font-semibold tabular-nums">
               {totalTurns}
             </span>
           </div>
-          <div className="flex flex-col col-span-2 sm:col-span-1">
+          <div className="col-span-2 flex flex-col sm:col-span-1">
             <span className="text-fg-muted">Spent (30d)</span>
-            <span className="text-base font-semibold text-fg tabular-nums mt-0.5">
+            <span className="text-fg mt-0.5 text-base font-semibold tabular-nums">
               ${totalCost.toFixed(2)}
             </span>
           </div>
@@ -209,24 +203,23 @@ export default async function ApiKeysSettingsPage({
 
       {/* Empty state when no providers are configured. */}
       {totalConfigured === 0 ? (
-        <div className="border border-border bg-bg-elev-1 rounded-sm p-6 flex flex-col items-center text-center gap-3">
+        <div className="border-border bg-bg-elev-1 flex flex-col items-center gap-3 rounded-sm border p-6 text-center">
           <div className="text-3xl">🔑</div>
           <div>
-            <h3 className="text-sm font-semibold text-fg">No API keys configured yet</h3>
+            <h3 className="text-fg text-sm font-semibold">No API keys configured yet</h3>
             <p className="text-caption text-fg-subtle mt-1 max-w-md">
-              Pick a provider below and paste your API key. The free tier
-              (Google Gemini or Groq) is a good starting point — the chat
-              works as soon as one key is saved.
+              Pick a provider below and paste your API key. The free tier (Google Gemini or Groq) is
+              a good starting point — the chat works as soon as one key is saved.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2 justify-center">
-            <span className="rounded-sm bg-success/15 px-2.5 py-1 text-caption font-medium text-success">
+          <div className="flex flex-wrap justify-center gap-2">
+            <span className="bg-success/15 text-caption text-success rounded-sm px-2.5 py-1 font-medium">
               Google Gemini · free
             </span>
-            <span className="rounded-sm bg-success/15 px-2.5 py-1 text-caption font-medium text-success">
+            <span className="bg-success/15 text-caption text-success rounded-sm px-2.5 py-1 font-medium">
               Groq · free
             </span>
-            <span className="rounded-sm bg-bg-elev-2 px-2.5 py-1 text-caption font-medium text-fg-subtle">
+            <span className="bg-bg-elev-2 text-caption text-fg-subtle rounded-sm px-2.5 py-1 font-medium">
               + 7 paid options
             </span>
           </div>
@@ -239,7 +232,10 @@ export default async function ApiKeysSettingsPage({
       >
         {configured.length > 0 ? (
           <section className="flex flex-col gap-3" aria-labelledby="configured-providers-heading">
-            <h3 id="configured-providers-heading" className="text-sm font-medium text-fg-subtle uppercase tracking-wide">
+            <h3
+              id="configured-providers-heading"
+              className="text-fg-subtle text-sm font-medium tracking-wide uppercase"
+            >
               Configured
             </h3>
             {configured.map((p) => {
@@ -262,7 +258,10 @@ export default async function ApiKeysSettingsPage({
 
         {available.length > 0 ? (
           <section className="flex flex-col gap-3" aria-labelledby="add-provider-heading">
-            <h3 id="add-provider-heading" className="text-sm font-medium text-fg-subtle uppercase tracking-wide">
+            <h3
+              id="add-provider-heading"
+              className="text-fg-subtle text-sm font-medium tracking-wide uppercase"
+            >
               {configured.length > 0 ? 'Add another' : 'Pick a provider'}
             </h3>
             {available.map((p) => {
@@ -294,22 +293,23 @@ export default async function ApiKeysSettingsPage({
       <ExportImportKeys />
 
       {/* Collapsible Capability Matrix */}
-      <details className="border border-border bg-bg-elev-1 rounded-sm overflow-hidden mt-2">
-        <summary aria-label="Toggle provider capability matrix" className="cursor-pointer select-none px-4 py-3 flex items-center justify-between gap-3 hover:bg-bg-elev-2 transition-colors">
+      <details className="border-border bg-bg-elev-1 mt-2 overflow-hidden rounded-sm border">
+        <summary
+          aria-label="Toggle provider capability matrix"
+          className="hover:bg-bg-elev-2 flex cursor-pointer items-center justify-between gap-3 px-4 py-3 transition-colors select-none"
+        >
           <div className="flex flex-col">
-            <span className="text-sm font-medium text-fg">
-              Provider Capability Matrix
-            </span>
+            <span className="text-fg text-sm font-medium">Provider Capability Matrix</span>
             <span className="text-caption text-fg-subtle">
               Compare capabilities (Vision, Embedding, Free tier) across all supported AI providers.
             </span>
           </div>
           <span className="text-caption text-fg-subtle">▾</span>
         </summary>
-        <div className="border-t border-border p-0 overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[500px]">
+        <div className="border-border max-w-full min-w-0 overflow-x-auto border-t p-0">
+          <table className="w-full min-w-[500px] border-collapse text-left">
             <thead>
-              <tr className="border-b border-border text-caption font-semibold text-fg-muted bg-bg-elev-2/50">
+              <tr className="border-border text-caption text-fg-muted bg-bg-elev-2/50 border-b font-semibold">
                 <th className="p-3">Provider</th>
                 <th className="p-3 text-center">Chat</th>
                 <th className="p-3 text-center">Vision</th>
@@ -319,22 +319,32 @@ export default async function ApiKeysSettingsPage({
                 <th className="p-3 text-center">Free Tier</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border/50 text-caption">
+            <tbody className="divide-border/50 text-caption divide-y">
               {BYOK_PROVIDERS_LIST.map((p) => (
                 <tr key={p.id} className="hover:bg-bg-elev-2/20">
-                  <td className="p-3 font-medium text-fg">{p.displayName}</td>
-                  <td className="p-3 text-center text-success">✓</td>
+                  <td className="text-fg p-3 font-medium">{p.displayName}</td>
+                  <td className="text-success p-3 text-center">✓</td>
                   <td className="p-3 text-center">
-                    {p.supports.vision ? <span className="text-success">✓</span> : <span className="text-fg-muted">—</span>}
+                    {p.supports.vision ? (
+                      <span className="text-success">✓</span>
+                    ) : (
+                      <span className="text-fg-muted">—</span>
+                    )}
                   </td>
                   <td className="p-3 text-center">
-                    {p.supports.embedding ? <span className="text-success">✓</span> : <span className="text-fg-muted">—</span>}
+                    {p.supports.embedding ? (
+                      <span className="text-success">✓</span>
+                    ) : (
+                      <span className="text-fg-muted">—</span>
+                    )}
                   </td>
-                  <td className="p-3 text-center text-success">✓</td>
-                  <td className="p-3 text-center text-success">✓</td>
+                  <td className="text-success p-3 text-center">✓</td>
+                  <td className="text-success p-3 text-center">✓</td>
                   <td className="p-3 text-center">
                     {p.pricingTier === 'free' ? (
-                      <span className="rounded-sm bg-success/15 px-2 py-0.5 text-xs font-medium text-success font-semibold">Free</span>
+                      <span className="bg-success/15 text-success rounded-sm px-2 py-0.5 text-xs font-medium font-semibold">
+                        Free
+                      </span>
                     ) : (
                       <span className="text-fg-muted">—</span>
                     )}
@@ -348,4 +358,3 @@ export default async function ApiKeysSettingsPage({
     </div>
   );
 }
-

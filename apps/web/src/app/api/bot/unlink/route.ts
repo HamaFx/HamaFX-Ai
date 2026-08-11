@@ -3,7 +3,7 @@
 // /api/bot/unlink — Unlink Telegram from the user's HamaFX account.
 // POST /api/bot/unlink
 
-import { unlinkBot } from '@hamafx/ai';
+import { unlinkBot } from '@/lib/services/api-boundary';
 
 import { errorResponse, withAuth } from '@/lib/api';
 

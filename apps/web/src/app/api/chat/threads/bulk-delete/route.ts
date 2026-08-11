@@ -12,7 +12,7 @@
 // the UI can show "deleted N conversations" instead of a generic
 // success toast.
 
-import { withRateLimit, batchDeleteThreads } from '@hamafx/db';
+import { withRateLimit, batchDeleteThreads } from '@/lib/services/api-boundary';
 import { z } from 'zod';
 
 import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';

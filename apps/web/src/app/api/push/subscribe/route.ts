@@ -14,9 +14,9 @@
 import {
   PushSubscriptionConflictError,
   savePushSubscription,
-} from '@hamafx/ai';
-import { withRateLimit } from '@hamafx/db';
-import { AppError, conflict } from '@hamafx/shared';
+} from '@/lib/services/api-boundary';
+import { withRateLimit } from '@/lib/services/api-boundary';
+import { AppError, conflict } from '@/lib/services/api-boundary';
 import { z } from 'zod';
 
 import { errorResponse, withAuth } from '@/lib/api';

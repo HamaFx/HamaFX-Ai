@@ -5,9 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev --port 3000",
-    "prebuild": "node scripts/set-build-id.mjs",
-    "build": "pnpm run prebuild && next build && pnpm run postbuild",
-    "postbuild": "node scripts/generate-sw.mjs",
+    "build": "node scripts/build.mjs",
     "start": "next start",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
@@ -15,6 +13,7 @@
     "analyze": "ANALYZE=true next build",
     "bundle-size:check": "node scripts/bundle-size-guard.mjs",
     "generate:icons": "node scripts/generate-icons.mjs",
+    "generate:screenshots": "node scripts/generate-pwa-screenshots.mjs",
     "clean": "rm -rf node_modules .turbo .next"
   },
   "dependencies": {

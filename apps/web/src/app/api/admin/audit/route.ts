@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 
-import { listAdminAuditLogs } from '@hamafx/db';
+import { listAdminAuditLogs } from '@/lib/services/api-boundary';
 
 import { withAdminAuth } from '@/lib/admin-auth';
 import { parseSearchParams } from '@/lib/api';

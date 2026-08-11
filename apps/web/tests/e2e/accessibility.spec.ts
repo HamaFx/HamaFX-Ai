@@ -25,11 +25,13 @@
 //   • No critical axe violations (if @axe-core/playwright is available)
 // ---------------------------------------------------------------------------
 
-import { test, expect } from './fixtures';
+import { expect, test } from './fixtures';
 
 test.describe('Accessibility', () => {
   test('login page has accessible form inputs', async ({ browser }) => {
-    const context = await browser.newContext();
+    const context = await browser.newContext({
+      baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+    });
     const page = await context.newPage();
 
     await page.goto('/login');
@@ -43,7 +45,7 @@ test.describe('Accessibility', () => {
     await expect(passwordInput).toBeVisible();
 
     // Submit button should have an accessible name
-    const submitButton = page.getByRole('button', { name: /sign in/i });
+    const submitButton = page.getByRole('button', { name: 'Sign in', exact: true });
     await expect(submitButton).toBeVisible();
 
     // Error region should have role="alert" (already in the DOM even if empty)
@@ -54,7 +56,9 @@ test.describe('Accessibility', () => {
   });
 
   test('register page has accessible form inputs', async ({ browser }) => {
-    const context = await browser.newContext();
+    const context = await browser.newContext({
+      baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+    });
     const page = await context.newPage();
 
     await page.goto('/register');
@@ -73,7 +77,7 @@ test.describe('Accessibility', () => {
     const page = authedPage;
 
     // The skip link should exist in the DOM (visible on focus)
-    const skipLink = page.getByRole('link', { name: /skip to content/i });
+    const skipLink = page.getByRole('link', { name: /skip to main content/i });
     await expect(skipLink).toBeAttached();
 
     // Focus the link to make it visible
@@ -92,7 +96,7 @@ test.describe('Accessibility', () => {
     const page = authedPage;
 
     // The chat textarea should be a textbox role
-    const textbox = page.getByRole('textbox');
+    const textbox = page.getByRole('textbox', { name: 'Chat message input' });
     await expect(textbox).toBeVisible({ timeout: 15_000 });
     await expect(textbox).toBeEnabled();
   });
@@ -122,11 +126,11 @@ test.describe('Accessibility', () => {
   test('no duplicate h1 on key pages', async ({ authedPage }) => {
     const page = authedPage;
 
-    const pages = ['/dashboard', '/journal', '/alerts', '/signals', '/news', '/calendar'];
+    const pages = ['/dashboard', '/journal', '/alerts', '/news', '/calendar'];
 
     for (const path of pages) {
-      await page.goto(path);
-      await page.waitForLoadState('networkidle').catch(() => {});
+      await page.goto(path, { waitUntil: 'domcontentloaded' });
+      await page.waitForTimeout(500);
 
       const h1Count = await page.locator('h1').count();
       // Each page should have at most one h1

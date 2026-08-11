@@ -4,8 +4,8 @@
 // GET  /api/notifications/route-config
 // PUT  /api/notifications/route-config
 
-import { getRouteConfig, saveRouteConfig } from '@hamafx/ai';
-import { RouteConfigSchema, type RouteConfig } from '@hamafx/shared';
+import { getRouteConfig, saveRouteConfig } from '@/lib/services/api-boundary';
+import { RouteConfigSchema, type RouteConfig } from '@/lib/services/api-boundary';
 
 import { errorResponse, withAuth } from '@/lib/api';
 

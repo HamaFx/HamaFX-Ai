@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { updateUserSettingsField } from '@hamafx/db';
+import { updateUserSettingsField } from '@/lib/services/api-boundary';
 
 import { errorResponse, withAuth } from '@/lib/api';
 

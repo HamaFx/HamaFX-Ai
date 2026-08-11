@@ -36,6 +36,17 @@ interface PerformanceChartProps {
   height?: number;
 }
 
+const PERF_THEME_COLORS: Record<string, { text: string; grid: string }> = {
+  black: { text: '#a1a8b3', grid: '#1f1f1f' },
+  slate: { text: '#94a3b8', grid: '#1e293b' },
+  navy: { text: '#64748b', grid: '#0f172a' },
+  classic: { text: '#a1a8b3', grid: '#262a35' },
+};
+
+function getPerfChartColors(theme: string): { text: string; grid: string } {
+  return PERF_THEME_COLORS[theme] ?? PERF_THEME_COLORS.black!;
+}
+
 export function PerformanceChart({
   entries,
   theme = 'black',
@@ -136,8 +147,7 @@ export function PerformanceChart({
         seriesRef.current = null;
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chartData, theme, height]);
+  }, [chartData, height, theme, totalR]);
 
   // Keep colors updated when totalR changes
   useEffect(() => {
@@ -159,21 +169,6 @@ export function PerformanceChart({
       grid: { horzLines: { color: colors.grid } },
     });
   }, [theme]);
-
-// ── Inline theme helpers (replaces the deleted ./chart-themes.ts) ──
-
-const PERF_THEME_COLORS: Record<string, { text: string; grid: string }> = {
-  black: { text: '#a1a8b3', grid: '#1f1f1f' },
-  slate: { text: '#94a3b8', grid: '#1e293b' },
-  navy: { text: '#64748b', grid: '#0f172a' },
-  classic: { text: '#a1a8b3', grid: '#262a35' },
-};
-
-function getPerfChartColors(theme: string): { text: string; grid: string } {
-  return PERF_THEME_COLORS[theme] ?? PERF_THEME_COLORS.black!;
-}
-
-// ── Component ──
 
   if (chartData.length < 2) {
     return (

@@ -10,8 +10,6 @@ import type {
   Candle,
   IndicatorKind,
   IndicatorResult,
-  StructureKind,
-  StructureResult,
   Symbol,
   Tick,
   Timeframe,
@@ -111,34 +109,6 @@ export async function fetchChartData(
       tf,
       count,
       indicators: indicators.map((i) => ({ kind: i.kind, params: i.params ?? {} })),
-    }),
-    ...(opts.signal ? { signal: opts.signal } : {}),
-    retries: 2,
-  });
-}
-
-export interface FetchStructureOptions extends FetchOptions {
-  count?: number;
-  kinds?: readonly StructureKind[];
-  /** Swing-pivot strictness (k bars on each side). Default 3. */
-  lookback?: number;
-}
-
-/** POST /api/market/structure — SMC events (swings, BOS/CHoCH, FVG, OB, liquidity). */
-export async function fetchStructure(
-  symbol: Symbol,
-  tf: Timeframe,
-  opts: FetchStructureOptions = {},
-): Promise<StructureResult> {
-  return apiFetch<StructureResult>('/api/market/structure', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      symbol,
-      tf,
-      count: opts.count ?? 300,
-      ...(opts.kinds ? { kinds: opts.kinds } : {}),
-      lookback: opts.lookback ?? 3,
     }),
     ...(opts.signal ? { signal: opts.signal } : {}),
     retries: 2,

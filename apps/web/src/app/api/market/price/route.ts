@@ -2,7 +2,7 @@
 
 // PF-22 — /api/market/price — latest prices (thin controller).
 
-import { SYMBOLS } from '@hamafx/shared';
+import { SYMBOLS } from '@/lib/services/api-boundary';
 import { z } from 'zod';
 
 import { errorResponse, withAuth } from '@/lib/api';

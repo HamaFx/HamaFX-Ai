@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 
-import { listCronRuns } from '@hamafx/db';
+import { listCronRuns } from '@/lib/services/api-boundary';
 
 import { withAdminAuth } from '@/lib/admin-auth';
 import { parseSearchParams } from '@/lib/api';

@@ -3,8 +3,8 @@
 // /api/journal/review — generate an AI post-trade review for a closed journal entry.
 // POST { id: string }
 
-import { getEntry, reviewTrade } from '@hamafx/ai';
-import { getUserWithSettings } from '@hamafx/db';
+import { getEntry, reviewTrade } from '@/lib/services/api-boundary';
+import { getUserWithSettings } from '@/lib/services/api-boundary';
 import { z } from 'zod';
 
 import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';

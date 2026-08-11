@@ -4,22 +4,31 @@
 // `useChat`, runs the agent, and streams back the SDK's UI-message stream
 // for the client to consume.
 
-import { BudgetExceededError, getThread, runChat } from '@hamafx/ai';
-import { pickAiEnv } from '@hamafx/shared';
 import * as Sentry from '@sentry/nextjs';
-import { providerUnavailable } from '@hamafx/shared';
-import { withRateLimit } from '@hamafx/db';
-import { z } from 'zod';
 import type { UIMessage } from 'ai';
-import {
-  AnalysisQueuedEventSchema,
-  ChatStreamEventSchema,
-} from '@hamafx/shared';
+import { z } from 'zod';
 
 import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';
 import { getServerEnv } from '@/lib/env';
 import { createRequestLogger } from '@/lib/logger';
-import { traceIdStorage } from '@hamafx/shared/logger';
+import {
+  AnalysisQueuedEventSchema,
+  BudgetExceededError,
+  ChatStreamEventSchema,
+  extractUserMessageText,
+  getDb,
+  getThread,
+  getUserWithSettings,
+  pickAiEnv,
+  ProgressTracker,
+  providerUnavailable,
+  resolveMode,
+  runChat,
+  runMultiAgentChat,
+  schema,
+  traceIdStorage,
+  withRateLimit,
+} from '@/lib/services/api-boundary';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -61,36 +70,65 @@ export const POST = withAuth<void>(async (req, { user }) => {
   const rl = await withRateLimit(user.userId, 'ai_chat', CHAT_RATE_LIMIT);
   if (!rl.allowed) {
     return Response.json(
-      { error: { code: 'RATE_LIMITED', message: `Too many chat turns (${rl.count}/${rl.limit} per minute). Slow down.` } },
-      { status: 429, headers: { 'Retry-After': '60', 'X-RateLimit-Limit': String(rl.limit), 'X-RateLimit-Remaining': '0' } },
+      {
+        error: {
+          code: 'RATE_LIMITED',
+          message: `Too many chat turns (${rl.count}/${rl.limit} per minute). Slow down.`,
+        },
+      },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': '60',
+          'X-RateLimit-Limit': String(rl.limit),
+          'X-RateLimit-Remaining': '0',
+        },
+      },
     );
   }
 
   let body: z.infer<typeof BodySchema>;
-  try { body = await parseJsonBody(req, BodySchema); } catch (err) { return errorResponse(err); }
+  try {
+    body = await parseJsonBody(req, BodySchema);
+  } catch (err) {
+    return errorResponse(err);
+  }
 
   const last = body.messages.at(-1);
   if (!last || last.role !== 'user') {
-    return Response.json({ error: { code: 'VALIDATION', message: 'last message must be from the user' } }, { status: 400 });
+    return Response.json(
+      { error: { code: 'VALIDATION', message: 'last message must be from the user' } },
+      { status: 400 },
+    );
   }
 
   let env: ReturnType<typeof getServerEnv>;
-  try { env = getServerEnv(); } catch (err) { return errorResponse(err); }
+  try {
+    env = getServerEnv();
+  } catch (err) {
+    return errorResponse(err);
+  }
 
   const aiPrefsHeader = req.headers.get('X-AI-Prefs');
   let customInstructions: string | undefined;
   if (aiPrefsHeader) {
     try {
       const prefs = JSON.parse(aiPrefsHeader) as { customInstructions?: unknown };
-      if (typeof prefs.customInstructions === 'string') customInstructions = prefs.customInstructions;
-    } catch { /* ignore malformed AI prefs header */ }
+      if (typeof prefs.customInstructions === 'string')
+        customInstructions = prefs.customInstructions;
+    } catch {
+      /* ignore malformed AI prefs header */
+    }
   }
 
   // S2 fix — verify thread ownership before any agent work runs.
   // This check gates both single-agent and multi-agent paths.
   const thread = await getThread(user.userId, body.threadId);
   if (!thread) {
-    return Response.json({ error: { code: 'NOT_FOUND', message: 'Thread not found' } }, { status: 404 });
+    return Response.json(
+      { error: { code: 'NOT_FOUND', message: 'Thread not found' } },
+      { status: 404 },
+    );
   }
 
   try {
@@ -100,15 +138,14 @@ export const POST = withAuth<void>(async (req, { user }) => {
     const analysisMode = body.analysisMode ?? 'single';
 
     if (analysisMode !== 'single') {
-      const { runMultiAgentChat, resolveMode, extractUserMessageText, ProgressTracker } = await import('@hamafx/ai');
-      const { getDb, schema, getUserWithSettings } = await import('@hamafx/db');
-
       const db = getDb();
       const { settings: userSettings, user: userRow } = await getUserWithSettings(user.userId);
 
-      if (!userSettings) return errorResponse(new Error('User settings not found. Please complete onboarding.'));
+      if (!userSettings)
+        return errorResponse(new Error('User settings not found. Please complete onboarding.'));
 
-      const displayName = userRow?.name?.trim() || (userRow?.email ? userRow.email.split('@')[0] : null);
+      const displayName =
+        userRow?.name?.trim() || (userRow?.email ? userRow.email.split('@')[0] : null);
       const userText = extractUserMessageText(last as UIMessage);
       const resolvedMode = resolveMode(analysisMode, userText);
 
@@ -133,7 +170,10 @@ export const POST = withAuth<void>(async (req, { user }) => {
             .returning({ id: schema.analysisJobs.id });
 
           if (!job) {
-            return Response.json({ error: { code: 'INTERNAL', message: 'Failed to queue analysis job' } }, { status: 500 });
+            return Response.json(
+              { error: { code: 'INTERNAL', message: 'Failed to queue analysis job' } },
+              { status: 500 },
+            );
           }
 
           const queued = AnalysisQueuedEventSchema.parse({
@@ -151,7 +191,14 @@ export const POST = withAuth<void>(async (req, { user }) => {
         const messageId = crypto.randomUUID();
         const stream = new ReadableStream({
           async start(controller) {
-            const tracker = new ProgressTracker(resolvedMode, resolvedMode === 'quick' ? ['technical'] : resolvedMode === 'standard' ? ['technical', 'fundamental'] : ['technical', 'fundamental', 'risk', 'sentiment']);
+            const tracker = new ProgressTracker(
+              resolvedMode,
+              resolvedMode === 'quick'
+                ? ['technical']
+                : resolvedMode === 'standard'
+                  ? ['technical', 'fundamental']
+                  : ['technical', 'fundamental', 'risk', 'sentiment'],
+            );
             const streamLog = createRequestLogger(req, user);
 
             const send = (chunk: object) => {
@@ -172,10 +219,16 @@ export const POST = withAuth<void>(async (req, { user }) => {
 
             try {
               const result = await runMultiAgentChat({
-                threadId: body.threadId, userId: user.userId, userMessage: last as UIMessage, history: body.messages as UIMessage[],
-                userSettings, displayName: displayName ?? null, ...(customInstructions ? { customInstructions } : {}),
+                threadId: body.threadId,
+                userId: user.userId,
+                userMessage: last as UIMessage,
+                history: body.messages as UIMessage[],
+                userSettings,
+                displayName: displayName ?? null,
+                ...(customInstructions ? { customInstructions } : {}),
                 env: pickAiEnv(env),
-                ...(req.signal ? { signal: req.signal } : { signal: null }), analysisMode,
+                ...(req.signal ? { signal: req.signal } : { signal: null }),
+                analysisMode,
                 onProgress: (event) => {
                   tracker.update(event);
                   send(tracker.buildPart());
@@ -195,7 +248,13 @@ export const POST = withAuth<void>(async (req, { user }) => {
               send({
                 type: 'data-multi-agent-meta',
                 id: messageId,
-                data: { agentOpinions: result.agentOpinions, mode: result.mode, totalCostUsd: result.totalCostUsd, totalLatencyMs: result.totalLatencyMs, messageId: result.messageId },
+                data: {
+                  agentOpinions: result.agentOpinions,
+                  mode: result.mode,
+                  totalCostUsd: result.totalCostUsd,
+                  totalLatencyMs: result.totalLatencyMs,
+                  messageId: result.messageId,
+                },
                 transient: true,
               });
             } catch (err) {
@@ -203,14 +262,18 @@ export const POST = withAuth<void>(async (req, { user }) => {
                 tags: { component: 'chat', mode: 'multi-agent', route: '/api/chat' },
                 extra: { threadId: body.threadId, userId: user.userId },
               });
-              log.error({ err: String(err), threadId: body.threadId, mode: resolvedMode }, 'multi-agent chat failed');
-              const errorMessage = err instanceof BudgetExceededError
-                ? 'Daily AI budget exceeded. Please try again tomorrow.'
-                : process.env.NODE_ENV === 'production'
-                  ? 'An unexpected error occurred. Please try again.'
-                  : err instanceof Error
-                    ? err.message
-                    : String(err);
+              log.error(
+                { err: String(err), threadId: body.threadId, mode: resolvedMode },
+                'multi-agent chat failed',
+              );
+              const errorMessage =
+                err instanceof BudgetExceededError
+                  ? 'Daily AI budget exceeded. Please try again tomorrow.'
+                  : process.env.NODE_ENV === 'production'
+                    ? 'An unexpected error occurred. Please try again.'
+                    : err instanceof Error
+                      ? err.message
+                      : String(err);
               send({ type: 'error', errorText: errorMessage });
             } finally {
               controller.close();
@@ -222,7 +285,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
           headers: {
             'Content-Type': 'text/event-stream; charset=utf-8',
             'Cache-Control': 'no-cache',
-            'Connection': 'keep-alive',
+            Connection: 'keep-alive',
           },
         });
       }
@@ -241,9 +304,12 @@ export const POST = withAuth<void>(async (req, { user }) => {
       : timeoutSignal;
 
     const result = await runChat({
-      threadId: body.threadId, userId: user.userId,
+      threadId: body.threadId,
+      userId: user.userId,
       userMessage: last as UIMessage,
-      ...(body.modelOverride !== undefined && body.modelOverride !== null ? { modelOverride: body.modelOverride } : {}),
+      ...(body.modelOverride !== undefined && body.modelOverride !== null
+        ? { modelOverride: body.modelOverride }
+        : {}),
       ...(customInstructions ? { customInstructions } : {}),
       env: pickAiEnv(env),
       signal,
@@ -276,7 +342,9 @@ export const POST = withAuth<void>(async (req, { user }) => {
     const isProd = process.env.NODE_ENV === 'production';
     const message = isProd
       ? 'An unexpected error occurred. Please try again.'
-      : err instanceof Error ? err.message : String(err);
+      : err instanceof Error
+        ? err.message
+        : String(err);
     return Response.json(
       { error: { code: 'CHAT_FAILED', message, ...(requestId ? { requestId } : {}) } },
       { status: 500, headers: errorHeaders },

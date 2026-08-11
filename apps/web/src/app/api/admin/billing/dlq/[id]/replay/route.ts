@@ -7,7 +7,7 @@ import {
   claimBillingWebhookReplay,
   markBillingWebhookReplayed,
   releaseBillingWebhookReplay,
-} from '@hamafx/db';
+} from '@/lib/services/api-boundary';
 
 import { IpnPayloadSchema, processVerifiedIpnPayload, type IpnPayload } from '@/app/api/billing/webhook/route';
 import { withAdminAuth } from '@/lib/admin-auth';

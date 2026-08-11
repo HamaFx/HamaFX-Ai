@@ -18,12 +18,18 @@
 //      it via `getUserIdFromRequest()` (lib/api.ts) instead of re-decoding
 //      the JWT themselves.
 
-import { NextResponse } from 'next/server';
 import NextAuth from 'next-auth';
+import { NextResponse } from 'next/server';
+
+import { readOrCreateRequestId, REQUEST_ID_HEADER } from '@/lib/request-id';
+import {
+  getSigningSecret,
+  signUserId,
+  USER_ID_HEADER,
+  USER_ID_SIG_HEADER,
+} from '@/lib/signed-user-header';
 
 import { authConfig } from './auth.config';
-import { REQUEST_ID_HEADER, readOrCreateRequestId } from '@/lib/request-id';
-import { signUserId, USER_ID_HEADER, USER_ID_SIG_HEADER, getSigningSecret } from '@/lib/signed-user-header';
 
 const { auth } = NextAuth(authConfig);
 
@@ -45,6 +51,7 @@ function setCspHeader(response: NextResponse, nonce: string): void {
       "img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in https://s3.tradingview.com https://api.dicebear.com",
       "font-src 'self' data:",
       "connect-src 'self' wss: https://*.supabase.co https://*.biquote.io https://*.binance.com https://api.resend.com https://*.nowpayments.io https://*.tradingview.com https://api.dicebear.com",
+      "frame-src 'self' https://*.tradingview.com https://*.s3.tradingview.com https://s.tradingview.com",
     ].join('; '),
   );
 }
@@ -64,10 +71,7 @@ const proxy: any = auth(async (req) => {
   // C-2: Legacy mode is ONLY allowed when NODE_ENV !== 'production'.
   // The ALLOW_LEGACY_AUTH escape hatch has been removed — legacy auth
   // in production is now a hard error in auth.config.ts at boot time.
-  if (
-    process.env.AUTH_MODE === 'legacy' &&
-    process.env.NODE_ENV !== 'production'
-  ) {
+  if (process.env.AUTH_MODE === 'legacy' && process.env.NODE_ENV !== 'production') {
     const headers = new Headers(req.headers);
     headers.set(REQUEST_ID_HEADER, requestId);
     headers.set('x-user-id', '__system__');
@@ -98,8 +102,7 @@ const proxy: any = auth(async (req) => {
   // We determine this from NODE_ENV=production OR COOKIE_SECURE_MODE=true
   // for Docker self-hosted deployments that serve over HTTPS.
   const useSecureCookie =
-    process.env.NODE_ENV === 'production' ||
-    process.env.COOKIE_SECURE_MODE === 'true';
+    process.env.NODE_ENV === 'production' || process.env.COOKIE_SECURE_MODE === 'true';
   const csrfCookieName = useSecureCookie ? '__Host-hfx_csrf' : 'hfx_csrf';
   let csrfToken = req.cookies.get(csrfCookieName)?.value;
   if (!csrfToken) {
@@ -107,7 +110,11 @@ const proxy: any = auth(async (req) => {
   }
 
   const isStateChanging = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method);
-  if (isStateChanging && req.nextUrl.pathname.startsWith('/api/') && !req.nextUrl.pathname.startsWith('/api/auth/')) {
+  if (
+    isStateChanging &&
+    req.nextUrl.pathname.startsWith('/api/') &&
+    !req.nextUrl.pathname.startsWith('/api/auth/')
+  ) {
     const headerToken = req.headers.get('x-csrf-token');
     if (!csrfToken || !headerToken || headerToken !== csrfToken) {
       return new NextResponse('Forbidden - CSRF token missing or invalid', { status: 403 });

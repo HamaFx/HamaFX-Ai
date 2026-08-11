@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { testProviderKey } from '@hamafx/ai';
-import { PROVIDER_IDS, type ProviderId } from '@hamafx/shared/encryption';
-import { schema } from '@hamafx/db';
-import { getDb } from '@hamafx/ai';
+import { testProviderKey } from '@/lib/services/api-boundary';
+import { PROVIDER_IDS, type ProviderId } from '@/lib/services/api-boundary';
+import { schema } from '@/lib/services/api-boundary';
+import { getDb } from '@/lib/services/api-boundary';
 import { and, eq } from 'drizzle-orm';
 import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';
 import { z } from 'zod';

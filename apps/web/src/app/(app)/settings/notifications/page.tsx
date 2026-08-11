@@ -72,8 +72,6 @@ export default async function NotificationsPage() {
 
         <RowDivider />
 
-        <RowDivider />
-
         <SettingsRow
           icon={<IconBell className="size-4 text-brand" />}
           label="Web push"

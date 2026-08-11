@@ -12,8 +12,8 @@
 //
 // Idempotent: only patches rows where `actuals_filled_at IS NULL`.
 
-import { listFredEventsMissingActual, parseFredEventId, patchEventActual } from '@hamafx/ai';
-import { fetchObservations, fredMeta } from '@hamafx/data/providers/fred';
+import { listFredEventsMissingActual, parseFredEventId, patchEventActual } from '@/lib/services/api-boundary';
+import { fetchObservations, fredMeta } from '@/lib/services/api-boundary';
 import * as Sentry from '@sentry/nextjs';
 
 import { withCronAuth } from '@/lib/cron';

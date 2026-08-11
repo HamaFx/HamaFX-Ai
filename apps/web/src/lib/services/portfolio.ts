@@ -9,25 +9,27 @@
 // call service → format Response.
 
 import {
-  createPosition as aiCreatePosition,
-  getOpenPositionsWithPnL,
-  listAllPositions as aiListAllPositions,
-  getPosition as aiGetPosition,
   closePosition as aiClosePosition,
+  createPosition as aiCreatePosition,
   deletePosition as aiDeletePosition,
-  getPortfolioSettings as aiGetPortfolioSettings,
-  savePortfolioSettings as aiSavePortfolioSettings,
   getPortfolioRiskReport as aiGetPortfolioRiskReport,
+  getPortfolioSettings as aiGetPortfolioSettings,
+  getPosition as aiGetPosition,
+  listAllPositions as aiListAllPositions,
+  savePortfolioSettings as aiSavePortfolioSettings,
+  getOpenPositionsWithPnL,
 } from '@hamafx/ai';
 import type {
-  CreatePositionInputSchema,
   ClosePositionInputSchema,
-  PortfolioSettings,
+  CreatePositionInputSchema,
   PortfolioPosition,
-  PositionWithPnL,
   PortfolioRiskReport,
+  PortfolioSettings,
+  PositionWithPnL,
 } from '@hamafx/shared';
 import { z } from 'zod';
+
+export { CreatePositionInputSchema, ClosePositionInputSchema, AppError } from '@hamafx/shared';
 
 // ── Schemas ─────────────────────────────────────────────────────────────────
 
@@ -123,10 +125,7 @@ export async function createPositionService(
   return { position: toPositionDTO(position) };
 }
 
-export async function getPositionService(
-  userId: string,
-  id: string,
-): Promise<PositionDTO | null> {
+export async function getPositionService(userId: string, id: string): Promise<PositionDTO | null> {
   const position = await aiGetPosition(userId, id);
   return position ? toPositionDTO(position) : null;
 }
@@ -157,15 +156,18 @@ export async function savePortfolioSettingsService(
 ): Promise<{ settings: PortfolioSettingsDTO | null }> {
   const cleaned = Object.fromEntries(
     Object.entries(input).filter(([_, v]) => v !== undefined),
-  ) as Partial<Pick<PortfolioSettings, 'accountBalance' | 'baseCurrency' | 'maxRiskPerTradePct' | 'maxTotalExposurePct'>>;
+  ) as Partial<
+    Pick<
+      PortfolioSettings,
+      'accountBalance' | 'baseCurrency' | 'maxRiskPerTradePct' | 'maxTotalExposurePct'
+    >
+  >;
 
   const settings = await aiSavePortfolioSettings(userId, cleaned);
   return { settings };
 }
 
-export async function getRiskReportService(
-  userId: string,
-): Promise<{ report: RiskReportDTO }> {
+export async function getRiskReportService(userId: string): Promise<{ report: RiskReportDTO }> {
   const report = await aiGetPortfolioRiskReport(userId);
   return { report: toRiskReportDTO(report) };
 }

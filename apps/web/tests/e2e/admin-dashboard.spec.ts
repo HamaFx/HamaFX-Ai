@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
-import { test, expect } from '@playwright/test';
-// With AUTH_MODE=legacy, all auth checks are bypassed — no authenticateAs needed.
-import { ensureTestUser } from './test-utils';
+import { expect, test } from '@playwright/test';
+
+import { authenticateAs } from './test-utils';
 
 test.describe('Admin dashboard', () => {
   test('loads for admin users', async ({ browser }) => {
-    const context = await browser.newContext();
+    const context = await browser.newContext({
+      baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+    });
     const page = await context.newPage();
 
-    await ensureTestUser('admin@example.com', 'password123', 'admin');
+    await authenticateAs(page, 'admin@example.com', 'password123', 'admin');
     await page.goto('/admin');
     await expect(page).toHaveURL('/admin');
 
@@ -37,10 +39,12 @@ test.describe('Admin dashboard', () => {
   });
 
   test('switches between admin tabs', async ({ browser }) => {
-    const context = await browser.newContext();
+    const context = await browser.newContext({
+      baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+    });
     const page = await context.newPage();
 
-    await ensureTestUser('admin@example.com', 'password123', 'admin');
+    await authenticateAs(page, 'admin@example.com', 'password123', 'admin');
     await page.goto('/admin');
     await expect(page).toHaveURL('/admin');
 
@@ -56,10 +60,12 @@ test.describe('Admin dashboard', () => {
   });
 
   test('redirects non-admin users to login', async ({ browser }) => {
-    const context = await browser.newContext();
+    const context = await browser.newContext({
+      baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+    });
     const page = await context.newPage();
 
-    await ensureTestUser('regular@example.com', 'password123', 'user');
+    await authenticateAs(page, 'regular@example.com', 'password123', 'user');
 
     await page.goto('/admin');
 

@@ -24,7 +24,7 @@
 //                                      (variable NAMES only, never values)
 //   502 { error: string }              on Resend non-2xx (response text truncated)
 
-import { AppError } from '@hamafx/shared';
+import { AppError } from '@/lib/services/api-boundary';
 import { z } from 'zod';
 
 import { withAdminAuth } from '@/lib/admin-auth';

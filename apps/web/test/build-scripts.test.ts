@@ -3,7 +3,9 @@
 
 import { execSync } from 'node:child_process';
 import { existsSync, readFileSync, renameSync, unlinkSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 const buildIdFile = resolve(process.cwd(), '.build-id');
@@ -13,6 +15,15 @@ const precacheFile = resolve(process.cwd(), 'public/sw-precache.json');
 
 describe('build scripts', () => {
   let originalSw: Buffer | null = null;
+
+  it('uses the single build wrapper without lifecycle duplicates', async () => {
+    const pkg = JSON.parse(await readFile(resolve(process.cwd(), 'package.json'), 'utf8')) as {
+      scripts?: Record<string, string>;
+    };
+    expect(pkg.scripts?.build).toBe('node scripts/build.mjs');
+    expect(pkg.scripts?.prebuild).toBeUndefined();
+    expect(pkg.scripts?.postbuild).toBeUndefined();
+  });
 
   beforeAll(() => {
     if (existsSync(swFile)) {
@@ -69,9 +80,7 @@ describe('build scripts', () => {
     renameSync(templateFile, backup);
 
     try {
-      expect(() =>
-        execSync('node scripts/generate-sw.mjs', { cwd: process.cwd() }),
-      ).toThrow();
+      expect(() => execSync('node scripts/generate-sw.mjs', { cwd: process.cwd() })).toThrow();
     } finally {
       renameSync(backup, templateFile);
     }

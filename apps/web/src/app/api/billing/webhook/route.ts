@@ -15,7 +15,7 @@ import {
   recordBillingWebhookFailure,
   updatePaymentStatus,
   updateSubscriptionFromPayment,
-} from '@hamafx/db';
+} from '@/lib/services/api-boundary';
 import { getServerEnv } from '@/lib/env';
 import { verifyIpnSignature } from '@/lib/nowpayments';
 import { createScopedLoggerWithContext } from '@/lib/logger';

@@ -74,7 +74,6 @@ export const linkCommand: BotCommand = {
           '/ask is gold bullish? — Ask a question',
           '/status — System status',
           '/positions — Your open positions',
-          '/track — AI track record',
           '/help — See all commands',
         ].join('\n'),
       };

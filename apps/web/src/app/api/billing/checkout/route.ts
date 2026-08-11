@@ -14,7 +14,7 @@ import {
   getPlan,
   saveCheckoutInvoice,
   upsertSubscription,
-} from '@hamafx/db';
+} from '@/lib/services/api-boundary';
 import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';
 import { getServerEnv } from '@/lib/env';
 import { createInvoice } from '@/lib/nowpayments';

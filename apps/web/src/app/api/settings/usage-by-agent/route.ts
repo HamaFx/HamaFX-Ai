@@ -15,8 +15,8 @@
 //
 // Auth: NextAuth session gate. Per-user data only.
 
-import { schema } from '@hamafx/db';
-import { getDb } from '@hamafx/ai';
+import { schema } from '@/lib/services/api-boundary';
+import { getDb } from '@/lib/services/api-boundary';
 import { eq, gte, and, sql } from 'drizzle-orm';
 
 import { errorResponse, withAuth } from '@/lib/api';

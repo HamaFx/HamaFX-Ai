@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { withAuth, errorResponse, parseJsonBody } from '@/lib/api';
-import { getWatchlistWithCatalog, isSymbolInCatalog, getNextDisplayOrder, reorderWatchlist, addUserSymbol } from '@hamafx/db';
+import { getWatchlistWithCatalog, isSymbolInCatalog, getNextDisplayOrder, reorderWatchlist, addUserSymbol } from '@/lib/services/api-boundary';
 import { z } from 'zod';
-import { SymbolSchema } from '@hamafx/shared';
+import { SymbolSchema } from '@/lib/services/api-boundary';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';

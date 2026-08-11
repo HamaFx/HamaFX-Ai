@@ -5,7 +5,7 @@
 
 import * as Sentry from '@sentry/nextjs';
 
-import { countStaleBillingWebhookFailures } from '@hamafx/db';
+import { countStaleBillingWebhookFailures } from '@/lib/services/api-boundary';
 import { withCronAuth } from '@/lib/cron';
 import { createScopedLoggerWithContext } from '@/lib/logger';
 

@@ -18,7 +18,7 @@
 // E2E: Navigation
 //
 // Verifies that all major app routes load without errors when authenticated.
-// Covers: dashboard, chat, journal, alerts, signals, news, calendar, chart,
+// Covers: dashboard, chat, journal, alerts, news, calendar, chart,
 // settings sub-pages, and offline page.
 // ---------------------------------------------------------------------------
 
@@ -30,7 +30,6 @@ test.describe('Navigation — authenticated routes', () => {
     { path: '/chat', heading: null, urlCheck: /.*\/chat/ },
     { path: '/journal', heading: /journal/i },
     { path: '/alerts', heading: /alerts/i },
-    { path: '/signals', heading: /ai signals/i },
     { path: '/news', heading: /news/i },
     { path: '/calendar', heading: /calendar/i },
     { path: '/settings/profile', heading: /profile/i },
@@ -42,7 +41,6 @@ test.describe('Navigation — authenticated routes', () => {
     { path: '/settings/billing', heading: null, urlCheck: /.*\/settings\/billing/ },
     { path: '/settings/portfolio', heading: null, urlCheck: /.*\/settings\/portfolio/ },
     { path: '/settings/telegram', heading: null, urlCheck: /.*\/settings\/telegram/ },
-    { path: '/settings/track-record', heading: null, urlCheck: /.*\/settings\/track-record/ },
     { path: '/offline', heading: /offline/i },
   ];
 

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { findVerificationToken, deleteVerificationToken, verifyUserEmail } from '@hamafx/db';
-import { AppError } from '@hamafx/shared';
+import { findVerificationToken, deleteVerificationToken, verifyUserEmail } from '@/lib/services/api-boundary';
+import { AppError } from '@/lib/services/api-boundary';
 import { errorResponse } from '@/lib/api';
 import { hashToken } from '@/lib/auth-tokens';
 

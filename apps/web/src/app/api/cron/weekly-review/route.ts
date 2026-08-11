@@ -9,8 +9,8 @@
 // Calls `emitWeeklyReview` exactly once. Idempotent within an ISO week
 // via `briefings_emitted` PK on (`weekly_review:<isoWeek>`, 'weekly_review').
 
-import { emitWeeklyReview } from '@hamafx/ai';
-import { getActiveUserIds } from '@hamafx/db';
+import { emitWeeklyReview } from '@/lib/services/api-boundary';
+import { getActiveUserIds } from '@/lib/services/api-boundary';
 import * as Sentry from '@sentry/nextjs';
 
 import { withCronAuth } from '@/lib/cron';

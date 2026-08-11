@@ -14,11 +14,11 @@
 // cross-site form posts. (The §22 CSRF token would add belt-and-
 // braces double-submit on top.)
 
-import { validationError, providerUnavailable, AppError } from '@hamafx/shared';
+import { validationError, providerUnavailable, AppError } from '@/lib/services/api-boundary';
 
 import { errorResponse, withAuth } from '@/lib/api';
 import { getServerEnv } from '@/lib/env';
-import { withRateLimit } from '@hamafx/db';
+import { withRateLimit } from '@/lib/services/api-boundary';
 import {
   CHAT_IMAGE_MAX_BYTES,
   uploadChatImage,

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { marketDataProviders } from '@hamafx/data';
+import { marketDataProviders } from '@/lib/services/api-boundary';
 import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';
 import { z } from 'zod';
 

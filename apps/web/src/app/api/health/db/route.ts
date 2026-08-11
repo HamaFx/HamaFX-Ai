@@ -9,7 +9,7 @@
 // Returns 200 if both checks pass, 503 if either fails.
 
 import { NextResponse } from 'next/server';
-import { getDb } from '@hamafx/ai';
+import { getDb } from '@/lib/services/api-boundary';
 import { sql } from 'drizzle-orm';
 import { readFileSync } from 'node:fs';
 

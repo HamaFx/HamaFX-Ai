@@ -4,7 +4,7 @@
 
 import { errorResponse, withAuth } from '@/lib/api';
 import { listPositionsService, createPositionService } from '@/lib/services/portfolio';
-import { CreatePositionInputSchema } from '@hamafx/shared';
+import { CreatePositionInputSchema } from '@/lib/services/portfolio';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';

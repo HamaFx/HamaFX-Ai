@@ -17,8 +17,8 @@
 //   - Hobby: external scheduler (Fly.io worker, GitHub Actions, etc.) hits
 //     this URL with `Authorization: Bearer ${CRON_SECRET}`.
 
-import { latestArticleTimestampMs, upsertArticles } from '@hamafx/ai';
-import { fetchNews } from '@hamafx/data';
+import { latestArticleTimestampMs, upsertArticles } from '@/lib/services/api-boundary';
+import { fetchNews } from '@/lib/services/api-boundary';
 import * as Sentry from '@sentry/nextjs';
 
 import { withCronAuth } from '@/lib/cron';

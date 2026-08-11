@@ -13,8 +13,8 @@
 // The endpoint never returns key values — only the presence/absence
 // per provider.
 
-import { configuredProviders, decryptByok } from '@hamafx/shared/encryption';
-import { getUserWithSettings } from '@hamafx/db';
+import { configuredProviders, decryptByok } from '@/lib/services/api-boundary';
+import { getUserWithSettings } from '@/lib/services/api-boundary';
 
 import { errorResponse, withAuth } from '@/lib/api';
 

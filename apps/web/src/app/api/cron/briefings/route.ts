@@ -19,8 +19,8 @@ import {
   emitPostEvent,
   emitPreEvent,
   findHighImpactEventsInWindow,
-} from '@hamafx/ai';
-import { getActiveUserIds } from '@hamafx/db';
+} from '@/lib/services/api-boundary';
+import { getActiveUserIds } from '@/lib/services/api-boundary';
 import * as Sentry from '@sentry/nextjs';
 
 import { withCronAuth } from '@/lib/cron';

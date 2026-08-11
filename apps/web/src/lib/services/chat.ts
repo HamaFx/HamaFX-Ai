@@ -11,13 +11,13 @@
 
 import {
   createThread as aiCreateThread,
-  listThreads as aiListThreads,
-  getThread as aiGetThread,
   deleteThread as aiDeleteThread,
-  updateThreadPinnedSymbol,
+  getThread as aiGetThread,
   listMessages as aiListMessages,
-} from '@hamafx/ai';
-import type { DbThread } from '@hamafx/ai';
+  listThreads as aiListThreads,
+  updateThreadPinnedSymbol,
+  type DbThread,
+} from '@hamafx/ai/persistence';
 
 // ── DTOs ─────────────────────────────────────────────────────────────────────
 
@@ -73,10 +73,7 @@ export async function createThreadService(
   return { thread: toThreadDTO(thread, userId) };
 }
 
-export async function getThreadService(
-  userId: string,
-  id: string,
-): Promise<ThreadDTO | null> {
+export async function getThreadService(userId: string, id: string): Promise<ThreadDTO | null> {
   const thread = await aiGetThread(userId, id);
   return thread ? toThreadDTO(thread, userId) : null;
 }

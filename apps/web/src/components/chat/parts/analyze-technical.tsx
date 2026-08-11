@@ -117,7 +117,7 @@ function TfCard({
       </dl>
 
       <Link
-        href={`/chart/${symbol}/structure?tf=${reading.tf}`}
+        href={`/chart/${symbol}?tf=${reading.tf}`}
         className="text-fg focus-visible:ring-fg mt-1 block min-h-[24px] text-right text-body-sm font-medium underline-offset-2 outline-none hover:underline focus-visible:ring-2"
       >
         view chart →

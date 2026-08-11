@@ -77,7 +77,7 @@ export function WatchlistWidget({
           <span className="text-fg text-body-sm font-semibold">Watchlist</span>
         </div>
         <Link
-          href="/chart"
+          href={`/chart/${list[0] ?? 'XAUUSD'}`}
           className="text-fg-subtle hover:text-fg text-caption"
         >
           Open chart

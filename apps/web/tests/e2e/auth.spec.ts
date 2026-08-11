@@ -21,7 +21,8 @@
 // and session persistence. Uses modern getByRole/getByLabel selectors.
 // ---------------------------------------------------------------------------
 
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+
 import { ensureTestUser } from './test-utils';
 
 test.describe('Authentication', () => {
@@ -31,7 +32,9 @@ test.describe('Authentication', () => {
 
   test('redirects to login when unauthenticated', async ({ browser }) => {
     // Use a fresh context with no saved storageState
-    const context = await browser.newContext();
+    const context = await browser.newContext({
+      baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+    });
     const page = await context.newPage();
 
     await page.goto('/');
@@ -41,7 +44,7 @@ test.describe('Authentication', () => {
     // and the login form has a "Sign in" button. Assert both so the test
     // confirms we landed on the login page.
     await expect(page.getByRole('heading', { name: /hamafx/i })).toBeVisible();
-    await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Sign in', exact: true })).toBeVisible();
 
     await context.close();
   });
@@ -50,7 +53,9 @@ test.describe('Authentication', () => {
   // NEXT_REDIRECT throws, so the redirect from /login to /chat never
   // completes through the UI. See apps/web/tests/e2e/test-utils.ts:authenticateAs.
   test.fixme('successful login redirects to chat', async ({ browser }) => {
-    const context = await browser.newContext();
+    const context = await browser.newContext({
+      baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+    });
     const page = await context.newPage();
 
     await page.goto('/login');
@@ -65,7 +70,9 @@ test.describe('Authentication', () => {
   });
 
   test('invalid credentials show error message', async ({ browser }) => {
-    const context = await browser.newContext();
+    const context = await browser.newContext({
+      baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+    });
     const page = await context.newPage();
 
     await page.goto('/login');
@@ -84,7 +91,9 @@ test.describe('Authentication', () => {
   });
 
   test('login page has link to register', async ({ browser }) => {
-    const context = await browser.newContext();
+    const context = await browser.newContext({
+      baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+    });
     const page = await context.newPage();
 
     await page.goto('/login');
@@ -98,7 +107,9 @@ test.describe('Authentication', () => {
   });
 
   test('login page has forgot password link', async ({ browser }) => {
-    const context = await browser.newContext();
+    const context = await browser.newContext({
+      baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+    });
     const page = await context.newPage();
 
     await page.goto('/login');
@@ -114,7 +125,9 @@ test.describe('Authentication', () => {
 
 test.describe('Registration', () => {
   test('register page renders with required fields', async ({ browser }) => {
-    const context = await browser.newContext();
+    const context = await browser.newContext({
+      baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+    });
     const page = await context.newPage();
 
     await page.goto('/register');
@@ -129,7 +142,9 @@ test.describe('Registration', () => {
   });
 
   test('password mismatch shows validation error', async ({ browser }) => {
-    const context = await browser.newContext();
+    const context = await browser.newContext({
+      baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+    });
     const page = await context.newPage();
 
     await page.goto('/register');
@@ -146,7 +161,9 @@ test.describe('Registration', () => {
   });
 
   test('password strength indicators appear', async ({ browser }) => {
-    const context = await browser.newContext();
+    const context = await browser.newContext({
+      baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+    });
     const page = await context.newPage();
 
     await page.goto('/register');

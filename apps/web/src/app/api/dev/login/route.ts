@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import { NextResponse } from 'next/server';
 import crypto from 'node:crypto';
 import { signIn } from '@/auth';
-import { getUserById, createUserWithSettings } from '@hamafx/db';
+import { getUserById, createUserWithSettings } from '@/lib/services/api-boundary';
 import { createScopedLoggerWithContext } from '@/lib/logger';
 
 export const runtime = 'nodejs';

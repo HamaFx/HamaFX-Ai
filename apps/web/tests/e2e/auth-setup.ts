@@ -24,20 +24,19 @@
 // This file is matched by the 'setup' project in playwright.config.ts.
 // ---------------------------------------------------------------------------
 
-import { test as setup, expect } from '@playwright/test';
-import { ensureSystemUser } from './test-utils';
+import { expect, test as setup } from '@playwright/test';
+
+import { authenticateAs } from './test-utils';
 
 const AUTH_FILE = 'tests/e2e/.auth/user.json';
 
 setup('authenticate as test user', async ({ page }) => {
-  // In legacy mode, middleware and chat pages use '__system__' as userId.
-  // Create the DB row so FK constraints on threads/settings pass.
-  await ensureSystemUser();
-
-  // With AUTH_MODE=legacy, all auth checks are bypassed — navigate directly.
+  // Use the same signed JWT/session-row path as the secure application.
+  // This keeps all dependent projects in normal auth mode.
+  await authenticateAs(page, 'test@example.com', 'password123');
   await page.goto('/chat');
   await expect(page).toHaveURL(/.*\/chat.*/, { timeout: 30_000 });
 
-  // Save the authenticated state for downstream projects
+  // Save the authenticated state for downstream projects.
   await page.context().storageState({ path: AUTH_FILE });
 });

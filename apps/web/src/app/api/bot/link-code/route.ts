@@ -3,7 +3,7 @@
 // /api/bot/link-code — Generate a link code for linking Telegram to HamaFX.
 // POST /api/bot/link-code
 
-import { createLinkCode, getBotLink } from '@hamafx/ai';
+import { createLinkCode, getBotLink } from '@/lib/services/api-boundary';
 
 import { errorResponse, withAuth } from '@/lib/api';
 

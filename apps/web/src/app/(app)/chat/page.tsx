@@ -17,12 +17,16 @@
 //     /settings/api-keys?from=chat. Otherwise redirect to the most
 //     recently used thread, or create a fresh one if none exist.
 
-import { configuredProviders, decryptByok } from '@hamafx/shared/encryption';
-import { createThread, listThreads } from '@hamafx/ai';
 import { redirect } from 'next/navigation';
 
 import { auth } from '@/auth';
-import { getUserApiKeys } from '@hamafx/db';
+import {
+  configuredProviders,
+  createThread,
+  decryptByok,
+  getUserApiKeys,
+  listThreads,
+} from '@/lib/services/api-boundary';
 
 export const dynamic = 'force-dynamic';
 

@@ -27,15 +27,32 @@
 //   • HTML reporter for local debugging
 // ---------------------------------------------------------------------------
 
-import { defineConfig, devices } from '@playwright/test';
-import { fileURLToPath } from 'url';
+import { randomBytes } from 'node:crypto';
 import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+import { defineConfig, devices } from '@playwright/test';
+
 import { loadE2eEnv } from './tests/e2e/env-loader';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 loadE2eEnv(__dirname);
+// E2E must exercise the protected application path. Never inherit a local
+// AUTH_MODE=legacy setting from a developer's .env.local file.
+process.env.AUTH_MODE = 'normal';
+
+const e2ePort = Number(process.env.PLAYWRIGHT_PORT ?? 3000);
+const e2eBaseUrl = process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${e2ePort}`;
+// Keep the test runner, JWT helper, and child Next process on one origin.
+process.env.NEXTAUTH_URL = e2eBaseUrl;
+// Local env files may intentionally leave ENCRYPTION_SECRET blank. E2E
+// fixtures need to encrypt their seed provider with the same key that the
+// child Next process uses, so create one ephemeral per-run value here.
+if (!/^[0-9a-f]{64}$/i.test(process.env.ENCRYPTION_SECRET ?? '')) {
+  process.env.ENCRYPTION_SECRET = randomBytes(32).toString('hex');
+}
 
 const isCI = !!process.env.CI;
 
@@ -43,12 +60,10 @@ const isCI = !!process.env.CI;
 // .env.production.local (since .env.local has an empty override).
 function buildWebServerCommand(): string {
   const encKey = process.env.ENCRYPTION_SECRET;
-  const baseCmd = isCI ? 'pnpm build && pnpm start' : 'pnpm dev';
-  // Next.js 16 uses Turbopack by default; no bundler flag is needed.
-  if (encKey) {
-    return `ENCRYPTION_SECRET=${encKey} ${baseCmd}`;
-  }
-  return baseCmd;
+  // Next.js 16 uses Turbopack by default; no bundler flag is needed. The
+  // security-critical values are supplied through webServer.env below so
+  // they do not appear in the child process command line.
+  return isCI ? 'pnpm build && pnpm start' : 'pnpm dev';
 }
 
 export default defineConfig({
@@ -71,7 +86,7 @@ export default defineConfig({
     : 'html',
 
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: e2eBaseUrl,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -147,9 +162,19 @@ export default defineConfig({
   globalSetup: './tests/e2e/global-setup.ts',
 
   webServer: {
-    command: buildWebServerCommand(),
-    url: 'http://localhost:3000',
-    reuseExistingServer: !isCI,
+    command: `${buildWebServerCommand()} --port ${e2ePort}`,
+    url: e2eBaseUrl,
+    env: {
+      AUTH_MODE: 'normal',
+      NEXTAUTH_URL: e2eBaseUrl,
+      ...(process.env.AUTH_SECRET ? { AUTH_SECRET: process.env.AUTH_SECRET } : {}),
+      ...(process.env.ENCRYPTION_SECRET
+        ? { ENCRYPTION_SECRET: process.env.ENCRYPTION_SECRET }
+        : {}),
+    },
+    // Never reuse an already-running server: it may have been started with
+    // AUTH_MODE=legacy or a different signing secret.
+    reuseExistingServer: false,
     timeout: isCI ? 120_000 : 30_000,
   },
 });

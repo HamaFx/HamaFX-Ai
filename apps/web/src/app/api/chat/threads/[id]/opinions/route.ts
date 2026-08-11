@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { getThread, listAgentOpinions } from '@hamafx/ai';
+import { getThread, listAgentOpinions } from '@/lib/services/api-boundary';
 import { errorResponse, withAuth } from '@/lib/api';
 
 export const runtime = 'nodejs';

@@ -4,8 +4,8 @@
 // GET  /api/notifications/noise-config
 // PUT  /api/notifications/noise-config
 
-import { getNoiseConfig, saveNoiseConfig } from '@hamafx/ai';
-import { NoiseConfigSchema, type NoiseConfig } from '@hamafx/shared';
+import { getNoiseConfig, saveNoiseConfig } from '@/lib/services/api-boundary';
+import { NoiseConfigSchema, type NoiseConfig } from '@/lib/services/api-boundary';
 
 import { errorResponse, withAuth } from '@/lib/api';
 

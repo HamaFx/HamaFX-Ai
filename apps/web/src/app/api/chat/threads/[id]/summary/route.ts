@@ -9,7 +9,7 @@
 // This lets the chat surface pin a "Thread summary" header once a thread is
 // long enough to warrant one.
 
-import { listMessages } from '@hamafx/ai';
+import { listMessages } from '@/lib/services/api-boundary';
 
 import { errorResponse, withAuth } from '@/lib/api';
 

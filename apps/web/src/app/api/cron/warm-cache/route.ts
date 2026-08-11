@@ -12,8 +12,8 @@
 // burning quota on it inside warm-cache hits the per-provider self-throttle
 // AND the upstream's quota — leave it to lazy fetch on first user view.
 
-import { getCandlesWithMeta, getPriceWithMeta } from '@hamafx/data';
-import { SYMBOLS } from '@hamafx/shared';
+import { getCandlesWithMeta, getPriceWithMeta } from '@/lib/services/api-boundary';
+import { SYMBOLS } from '@/lib/services/api-boundary';
 
 import { withCronAuth } from '@/lib/cron';
 import { createScopedLoggerWithContext } from '@/lib/logger';

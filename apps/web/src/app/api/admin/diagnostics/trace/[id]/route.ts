@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { getDiagnosticTrace } from '@hamafx/db';
+import { getDiagnosticTrace } from '@/lib/services/api-boundary';
 
 import { withAdminAuth } from '@/lib/admin-auth';
 import { recordAdminAudit } from '@/lib/services/admin';

@@ -4,7 +4,7 @@
 //
 // Polling endpoint for background multi-agent analysis jobs.
 
-import { getAnalysisJob } from '@hamafx/db';
+import { getAnalysisJob } from '@/lib/services/api-boundary';
 import { withAuth } from '@/lib/api';
 
 export const runtime = 'nodejs';

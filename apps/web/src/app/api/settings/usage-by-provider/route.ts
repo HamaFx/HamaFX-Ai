@@ -12,7 +12,7 @@
 //
 // Auth: NextAuth session gate. Per-user data only.
 
-import { computeUsage } from '@hamafx/ai';
+import { computeUsage } from '@/lib/services/api-boundary';
 
 import { errorResponse, withAuth } from '@/lib/api';
 

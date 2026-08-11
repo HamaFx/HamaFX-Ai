@@ -21,14 +21,14 @@
 // Run on mobile-chrome and mobile-safari projects in addition to desktop.
 // ---------------------------------------------------------------------------
 
-import { test, expect } from './fixtures';
+import { expect, test } from './fixtures';
 
 test.describe('Responsive layout', () => {
   test('chat page is usable on mobile viewport', async ({ authedPage }) => {
     const page = authedPage;
 
     // Verify the textarea is visible and usable
-    const textarea = page.getByRole('textbox');
+    const textarea = page.getByRole('textbox', { name: 'Chat message input' });
     await expect(textarea).toBeVisible({ timeout: 15_000 });
 
     // The textarea should be within the viewport (not off-screen)
@@ -76,7 +76,9 @@ test.describe('Responsive layout', () => {
 
     await page.goto('/journal');
 
-    await expect(page.getByRole('heading', { name: /journal/i })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole('heading', { name: 'Journal', exact: true })).toBeVisible({
+      timeout: 15_000,
+    });
 
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
     const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
@@ -85,17 +87,33 @@ test.describe('Responsive layout', () => {
 
   test('no horizontal scroll on key pages at mobile viewport', async ({ authedPage }) => {
     const page = authedPage;
-
-    const pages = ['/chat', '/dashboard', '/journal', '/alerts', '/signals', '/news', '/calendar'];
+    const pages = ['/chat', '/dashboard', '/journal', '/alerts', '/news', '/calendar'];
 
     for (const path of pages) {
-      await page.goto(path);
-      await page.waitForLoadState('networkidle').catch(() => {});
+      await page.goto(path, { waitUntil: 'domcontentloaded' });
+      if (path === '/chat') {
+        await expect(page).toHaveURL(/\/chat(?:\/[^/?]+)?(?:\?.*)?$/);
+      } else {
+        await expect(page).toHaveURL(new RegExp(`${path.replace('/', '\\/')}$`));
+      }
+      await page.waitForTimeout(750);
 
-      const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
-      const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
+      let dimensions: { scrollWidth: number; clientWidth: number } | null = null;
+      for (let attempt = 0; attempt < 3 && !dimensions; attempt += 1) {
+        try {
+          dimensions = await page.evaluate(() => ({
+            scrollWidth: document.documentElement.scrollWidth,
+            clientWidth: document.documentElement.clientWidth,
+          }));
+        } catch (error) {
+          if (!String(error).includes('Execution context was destroyed')) throw error;
+          await page.waitForTimeout(250);
+        }
+      }
+
+      expect(dimensions).not.toBeNull();
       // Allow 2px tolerance for sub-pixel rounding
-      expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 2);
+      expect(dimensions!.scrollWidth).toBeLessThanOrEqual(dimensions!.clientWidth + 2);
     }
   });
 });

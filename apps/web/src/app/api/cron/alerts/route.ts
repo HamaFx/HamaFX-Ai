@@ -9,7 +9,7 @@
 // scheduler. The eval is fast (one cached price call per priceCross + one
 // candle call per (symbol, tf) deduped via the data cache).
 
-import { evaluateAlerts } from '@hamafx/ai';
+import { evaluateAlerts } from '@/lib/services/api-boundary';
 
 import { withCronAuth } from '@/lib/cron';
 import { createScopedLoggerWithContext } from '@/lib/logger';

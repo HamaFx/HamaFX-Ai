@@ -15,11 +15,12 @@
  */
 
 import { createCipheriv, randomBytes } from 'node:crypto';
+
 import { encode } from '@auth/core/jwt';
 import { getDb, schema } from '@hamafx/db';
-import { sql } from 'drizzle-orm';
-import bcrypt from 'bcryptjs';
 import type { Page } from '@playwright/test';
+import bcrypt from 'bcryptjs';
+import { sql } from 'drizzle-orm';
 
 /**
  * Encrypt a dummy BYOK payload for the test user so the chat page
@@ -48,22 +49,30 @@ function encryptDummyByokKey(): string | null {
   }
 }
 
-export async function ensureTestUser(email = 'test@example.com', password = 'password123', role: 'user' | 'admin' = 'user') {
+export async function ensureTestUser(
+  email = 'test@example.com',
+  password = 'password123',
+  role: 'user' | 'admin' = 'user',
+) {
   const db = getDb();
-  
+
   const hashedPassword = await bcrypt.hash(password, 10);
   const id = crypto.randomUUID();
 
-  const result = await db.insert(schema.users).values({
-    id,
-    email,
-    name: 'Test User',
-    hashedPassword,
-    role,
-  }).onConflictDoUpdate({
-    target: schema.users.email,
-    set: { hashedPassword }
-  }).returning();
+  const result = await db
+    .insert(schema.users)
+    .values({
+      id,
+      email,
+      name: 'Test User',
+      hashedPassword,
+      role,
+    })
+    .onConflictDoUpdate({
+      target: schema.users.email,
+      set: { hashedPassword, role },
+    })
+    .returning();
 
   const user = result[0];
 
@@ -71,20 +80,23 @@ export async function ensureTestUser(email = 'test@example.com', password = 'pas
   // provider and doesn't redirect to /settings/api-keys.
   const encryptedKey = encryptDummyByokKey();
 
-  await db.insert(schema.userSettings).values({
-    userId: user.id,
-    defaultSymbol: 'XAUUSD',
-    timezone: 'UTC',
-    language: 'en',
-    onboardingCompleted: true,
-    ...(encryptedKey ? { aiApiKeys: encryptedKey } : {}),
-  }).onConflictDoUpdate({
-    target: schema.userSettings.userId,
-    set: { 
+  await db
+    .insert(schema.userSettings)
+    .values({
+      userId: user.id,
+      defaultSymbol: 'XAUUSD',
+      timezone: 'UTC',
+      language: 'en',
       onboardingCompleted: true,
       ...(encryptedKey ? { aiApiKeys: encryptedKey } : {}),
-    }
-  });
+    })
+    .onConflictDoUpdate({
+      target: schema.userSettings.userId,
+      set: {
+        onboardingCompleted: true,
+        ...(encryptedKey ? { aiApiKeys: encryptedKey } : {}),
+      },
+    });
 
   return user;
 }
@@ -98,7 +110,12 @@ export async function ensureTestUser(email = 'test@example.com', password = 'pas
  * between React 19's useActionState and NextAuth v5 beta's redirect
  * handling (useActionState swallows NEXT_REDIRECT throws).
  */
-export async function createSessionForUser(user: { id: string; email: string; name: string | null }) {
+export async function createSessionForUser(user: {
+  id: string;
+  email: string;
+  name: string | null;
+  tokenVersion?: number | null;
+}) {
   const secret = process.env.AUTH_SECRET;
   if (!secret) throw new Error('AUTH_SECRET must be set for E2E session creation');
 
@@ -119,7 +136,17 @@ export async function createSessionForUser(user: { id: string; email: string; na
   // Build the JWT with the same claims NextAuth uses (see auth.ts JWT callback).
   // Pass salt as a Buffer — @panva/hkdf (used by @auth/core/jwt) requires
   // Uint8Array in newer versions rather than a plain string.
-  const salt = Buffer.from('authjs.session-token');
+  // Match NextAuth's secure-cookie decision to the actual test URL rather
+  // than NODE_ENV. A production build can still be exercised over HTTP on
+  // localhost, where the non-secure cookie name is correct.
+  const baseUrl =
+    process.env.PLAYWRIGHT_BASE_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000';
+  const isHttps = baseUrl.startsWith('https://');
+  const cookieName = isHttps ? '__Secure-authjs.session-token' : 'authjs.session-token';
+
+  // The JWT salt is the session cookie name in Auth.js. Keep it identical
+  // to the name selected above or the server cannot decode the token.
+  const salt = Buffer.from(cookieName);
   const token = await encode({
     token: {
       sub: user.id,
@@ -127,7 +154,7 @@ export async function createSessionForUser(user: { id: string; email: string; na
       email: user.email,
       name: user.name ?? 'Test User',
       picture: null,
-      tokenVersion: 0,
+      tokenVersion: user.tokenVersion ?? 0,
       emailVerified: new Date().toISOString(),
       rememberMe: true,
       sessionId,
@@ -137,13 +164,6 @@ export async function createSessionForUser(user: { id: string; email: string; na
     salt,
   });
 
-  // The cookie name NextAuth uses for the session token.
-  // On localhost (HTTP) it's 'authjs.session-token'.
-  const cookieName =
-    process.env.NODE_ENV === 'production'
-      ? '__Secure-authjs.session-token'
-      : 'authjs.session-token';
-
   // Playwright addCookies requires either url OR domain+path.
   // Use domain+path to match the cookie scope NextAuth uses.
   return {
@@ -152,6 +172,7 @@ export async function createSessionForUser(user: { id: string; email: string; na
     domain: 'localhost',
     path: '/',
     httpOnly: true,
+    secure: isHttps,
     sameSite: 'Lax' as const,
   };
 }
@@ -173,14 +194,16 @@ export async function authenticateAs(
   password: string,
   role: 'user' | 'admin' = 'user',
 ) {
+  const user = await ensureTestUser(email, password, role);
+  const cookie = await createSessionForUser(user);
+  await page.context().addCookies([cookie]);
   return user;
 }
 
 /**
  * Create the __system__ user in the DB with the exact id '__system__'.
- * Required for AUTH_MODE=legacy E2E tests — the chat page and middleware
- * use this user ID when bypassing auth. Without this row, FK constraints
- * on threads/settings fail.
+ * Kept only for legacy-mode compatibility tests. Secure E2E tests use
+ * authenticateAs() and a real user session instead.
  */
 export async function ensureSystemUser() {
   const db = getDb();

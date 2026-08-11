@@ -19,9 +19,9 @@
 //
 // Auth: NextAuth session gate. Per-user data only.
 
-import { BYOK_PROVIDERS } from '@hamafx/ai';
-import { getUserWithSettings, updateUserSettingsField } from '@hamafx/db';
-import { PROVIDER_IDS, type ProviderId } from '@hamafx/shared/encryption';
+import { BYOK_PROVIDERS } from '@/lib/services/api-boundary';
+import { getUserWithSettings, updateUserSettingsField } from '@/lib/services/api-boundary';
+import { PROVIDER_IDS, type ProviderId } from '@/lib/services/api-boundary';
 import { z } from 'zod';
 
 import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';

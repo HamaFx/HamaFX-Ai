@@ -1,20 +1,24 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { UIMessage } from 'ai';
+import type { Metadata } from 'next';
+import { notFound, redirect } from 'next/navigation';
 import { z } from 'zod';
+
+import { auth } from '@/auth';
+import { ChatScreen } from '@/components/chat/chat-screen';
 // /chat/[threadId] — full-screen chat surface for a specific thread.
 //
 // Server component: validates the thread, hydrates the message history from
 // Postgres, then hands off to the client `<ChatScreen>` for the streaming
 // `useChat` experience.
 
-import { getThread, listMessages, listThreads } from '@hamafx/ai';
-import { getUserWithSettings } from '@hamafx/db';
-import type { Metadata } from 'next';
-import { notFound, redirect } from 'next/navigation';
-
-import { auth } from '@/auth';
-import { ChatScreen } from '@/components/chat/chat-screen';
+import {
+  getThread,
+  getUserWithSettings,
+  listMessages,
+  listThreads,
+} from '@/lib/services/api-boundary';
 
 export const dynamic = 'force-dynamic';
 

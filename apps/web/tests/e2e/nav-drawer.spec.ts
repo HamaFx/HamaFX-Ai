@@ -65,7 +65,7 @@ test.describe('Navigation drawer', () => {
     await expect(page.getByText('Personal')).toBeAttached();
 
     // All secondary items should be present
-    const personalItems = ['Signals', 'Alerts', 'Journal', 'Settings'];
+    const personalItems = ['Alerts', 'Journal', 'Settings'];
     for (const item of personalItems) {
       await expect(page.getByRole('link', { name: new RegExp(item, 'i') }).first()).toBeAttached();
     }

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { logStreamHub } from '@hamafx/shared';
+import { logStreamHub } from '@/lib/services/api-boundary';
 
 import { withAdminAuth } from '@/lib/admin-auth';
 

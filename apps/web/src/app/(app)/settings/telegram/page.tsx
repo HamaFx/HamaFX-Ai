@@ -49,7 +49,6 @@ export default async function TelegramSettingsPage() {
             { cmd: '/chart <symbol>', desc: 'Chart snapshot link (e.g. /chart XAUUSD)' },
             { cmd: '/alert <symbol> > <price>', desc: 'Create price alert (e.g. /alert XAUUSD > 2700)' },
             { cmd: '/positions', desc: 'Show your open positions' },
-            { cmd: '/track', desc: 'AI track record stats' },
             { cmd: '/status', desc: 'System status and overview' },
             { cmd: '/help', desc: 'List all commands' },
           ].map((item) => (

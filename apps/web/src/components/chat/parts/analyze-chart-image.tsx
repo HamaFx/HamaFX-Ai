@@ -3,22 +3,13 @@
 // Bespoke renderer for the `analyze_chart_image` tool part.
 //
 // Server component. Renders the structured technical readout from the
-// vision model — observed paragraph, labelled levels, an optional deep
-// link to /chart/<symbol>?tf=<tf>&overlays=<...> when the model emitted
-// an overlay shape we can re-render via the existing OverlaySet pipeline.
+// vision model — observed paragraph, labelled levels, and an optional
+// deep link to the normal TradingView chart for the detected symbol/timeframe.
 
-import { priceDecimals, type AnalyzeChartImageOutput, type AnnotateChartKind } from '@hamafx/shared';
+import { priceDecimals, type AnalyzeChartImageOutput } from '@hamafx/shared';
 import { Link } from 'next-view-transitions';
 
 import type { ToolPartProps } from './registry';
-
-const TOGGLEABLE: AnnotateChartKind[] = [
-  'swings',
-  'bos_choch',
-  'fvg',
-  'order_blocks',
-  'liquidity',
-];
 
 export function AnalyzeChartImagePart({
   output,
@@ -47,12 +38,12 @@ export function AnalyzeChartImagePart({
 
       {output.levels.length > 0 ? <LevelsList output={output} /> : null}
 
-      {output.overlay && output.symbol && output.tf ? (
+      {output.symbol && output.tf ? (
         <Link
-          href={buildOverlayHref(output)}
+          href={buildChartHref(output)}
           className="text-fg focus-visible:ring-fg text-right text-body-sm font-medium underline-offset-2 outline-none hover:underline focus-visible:ring-2"
         >
-          apply on chart →
+          open chart →
         </Link>
       ) : null}
     </div>
@@ -79,13 +70,8 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-function buildOverlayHref(output: AnalyzeChartImageOutput): string {
-  const overlay = output.overlay;
-  if (!overlay) return `/chart/${output.symbol}/structure`;
-  const kinds = TOGGLEABLE.filter((k) => (overlay.countsByKind[k] ?? 0) > 0).join(',');
-  const params = [`tf=${output.tf}`];
-  if (kinds) params.push(`overlays=${kinds}`);
-  return `/chart/${output.symbol}/structure?${params.join('&')}`;
+function buildChartHref(output: AnalyzeChartImageOutput): string {
+  return `/chart/${output.symbol}?tf=${output.tf}`;
 }
 
 function shortRef(s: string): string {

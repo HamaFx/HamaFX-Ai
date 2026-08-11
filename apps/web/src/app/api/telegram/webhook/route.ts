@@ -5,7 +5,7 @@
 
 import { timingSafeEqual } from 'node:crypto';
 
-import { handleTelegramWebhook, telegramApiCall, type TelegramUpdate } from '@hamafx/ai';
+import { handleTelegramWebhook, telegramApiCall, type TelegramUpdate } from '@/lib/services/api-boundary';
 import * as Sentry from '@sentry/nextjs';
 import { z } from 'zod';
 

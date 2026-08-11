@@ -1,8 +1,8 @@
-import { withRateLimit, createJournalEntry } from '@hamafx/db';
+import { withRateLimit, createJournalEntry } from '@/lib/services/api-boundary';
 import { z } from 'zod';
 
 import { errorResponse, withAuth } from '@/lib/api';
-import { ALL_SYMBOLS } from '@hamafx/shared';
+import { ALL_SYMBOLS } from '@/lib/services/api-boundary';
 
 const ImportRowSchema = z.object({
   symbol: z.string().transform((value) => value.trim().toUpperCase()).refine((value) => ALL_SYMBOLS.includes(value), {

@@ -22,8 +22,9 @@
 // the broken UI login — see useActionState + NextAuth redirect issue).
 // ---------------------------------------------------------------------------
 
-import { test, expect } from '@playwright/test';
-import { ensureTestUser, createSessionForUser } from './test-utils';
+import { expect, test } from '@playwright/test';
+
+import { createSessionForUser, ensureTestUser } from './test-utils';
 
 test.describe('Multi-User Isolation', () => {
   test.beforeAll(async () => {
@@ -35,8 +36,12 @@ test.describe('Multi-User Isolation', () => {
     test.setTimeout(120_000);
 
     // 1. Create two separate browser contexts (simulating two users)
-    const contextA = await browser.newContext();
-    const contextB = await browser.newContext();
+    const contextA = await browser.newContext({
+      baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+    });
+    const contextB = await browser.newContext({
+      baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+    });
     const pageA = await contextA.newPage();
     const pageB = await contextB.newPage();
 
@@ -63,7 +68,9 @@ test.describe('Multi-User Isolation', () => {
       await textareaA.press('Enter');
 
       await expect(pageA.locator('.group.items-end').first()).toBeVisible({ timeout: 15_000 });
-      await expect(pageA.locator('.group.items-end').first()).toContainText('A unique message from User A');
+      await expect(pageA.locator('.group.items-end').first()).toContainText(
+        'A unique message from User A',
+      );
       await expect(pageA).toHaveURL(/.*\/chat\/[a-zA-Z0-9_-]+/);
 
       // Grab the thread ID from the URL
@@ -82,12 +89,17 @@ test.describe('Multi-User Isolation', () => {
 
       // The app should either 404, show an error, or redirect away.
       // Check that User B is NOT seeing User A's message.
-      await expect(pageB.getByText('A unique message from User A')).not.toBeVisible({ timeout: 10_000 });
+      await expect(pageB.getByText('A unique message from User A')).not.toBeVisible({
+        timeout: 10_000,
+      });
 
       // The page should either redirect or show not-found
       const currentUrlB = pageB.url();
       const isRedirected = !currentUrlB.includes(threadId);
-      const notFoundText = await pageB.locator('h1').textContent().catch(() => '');
+      const notFoundText = await pageB
+        .locator('h1')
+        .textContent()
+        .catch(() => '');
       const isNotFound = (notFoundText || '').toLowerCase().includes('not found');
 
       // Either redirected away or showing not-found
@@ -99,8 +111,12 @@ test.describe('Multi-User Isolation', () => {
   });
 
   test('user A and user B have separate thread lists', async ({ browser }) => {
-    const contextA = await browser.newContext();
-    const contextB = await browser.newContext();
+    const contextA = await browser.newContext({
+      baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+    });
+    const contextB = await browser.newContext({
+      baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+    });
     const pageA = await contextA.newPage();
     const pageB = await contextB.newPage();
 

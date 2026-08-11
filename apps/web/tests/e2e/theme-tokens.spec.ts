@@ -54,7 +54,7 @@ test.describe('Theme tokens — semantic colors', () => {
     const brandColor = await page.evaluate(() =>
       getComputedStyle(document.documentElement).getPropertyValue('--color-brand').trim(),
     );
-    expect(brandColor).toBe('#F07010');
+    expect(brandColor).toBe('#F56E0F');
   });
 
   test('bg token renders as near-black', async ({ authedPage }) => {
@@ -98,7 +98,7 @@ test.describe('Theme tokens — surface tokens', () => {
     const borderColor = await page.evaluate(() =>
       getComputedStyle(document.documentElement).getPropertyValue('--color-border').trim(),
     );
-    expect(borderColor).toBe('#1E1E1E');
+    expect(borderColor).toBe('#262626');
   });
 });
 

@@ -19,15 +19,12 @@
 // Wires the form (in a Drawer), list, stats summary, and performance curve together.
 // Implements an advanced, responsive two-column grid on desktop, showing the equity curve and list
 // on the left, and stats summary / analytics on the right.
-
 import type { JournalEntry, JournalStats } from '@hamafx/shared';
+import { IconActivity, IconBook, IconPlus, IconRefresh, IconUpload } from '@tabler/icons-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import {IconPlus, IconBook, IconActivity, IconRefresh, IconUpload} from '@tabler/icons-react';
 import { useState } from 'react';
 
-import { apiFetch } from '@/lib/api-client';
-import { cn } from '@/lib/cn';
-
+import { PerformanceChart } from '@/components/chart/performance-chart';
 import {
   Drawer,
   DrawerContent,
@@ -37,13 +34,14 @@ import {
 } from '@/components/ui/drawer';
 import { Segmented } from '@/components/ui/segmented';
 import { StaleIndicator } from '@/components/ui/stale-indicator';
-import { PerformanceChart } from '@/components/chart/performance-chart';
+import { apiFetch } from '@/lib/api-client';
+import { cn } from '@/lib/cn';
 
+import { AiReviewPanel } from './ai-review-panel';
 import { BreakdownTable } from './analytics/breakdown-table';
 import { DrawdownChart } from './analytics/drawdown-chart';
 import { RDistribution } from './analytics/r-distribution';
 import { StreakDisplay } from './analytics/streak-display';
-import { AiReviewPanel } from './ai-review-panel';
 import { EntryForm } from './entry-form';
 import { EntryList } from './entry-list';
 import { ImportTrades } from './import-trades';
@@ -73,25 +71,27 @@ export function JournalView() {
   const refresh = () => qc.invalidateQueries({ queryKey: QKEY });
 
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in duration-300">
+    <div className="animate-in fade-in flex flex-col gap-6 duration-300">
       {/* Sticky header controls */}
-      <header className="border border-border bg-bg-elev-1 rounded-sm flex flex-wrap items-center justify-between gap-4 p-4">
+      <header className="border-border bg-bg-elev-1 flex flex-wrap items-center justify-between gap-4 rounded-sm border p-4">
         <div className="flex items-center gap-3">
-          <div className="rounded-sm bg-bg-elev-2 p-3 text-fg">
+          <div className="bg-bg-elev-2 text-fg rounded-sm p-3">
             <IconBook className="size-5" />
           </div>
           <div>
-            <h1 className="text-lg font-black tracking-tight text-fg">Trading Journal</h1>
-            <p className="text-body-sm text-fg-subtle mt-0.5">Track, analyze, and optimize your trading performance</p>
+            <h2 className="text-fg text-lg font-black tracking-tight">Trading Journal</h2>
+            <p className="text-body-sm text-fg-subtle mt-0.5">
+              Track, analyze, and optimize your trading performance
+            </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           <StaleIndicator isFetching={isFetching && !isLoading} />
-          
+
           <button
             onClick={() => setImportOpen(true)}
-            className="bg-bg-elev-1 border border-border size-10 flex items-center justify-center rounded-sm text-fg-muted hover:text-fg transition-all cursor-pointer"
+            className="bg-bg-elev-1 border-border text-fg-muted hover:text-fg flex size-10 cursor-pointer items-center justify-center rounded-sm border transition-all"
             title="Import trades"
           >
             <IconUpload className="size-4" />
@@ -99,15 +99,15 @@ export function JournalView() {
 
           <button
             onClick={refresh}
-            className="bg-bg-elev-1 border border-border size-10 flex items-center justify-center rounded-sm text-fg-muted hover:text-fg transition-all cursor-pointer"
+            className="bg-bg-elev-1 border-border text-fg-muted hover:text-fg flex size-10 cursor-pointer items-center justify-center rounded-sm border transition-all"
             title="Refresh logs"
           >
-            <IconRefresh className={cn("size-4", isFetching && "animate-spin")} />
+            <IconRefresh className={cn('size-4', isFetching && 'animate-spin')} />
           </button>
 
           <button
             onClick={() => setOpen(true)}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-sm bg-fg px-4 text-xs font-bold text-black shadow-sm hover:opacity-90 transition-all cursor-pointer"
+            className="bg-fg inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-sm px-4 text-xs font-bold text-black shadow-sm transition-all hover:opacity-90"
           >
             <IconPlus className="size-4" />
             <span>Log Trade</span>
@@ -117,14 +117,20 @@ export function JournalView() {
 
       {/* Main Responsive Grid Layout */}
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center h-[350px] gap-2.5">
-          <IconActivity className="size-6 text-fg animate-pulse" />
-          <p className="text-xs font-bold uppercase tracking-wider text-fg-muted">Loading your metrics...</p>
+        <div className="flex h-[350px] flex-col items-center justify-center gap-2.5">
+          <IconActivity className="text-fg size-6 animate-pulse" />
+          <p className="text-fg-muted text-xs font-bold tracking-wider uppercase">
+            Loading your metrics...
+          </p>
         </div>
       ) : isError ? (
-        <div className="border border-border bg-bg-elev-1 rounded-sm p-6 border-danger/20 bg-danger/5 text-center flex flex-col items-center justify-center gap-2">
-          <p className="text-sm font-semibold text-danger" role="alert">Failed to load journal portfolio</p>
-          <p className="text-xs text-fg-subtle">{(error as Error)?.message || 'Unknown network error'}</p>
+        <div className="border-border bg-bg-elev-1 border-danger/20 bg-danger/5 flex flex-col items-center justify-center gap-2 rounded-sm border p-6 text-center">
+          <p className="text-danger text-sm font-semibold" role="alert">
+            Failed to load journal portfolio
+          </p>
+          <p className="text-fg-subtle text-xs">
+            {(error as Error)?.message || 'Unknown network error'}
+          </p>
         </div>
       ) : (
         <div className="flex flex-col gap-6">
@@ -143,9 +149,9 @@ export function JournalView() {
           />
 
           {tab === 'overview' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
               {/* Left Column: Equity curve and entries list (occupies 2/3 of desktop width) */}
-              <div className="lg:col-span-2 flex flex-col gap-6">
+              <div className="flex flex-col gap-6 lg:col-span-2">
                 {/* Cum R Equity Curve */}
                 <PerformanceChart entries={data?.entries ?? []} />
 
@@ -172,7 +178,7 @@ export function JournalView() {
               })()}
               <DrawdownChart entries={data.entries} stats={data.stats} />
               <RDistribution stats={data.stats} />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <BreakdownTable
                   title="By Symbol"
                   data={(data.stats.bySymbol ?? []).map((s) => ({
@@ -236,9 +242,12 @@ export function JournalView() {
       <Drawer open={open} onOpenChange={setOpen}>
         <DrawerContent className="max-h-[85svh]">
           <DrawerHeader className="pb-2">
-            <DrawerTitle className="text-lg font-black tracking-tight text-fg">Log New Position</DrawerTitle>
-            <DrawerDescription className="text-xs text-fg-subtle">
-              Record entry, size, stop-loss, and target. Outcome stats calculate automatically upon trade closure.
+            <DrawerTitle className="text-fg text-lg font-black tracking-tight">
+              Log New Position
+            </DrawerTitle>
+            <DrawerDescription className="text-fg-subtle text-xs">
+              Record entry, size, stop-loss, and target. Outcome stats calculate automatically upon
+              trade closure.
             </DrawerDescription>
           </DrawerHeader>
           <EntryForm
@@ -254,17 +263,21 @@ export function JournalView() {
       <Drawer open={importOpen} onOpenChange={setImportOpen}>
         <DrawerContent className="max-h-[85svh]">
           <DrawerHeader className="pb-2">
-            <DrawerTitle className="text-lg font-black tracking-tight text-fg">Import Trades</DrawerTitle>
-            <DrawerDescription className="text-xs text-fg-subtle">
+            <DrawerTitle className="text-fg text-lg font-black tracking-tight">
+              Import Trades
+            </DrawerTitle>
+            <DrawerDescription className="text-fg-subtle text-xs">
               Upload a CSV file to bulk-import your trading history.
             </DrawerDescription>
           </DrawerHeader>
-          <ImportTrades onImported={() => { refresh(); setImportOpen(false); }} />
+          <ImportTrades
+            onImported={() => {
+              refresh();
+              setImportOpen(false);
+            }}
+          />
         </DrawerContent>
       </Drawer>
     </div>
   );
 }
-
-
-
