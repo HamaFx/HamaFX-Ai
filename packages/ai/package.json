@@ -48,7 +48,7 @@
     "@ai-sdk/anthropic": "^2.0.79",
     "@ai-sdk/google": "^2.0.74",
     "@ai-sdk/google-vertex": "3.0.139",
-    "@ai-sdk/openai-compatible": "^1.0.39",
+    "@ai-sdk/openai-compatible": "^3.0.27",
     "@kestrel/data": "workspace:*",
     "@kestrel/db": "workspace:*",
     "@kestrel/indicators": "workspace:*",
