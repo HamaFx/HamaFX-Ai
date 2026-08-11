@@ -8,9 +8,11 @@
 # Kestrel
 
 <pre>
-█▄█ █▀▀ █▀▀ ▀█▀ █▀█ █▀▀ █
-█▀▄ █▀▀ ▀▀█  █  █▀▄ █▀▀ █
+█▄█ █▀▀ █▀▀ ▀█▀ █▀█ █▀▀ █  
+█▀▄ █▀▀ ▀▀█  █  █▀▄ █▀▀ █  
 ▀ ▀ ▀▀▀ ▀▀▀  ▀  ▀ ▀ ▀▀▀ ▀▀▀
+
+
 </pre>
 
 ### Your self-hosted AI copilot for gold, forex, and crypto research.
