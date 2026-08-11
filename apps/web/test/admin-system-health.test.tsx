@@ -2,7 +2,7 @@
 // @vitest-environment jsdom
 
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, cleanup, act } from '@testing-library/react';
+import { render, screen, cleanup, act, fireEvent } from '@testing-library/react';
 
 let visibilityState: VisibilityState = 'visible';
 
@@ -56,6 +56,34 @@ describe('AdminSystemHealth', () => {
       await vi.advanceTimersByTimeAsync(30_000);
     });
     expect(mockApiFetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('refetches with the selected time window', async () => {
+    mockApiFetch.mockResolvedValue({
+      ts: new Date().toISOString(),
+      dbOk: true,
+      overall: 'healthy',
+      langfuseActive: false,
+      langfuseBaseUrl: null,
+      slis: [],
+      anomalies: [],
+      dbLatencyMs: 1,
+    });
+
+    render(<AdminSystemHealth />);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: '1h' }));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    expect(mockApiFetch).toHaveBeenLastCalledWith(
+      '/api/admin/health-slo?hours=1',
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    );
   });
 
   it('skips fetching while hidden and resumes when visible', async () => {

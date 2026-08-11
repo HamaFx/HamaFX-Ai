@@ -20,6 +20,7 @@ export function AdminOnboardingControl() {
   const router = useRouter();
   const [targetUserId, setTargetUserId] = useState('');
   const [status, setStatus] = useState<OnboardingInspectDTO | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [fullReset, setFullReset] = useState(false);
@@ -32,6 +33,7 @@ export function AdminOnboardingControl() {
         `/api/admin/onboarding/inspect?userId=${encodeURIComponent(userId)}`,
       );
       setStatus(data);
+      if (!userId) setCurrentUserId(data.userId);
     } catch (err) {
       toastApiError(err, 'Failed to load onboarding status');
     } finally {
@@ -65,8 +67,16 @@ export function AdminOnboardingControl() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: status.userId, mode: fullReset ? 'full' : 'soft' }),
       });
-      toast.success('Onboarding reset. Redirecting...');
-      router.push('/onboarding');
+      // Only the current admin should be sent through their own wizard.
+      // Resetting another user's onboarding must not navigate the admin away
+      // from the dashboard; reload the inspected record instead.
+      if (status.userId === currentUserId) {
+        toast.success('Onboarding reset. Redirecting...');
+        router.push('/onboarding');
+      } else {
+        toast.success('Onboarding reset');
+        await fetchStatus(status.userId);
+      }
     } catch (err) {
       toastApiError(err, 'Failed to reset onboarding');
     } finally {

@@ -17,7 +17,7 @@ export interface SliSnapshot {
   current: number | null;
   /** SLO target success rate (0–1) */
   sloTarget: number;
-  /** Window description */
+  /** Measurement scope, such as "current" or "24h". */
   window: string;
   /** Numerator: successful events */
   success: number;
@@ -45,7 +45,7 @@ export interface HealthSloResponse {
   langfuseBaseUrl: string | null;
   /** Per-service SLI snapshots */
   slis: SliSnapshot[];
-  /** Anomalies: stuck cron, stale analysis jobs, stale ticks */
+  /** Anomalies: unavailable/stuck activity, stale analysis jobs, stale ticks */
   anomalies: string[];
 }
 

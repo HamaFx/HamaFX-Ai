@@ -24,8 +24,8 @@ function createMockDb(scenario: 'healthy' | 'missing-live-ticks' | 'stale-tick' 
           throw new Error('relation "live_ticks" does not exist');
         }
         return scenario === 'stale-tick'
-          ? { rows: [{ symbol_count: 3, newest_age_s: 90 }] }
-          : { rows: [{ symbol_count: 2, newest_age_s: 30 }] };
+          ? { rows: [{ symbol_count: 3, oldest_age_s: 90 }] }
+          : { rows: [{ symbol_count: 2, oldest_age_s: 30 }] };
       }
 
       if (callIndex === 3) {
@@ -59,7 +59,7 @@ describe('computeHealthSloService', () => {
 
     const tickSli = result.slis.find((s) => s.key === 'worker_ticks');
     expect(tickSli).toBeDefined();
-    expect(tickSli?.details).toBe('Newest tick 30s old across 2 symbols');
+    expect(tickSli?.details).toBe('Oldest symbol tick 30s old across 2 symbols');
     expect(tickSli?.success).toBe(1);
   });
 
@@ -69,6 +69,8 @@ describe('computeHealthSloService', () => {
 
     expect(result.dbOk).toBe(true);
     expect(result.slis.find((s) => s.key === 'worker_ticks')?.current).toBeNull();
+    expect(result.overall).toBe('degraded');
+    expect(result.anomalies).toContain('Tick telemetry is unavailable — worker health cannot be verified');
     expect(result.slis.find((s) => s.key === 'cron_jobs')?.total).toBe(10);
     expect(result.slis.find((s) => s.key === 'ai_gateway')?.total).toBe(100);
   });
@@ -81,6 +83,8 @@ describe('computeHealthSloService', () => {
     expect(cronSli?.success).toBe(9);
     expect(cronSli?.total).toBe(10);
     expect(cronSli?.current).toBe(0.9);
+    expect(result.slis.find((s) => s.key === 'worker_ticks')?.window).toBe('current');
+    expect(result.slis.find((s) => s.key === 'cron_jobs')?.window).toBe('24h');
 
     const toolSli = result.slis.find((s) => s.key === 'ai_gateway');
     expect(toolSli?.success).toBe(99);

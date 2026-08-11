@@ -2,8 +2,6 @@
 
 import { z } from 'zod';
 
-import { deleteOldCronRuns } from '@/lib/services/api-boundary';
-
 import { withAdminAuth } from '@/lib/admin-auth';
 import { parseJsonBody } from '@/lib/api';
 
@@ -28,10 +26,14 @@ export const POST = withAdminAuth(async (req) => {
   }> = [];
 
   if (target === 'cron_locks' || target === 'all') {
-    // Remove stuck cron locks (started but not finished for > 1 hour)
-    const cutoff = new Date(Date.now() - 60 * 60 * 1000);
-    await deleteOldCronRuns(cutoff);
-    results.push({ target: 'cron_locks', status: 'flushed' });
+    // cron_runs is history, not a lock table. Never delete it from a
+    // maintenance action labelled "cron locks"; there is no supported
+    // lock-flush operation in this deployment.
+    results.push({
+      target: 'cron_locks',
+      status: 'unsupported',
+      reason: 'Cron locks are not stored separately; cron history was left unchanged',
+    });
   }
 
   if (target === 'cache' || target === 'all') {

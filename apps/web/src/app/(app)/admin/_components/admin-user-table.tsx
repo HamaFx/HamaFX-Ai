@@ -195,7 +195,10 @@ export function AdminUserTable() {
             <select
               id="page-size"
               value={pageSize}
-              onChange={(e) => setPageSize(Number(e.target.value))}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setPage(0);
+              }}
               className="bg-bg-elev-1 border-border text-fg rounded-sm border px-2 py-1 text-sm"
             >
               {PAGE_SIZES.map((size) => (

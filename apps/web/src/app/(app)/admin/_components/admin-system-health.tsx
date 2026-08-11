@@ -42,6 +42,13 @@ const SLI_ICONS: Record<string, typeof IconDatabase> = {
   chat_api: IconMessage,
 };
 
+const HEALTH_WINDOWS = [
+  { hours: 1, label: '1h' },
+  { hours: 24, label: '24h' },
+  { hours: 168, label: '7d' },
+  { hours: 720, label: '30d' },
+] as const;
+
 // ── Sub-components ───────────────────────────────────────────────────────
 
 /** Large overall status banner at the top. */
@@ -266,35 +273,34 @@ export function AdminSystemHealth() {
   const [windowHours, setWindowHours] = useState(24);
   const abortRef = useRef<AbortController | null>(null);
   const isVisibleRef = useRef(false);
-  const inFlightRef = useRef(false);
+  const requestIdRef = useRef(0);
   const windowHoursRef = useRef(windowHours);
 
   useEffect(() => {
     windowHoursRef.current = windowHours;
   }, [windowHours]);
 
-  const fetchHealth = useCallback(async () => {
-    if (inFlightRef.current) return;
-    inFlightRef.current = true;
-
+  const fetchHealth = useCallback(async (hours = windowHoursRef.current) => {
+    const requestId = ++requestIdRef.current;
     abortRef.current?.abort();
-    abortRef.current = new AbortController();
+    const controller = new AbortController();
+    abortRef.current = controller;
 
     setLoading(true);
     setFetchError(null);
     try {
-      const json = await apiFetch<HealthSloData>(`/api/admin/health-slo?hours=${windowHoursRef.current}`, {
-        signal: abortRef.current.signal,
+      const json = await apiFetch<HealthSloData>(`/api/admin/health-slo?hours=${hours}`, {
+        signal: controller.signal,
       });
-      setData(json);
+      if (requestId === requestIdRef.current) setData(json);
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') return;
+      if (requestId !== requestIdRef.current) return;
       const msg = err instanceof Error ? err.message : 'Failed to load system health';
       setFetchError(msg);
       toastApiError(err, msg);
     } finally {
-      setLoading(false);
-      inFlightRef.current = false;
+      if (requestId === requestIdRef.current) setLoading(false);
     }
   }, []);
 
@@ -321,6 +327,7 @@ export function AdminSystemHealth() {
     document.addEventListener('visibilitychange', handleVisibility);
 
     return () => {
+      requestIdRef.current += 1;
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibility);
       abortRef.current?.abort();
@@ -345,22 +352,37 @@ export function AdminSystemHealth() {
 
   if (!data) return null;
 
+  const activityWindowLabel = data.slis.find((sli) => sli.key === 'cron_jobs')?.window ?? '24h';
+
   return (
     <SettingsSection
       title="System Health"
-      description={`SLI metrics over the last ${data.slis[0]?.window ?? '24h'}. Refreshes every 30s.`}
+      description={`Current worker freshness; activity SLIs over the last ${activityWindowLabel}. Refreshes every 30s.`}
     >
       <div className="flex flex-col gap-4">
+        {fetchError && (
+          <div className="border-warn/25 bg-warn/5 flex items-center justify-between gap-3 rounded-sm border px-3 py-2">
+            <p className="text-warn text-xs">Refresh failed. Showing the last successful snapshot.</p>
+            <button
+              type="button"
+              onClick={() => void fetchHealth()}
+              className="text-warn text-xs font-semibold underline hover:no-underline"
+            >
+              Retry
+            </button>
+          </div>
+        )}
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-1 rounded-sm bg-bg-elev-1 border border-border p-0.5">
-            {[1, 24, 168, 720].map((hours) => {
-              const label = hours === 1 ? '1h' : hours <= 24 ? `${hours}h` : hours <= 168 ? '7d' : '30d';
-              return (
+            {HEALTH_WINDOWS.map(({ hours, label }) => (
                 <button
                   key={hours}
                   type="button"
-                  onClick={() => setWindowHours(hours)}
-                  disabled={loading}
+                  onClick={() => {
+                    setWindowHours(hours);
+                    void fetchHealth(hours);
+                  }}
+                  disabled={loading || hours === windowHours}
                   className={cn(
                     'rounded-sm px-3 py-1 text-xs font-medium transition-colors',
                     windowHours === hours
@@ -370,12 +392,11 @@ export function AdminSystemHealth() {
                 >
                   {label}
                 </button>
-              );
-            })}
+              ))}
           </div>
           <button
             type="button"
-            onClick={fetchHealth}
+            onClick={() => void fetchHealth()}
             disabled={loading}
             className="text-fg-subtle hover:text-fg flex items-center gap-1 text-xs transition-colors"
             aria-label="Refresh health data"
@@ -400,7 +421,7 @@ export function AdminSystemHealth() {
           <p className="text-fg-subtle text-xs">
             SLO targets from{' '}
             <code className="bg-bg-elev-2 rounded-sm px-1 py-0.5 text-xs">docs/INCIDENT-RESPONSE.md §2</code>.
-            Error budget = (current − target) / (1 − target). When budget is exhausted, freeze
+            Error budget remaining = (current − target) / (1 − target), floored at 0. When budget is exhausted, freeze
             non-critical deploys.
             {data.langfuseActive && data.langfuseBaseUrl && (
               <>

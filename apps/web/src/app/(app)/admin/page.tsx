@@ -141,8 +141,16 @@ export default function AdminPage() {
   useEffect(() => {
     if (rawTab !== null && !isValidTab(rawTab)) {
       router.replace('/admin', { scroll: false });
+      return;
     }
-  }, [rawTab, router]);
+
+    if (rawTab !== 'traces' && searchParams.get('trace')) {
+      const params = new URLSearchParams(window.location.search);
+      params.delete('trace');
+      const qs = params.toString();
+      router.replace(`/admin${qs ? `?${qs}` : ''}`, { scroll: false });
+    }
+  }, [rawTab, router, searchParams]);
 
   const updateUrl = useCallback(
     (tabId: TabId) => {
@@ -151,6 +159,11 @@ export default function AdminPage() {
         params.delete(TAB_PARAM);
       } else {
         params.set(TAB_PARAM, tabId);
+      }
+      // Trace details belong only to the Traces tab. Do not carry a stale
+      // deep-link into another section and unexpectedly reopen it later.
+      if (tabId !== 'traces') {
+        params.delete('trace');
       }
       const qs = params.toString();
       router.replace(`/admin${qs ? `?${qs}` : ''}`, { scroll: false });

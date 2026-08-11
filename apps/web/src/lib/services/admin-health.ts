@@ -33,7 +33,7 @@ export interface HealthSloDb {
 
 interface TickAggregate {
   symbolCount: number;
-  newestAgeSeconds: number | null;
+  oldestAgeSeconds: number | null;
 }
 
 interface CronAggregate {
@@ -67,7 +67,11 @@ function computeErrorBudget(current: number | null, sloTarget: number): number |
   if (current === null) return null;
   if (current >= 1) return 1;
   if (sloTarget >= 1) return current >= 1 ? 1 : 0;
-  return pct((current - sloTarget) / (1 - sloTarget));
+
+  // Error budget is remaining budget, not an unbounded score. Once the
+  // target is missed the budget is exhausted and must render as 0, rather
+  // than a negative percentage that the UI would clamp inconsistently.
+  return pct(Math.max(0, Math.min(1, (current - sloTarget) / (1 - sloTarget))));
 }
 
 /**
@@ -103,7 +107,7 @@ export async function computeHealthSloService(
     queryCronAggregate(db, since),
     queryToolAggregate(db, since),
     queryChatAggregate(db, since),
-    queryAnalysisAggregate(db),
+    queryAnalysisAggregate(db, since),
   ]);
 
   const ticks = ticksResult.status === 'fulfilled' ? ticksResult.value : null;
@@ -123,17 +127,19 @@ export async function computeHealthSloService(
 
   if (ticks) {
     tickSymbolCount = ticks.symbolCount;
-    tickAgeSeconds = ticks.newestAgeSeconds;
+    tickAgeSeconds = ticks.oldestAgeSeconds;
     if (tickAgeSeconds !== null) {
       tickOk = tickAgeSeconds <= TICK_OK_S;
       if (tickAgeSeconds > TICK_FRESH_S) {
         anomalies.push(
-          `Tick data is stale: newest tick is ${tickAgeSeconds}s old (threshold: ${TICK_FRESH_S}s)`,
+          `Tick data is stale: oldest symbol tick is ${tickAgeSeconds}s old (threshold: ${TICK_FRESH_S}s)`,
         );
       }
     } else {
       anomalies.push('No live tick data — worker may not be running');
     }
+  } else {
+    anomalies.push('Tick telemetry is unavailable — worker health cannot be verified');
   }
 
   // ── Build cron SLI / anomaly ──────────────────────────────────────────────
@@ -141,20 +147,43 @@ export async function computeHealthSloService(
   if (cron) {
     if (cron.total > 0) {
       cronSuccessRate = cron.done / cron.total;
+      if (cronSuccessRate < 0.995) {
+        anomalies.push(
+          `Cron completion is below SLO: ${cron.done}/${cron.total} completed (target: 99.5%)`,
+        );
+      }
+    } else {
+      anomalies.push('No cron runs in the selected window — cron health cannot be verified');
     }
     if (cron.stuck > 0) {
       anomalies.push(`${cron.stuck} cron job(s) stuck in 'started' > 5 minutes`);
     }
+  } else {
+    anomalies.push('Cron telemetry is unavailable — cron health cannot be verified');
   }
 
   // ── Build AI gateway SLI ────────────────────────────────────────────────
   let toolSuccessRate: number | null = null;
   if (tools && tools.total > 0) {
     toolSuccessRate = tools.ok / tools.total;
+    if (toolSuccessRate < 0.99) {
+      anomalies.push(
+        `AI tool success is below SLO: ${tools.ok}/${tools.total} succeeded (target: 99%)`,
+      );
+    }
+  } else if (!tools) {
+    anomalies.push('AI tool telemetry is unavailable — gateway health cannot be verified');
+  } else {
+    anomalies.push('No AI tool calls in the selected window — gateway health cannot be verified');
   }
 
   // ── Build chat API count ────────────────────────────────────────────────
   const chatTurns = chat?.turns ?? 0;
+  if (!chat) {
+    anomalies.push('Chat telemetry is unavailable — chat health cannot be verified');
+  } else if (chatTurns === 0) {
+    anomalies.push('No chat turns in the selected window — chat health cannot be verified');
+  }
 
   // ── Build analysis anomalies ────────────────────────────────────────────
   if (analysis) {
@@ -183,13 +212,13 @@ export async function computeHealthSloService(
       label: 'Worker / Tick Freshness',
       current: tickSymbolCount > 0 ? (tickOk ? 1 : 0) : null,
       sloTarget: 0.999,
-      window: HOUR_LABEL,
+      window: 'current',
       success: tickOk ? 1 : 0,
       total: tickSymbolCount > 0 ? 1 : 0,
       errorBudget: tickSymbolCount > 0 ? (tickOk ? 1 : 0) : null,
       details:
         tickSymbolCount > 0 && tickAgeSeconds !== null
-          ? `Newest tick ${tickAgeSeconds}s old across ${tickSymbolCount} symbols`
+          ? `Oldest symbol tick ${tickAgeSeconds}s old across ${tickSymbolCount} symbols`
           : 'No tick data',
     },
     {
@@ -253,6 +282,9 @@ export async function computeHealthSloService(
 }
 
 // ── Query helpers (each returns null when its source table is missing) ─────
+// Cron totals/completions/stuck counts are all selected-window activity.
+// Analysis counts are selected-window cohorts whose current status has
+// crossed the stale/running threshold.
 
 async function queryTickAggregate(
   db: HealthSloDb,
@@ -261,15 +293,15 @@ async function queryTickAggregate(
     const result = await db.execute(sql`
       SELECT
         COUNT(DISTINCT symbol)::int AS symbol_count,
-        EXTRACT(EPOCH FROM (NOW() - MAX(ts)))::int AS newest_age_s
+        EXTRACT(EPOCH FROM (NOW() - MIN(ts)))::int AS oldest_age_s
       FROM live_ticks
     `);
     const rows = extractRows(result);
-    const row = rows[0] as { symbol_count: number; newest_age_s: number | null } | undefined;
+    const row = rows[0] as { symbol_count: number; oldest_age_s: number | null } | undefined;
 
     return {
       symbolCount: Number(row?.symbol_count ?? 0),
-      newestAgeSeconds: row?.newest_age_s ?? null,
+      oldestAgeSeconds: row?.oldest_age_s == null ? null : Number(row.oldest_age_s),
     };
   } catch {
     return null;
@@ -283,14 +315,14 @@ async function queryCronAggregate(
   try {
     const result = await db.execute(sql`
       SELECT
-        COUNT(*)::text AS total,
-        COUNT(*) FILTER (WHERE status = 'done')::text AS done,
+        COUNT(*) FILTER (WHERE started_at >= ${since})::text AS total,
+        COUNT(*) FILTER (WHERE status = 'done' AND started_at >= ${since})::text AS done,
         COUNT(*) FILTER (
           WHERE status = 'started'
+          AND started_at >= ${since}
           AND started_at < NOW() - INTERVAL '5 minutes'
         )::text AS stuck
       FROM cron_runs
-      WHERE started_at >= ${since}
     `);
     const rows = extractRows(result);
     const row = rows[0] as { total: string; done: string; stuck: string } | undefined;
@@ -350,16 +382,19 @@ async function queryChatAggregate(
 
 async function queryAnalysisAggregate(
   db: HealthSloDb,
+  since: Date,
 ): Promise<AnalysisAggregate | null> {
   try {
     const result = await db.execute(sql`
       SELECT
         COUNT(*) FILTER (
           WHERE status = 'pending'
+          AND created_at >= ${since}
           AND created_at < NOW() - INTERVAL '10 minutes'
         )::text AS stale,
         COUNT(*) FILTER (
           WHERE status = 'running'
+          AND created_at >= ${since}
           AND started_at < NOW() - INTERVAL '30 seconds'
         )::text AS stuck
       FROM analysis_jobs

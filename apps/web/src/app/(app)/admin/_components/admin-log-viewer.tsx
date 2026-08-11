@@ -54,31 +54,45 @@ export function AdminLogViewer() {
   const reconnectAttempt = useRef(0);
   const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pausedRef = useRef(false);
+  const mountedRef = useRef(true);
+  const connectGenerationRef = useRef(0);
+  const probeAbortRef = useRef<AbortController | null>(null);
 
   // Keep pausedRef in sync so the message handler reads the latest value.
   useEffect(() => {
     pausedRef.current = isPaused;
   }, [isPaused]);
 
-  const disconnect = useCallback(() => {
+  const disconnect = useCallback((updateStatus = false) => {
+    connectGenerationRef.current += 1;
+    probeAbortRef.current?.abort();
+    probeAbortRef.current = null;
     if (reconnectTimeout.current !== null) {
       clearTimeout(reconnectTimeout.current);
       reconnectTimeout.current = null;
     }
     sourceRef.current?.close();
     sourceRef.current = null;
-    reconnectAttempt.current = 0;
+    if (updateStatus && mountedRef.current) setStatus('idle');
   }, []);
 
-  const connect = useCallback(async () => {
+  const connect = useCallback(async (resetBackoff = true) => {
     disconnect();
+    const generation = connectGenerationRef.current;
+    if (resetBackoff) reconnectAttempt.current = 0;
     setNotEnabledMsg('');
     setStatus('connecting');
 
     // Pre-flight: fetch to distinguish 503 (not enabled) / 403 (production) from network errors.
+    const probeController = new AbortController();
+    probeAbortRef.current = probeController;
     try {
-      const res = await fetch('/api/admin/logs/stream', { method: 'GET' });
+      const res = await fetch('/api/admin/logs/stream?probe=1', {
+        method: 'GET',
+        signal: probeController.signal,
+      });
       if (res.status === 403) {
+        if (!mountedRef.current || generation !== connectGenerationRef.current) return;
         setNotEnabledMsg(
           'Log streaming is disabled in production. Run locally with ENABLE_LOG_STREAM=true to view live logs.',
         );
@@ -86,34 +100,43 @@ export function AdminLogViewer() {
         return;
       }
       if (res.status === 503) {
+        let message = 'Log streaming is not enabled.';
         try {
           const body = await res.json();
-          setNotEnabledMsg(
-            typeof body?.error?.message === 'string'
-              ? body.error.message
-              : 'Log streaming is not enabled.',
-          );
+          if (typeof body?.error?.message === 'string') message = body.error.message;
         } catch {
-          setNotEnabledMsg('Log streaming is not enabled.');
+          // Use the generic disabled message when the response is not JSON.
         }
+        if (!mountedRef.current || generation !== connectGenerationRef.current) return;
+        setNotEnabledMsg(message);
         setStatus('not_enabled');
+        return;
+      }
+      if (!res.ok) {
+        if (!mountedRef.current || generation !== connectGenerationRef.current) return;
+        setNotEnabledMsg(`Log stream unavailable (HTTP ${res.status}).`);
+        setStatus('error');
         return;
       }
     } catch {
       // network error — EventSource will also fail, handled by onerror below.
+    } finally {
+      if (probeAbortRef.current === probeController) probeAbortRef.current = null;
     }
+
+    if (!mountedRef.current || generation !== connectGenerationRef.current) return;
 
     const source = new EventSource('/api/admin/logs/stream');
     sourceRef.current = source;
-    reconnectAttempt.current = 0;
 
     source.onopen = () => {
+      if (!mountedRef.current || generation !== connectGenerationRef.current || sourceRef.current !== source) return;
       setStatus('connected');
       reconnectAttempt.current = 0;
     };
 
     source.onmessage = (event) => {
-      if (pausedRef.current) return;
+      if (!mountedRef.current || sourceRef.current !== source || pausedRef.current) return;
       const line = typeof event.data === 'string' ? event.data : String(event.data);
       setLines((prev) => {
         const next = [...prev, line];
@@ -122,8 +145,10 @@ export function AdminLogViewer() {
     };
 
     source.onerror = () => {
-      disconnect();
-      if (status !== 'connecting') setStatus('error');
+      if (!mountedRef.current || generation !== connectGenerationRef.current || sourceRef.current !== source) return;
+      source.close();
+      sourceRef.current = null;
+      setStatus('error');
       // Exponential backoff reconnect
       const delay = Math.min(
         RECONNECT_MAX_MS,
@@ -131,14 +156,15 @@ export function AdminLogViewer() {
       );
       reconnectAttempt.current++;
       reconnectTimeout.current = setTimeout(() => {
-        void connect();
+        if (mountedRef.current) void connect(false);
       }, delay);
     };
-  }, [disconnect, status]);
+  }, [disconnect]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      mountedRef.current = false;
       disconnect();
     };
   }, [disconnect]);
@@ -197,7 +223,12 @@ export function AdminLogViewer() {
               Connect
             </Button>
           ) : (
-            <Button variant="secondary" size="sm" onClick={disconnect} disabled={status !== 'connected' && status !== 'connecting'}>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => disconnect(true)}
+              disabled={status !== 'connected' && status !== 'connecting'}
+            >
               Disconnect
             </Button>
           )}

@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   IconStethoscope,
@@ -116,6 +116,7 @@ export function AdminDiagnosticTraces() {
 
   const [detail, setDetail] = useState<DiagnosticTraceDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const detailRequestRef = useRef(0);
   const [detailError, setDetailError] = useState<string | null>(null);
 
   const fetchTraces = useCallback(async () => {
@@ -136,19 +137,21 @@ export function AdminDiagnosticTraces() {
   }, []);
 
   const fetchDetail = useCallback(async (id: string) => {
+    const requestId = ++detailRequestRef.current;
     setDetailLoading(true);
     setDetailError(null);
     try {
       const data = await apiFetch<{ trace: DiagnosticTraceDetail }>(
         `/api/admin/diagnostics/trace/${id}`,
       );
-      setDetail(data.trace);
+      if (requestId === detailRequestRef.current) setDetail(data.trace);
     } catch (err) {
+      if (requestId !== detailRequestRef.current) return;
       const msg = err instanceof Error ? err.message : 'Unknown error';
       setDetailError(msg);
       toastApiError(err, 'Failed to load trace detail');
     } finally {
-      setDetailLoading(false);
+      if (requestId === detailRequestRef.current) setDetailLoading(false);
     }
   }, []);
 
@@ -160,8 +163,10 @@ export function AdminDiagnosticTraces() {
     if (traceIdFromUrl) {
       void fetchDetail(traceIdFromUrl);
     } else {
+      detailRequestRef.current += 1;
       setDetail(null);
       setDetailError(null);
+      setDetailLoading(false);
     }
   }, [traceIdFromUrl, fetchDetail]);
 

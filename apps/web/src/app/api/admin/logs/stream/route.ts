@@ -13,12 +13,19 @@ export const dynamic = 'force-dynamic';
  */
 // Environment gate is checked first so the dev-only endpoint does not
 // leak its existence in production before any auth checks run.
-const adminStreamHandler = withAdminAuth(async (_req) => {
+const adminStreamHandler = withAdminAuth(async (req) => {
   if (!logStreamHub.isEnabled()) {
     return Response.json(
       { error: { code: 'NOT_ENABLED', message: 'Log streaming is not enabled. Set ENABLE_LOG_STREAM=true' } },
       { status: 503 },
     );
+  }
+
+  // A lightweight probe lets the UI distinguish disabled/protected streams
+  // before opening the long-lived EventSource connection. It must never
+  // subscribe a client itself.
+  if (new URL(req.url).searchParams.get('probe') === '1') {
+    return Response.json({ ok: true });
   }
 
   const clientId = crypto.randomUUID();
