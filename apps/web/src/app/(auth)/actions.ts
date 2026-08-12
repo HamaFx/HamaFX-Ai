@@ -1,6 +1,7 @@
 'use server';
 
 import * as Sentry from '@sentry/nextjs';
+import { createHmac } from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import { and, eq, gt, sql } from 'drizzle-orm';
 import { AuthError } from 'next-auth';
@@ -17,6 +18,15 @@ import { generateToken, hashToken } from '@/lib/auth-tokens';
 import { getServerEnv } from '@/lib/env';
 
 const BCRYPT_COST = 12;
+const SYSTEM_USER_ID = '__system__';
+
+/** Keep unauthenticated rate-limit subjects out of the user_id FK and avoid
+ * storing raw IP addresses or email addresses in the rate_limits table. */
+function unauthenticatedRateLimitKey(kind: string, value: string): string {
+  const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET ?? 'dev-only-rate-limit-key';
+  const digest = createHmac('sha256', secret).update(value).digest('hex');
+  return `${kind}:${digest}`;
+}
 
 export interface AuthActionState {
   error?: string;
@@ -80,12 +90,20 @@ export async function loginAction(prevState: AuthActionState, formData: FormData
     headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ||
     headersList.get('x-real-ip') ||
     'unknown';
-  const rl = await withRateLimit(`login:${clientIp}`, 'login', 10);
+  const rl = await withRateLimit(
+    SYSTEM_USER_ID,
+    unauthenticatedRateLimitKey('login-ip', clientIp),
+    10,
+  );
   if (!rl.allowed) {
     return { error: 'Too many login attempts. Please try again later.' };
   }
 
-  const rlEmail = await withRateLimit(`login-email:${normalizedEmail}`, 'login_email', 5);
+  const rlEmail = await withRateLimit(
+    SYSTEM_USER_ID,
+    unauthenticatedRateLimitKey('login-email', normalizedEmail),
+    5,
+  );
   if (!rlEmail.allowed) {
     return { error: 'Too many login attempts for this email. Please try again later.' };
   }
@@ -194,7 +212,11 @@ export async function registerAction(prevState: AuthActionState, formData: FormD
     headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ||
     headersList.get('x-real-ip') ||
     'unknown';
-  const rl = await withRateLimit(`register:${clientIp}`, 'register', 5);
+  const rl = await withRateLimit(
+    SYSTEM_USER_ID,
+    unauthenticatedRateLimitKey('register-ip', clientIp),
+    5,
+  );
   if (!rl.allowed) {
     return { error: 'Too many registration attempts. Please try again later.' };
   }
@@ -391,7 +413,11 @@ export async function forgotPasswordAction(prevState: unknown, formData: FormDat
     const email = typeof raw.email === 'string' ? raw.email.trim().toLowerCase() : '';
     if (!email) return { error: 'Email is required' };
 
-    const rl = await withRateLimit(`forgot:${email}`, 'forgot_password', 3);
+    const rl = await withRateLimit(
+      SYSTEM_USER_ID,
+      unauthenticatedRateLimitKey('forgot-email', email),
+      3,
+    );
     if (!rl.allowed) return { error: 'Too many requests. Try again later.' };
 
     const db = getDb();
@@ -439,7 +465,11 @@ export async function resetPasswordAction(prevState: unknown, formData: FormData
       headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ||
       headersList.get('x-real-ip') ||
       'unknown';
-    const rl = await withRateLimit(`reset:${clientIp}`, 'reset_password', 5);
+    const rl = await withRateLimit(
+      SYSTEM_USER_ID,
+      unauthenticatedRateLimitKey('reset-ip', clientIp),
+      5,
+    );
     if (!rl.allowed) {
       return { error: 'Too many reset attempts. Please try again later.' };
     }
@@ -512,7 +542,11 @@ export async function resendVerificationAction(email: string) {
     return { error: 'Invalid email address' };
   }
 
-  const rl = await withRateLimit(`resend-verify:${normalizedEmail}`, 'resend_verify', 3);
+  const rl = await withRateLimit(
+    SYSTEM_USER_ID,
+    unauthenticatedRateLimitKey('resend-verify-email', normalizedEmail),
+    3,
+  );
   if (!rl.allowed) {
     return { error: 'Too many requests. Please try again later.' };
   }
