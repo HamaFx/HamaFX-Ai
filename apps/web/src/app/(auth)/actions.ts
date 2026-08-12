@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs';
 import { and, eq, gt, sql } from 'drizzle-orm';
 import { AuthError } from 'next-auth';
 import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
 import { schema, withRateLimit, userExistsByEmail, createUserWithSettings, createVerificationToken } from '@kestrel/db'
@@ -16,6 +17,31 @@ import { generateToken, hashToken } from '@/lib/auth-tokens';
 import { getServerEnv } from '@/lib/env';
 
 const BCRYPT_COST = 12;
+
+export interface AuthActionState {
+  error?: string;
+  success?: boolean;
+  requires2FA?: boolean;
+  email?: string;
+}
+
+interface SignInResult {
+  ok: boolean;
+  error?: string | null;
+}
+
+function isFailedSignIn(result: SignInResult): boolean {
+  return result.ok !== true;
+}
+
+function invalidCredentialsState(): AuthActionState {
+  recordAuthEvent('login_failure');
+  return { error: 'Invalid email or password' };
+}
+
+function registrationSignInFailureState(): AuthActionState {
+  return { error: 'Account created, but failed to automatically sign in' };
+}
 
 /**
  * P2-7: Centralized redirect sanitizer. Blocks open redirects via
@@ -37,7 +63,7 @@ const loginSchema = z.object({
   next: z.string().optional(),
 });
 
-export async function loginAction(prevState: unknown, formData: FormData) {
+export async function loginAction(prevState: AuthActionState, formData: FormData): Promise<AuthActionState> {
   return Sentry.withServerActionInstrumentation('loginAction', { formData }, async () => {
   const raw = formData instanceof FormData ? Object.fromEntries(formData) : (formData ?? {});
   const parsed = loginSchema.safeParse(raw);
@@ -75,7 +101,7 @@ export async function loginAction(prevState: unknown, formData: FormData) {
   const ua = headersList.get('user-agent')?.slice(0, 255) || undefined;
 
   try {
-    await signIn('credentials', {
+    const result = await signIn('credentials', {
       email: normalizedEmail,
       password,
       totpCode: formData.get('totpCode') as string || undefined,
@@ -83,10 +109,11 @@ export async function loginAction(prevState: unknown, formData: FormData) {
       deviceName: ua,
       ip: clientIp !== 'unknown' ? clientIp : undefined,
       redirectTo: safeNext,
+      redirect: false,
     });
-    // P1-1: Record login success ONLY after signIn resolves without throwing.
-    recordAuthEvent('login_success');
-    return { success: true };
+    if (isFailedSignIn(result)) {
+      return invalidCredentialsState();
+    }
   } catch (error) {
     const errStr = String(error);
     // P3-2: isRedirectError from next/navigation unavailable in this
@@ -120,8 +147,7 @@ export async function loginAction(prevState: unknown, formData: FormData) {
       if (message === 'AUTH_SYSTEM_ERROR' || message === 'SESSION_SYSTEM_ERROR') {
         return { error: 'Unable to sign in right now. Please try again.' };
       }
-      recordAuthEvent('login_failure');
-      return { error: 'Invalid email or password' };
+      return invalidCredentialsState();
     }
     Sentry.captureException(error, {
       tags: { component: 'auth-actions', action: 'login' },
@@ -129,6 +155,12 @@ export async function loginAction(prevState: unknown, formData: FormData) {
     });
     return { error: 'Unable to sign in right now. Please try again.' };
   }
+
+  // P1-1: Record login success only after signIn resolves without throwing.
+  recordAuthEvent('login_success');
+  // Keep the Next.js redirect outside the catch block so its control-flow
+  // exception is never mistaken for an authentication failure.
+  redirect(safeNext);
   });
 }
 
@@ -140,7 +172,7 @@ const registerSchema = z.object({
   password: passwordSchema,
 });
 
-export async function registerAction(prevState: unknown, formData: FormData) {
+export async function registerAction(prevState: AuthActionState, formData: FormData): Promise<AuthActionState> {
   return Sentry.withServerActionInstrumentation('registerAction', { formData }, async () => {
   const raw = formData instanceof FormData ? Object.fromEntries(formData) : (formData ?? {});
   const parsed = registerSchema.safeParse(raw);
@@ -214,18 +246,21 @@ export async function registerAction(prevState: unknown, formData: FormData) {
   }
 
   try {
-    await signIn('credentials', {
+    const result = await signIn('credentials', {
       email: normalizedEmail,
       password,
       rememberMe: 'true', // new registrations get remembered by default
       redirectTo: '/onboarding',
+      redirect: false,
     });
-    return { success: true };
+    if (isFailedSignIn(result)) {
+      return registrationSignInFailureState();
+    }
   } catch (error) {
     const errStr = String(error);
     if (errStr.includes('NEXT_REDIRECT')) throw error;
     if (error instanceof AuthError) {
-      return { error: 'Account created, but failed to automatically sign in' };
+      return registrationSignInFailureState();
     }
     Sentry.captureException(error, {
       tags: { component: 'auth-actions', action: 'register' },
@@ -233,6 +268,9 @@ export async function registerAction(prevState: unknown, formData: FormData) {
     });
     return { error: 'Unable to finish registration right now. Please try again.' };
   }
+
+  // Redirect only after the authentication call has completed successfully.
+  redirect('/onboarding');
   });
 }
 
