@@ -79,6 +79,22 @@ if (vercelEnv && vercelEnv !== 'production') {
   process.exit(0);
 }
 
+// Match the runtime migrator and shared environment parser: this OSS
+// release is single-user only. Refuse before opening a production DB
+// connection so an unsupported tenant/RLS mode cannot mutate its schema.
+const multiUserEnabled = ['1', 'true'].includes((process.env.MULTI_USER_ENABLED ?? '').toLowerCase());
+const rlsEnabled = ['1', 'true'].includes(
+  (process.env.KESTREL_ENABLE_RLS ?? process.env.HAMAFX_ENABLE_RLS ?? '').toLowerCase(),
+);
+const registrationMode = process.env.REGISTRATION_MODE ?? 'owner-first';
+if (multiUserEnabled || rlsEnabled || registrationMode === 'open') {
+  console.error(
+    '[predeploy-migrate] Multi-user/RLS and open-registration modes are disabled in this open-source release. ' +
+      'Set MULTI_USER_ENABLED=0, KESTREL_ENABLE_RLS=0, and REGISTRATION_MODE=owner-first (or disabled).',
+  );
+  process.exit(1);
+}
+
 const isProductionDeploy =
   vercelEnv === 'production' || process.env.NODE_ENV === 'production';
 const envVars = isProductionDeploy
@@ -136,43 +152,53 @@ if (!existsSync(migrationsDir)) {
 }
 
 // Phase 10 — Hash-mismatch safety check before applying migrations.
-// Warns when an applied migration file has been edited, which would
-// cause drizzle-kit to re-apply non-idempotent DDL and likely fail.
+// Refuses to apply when the database contains migration hashes that are
+// absent from the current journal. This prevents edited or otherwise
+// divergent migration history from being re-applied during deploy.
 try {
   const { default: postgres } = await import('postgres');
+  const productionTls = vercelEnv === 'production' || process.env.NODE_ENV === 'production';
+  const ca = process.env.SUPABASE_CA_CERT?.replace(/\\\\n/g, '\\n').trim();
   const sql = postgres(url, {
     prepare: false,
-    ssl: { rejectUnauthorized: false },
+    ssl: ca
+      ? { ca, rejectUnauthorized: true }
+      : productionTls
+        ? { rejectUnauthorized: true }
+        : { rejectUnauthorized: false },
   });
 
   try {
-    const appliedRows = await sql`
-      SELECT hash FROM drizzle."__drizzle_migrations"
+    const trackingTable = await sql`
+      SELECT to_regclass('drizzle.__drizzle_migrations') AS table_name
     `;
+    const appliedRows = trackingTable[0]?.table_name
+      ? await sql`SELECT hash FROM drizzle."__drizzle_migrations"`
+      : [];
     const appliedHashes = new Set(appliedRows.map((r) => r.hash));
 
     const journalPath = join(migrationsDir, 'meta', '_journal.json');
     const journal = JSON.parse(readFileSync(journalPath, 'utf-8'));
+    const currentHashes = new Map();
 
-    const mismatchedFiles = [];
     for (const entry of journal.entries || []) {
       const sqlPath = join(migrationsDir, `${entry.tag}.sql`);
       if (!existsSync(sqlPath)) {
-        mismatchedFiles.push(`${entry.tag}: file missing`);
-        continue;
+        throw new Error(`Migration file is missing for journal entry ${entry.tag}`);
       }
       const fileHash = createHash('sha256')
         .update(readFileSync(sqlPath))
         .digest('hex');
-      // If the file's hash is NOT in appliedHashes, it hasn't been applied yet.
-      // That's normal for new migrations. The danger case — a file was edited
-      // after being applied — is caught by the CI hash-stability test.
-      // Here we just log which migrations are pending for visibility.
-      if (!appliedHashes.has(fileHash)) {
-        // Skip known pending (not yet applied) — these will be applied next.
-        // We can't easily distinguish "pending" from "edited" without per-tag
-        // tracking, which drizzle-kit doesn't expose. The CI test handles this.
-      }
+      currentHashes.set(fileHash, entry.tag);
+    }
+
+    const unknownAppliedHashes = [...appliedHashes].filter(
+      (hash) => !currentHashes.has(hash),
+    );
+    if (unknownAppliedHashes.length > 0) {
+      throw new Error(
+        `${unknownAppliedHashes.length} applied migration hash(es) are absent from the current journal; refusing to apply migrations until history is reconciled`,
+      );
     }
 
     // Log the pending count for visibility
@@ -197,11 +223,11 @@ try {
     await sql.end({ timeout: 5 });
   }
 } catch (err) {
-  console.warn(
-    '[predeploy-migrate] WARNING: Could not run hash-mismatch safety check:',
+  console.error(
+    '[predeploy-migrate] FAILED safety check — refusing to apply migrations:',
     err instanceof Error ? err.message : err,
   );
-  console.warn('[predeploy-migrate] Proceeding with migration anyway.');
+  process.exit(1);
 }
 
 try {

@@ -68,6 +68,12 @@ export const alerts = pgTable(
      */
     lastFiredAt: timestamp('last_fired_at', { withTimezone: true }),
     /**
+     * Lease timestamp used to prevent duplicate external deliveries when
+     * multiple cron workers evaluate the same alert concurrently. A stale
+     * lease can be reclaimed after the delivery timeout.
+     */
+    deliveryClaimedAt: timestamp('delivery_claimed_at', { withTimezone: true }),
+    /**
      * Phase C — item 17. Snooze in hours (0..168). 0 = no snooze
      * (one-shot, the legacy behavior). Any value > 0 means: after
      * firing, the alert goes dormant for that many hours before
@@ -82,5 +88,6 @@ export const alerts = pgTable(
     index('alerts_active_idx').on(t.active),
     index('alerts_fired_at_idx').on(t.firedAt),
     index('alerts_last_fired_at_idx').on(t.lastFiredAt),
+    index('alerts_delivery_claimed_at_idx').on(t.deliveryClaimedAt),
   ],
 );

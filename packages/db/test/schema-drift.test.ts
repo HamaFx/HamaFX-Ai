@@ -19,7 +19,7 @@
 // Compares the Drizzle schema definitions against the actual database
 // structure after applying all migrations.
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -95,7 +95,7 @@ function getSchemaTableColumns(): Map<string, string[]> {
     'daily-ai-spend.ts', 'rate-limits.ts', 'live-ticks.ts', 'candles-1m.ts',
     'throttle.ts', 'intermarket-resonance.ts', 'audit.ts', 'provider-tests.ts',
     'symbol-catalog.ts', 'cron-runs.ts', 'portfolio.ts',
-    'noise-control.ts', 'bot-links.ts', 'billing.ts',
+    'noise-control.ts', 'bot-links.ts', 'billing.ts', 'telegram-updates.ts',
   ];
   for (const file of files) {
     try {
@@ -140,7 +140,13 @@ describe('Phase 6 — Task 28: Schema drift detection', () => {
     const db = await getPGliteDb(dir);
     await applyAll(db);
     const schemaTables = getSchemaTableColumns();
-    const tablesToCheck = ['journal_entries', 'portfolio_positions', 'alerts', 'chat_telemetry'];
+    const tablesToCheck = [
+      'journal_entries',
+      'portfolio_positions',
+      'alerts',
+      'chat_telemetry',
+      'chat_tool_telemetry',
+    ];
     for (const tableName of tablesToCheck) {
       const schemaCols = schemaTables.get(tableName);
       if (!schemaCols) continue;
@@ -152,13 +158,19 @@ describe('Phase 6 — Task 28: Schema drift detection', () => {
     }
   });
 
-  it('migration count matches journal entry count', async () => {
+  it('migration journal and SQL files have a one-to-one mapping', async () => {
     const journal = JSON.parse(readFileSync(join(DRIZZLE_DIR, 'meta', '_journal.json'), 'utf-8')) as { entries: Array<{ tag: string }> };
+    const sqlFiles = readdirSync(DRIZZLE_DIR).filter((file) => file.endsWith('.sql'));
+    const journalTags = new Set(journal.entries.map((entry) => `${entry.tag}.sql`));
+
+    expect(sqlFiles).toHaveLength(journal.entries.length);
     for (const entry of journal.entries) {
       const sqlPath = join(DRIZZLE_DIR, `${entry.tag}.sql`);
       expect(readFileSync(sqlPath, 'utf-8').length).toBeGreaterThan(0);
     }
-    expect(journal.entries.length).toBe(journal.entries.length);
+    for (const file of sqlFiles) {
+      expect(journalTags.has(file)).toBe(true);
+    }
   });
 
   // Phase 10 — Migration idempotency guard

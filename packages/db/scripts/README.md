@@ -25,6 +25,22 @@ install extensions in their own connection first.
 Read-only health check. Lists installed extensions, confirms `vector(N)` is
 usable, prints `search_path`. Useful when something looks off.
 
+## `migration-reconcile.mjs`
+
+Strictly read-only production reconciliation report. It compares repository
+migration hashes with `drizzle.__drizzle_migrations`, inspects the duplicate
+briefing-thread invariant, checks the columns and indexes introduced by the
+latest safety migrations, and reports the connected role's RLS bypass status.
+It never executes DDL or DML.
+
+```bash
+DIRECT_URL=... pnpm --filter @kestrel/db migrate:reconcile
+DIRECT_URL=... pnpm --filter @kestrel/db migrate:reconcile -- --json
+```
+
+Use the direct/session connection for production. Resolve every unknown hash
+and duplicate briefing group before running `migrate:apply`.
+
 ## `rotate-encryption-secret.mjs`
 
 Re-encrypts all encrypted BYOK, Telegram-token, and TOTP fields with a new

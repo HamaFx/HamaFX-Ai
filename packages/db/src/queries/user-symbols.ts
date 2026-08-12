@@ -16,7 +16,7 @@
 
 // User symbol watchlist query helpers.
 
-import { and, asc, eq } from 'drizzle-orm';
+import { and, asc, eq, sql } from 'drizzle-orm';
 import { getDb, schema } from '../client';
 
 export type UserSymbolRow = typeof schema.userSymbols.$inferSelect;
@@ -57,14 +57,26 @@ export async function addUserSymbol(
   displayOrder?: number,
 ): Promise<void> {
   const db = getDb();
-  await db
-    .insert(schema.userSymbols)
-    .values({
-      userId,
-      symbol,
-      displayOrder: displayOrder ?? 0,
-    })
-    .onConflictDoNothing({ target: [schema.userSymbols.userId, schema.userSymbols.symbol] });
+  await db.transaction(async (tx) => {
+    // Serialize automatic order allocation per user. The caller may still
+    // provide an explicit order for imports/onboarding, but normal additions
+    // compute max+1 while holding this transaction-scoped advisory lock.
+    await tx.execute(
+      sql`SELECT pg_advisory_xact_lock(hashtextextended(${userId}, 0))`,
+    );
+    let nextOrder = displayOrder;
+    if (nextOrder === undefined) {
+      const [row] = await tx
+        .select({ maxOrder: sql<number>`coalesce(max(${schema.userSymbols.displayOrder}), -1)` })
+        .from(schema.userSymbols)
+        .where(eq(schema.userSymbols.userId, userId));
+      nextOrder = Number(row?.maxOrder ?? -1) + 1;
+    }
+    await tx
+      .insert(schema.userSymbols)
+      .values({ userId, symbol, displayOrder: nextOrder })
+      .onConflictDoNothing({ target: [schema.userSymbols.userId, schema.userSymbols.symbol] });
+  });
 }
 
 export async function removeUserSymbol(

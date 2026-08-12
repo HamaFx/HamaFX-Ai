@@ -42,6 +42,25 @@ if (multiUserEnabled || rlsEnabled || registrationMode === 'open') {
   process.exit(1);
 }
 
+function resolveSslOptions() {
+  if (process.env.DB_DISABLE_SSL === 'true') {
+    if (
+      process.env.NODE_ENV !== 'production' ||
+      (process.env.KESTREL_LOCAL_DOCKER ?? process.env.HAMAFX_LOCAL_DOCKER) === 'true'
+    ) {
+      return false;
+    }
+    throw new Error(
+      '[runtime-migrate] DB_DISABLE_SSL=true is only permitted with KESTREL_LOCAL_DOCKER=true.',
+    );
+  }
+  const ca = process.env.SUPABASE_CA_CERT?.replace(/\\\\n/g, '\\n').trim();
+  if (ca) return { ca, rejectUnauthorized: true };
+  return process.env.NODE_ENV === 'production'
+    ? { rejectUnauthorized: true }
+    : { rejectUnauthorized: false };
+}
+
 const redactUrl = (url) => url.replace(/:[^/@]+@/, ':***@');
 console.log(`[runtime-migrate] Applying migrations using ${redactUrl(databaseUrl)}`);
 
@@ -51,6 +70,7 @@ const sql = postgres(databaseUrl, {
   connect_timeout: 10,
   idle_timeout: 10,
   max_lifetime: 60,
+  ssl: resolveSslOptions(),
 });
 
 try {

@@ -449,6 +449,48 @@
       "when": 1786383600000,
       "tag": "0064_phase2_symbol_catalog_activation",
       "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1786557228000,
+      "tag": "0065_repair_tool_output_chars",
+      "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1786558914000,
+      "tag": "0066_phase2_concurrency_guards",
+      "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1786565500000,
+      "tag": "0067_telegram_update_idempotency",
+      "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1786565500001,
+      "tag": "0068_remove_stale_twelve_data_symbol",
+      "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1786568800000,
+      "tag": "0069_restore_public_grants",
+      "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1786569000000,
+      "tag": "0070_restrict_public_api_grants",
+      "breakpoints": true
     }
   ]
 }

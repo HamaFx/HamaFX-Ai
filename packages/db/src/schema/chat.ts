@@ -15,7 +15,7 @@
  */
 
 import { sql } from 'drizzle-orm';
-import { boolean, index, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { boolean, index, jsonb, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 
 // Note: `real` is not needed here — analysis_mode is text.
 import { organization, users } from './auth';
@@ -65,6 +65,9 @@ export const chatThreads = pgTable(
     index('chat_threads_updated_at_idx').on(t.updatedAt),
     index('chat_threads_user_id_idx').on(t.userId),
     index('chat_threads_tenant_id_idx').on(t.tenantId),
+    uniqueIndex('chat_threads_one_briefings_per_user_idx')
+      .on(t.userId)
+      .where(sql`${t.isBriefings} = true`),
   ],
 );
 

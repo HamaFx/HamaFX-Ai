@@ -164,12 +164,10 @@ function resolveSslOptions(): false | { rejectUnauthorized: boolean; ca?: string
   // deployments can set DB_DISABLE_SSL=true (which disables
   // TLS entirely) or supply a CA cert via SUPABASE_CA_CERT.
   if (process.env.NODE_ENV === 'production') {
-    console.warn(
-      '*** [db] SECURITY WARNING: DB TLS verification not configured. ***\n' +
-      '  Set SUPABASE_CA_CERT with your CA bundle (from Supabase/Self-Host dashboard) for verified TLS.\n' +
-      '  The connection will proceed with rejectUnauthorized: false, but this is NOT recommended for production.\n' +
-      '  Self-hosters: set up TLS on your Postgres server and provide the CA cert.',
-    );
+    // Use Node's system CA store when no provider-specific bundle is
+    // supplied. Never silently downgrade a production DB connection to
+    // rejectUnauthorized=false.
+    return { rejectUnauthorized: true };
   }
 
   return { rejectUnauthorized: false };

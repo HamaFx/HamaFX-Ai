@@ -127,6 +127,7 @@ const EXPECTED_TABLES = [
   'billing_webhook_dlq', 'billing_checkout_attempts',
   // Phase 3 — Multi-tenancy, migrations 0035–0041
   'organization', 'organization_member',
+  'telegram_updates',
 ];
 
 describe('Phase 6 — Task 27: Full migration chain (all migrations on fresh PGlite)', { timeout: 30_000 }, () => {

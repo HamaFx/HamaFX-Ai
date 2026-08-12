@@ -38,6 +38,7 @@
     "migrate:gen:custom": "drizzle-kit generate --custom",
     "migrate:apply": "node scripts/install-extensions.mjs && drizzle-kit migrate",
     "migrate:status": "node scripts/migrate-status.mjs",
+    "migrate:reconcile": "node scripts/migration-reconcile.mjs",
     "migrate:rotate-encryption": "node scripts/rotate-encryption-secret.mjs",
     "migrate:setup-extensions": "node scripts/install-extensions.mjs",
     "seed:plans": "tsx scripts/seed-plans.ts",

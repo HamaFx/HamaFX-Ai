@@ -54,12 +54,29 @@ for (const entry of journalEntries) {
   console.log(`   [${status}]  ${entry.tag}`);
 }
 
+const journalTags = new Set(journalEntries.map((entry) => entry.tag));
+const unjournaledFiles = sqlFiles.filter(
+  (file) => ![...journalTags].some((tag) => file.startsWith(`${tag}.`)),
+);
+for (const file of unjournaledFiles) {
+  console.log(`   [UNJOURNALED]  ${file}`);
+}
+
 if (!allFilesExist) {
   console.log('\nSome migration files are missing. Run `pnpm migrate:gen` to regenerate.\n');
   process.exit(1);
 }
 
-const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+if (unjournaledFiles.length > 0) {
+  console.log('\nSome SQL files are not present in _journal.json. Register or remove them before deploying.\n');
+  process.exit(1);
+}
+
+const dbUrl =
+  process.env.DIRECT_URL ||
+  process.env.POSTGRES_URL_NON_POOLING ||
+  process.env.DATABASE_URL ||
+  process.env.POSTGRES_URL;
 if (!dbUrl) {
   console.log('\nDATABASE_URL not set — showing file-based status only.');
   console.log('Set DATABASE_URL to check which migrations are applied in the database.\n');
@@ -69,9 +86,16 @@ if (!dbUrl) {
 async function checkDatabase() {
   try {
     const { default: postgres } = await import('postgres');
+    const productionTls =
+      process.env.VERCEL_ENV === 'production' || process.env.NODE_ENV === 'production';
+    const ca = process.env.SUPABASE_CA_CERT?.replace(/\\\\n/g, '\\n').trim();
     const sql = postgres(dbUrl, {
       prepare: false,
-      ssl: { rejectUnauthorized: false },
+      ssl: ca
+        ? { ca, rejectUnauthorized: true }
+        : productionTls
+          ? { rejectUnauthorized: true }
+          : { rejectUnauthorized: false },
     });
 
     try {
@@ -80,6 +104,20 @@ async function checkDatabase() {
       `;
 
       const appliedHashes = new Set(rows.map((r) => r.hash));
+      const journalHashes = new Set();
+      for (const entry of journalEntries) {
+        const sqlPath = join(DRIZZLE_DIR, `${entry.tag}.sql`);
+        journalHashes.add(createHash('sha256').update(readFileSync(sqlPath)).digest('hex'));
+      }
+      const unknownAppliedHashes = [...appliedHashes].filter((hash) => !journalHashes.has(hash));
+      if (unknownAppliedHashes.length > 0) {
+        console.error(
+          `\n   Database contains ${unknownAppliedHashes.length} applied migration hash(es) absent from the current journal.`,
+        );
+        console.error('   Reconcile migration history before applying or deploying.\n');
+        process.exitCode = 1;
+        return;
+      }
 
       const pending = [];
       for (const entry of journalEntries) {

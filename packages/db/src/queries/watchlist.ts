@@ -16,8 +16,9 @@
 
 // Watchlist query helpers — symbol catalog JOINs.
 
-import { eq, asc, and, sql } from 'drizzle-orm';
+import { eq, asc, and, inArray, sql } from 'drizzle-orm';
 import { getDb, schema } from '../client';
+import { validationError } from '@kestrel/shared';
 
 /** A watchlist entry enriched with symbol catalog metadata. */
 export interface WatchlistEntry {
@@ -107,15 +108,49 @@ export async function getNextDisplayOrder(userId: string): Promise<number> {
  */
 export async function reorderWatchlist(userId: string, symbols: string[]): Promise<void> {
   if (symbols.length === 0) return;
+  if (symbols.length > 100) throw validationError('watchlist reorder exceeds the 100-symbol limit');
+  if (symbols.some((symbol) => symbol.length === 0 || symbol.length > 32)) {
+    throw validationError('watchlist symbols must be non-empty and at most 32 characters');
+  }
+  if (new Set(symbols).size !== symbols.length) {
+    throw validationError('watchlist reorder contains duplicate symbols');
+  }
 
   const db = getDb();
-  const whenClauses = symbols.map((_s, i) =>
-    sql`WHEN ${eq(schema.userSymbols.symbol, symbols[i]!)} THEN ${i}`,
-  );
-  await db
-    .update(schema.userSymbols)
-    .set({
-      displayOrder: sql`CASE ${sql.join(whenClauses, sql` `)} END`,
-    })
-    .where(eq(schema.userSymbols.userId, userId));
+  await db.transaction(async (tx) => {
+    // Lock the current rows for the duration of validation + update so two
+    // reorder requests cannot observe and rewrite different orderings.
+    await tx.execute(
+      sql`SELECT ${schema.userSymbols.symbol}
+          FROM ${schema.userSymbols}
+          WHERE ${eq(schema.userSymbols.userId, userId)}
+          FOR UPDATE`,
+    );
+    const existing = await tx
+      .select({ symbol: schema.userSymbols.symbol })
+      .from(schema.userSymbols)
+      .where(eq(schema.userSymbols.userId, userId));
+    const existingSymbols = existing.map((row) => row.symbol);
+    if (
+      existingSymbols.length !== symbols.length ||
+      existingSymbols.some((symbol) => !symbols.includes(symbol))
+    ) {
+      throw validationError('watchlist reorder must include exactly the user watchlist symbols');
+    }
+
+    const whenClauses = symbols.map((symbol, i) =>
+      sql`WHEN ${eq(schema.userSymbols.symbol, symbol)} THEN ${i}`,
+    );
+    await tx
+      .update(schema.userSymbols)
+      .set({
+        displayOrder: sql`CASE ${sql.join(whenClauses, sql` `)} ELSE ${schema.userSymbols.displayOrder} END`,
+      })
+      .where(
+        and(
+          eq(schema.userSymbols.userId, userId),
+          inArray(schema.userSymbols.symbol, symbols),
+        ),
+      );
+  });
 }

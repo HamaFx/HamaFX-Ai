@@ -1,0 +1,265 @@
+{
+  "entries": [
+    {
+      "tag": "0000_lazy_red_shift",
+      "hash": "ad9b68aff3c6e79a68b0d86658a7ff1004de9eab88271e72c970764615eeb748"
+    },
+    {
+      "tag": "0001_phase_1_completion",
+      "hash": "faaf97f9ef6998628841bf68c58d64a9fd44b4dd816cdc331e2618dcf92202b2"
+    },
+    {
+      "tag": "0002_phase_2",
+      "hash": "2766ed929291da05ea9705099b8c40fbbac942595d8164cc16beed3752b094cb"
+    },
+    {
+      "tag": "0003_alert_system",
+      "hash": "bc09ff3faeec81014adb557d570b96030f8cc3a3487434d2d60c64edd4c524e6"
+    },
+    {
+      "tag": "0004_journal_system",
+      "hash": "548b4e815995723f10ad00b655e05b5509c5a732f0fc46b5aac356cc655e1cbd"
+    },
+    {
+      "tag": "0005_market_data",
+      "hash": "68f6dc195224f1131ae81b328f32ec318b0999127202515da23733ee070993a8"
+    },
+    {
+      "tag": "0006_dashboard_layout",
+      "hash": "df7904a4f6972e085fca3c8755d1f78b783a5388f76424e8f30fb2162d4e3526"
+    },
+    {
+      "tag": "0007_idempotency_keys",
+      "hash": "a6a6423b89df48f301690d312c8284c2955fef5f810c55eeb10dff058a718db2"
+    },
+    {
+      "tag": "0008_handoff_tables",
+      "hash": "362019599ba6282587125f765bd46da0ce2bed4f225d76cfda7ef4dddc25ddef"
+    },
+    {
+      "tag": "0009_news_articles",
+      "hash": "53436db0ff88886090975798252de43fb11f21785811de9306e795aa75f96b33"
+    },
+    {
+      "tag": "0010_provider_tests",
+      "hash": "d71e9582f5072da99c2d79359eafb95d60e0a3861838a3ac65e082d225b36985"
+    },
+    {
+      "tag": "0011_alert_snooze",
+      "hash": "410285d48a05acff253349af8f4f1e67d83d33c5ec22a96de4a36d568625f169"
+    },
+    {
+      "tag": "0012_default_models",
+      "hash": "cb67c654a42bbd18a5bc4e2b8ea06da9d168f25314f1d0b862d77ae5ef81919d"
+    },
+    {
+      "tag": "0013_chat_model",
+      "hash": "9969e157797cba13a909f9b036f4b5518355acfe1325d5051072e6400f22b072"
+    },
+    {
+      "tag": "0014_vision_embedding_model",
+      "hash": "ff1911298894f27057586e82492cc73268bfe73c0842ecdfb0fa4fcb92135c55"
+    },
+    {
+      "tag": "0015_open_komodo",
+      "hash": "30824e8d1a41d8448f6d2a75596e80ca1a868e2f2c8d03a71397eafe46b94c09"
+    },
+    {
+      "tag": "0016_windy_cobalt_man",
+      "hash": "97840a912a9f5f253e6e47153364517afc5858817a77009e9774c3e6b5f836ae"
+    },
+    {
+      "tag": "0017_fantastic_mastermind",
+      "hash": "3bf24dce9dabb52da0ad332945417ac2a0987f9daec7d8a82960e95655b080b6"
+    },
+    {
+      "tag": "0018_bizarre_amazoness",
+      "hash": "627caf72b96c7fb7a3113efd155e6d588ee1a60a02f1b8b9b714d935ec4a784a"
+    },
+    {
+      "tag": "0019_funny_silver_centurion",
+      "hash": "76c7db038ef9a3e59be298818b4aae87aba6ebe2e35e09793bd553b03dd60afb"
+    },
+    {
+      "tag": "0020_broken_azazel",
+      "hash": "1c7ec0cb177f665820cb97cc1e07409c5619c8f3f63e3e4473a1f0280099fb4d"
+    },
+    {
+      "tag": "0021_user_settings_prefs",
+      "hash": "c0dbe515f5b31824b94b0a1b99e0d4fbac7856be071fd19e843bc120f2ce2814"
+    },
+    {
+      "tag": "0022_many_proteus",
+      "hash": "42f032610e514c6a6ef418391998841908c655f3d2bfda2306bfc55a22f140f5"
+    },
+    {
+      "tag": "0023_burly_nightcrawler",
+      "hash": "a4b42fe3297ede68b0a45a819a37d6e4da7165a708de9d2baa1a0332416a6aec"
+    },
+    {
+      "tag": "0024_living_doorman",
+      "hash": "9a22c40e269de577753b94e184267422615f2fbe3b33ae00528295e1e09c26b7"
+    },
+    {
+      "tag": "0025_multi_agent_orchestration",
+      "hash": "8aceba74b69b4148d9f36f9914101e7e5b6113427d571c6f9bfd40e29ad7c020"
+    },
+    {
+      "tag": "0026_decision_signal_tracking",
+      "hash": "b7d42fb644395f8e461a96d2d7b0336756119d576417d54b2045d6df9f124680"
+    },
+    {
+      "tag": "0027_phase1_critical_fixes",
+      "hash": "6f0c603b47d8bdb392c80105ea6b41c49b75b821a093ea913473cb6cfb26ae61"
+    },
+    {
+      "tag": "0028_phase2_data_integrity",
+      "hash": "d60d534637a1fc0f197450196c53011b6270f3a833ddb2e0638f45123e897103"
+    },
+    {
+      "tag": "0029_phase3_schema_fixes",
+      "hash": "a03a9a8b5e5daccc699ba639ecfa5d20729796b6323e7e4b7f9b91d61bffa06f"
+    },
+    {
+      "tag": "0030_phase4_security",
+      "hash": "c295817d88f77ea8d4118cbdd24d55c8e1f572f3ae1391318a3203c4892a0302"
+    },
+    {
+      "tag": "0031_phase7_comments_and_triggers",
+      "hash": "1683118438aeb7cebb9ff66989b6b38930a69e047b24c4559355e0b07b93e746"
+    },
+    {
+      "tag": "0032_phase8_soft_delete_enums_fts",
+      "hash": "047a109169ccf72126c98c25df28eba2ad5e6a829f0943d6b99c59dd12a89ce1"
+    },
+    {
+      "tag": "0033_fix_analysis_mode",
+      "hash": "556a99b9d3c21f854b9d86146a6bacf2ac6716e8b6fb321563cc083d01f70b92"
+    },
+    {
+      "tag": "0034_breezy_absorbing_man",
+      "hash": "3514d99aa835b8a856db981f30bfffd95a90e2f3c7064fbccb20b4e7815bbb81"
+    },
+    {
+      "tag": "0035_phase3_multitenancy_foundation",
+      "hash": "be53d591bf600e9b62fb74e415dadf1011c3ddd5477fb85ca6b54a3060f35faa"
+    },
+    {
+      "tag": "0036_phase3_tenant_constraints",
+      "hash": "20565ff8bef7115f80b4cfb19426215abfc631ddb68c0e648648f22e70f1dc1b"
+    },
+    {
+      "tag": "0037_phase3_bypassrls_admin_role",
+      "hash": "c494b7fec5c62745c1baa41883e8ab6cbea9dafa69ec3b86b16109a2ed79d839"
+    },
+    {
+      "tag": "0038_phase3_rls_cutover",
+      "hash": "0b7b3c200886d90e9e48e20da42c9e94f1802de6a98bddd8e0d7ae0eedfb3578"
+    },
+    {
+      "tag": "0039_phase3_runtime_fixes",
+      "hash": "88577c3ec86be02ab6b928bee151ad73961e0bbc9bc965648a7587cd4df37325"
+    },
+    {
+      "tag": "0040_phase8_billing_nowpayments",
+      "hash": "6867fed776b187e985e5cae99e6f5f7a862cd8b2ab231e1d3ba6d42dea93a24d"
+    },
+    {
+      "tag": "0041_fix_missing_tenant_columns",
+      "hash": "f3c3c53111ee59b950359f04be5a03d0addc798d139fdda21ac652b17d69f1f7"
+    },
+    {
+      "tag": "0042_feature_flags_and_diagnostic_traces",
+      "hash": "e65113e4bf425673417b4b5e617167d69c4fdc0c5faf9000f099cb31998bc2ce"
+    },
+    {
+      "tag": "0043_add_n_data_symbol",
+      "hash": "a2cd382ea9662a30d7037b6ec418ad304a9a5f5356a64edd64a5d0fcc23d9ea0"
+    },
+    {
+      "tag": "0044_tenant_id_global_tables",
+      "hash": "1ed7370496a78e121128d0042fa33af934fc805ee034b2c760961a0126474387"
+    },
+    {
+      "tag": "0045_drop_duplicate_fts_index",
+      "hash": "9e8b3d6e387ded804aa25478541bfcd48785a7cbbd071d8cc58bc369cc1ef274"
+    },
+    {
+      "tag": "0046_tenant_id_defaults",
+      "hash": "468f4be9b85b1e89a3fd831b787dfe6abbf870dd4139bb782ce6b53425e3633a"
+    },
+    {
+      "tag": "0047_sturdy_longshot",
+      "hash": "a2baa506bb2ed730dd37a17cd1ced5854d362fdad4d23cb563cbcb61e17a5338"
+    },
+    {
+      "tag": "0048_sturdy_james_howlett",
+      "hash": "2e05154acf2229907671a923cb0c5cc95fda6f91a657cacff4b17f1fbc1b1fa7"
+    },
+    {
+      "tag": "0049_auth_token_purpose_hash",
+      "hash": "5c455f40de77489b135a71e32f66d9ee81bf37541d7f06430a57b866a2862885"
+    },
+    {
+      "tag": "0050_fix_tenant_triggers",
+      "hash": "49fd7311cd08b10d933d521af79ee40975093c5bfbee555045f81fa809d85de3"
+    },
+    {
+      "tag": "0051_worried_next_avengers",
+      "hash": "67f8414d73468f6e3efa286ce4791bf6ddc9dc2c645bc59c30e117492d140124"
+    },
+    {
+      "tag": "0052_drop_decision_signals",
+      "hash": "034127ab1f6256d0e696bee63cc9a06fddd57bf7ac624b589108a21189956dbe"
+    },
+    {
+      "tag": "0053_add_analysis_jobs_trace_id",
+      "hash": "6a238c166de30307bc8bf3559d00433262a9e12a99f9118e905939f7c40558cb"
+    },
+    {
+      "tag": "0054_fix_subscriptions_partial_unique",
+      "hash": "23199e15048180d6c76522a04b30a9f389258e1a45648d104b4433e23a8f581b"
+    },
+    {
+      "tag": "0055_drop_cron_runs_trigger",
+      "hash": "e6880105d7e6104a3980dada99ecef0fa983457c19bc10e50574f2ede0b6d50a"
+    },
+    {
+      "tag": "0056_add_audit_logs_tenant_created_idx",
+      "hash": "d38219e21c91849e21e05f541dbf68cf02a8370f34e957eb58242e4002d7c82c"
+    },
+    {
+      "tag": "0057_change_daily_ai_spend_float",
+      "hash": "73e5e71dd4e51bb41f8235a60f83919f3ef86a455ff57abc37ef276ab2f5fdf4"
+    },
+    {
+      "tag": "0058_drop_linked_signal_id",
+      "hash": "5f9129a97b490d29e7ddd6a6fbbd7f5d0ff076d7a0cbdaad95fdd2f92f3a093f"
+    },
+    {
+      "tag": "0060_provider_health",
+      "hash": "af258a220d46af7b83b3e2805cca74f569b9dd1989d8d6281b0c4ce3441eb4ec"
+    },
+    {
+      "tag": "0061_add_2fa_backup_codes",
+      "hash": "d2d9d802ce4a1a65a582c6ffdf6d0818cff54bd5d2399fce2b7e717399d36cd1"
+    },
+    {
+      "tag": "0062_admin_audit_log",
+      "hash": "e8fd85d7384419e63a899a3964711c110883610e24dbfa6879074d408dad49e0"
+    },
+    {
+      "tag": "0063_billing_safety_gate",
+      "hash": "ae63c11913feaabb2cefe12355e67917ee9b70494cb748abb91dd9ebd70b59a2"
+    },
+    {
+      "tag": "0064_phase2_symbol_catalog_activation",
+      "hash": "8462cc98e5b1a94391834afbbace023a647e5961da8de424faebbb29f32ff690"
+    },{"tag": "0065_repair_tool_output_chars", "hash": "06e7241016a938f32e0e18bcbbe0e80ba85e3232a04331b72b64cdaa4cbb419c"},
+    {"tag": "0066_phase2_concurrency_guards", "hash": "9864cb5431a9d6cdd459718cdb5eeeb529a31794e9053886b150f9b7a626500a"},
+    {"tag": "0067_telegram_update_idempotency", "hash": "00d60cf12a9c51305c5110a79756d095e37b6db0fe2b75f0b1389c1ad7937ee4"},
+    {"tag": "0068_remove_stale_twelve_data_symbol", "hash": "f6235274cbe64c82b7899870588154291e3d4fce4b0777bd94d50b471a5d9cd8"},
+    {"tag": "0069_restore_public_grants", "hash": "40c802c553ac8084587929ab35664df6cac03d05867c5ba3ac53a9aab80edb5c"},
+    {"tag": "0070_restrict_public_api_grants", "hash": "ca4fdc205dc93ccae86bac52b7be1e1ce0be54eb81ace753500512a9be8530e8"}
+  ]
+}
