@@ -4,7 +4,7 @@
 //
 // Phase 8 PR-14: this route is now a **manual-fallback path**. The
 // scheduled invocation runs on the GCE worker via
-// `hamafx-job-weekly-review.timer`.
+// `kestrel-job-weekly-review.timer`.
 //
 // Calls `emitWeeklyReview` exactly once. Idempotent within an ISO week
 // via `briefings_emitted` PK on (`weekly_review:<isoWeek>`, 'weekly_review').

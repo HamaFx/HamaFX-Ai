@@ -31,7 +31,7 @@ pnpm setup --json                # machine-readable result on stdout
 ### Manual setup (advanced)
 
 ```bash
-git clone https://github.com/HamaFx/HamaFX-Ai.git
+git clone https://github.com/HamaFx/Kestrel.git
 cd Kestrel
 cp .env.example .env
 ```
@@ -72,6 +72,8 @@ Docker will build the Next.js `app` and the `worker` containers. Once running, a
 
 If host port 5432 is already in use, set `POSTGRES_PUBLISHED_PORT=127.0.0.1:5433` in `.env` before starting Compose. The app and backup worker continue to use the internal `db:5432` network address.
 
+**Existing volume compatibility:** the Compose file keeps the historical `hamafx_pgdata` and `hamafx_backup-data` names by default so a VM upgraded from `/opt/hamafx` does not boot against empty volumes. These are internal compatibility identifiers. If an older local checkout used a different Compose project prefix, set `POSTGRES_VOLUME_NAME` and `BACKUP_VOLUME_NAME` in `.env` to the existing volume names before the first Kestrel start (for example, `hamafx-ai_pgdata`).
+
 ### Services
 
 | Service | Port | Description |
@@ -110,9 +112,9 @@ docker compose logs --tail=100 backup
 Restore is intentionally operator-confirmed because it replaces the current database. Stop external writes, then select `latest` or an archive filename shown in the backup logs:
 
 ```bash
-HAMAFX_RESTORE_CONFIRM=YES ./docker/restore-db.sh latest
+KESTREL_RESTORE_CONFIRM=YES ./docker/restore-db.sh latest
 # or:
-HAMAFX_RESTORE_CONFIRM=YES ./docker/restore-db.sh hamafx-20260810T030000Z.dump.gz
+KESTREL_RESTORE_CONFIRM=YES ./docker/restore-db.sh kestrel-20260810T030000Z.dump.gz
 ```
 
 The restore script stops `app`, `worker`, and `backup`, then runs `pg_restore --clean --if-exists` from a short-lived backup-image container over the private Compose network. It starts the application services again only after the restore command succeeds. Before using this in production, rehearse restoring to a disposable instance and verify that the application starts with the restored schema and data.
@@ -138,7 +140,7 @@ The `docker-compose.yml` binds ports 3000 (web) and 3001 (Langfuse) to `localhos
 ### Caddy Example
 
 ```caddyfile
-hamafx.yourdomain.com {
+kestrel.yourdomain.com {
     reverse_proxy localhost:3000
 }
 
@@ -152,7 +154,7 @@ langfuse.yourdomain.com {
 ```nginx
 server {
     listen 443 ssl;
-    server_name hamafx.yourdomain.com;
+    server_name kestrel.yourdomain.com;
 
     ssl_certificate /path/to/cert.pem;
     ssl_certificate_key /path/to/key.pem;
@@ -182,7 +184,7 @@ After accessing the app for the first time:
 2. **Onboarding wizard** — set your display name, timezone, default symbol, and AI provider key.
 3. **Start chatting** — the AI agent is ready to go.
 
-For a shared installation, do not enable multi-user mode. `MULTI_USER_ENABLED=1`, `HAMAFX_ENABLE_RLS=1`, and open registration are rejected by this OSS release until every user-data query establishes tenant context and the PostgreSQL isolation suite is complete.
+For a shared installation, do not enable multi-user mode. `MULTI_USER_ENABLED=1`, `KESTREL_ENABLE_RLS=1`, and open registration are rejected by this OSS release until every user-data query establishes tenant context and the PostgreSQL isolation suite is complete.
 
 See [13-first-run-setup.md](./13-first-run-setup.md) for detailed first-run information.
 

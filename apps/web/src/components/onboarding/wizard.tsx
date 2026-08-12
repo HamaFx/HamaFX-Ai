@@ -86,12 +86,19 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
     }
   }, [initialProgress]);
 
+  const onboardingStorageKey = 'kestrel_onboarding_wizard';
+  const legacyOnboardingStorageKey = 'hfx_onboarding_wizard';
+
   // Load saved wizard state on mount (API key intentionally excluded — in-memory only)
   useEffect(() => {
     try {
-      const saved = sessionStorage.getItem('hfx_onboarding_wizard');
+      const saved =
+        sessionStorage.getItem(onboardingStorageKey) ??
+        sessionStorage.getItem(legacyOnboardingStorageKey);
       if (saved && !initialProgress) {
         const parsed = JSON.parse(saved);
+        sessionStorage.setItem(onboardingStorageKey, saved);
+        sessionStorage.removeItem(legacyOnboardingStorageKey);
         if (typeof parsed.step === 'number') setStep(parsed.step);
         if (typeof parsed.name === 'string') setName(parsed.name);
         if (typeof parsed.timezone === 'string') setTimezone(parsed.timezone);
@@ -111,7 +118,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
   useEffect(() => {
     try {
       const state = { step, name, timezone, defaultSymbol, selectedProvider, tradingStyle, selectedSymbols };
-      sessionStorage.setItem('hfx_onboarding_wizard', JSON.stringify(state));
+      sessionStorage.setItem(onboardingStorageKey, JSON.stringify(state));
     } catch {
       // ignore
     }
@@ -193,14 +200,19 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
   function handleSubmit() {
     startSubmit(async () => {
       try {
-        const currentPrefs = JSON.parse(localStorage.getItem('hamafx:prefs') || '{}');
-        localStorage.setItem('hamafx:prefs', JSON.stringify({
+        const currentPrefs = JSON.parse(
+          localStorage.getItem('kestrel:prefs:v1') ??
+            localStorage.getItem('hamafx:prefs') ??
+            '{}',
+        );
+        localStorage.setItem('kestrel:prefs:v1', JSON.stringify({
           ...currentPrefs,
           defaultSymbol: defaultSymbol || selectedSymbols[0] || DEFAULT_WATCHLIST_SYMBOLS[0],
           timeFormat: currentPrefs.timeFormat || '24h',
           reduceMotion: currentPrefs.reduceMotion || false,
           tradingStyle: tradingStyle,
         }));
+        localStorage.removeItem('hamafx:prefs');
       } catch {
         // ignore
       }
@@ -220,7 +232,8 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
       try {
         const res = await completeOnboardingAction(fd);
         if (res.ok) {
-          sessionStorage.removeItem('hfx_onboarding_wizard');
+          sessionStorage.removeItem(onboardingStorageKey);
+          sessionStorage.removeItem(legacyOnboardingStorageKey);
           router.push('/chat');
           router.refresh();
         } else {
@@ -247,7 +260,8 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
       try {
         const res = await completeOnboardingAction(fd);
         if (res.ok) {
-          sessionStorage.removeItem('hfx_onboarding_wizard');
+          sessionStorage.removeItem(onboardingStorageKey);
+          sessionStorage.removeItem(legacyOnboardingStorageKey);
           router.push('/chat');
           router.refresh();
         } else {

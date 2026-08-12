@@ -50,6 +50,7 @@ import {
 } from '@kestrel/shared';
 import { useCopied } from '@/hooks/use-copied';
 
+import { KestrelBrand } from '@/components/brand/kestrel-brand';
 import { Tooltip } from '@/components/ui/tooltip';
 import { cn } from '@/lib/cn';
 import { MAX_TEXT_CHARS } from './composer-helpers';
@@ -86,7 +87,7 @@ const REGEN_MENU_TRIGGER = 'regen-menu-trigger';
  * Popover API handles this automatically; this only applies to the manual
  * fallback for browsers without support.
  */
-const REGEN_CLOSE_ALL = 'hamafx:close-regen-menus';
+const REGEN_CLOSE_ALL = 'kestrel:close-regen-menus';
 
 function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: MessageProps) {
   const isUser = message.role === 'user';
@@ -221,11 +222,12 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
             aria-hidden="true"
             className="mt-1 shrink-0 inline-flex size-4 items-center justify-center"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-brand" aria-hidden="true">
-              <rect x="4" y="6" width="3" height="12" rx="1" fill="currentColor" />
-              <rect x="10" y="3" width="3" height="18" rx="1" fill="currentColor" opacity="0.6" />
-              <rect x="17" y="8" width="3" height="10" rx="1" fill="currentColor" />
-            </svg>
+            <KestrelBrand
+              variant="mark"
+              markSize="xs"
+              decorative
+              className={cn(isStreaming ? 'opacity-100' : 'opacity-80')}
+            />
           </span>
         ) : null}
         <div className={cn('flex flex-col gap-2', !isUser && !isSystem ? 'min-w-0 flex-1' : 'w-full')}>

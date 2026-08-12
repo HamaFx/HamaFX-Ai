@@ -21,7 +21,7 @@
 // Why move it: the Vercel route was the closest one to the 60 s function
 // ceiling. Embedding 256 rows × ~150 ms/row burns most of the budget on
 // the AI Gateway round-trips. On the worker the same code runs without a
-// time cap (systemd kills only on 10 min — see hamafx-job-embedding-backfill.timer
+// time cap (systemd kills only on 10 min — see kestrel-job-embedding-backfill.timer
 // in PR-15).
 //
 // We import the existing `backfillEmbeddings` from @kestrel/ai unchanged —

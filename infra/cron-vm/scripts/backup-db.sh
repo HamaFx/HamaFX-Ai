@@ -13,11 +13,11 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/_load-env.sh" /opt/hamafx/.env
+source "$SCRIPT_DIR/_load-env.sh" /opt/kestrel/.env
 source "$SCRIPT_DIR/backup-storage.sh"
 
 DB_DUMP_URL="${DIRECT_URL:-${POSTGRES_URL_NON_POOLING:-${DATABASE_URL:-${POSTGRES_URL:-}}}}"
-: "${DB_DUMP_URL:?Set DIRECT_URL (preferred) or POSTGRES_URL_NON_POOLING / DATABASE_URL / POSTGRES_URL in /opt/hamafx/.env}"
+: "${DB_DUMP_URL:?Set DIRECT_URL (preferred) or POSTGRES_URL_NON_POOLING / DATABASE_URL / POSTGRES_URL in /opt/kestrel/.env}"
 
 HC_UUID="${HC_BACKUP_DB_UUID:-}"
 DATE_UTC="$(date -u +%Y-%m-%d)"

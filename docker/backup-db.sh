@@ -37,7 +37,7 @@ prune_old_backups() {
 
 run_backup() {
   timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
-  destination="$BACKUP_DIR/hamafx-$timestamp.dump.gz"
+  destination="$BACKUP_DIR/kestrel-$timestamp.dump.gz"
   temporary="$destination.tmp.$$"
 
   log "starting dump destination=$(basename "$destination")"

@@ -20,7 +20,7 @@
 // bookmark store (yet) — keeping the saved set in localStorage means the
 // user gets persistence without us shipping a new DB table just for this.
 //
-// Storage key: hamafx:news:bookmarks → JSON array of article ids.
+// Storage key: kestrel:news:bookmarks → JSON array of article ids.
 // Cross-tab sync via the `storage` event so toggling on one tab updates
 // the badge on another.
 

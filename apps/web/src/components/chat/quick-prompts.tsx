@@ -36,6 +36,7 @@ import { useMemo, memo } from 'react';
 import type { Symbol } from '@kestrel/shared';
 import {IconChartBar, IconBell, IconCalendarEvent, IconChartLine, IconTrendingUp} from '@tabler/icons-react';
 
+import { cn } from '@/lib/cn';
 import { getSessionInfo, type TradingSession } from '@/lib/session';
 
 interface QuickPromptsProps {
@@ -57,7 +58,7 @@ interface Prompt {
 const NO_PIN_PROMPTS: Record<TradingSession, readonly Prompt[]> = {
   asian: [
     { icon: IconTrendingUp, label: "What's moving in Asia today?", fg: 'text-fg' },
-    { icon: IconCalendarEvent, label: "Today's calendar", fg: 'text-accent' },
+    { icon: IconCalendarEvent, label: "Today's calendar", fg: 'text-brand' },
     { icon: IconChartLine, label: 'Top-down gold 4H→15M', fg: 'text-info' },
     { icon: IconChartBar, label: 'Show me the structure', fg: 'text-info' },
     { icon: IconBell, label: 'Alert gold above 2400', fg: 'text-warn' },
@@ -66,27 +67,27 @@ const NO_PIN_PROMPTS: Record<TradingSession, readonly Prompt[]> = {
     { icon: IconTrendingUp, label: 'London open — bias on majors?', fg: 'text-fg' },
     { icon: IconChartLine, label: 'Top-down EURUSD 4H→15M', fg: 'text-info' },
     { icon: IconChartBar, label: 'Show me the structure', fg: 'text-info' },
-    { icon: IconCalendarEvent, label: "London session calendar", fg: 'text-accent' },
+    { icon: IconCalendarEvent, label: "London session calendar", fg: 'text-brand' },
     { icon: IconBell, label: 'Alert EURUSD above 1.0900', fg: 'text-warn' },
   ],
   ny: [
     { icon: IconTrendingUp, label: 'NY session plan for XAUUSD', fg: 'text-fg' },
     { icon: IconChartLine, label: 'Top-down XAUUSD 4H→15M', fg: 'text-info' },
     { icon: IconChartBar, label: 'Show me the structure', fg: 'text-info' },
-    { icon: IconCalendarEvent, label: "NY session calendar", fg: 'text-accent' },
+    { icon: IconCalendarEvent, label: "NY session calendar", fg: 'text-brand' },
     { icon: IconBell, label: 'Alert gold above 2400', fg: 'text-warn' },
   ],
   closed: [
     { icon: IconChartBar, label: 'How did today close?', fg: 'text-info' },
     { icon: IconTrendingUp, label: 'Daily bias recap', fg: 'text-fg' },
     { icon: IconChartLine, label: 'Top-down gold 4H→15M', fg: 'text-info' },
-    { icon: IconCalendarEvent, label: "Tomorrow's calendar", fg: 'text-accent' },
+    { icon: IconCalendarEvent, label: "Tomorrow's calendar", fg: 'text-brand' },
     { icon: IconBell, label: 'Set an alert for tomorrow', fg: 'text-warn' },
   ],
   weekend: [
     { icon: IconTrendingUp, label: 'Weekly bias — what is your read?', fg: 'text-fg' },
     { icon: IconChartBar, label: 'Weekly structure recap', fg: 'text-info' },
-    { icon: IconCalendarEvent, label: 'Next week calendar', fg: 'text-accent' },
+    { icon: IconCalendarEvent, label: 'Next week calendar', fg: 'text-brand' },
     { icon: IconChartLine, label: 'Key levels to watch', fg: 'text-info' },
     { icon: IconBell, label: 'Set alert for Sunday open', fg: 'text-warn' },
   ],
@@ -98,7 +99,7 @@ function generatePinnedPrompts(symbol: string, session: TradingSession): readonl
     case 'asian':
       return [
         { icon: IconTrendingUp, label: `${s} Asian range and key levels`, fg: 'text-fg' },
-        { icon: IconCalendarEvent, label: `${s} news impact today`, fg: 'text-accent' },
+        { icon: IconCalendarEvent, label: `${s} news impact today`, fg: 'text-brand' },
         { icon: IconChartLine, label: `Top-down ${s} 4H→15M`, fg: 'text-info' },
         { icon: IconChartBar, label: `${s} Asian session structure`, fg: 'text-info' },
         { icon: IconBell, label: `Alert ${s} break of recent high`, fg: 'text-warn' },
@@ -108,7 +109,7 @@ function generatePinnedPrompts(symbol: string, session: TradingSession): readonl
         { icon: IconTrendingUp, label: `London open bias for ${s}`, fg: 'text-fg' },
         { icon: IconChartLine, label: `Top-down ${s} 4H→15M`, fg: 'text-info' },
         { icon: IconChartBar, label: `London session ${s} key levels`, fg: 'text-info' },
-        { icon: IconCalendarEvent, label: `European news affecting ${s}`, fg: 'text-accent' },
+        { icon: IconCalendarEvent, label: `European news affecting ${s}`, fg: 'text-brand' },
         { icon: IconBell, label: `Alert ${s} below London low`, fg: 'text-warn' },
       ];
     case 'ny':
@@ -116,7 +117,7 @@ function generatePinnedPrompts(symbol: string, session: TradingSession): readonl
         { icon: IconTrendingUp, label: `NY session plan for ${s}`, fg: 'text-fg' },
         { icon: IconChartLine, label: `Top-down ${s} 4H→15M`, fg: 'text-info' },
         { icon: IconChartBar, label: `${s} news & market correlation`, fg: 'text-info' },
-        { icon: IconCalendarEvent, label: `NY session calendar for USD`, fg: 'text-accent' },
+        { icon: IconCalendarEvent, label: `NY session calendar for USD`, fg: 'text-brand' },
         { icon: IconBell, label: `Alert ${s} break of high`, fg: 'text-warn' },
       ];
     case 'closed':
@@ -124,14 +125,14 @@ function generatePinnedPrompts(symbol: string, session: TradingSession): readonl
         { icon: IconChartBar, label: `How did ${s} close today?`, fg: 'text-info' },
         { icon: IconTrendingUp, label: `${s} daily bias recap`, fg: 'text-fg' },
         { icon: IconChartLine, label: `Top-down ${s} 4H→15M`, fg: 'text-info' },
-        { icon: IconCalendarEvent, label: `Tomorrow's ${s} news outlook`, fg: 'text-accent' },
+        { icon: IconCalendarEvent, label: `Tomorrow's ${s} news outlook`, fg: 'text-brand' },
         { icon: IconBell, label: `Set an alert for ${s} tomorrow`, fg: 'text-warn' },
       ];
     case 'weekend':
       return [
         { icon: IconTrendingUp, label: `${s} weekly bias & structure`, fg: 'text-fg' },
         { icon: IconChartBar, label: `Weekly ${s} sentiment & COT check`, fg: 'text-info' },
-        { icon: IconCalendarEvent, label: `Next week ${s} news calendar`, fg: 'text-accent' },
+        { icon: IconCalendarEvent, label: `Next week ${s} news calendar`, fg: 'text-brand' },
         { icon: IconChartLine, label: `${s} key levels to watch next week`, fg: 'text-info' },
         { icon: IconBell, label: `Set ${s} alert for Sunday open`, fg: 'text-warn' },
       ];
@@ -175,7 +176,10 @@ export const QuickPrompts = memo(function QuickPrompts({
             className="border border-border bg-bg-elev-1 text-fg hover:bg-bg-elev-3 focus-visible:ring-fg flex h-14 items-center gap-3 rounded-sm px-4 py-3 text-left text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 disabled:opacity-50"
           >
             <span
-              className={`shrink-0 inline-flex size-8 items-center justify-center rounded-sm border border-border bg-bg-elev-2 text-fg-muted`}
+              className={cn(
+                'shrink-0 inline-flex size-8 items-center justify-center rounded-sm border border-border bg-bg-elev-2',
+                p.fg,
+              )}
             >
               <Icon className="size-4" strokeWidth={2} aria-hidden="true" />
             </span>

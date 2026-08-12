@@ -62,7 +62,7 @@ User-provided AI provider keys (BYOK) are encrypted at rest using AES-256-GCM wi
 
 ### Row-Level Security (RLS)
 
-Fresh self-hosted installs are single-user only (`MULTI_USER_ENABLED=0`, `HAMAFX_ENABLE_RLS=0`, `REGISTRATION_MODE=owner-first`). Multi-user/RLS mode is disabled in this OSS release. The environment parser, database client, and runtime migration entrypoint reject either flag before the application starts or mutates the database. This boundary remains in place until every user-data query establishes tenant context and the PostgreSQL isolation suite passes.
+Fresh self-hosted installs are single-user only (`MULTI_USER_ENABLED=0`, `KESTREL_ENABLE_RLS=0`, `REGISTRATION_MODE=owner-first`). Multi-user/RLS mode is disabled in this OSS release. The environment parser, database client, and runtime migration entrypoint reject either flag before the application starts or mutates the database. This boundary remains in place until every user-data query establishes tenant context and the PostgreSQL isolation suite passes.
 
 Because the current query paths do not consistently establish tenant context, the single-user runtime migrator removes the unconditional RLS policies after applying the schema. Do not treat `userId` predicates alone as a substitute for database tenant isolation. When shared mode is eventually enabled, it must use PostgreSQL, a dedicated `ADMIN_DATABASE_URL` BYPASSRLS role for worker/cron operations, and the complete migration chain.
 
@@ -124,9 +124,9 @@ Kestrel integrates with multiple market data providers (BiQuote, Finnhub, Market
 
 | Environment | Method |
 |-------------|--------|
-| Local dev | Auto-generated to `.hamafx/dev-secrets.json` (gitignored) |
+| Local dev | Auto-generated to `.kestrel/dev-secrets.json` (gitignored) |
 | Docker | `.env` file (gitignored, from `.env.example` template) |
 | Production (hosted) | GCP Secret Manager (`SECRETS_VAULT_PROVIDER=gcp-secret-manager`) |
 | Self-hosted | `.env` file or your preferred secrets manager |
 
-**Never commit secrets.** The `.gitignore` excludes `.env`, `.env.local`, `.hamafx/`, and `docker-compose.override.yml`.
+**Never commit secrets.** The `.gitignore` excludes `.env`, `.env.local`, `.kestrel/`, and `docker-compose.override.yml`.

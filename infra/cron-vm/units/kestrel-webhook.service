@@ -1,0 +1,26 @@
+[Unit]
+Description=Kestrel GitHub webhook listener
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=kestrel
+Group=kestrel
+WorkingDirectory=/opt/kestrel
+EnvironmentFile=/opt/kestrel/.env
+Environment=WEBHOOK_PORT=9000
+ExecStart=/usr/bin/python3 /opt/kestrel/scripts/webhook-listener.py
+Restart=always
+RestartSec=10
+TimeoutStopSec=10
+
+NoNewPrivileges=true
+PrivateTmp=true
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=kestrel-webhook
+
+[Install]
+WantedBy=multi-user.target

@@ -6,7 +6,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/_load-env.sh" /opt/hamafx/.env
+source "$SCRIPT_DIR/_load-env.sh" /opt/kestrel/.env
 source "$SCRIPT_DIR/backup-storage.sh"
 
 if backup_storage_available; then

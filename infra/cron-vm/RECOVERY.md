@@ -1,7 +1,7 @@
 # Kestrel Disaster Recovery Playbook
 
 > Read-only-first recovery procedures for the production worker VM.
-> The active VM is `hamafx-cron` in GCP project
+> The active VM is `kestrel-cron` in GCP project
 > `gen-lang-client-0103421645`, zone `us-central1-a`.
 >
 > Backblaze B2 setup is intentionally deferred. Until the operator creates the
@@ -13,13 +13,13 @@
 ```bash
 export PROJECT_ID="gen-lang-client-0103421645"
 export ZONE="us-central1-a"
-export VM="hamafx-cron"
+export VM="kestrel-cron"
 
 # The following become available only after B2 is configured:
 export B2_BUCKET="<configured-b2-bucket>"
 ```
 
-Never print or commit `/opt/hamafx/.env`. It contains database credentials,
+Never print or commit `/opt/kestrel/.env`. It contains database credentials,
 cron authentication, provider keys, and health-check IDs.
 
 ## Scenario 1 — Restore a database backup into a temporary database
@@ -28,29 +28,29 @@ After B2 is configured and a backup exists:
 
 ```bash
 # 1. List recent dumps.
-rclone lsl "hamafx:${B2_BUCKET}/db" | sort -k2 | tail -10
+rclone lsl "kestrel:${B2_BUCKET}/db" | sort -k2 | tail -10
 
 # 2. Download one dump locally.
-LATEST=$(rclone lsf --files-only "hamafx:${B2_BUCKET}/db" | sort | tail -1)
-rclone copyto "hamafx:${B2_BUCKET}/db/${LATEST}" /tmp/latest.dump.gz
+LATEST=$(rclone lsf --files-only "kestrel:${B2_BUCKET}/db" | sort | tail -1)
+rclone copyto "kestrel:${B2_BUCKET}/db/${LATEST}" /tmp/latest.dump.gz
 gunzip -c /tmp/latest.dump.gz > /tmp/latest.dump
 
 # 3. Start a throwaway PostgreSQL container.
-docker run --rm -d --name hamafx-restore \
-  -e POSTGRES_USER=verify -e POSTGRES_PASSWORD=verify -e POSTGRES_DB=hamafx \
+docker run --rm -d --name kestrel-restore \
+  -e POSTGRES_USER=verify -e POSTGRES_PASSWORD=verify -e POSTGRES_DB=kestrel \
   -p 55432:5432 pgvector/pgvector:pg16
 sleep 10
 
 # 4. Restore and inspect only the temporary database.
 PGPASSWORD=verify pg_restore --no-owner --no-privileges \
-  -h 127.0.0.1 -p 55432 -U verify -d hamafx /tmp/latest.dump
-PGPASSWORD=verify psql -h 127.0.0.1 -p 55432 -U verify -d hamafx \
+  -h 127.0.0.1 -p 55432 -U verify -d kestrel /tmp/latest.dump
+PGPASSWORD=verify psql -h 127.0.0.1 -p 55432 -U verify -d kestrel \
   -c 'SELECT COUNT(*) FROM journal_entries;'
-PGPASSWORD=verify psql -h 127.0.0.1 -p 55432 -U verify -d hamafx \
+PGPASSWORD=verify psql -h 127.0.0.1 -p 55432 -U verify -d kestrel \
   -c 'SELECT COUNT(*) FROM chat_threads;'
 
 # 5. Remove temporary files/container.
-docker rm -f hamafx-restore
+docker rm -f kestrel-restore
 rm -f /tmp/latest.dump /tmp/latest.dump.gz
 ```
 
@@ -61,7 +61,7 @@ intentionally not automated here.
 ## Scenario 2 — Restore journal data for inspection
 
 ```bash
-rclone copyto "hamafx:${B2_BUCKET}/journal/$(date -u +%Y-%m-%d).json" /tmp/journal.json
+rclone copyto "kestrel:${B2_BUCKET}/journal/$(date -u +%Y-%m-%d).json" /tmp/journal.json
 jq 'length' /tmp/journal.json
 jq '.[0]' /tmp/journal.json
 rm -f /tmp/journal.json
@@ -72,17 +72,17 @@ rm -f /tmp/journal.json
 ```bash
 gcloud compute ssh "$VM" --zone="$ZONE" --project="$PROJECT_ID"
 sudo docker ps -a
-sudo docker inspect hamafx-worker --format '{{.State.Status}} {{.State.Health.Status}}'
-sudo docker logs --tail 200 hamafx-worker
-cat /opt/hamafx/.deployed-sha
+sudo docker inspect kestrel-worker --format '{{.State.Status}} {{.State.Health.Status}}'
+sudo docker logs --tail 200 kestrel-worker
+cat /opt/kestrel/.deployed-sha
 ```
 
-The worker is a Docker container, not a `hamafx-worker.service` systemd unit.
+The worker is a Docker container, not a `kestrel-worker.service` systemd unit.
 The Docker Compose file forces `WORKER_MODE=docker`, so heavy jobs run through
 the internal scheduler. Do not restore old heavy-job systemd timers; that could
 run jobs twice.
 
-The `hamafx-update.timer` normally pulls `origin/main`, rebuilds worker-
+The `kestrel-update.timer` normally pulls `origin/main`, rebuilds worker-
 relevant changes, waits for Docker health, and rolls back an unhealthy image.
 
 ## Scenario 4 — Rebuild the worker from a known-good commit
@@ -91,11 +91,11 @@ Only use this during an incident and after recording the current SHA:
 
 ```bash
 gcloud compute ssh "$VM" --zone="$ZONE" --project="$PROJECT_ID" \
-  --command="sudo -u hamafx git -C /opt/hamafx/app fetch origin"
+  --command="sudo -u kestrel git -C /opt/kestrel/app fetch origin"
 gcloud compute ssh "$VM" --zone="$ZONE" --project="$PROJECT_ID" \
-  --command="sudo -u hamafx git -C /opt/hamafx/app reset --hard <known-good-sha>"
+  --command="sudo -u kestrel git -C /opt/kestrel/app reset --hard <known-good-sha>"
 gcloud compute ssh "$VM" --zone="$ZONE" --project="$PROJECT_ID" \
-  --command="sudo bash /opt/hamafx/scripts/deploy-worker.sh"
+  --command="sudo bash /opt/kestrel/scripts/deploy-worker.sh"
 ```
 
 Push the fix to GitHub before unmasking the self-update timer, otherwise the
@@ -107,7 +107,7 @@ If the VM is lost, create a replacement only after confirming the current
 instance and disk cannot be recovered. Reuse the actual project and zone:
 
 ```bash
-gcloud compute instances create hamafx-cron \
+gcloud compute instances create kestrel-cron \
   --zone="$ZONE" --project="$PROJECT_ID" \
   --machine-type=e2-medium \
   --image-family=ubuntu-2404-lts-amd64 \
@@ -116,27 +116,27 @@ gcloud compute instances create hamafx-cron \
   --boot-disk-type=pd-standard
 ```
 
-Then provision Docker, restore the operator-managed `/opt/hamafx/.env` with
+Then provision Docker, restore the operator-managed `/opt/kestrel/.env` with
 mode `600`, deploy the worker, and verify the public health path. Do not place
 that environment file in Secret Manager; manual recovery was selected.
 
-## Scenario 6 — Recover `/opt/hamafx/.env` manually
+## Scenario 6 — Recover `/opt/kestrel/.env` manually
 
 The VM settings are intentionally not backed up to Secret Manager. Restore the
 file from the operator's secure manual record:
 
 ```bash
-sudo install -o hamafx -g hamafx -m 600 \
-  /secure/operator-record/hamafx.env /opt/hamafx/.env
+sudo install -o kestrel -g kestrel -m 600 \
+  /secure/operator-record/kestrel.env /opt/kestrel/.env
 sudo systemctl daemon-reload
-sudo docker compose -f /opt/hamafx/docker-compose.yml up -d --force-recreate worker
+sudo docker compose -f /opt/kestrel/docker-compose.yml up -d --force-recreate worker
 ```
 
 Verify only safe properties:
 
 ```bash
-sudo stat -c '%U %G %a %n' /opt/hamafx/.env
-sudo grep -E '^(PRODUCTION_URL|BACKUP_PROVIDER|B2_BUCKET)=' /opt/hamafx/.env \
+sudo stat -c '%U %G %a %n' /opt/kestrel/.env
+sudo grep -E '^(PRODUCTION_URL|BACKUP_PROVIDER|B2_BUCKET)=' /opt/kestrel/.env \
   | sed -E 's/=.*/=<configured-or-empty>/'
 ```
 
@@ -146,7 +146,7 @@ After creating the B2 account and restricted application key:
 
 ```bash
 # Install rclone on the VM using the approved distribution package.
-# Then add these values to /opt/hamafx/.env, without printing them:
+# Then add these values to /opt/kestrel/.env, without printing them:
 BACKUP_PROVIDER=b2
 B2_BUCKET=<private-bucket-name>
 B2_KEY_ID=<restricted-application-key-id>
@@ -165,7 +165,7 @@ Always update Vercel first, then the VM. Never print the value in logs:
 ```bash
 # Update CRON_SECRET in Vercel Production, deploy, then update the VM file.
 gcloud compute ssh "$VM" --zone="$ZONE" --project="$PROJECT_ID" \
-  --command="sudo sed -i 's/^CRON_SECRET=.*/CRON_SECRET=<new-value>/' /opt/hamafx/.env"
+  --command="sudo sed -i 's/^CRON_SECRET=.*/CRON_SECRET=<new-value>/' /opt/kestrel/.env"
 ```
 
 Restart the worker only if its environment uses the rotated value. Verify the

@@ -32,9 +32,10 @@ import { useConfirm } from '@/components/ui/confirm-drawer';
 import { clearChatHistoryAction, deleteAccountAction, exportDataAction } from '../../actions';
 import { SettingsRow } from '../settings-row';
 import { RowDivider } from '../row-divider';
+import { migrateLegacyStorageNamespace } from '@/lib/storage';
 
-const KEY_BOOKMARKS = 'hamafx:news:bookmarks';
-const KEY_PREFS = 'hamafx:prefs:v1';
+const KEY_BOOKMARKS = 'kestrel:news:bookmarks';
+const KEY_PREFS = 'kestrel:prefs:v1';
 
 interface Counts {
   bookmarks: number;
@@ -43,6 +44,7 @@ interface Counts {
 
 function readCounts(): Counts {
   if (typeof window === 'undefined') return { bookmarks: 0, storage: 0 };
+  migrateLegacyStorageNamespace();
   let bookmarks = 0;
   let storage = 0;
   try {
@@ -56,7 +58,7 @@ function readCounts(): Counts {
   }
   for (let i = 0; i < window.localStorage.length; i += 1) {
     const k = window.localStorage.key(i);
-    if (k && k.startsWith('hamafx:')) storage += 1;
+    if (k && k.startsWith('kestrel:')) storage += 1;
   }
   return { bookmarks, storage };
 }
@@ -73,7 +75,7 @@ export function DataCard() {
   useEffect(() => {
     setCounts(readCounts());
     function onStorage(e: StorageEvent) {
-      if (!e.key || e.key.startsWith('hamafx:')) setCounts(readCounts());
+      if (!e.key || e.key.startsWith('kestrel:')) setCounts(readCounts());
     }
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
@@ -138,11 +140,11 @@ export function DataCard() {
     const keys: string[] = [];
     for (let i = 0; i < window.localStorage.length; i += 1) {
       const k = window.localStorage.key(i);
-      if (k && k.startsWith('hamafx:')) keys.push(k);
+      if (k && k.startsWith('kestrel:')) keys.push(k);
     }
     keys.forEach((k) => window.localStorage.removeItem(k));
     setCounts(readCounts());
-    window.dispatchEvent(new CustomEvent('hamafx:storage-cleared'));
+    window.dispatchEvent(new CustomEvent('kestrel:storage-cleared'));
     toast.success('All local data cleared');
   }
 
@@ -273,7 +275,7 @@ export function DataCard() {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `hamafx-export-${Date.now()}.json`;
+                a.download = `kestrel-export-${Date.now()}.json`;
                 a.click();
                 URL.revokeObjectURL(url);
                 toast.success('Data export ready');

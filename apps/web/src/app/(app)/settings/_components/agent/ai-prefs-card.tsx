@@ -29,7 +29,7 @@ export interface AIPrefs {
   customInstructions: string;
 }
 
-export const AI_PREFS_STORAGE_KEY = 'hamafx:ai-prefs:v1';
+export const AI_PREFS_STORAGE_KEY = 'kestrel:ai-prefs:v1';
 
 /**
  * Phase A — UX_UPGRADE_PLAN.md item 6.

@@ -6,7 +6,7 @@ A GCE `e2-medium` instance that runs the Docker worker and fires lightweight cro
 
 | Property | Value |
 |----------|-------|
-| Name | `hamafx-cron` |
+| Name | `kestrel-cron` |
 | Project | `gen-lang-client-0103421645` |
 | Zone | `us-central1-a` |
 | Machine type | `e2-medium` (2 vCPU, 4 GB RAM) |
@@ -58,26 +58,26 @@ Vercel Cron schedules.
 
 ```bash
 # From the repo root — stage the Docker provisioner and cron-vm files
-gcloud compute scp -r infra/cron-vm hamafx-cron:/tmp/hamafx-cron \
+gcloud compute scp -r infra/cron-vm kestrel-cron:/tmp/kestrel-cron \
   --zone=us-central1-a --project=gen-lang-client-0103421645
-gcloud compute ssh hamafx-cron \
+gcloud compute ssh kestrel-cron \
   --zone=us-central1-a --project=gen-lang-client-0103421645 \
-  --command="sudo bash /tmp/hamafx-cron/_provision-docker.sh"
+  --command="sudo bash /tmp/kestrel-cron/_provision-docker.sh"
 ```
 
 ## Environment
 
-The VM reads `/opt/hamafx/.env` which must contain:
+The VM reads `/opt/kestrel/.env` which must contain:
 
 ```bash
-PRODUCTION_URL=https://hamafx-ai.vercel.app
+PRODUCTION_URL=https://kestrel-ai.vercel.app
 CRON_SECRET=<your-cron-secret>
 ```
 
 To update the secret:
 ```bash
-gcloud compute ssh hamafx-cron --zone=us-central1-a --project=gen-lang-client-0103421645 --command="sudo tee /opt/hamafx/.env << EOF
-PRODUCTION_URL=https://hamafx-ai.vercel.app
+gcloud compute ssh kestrel-cron --zone=us-central1-a --project=gen-lang-client-0103421645 --command="sudo tee /opt/kestrel/.env << EOF
+PRODUCTION_URL=https://kestrel-ai.vercel.app
 CRON_SECRET=<new-secret>
 EOF"
 ```
@@ -87,20 +87,20 @@ EOF"
 The Docker worker is the always-on process. Use `docker logs` and the worker health endpoint for it; use `journalctl` for host timers and maintenance services.
 
 ```bash
-# View recent journald output for any hamafx unit
-gcloud compute ssh hamafx-cron --zone=us-central1-a \
-  --command="sudo journalctl -u 'hamafx-*' -n 50 --no-pager"
+# View recent journald output for any kestrel unit
+gcloud compute ssh kestrel-cron --zone=us-central1-a \
+  --command="sudo journalctl -u 'kestrel-*' -n 50 --no-pager"
 
-# Show every active hamafx timer + when it next fires
-gcloud compute ssh hamafx-cron --zone=us-central1-a \
-  --command="systemctl list-timers --all 'hamafx-*' --no-pager"
+# Show every active kestrel timer + when it next fires
+gcloud compute ssh kestrel-cron --zone=us-central1-a \
+  --command="systemctl list-timers --all 'kestrel-*' --no-pager"
 
 # Tail the always-on worker
-gcloud compute ssh hamafx-cron --zone=us-central1-a \
-  --command="sudo docker logs -f --tail 200 hamafx-worker"
+gcloud compute ssh kestrel-cron --zone=us-central1-a \
+  --command="sudo docker logs -f --tail 200 kestrel-worker"
 ```
 
-The legacy `tail /var/log/hamafx-cron.log` still works for any pre-PR-15
+The legacy `tail /var/log/kestrel-cron.log` still works for any pre-PR-15
 crontab activity, but every Phase 8+ run goes to journald.
 
 ## Cost optimization
@@ -117,7 +117,7 @@ backup timers remain installed but are skipped safely by
 `backup-storage-ready.sh`; they must not report false backup success.
 
 When you are ready to connect B2, configure the VM with these values in
-`/opt/hamafx/.env` and install `rclone`:
+`/opt/kestrel/.env` and install `rclone`:
 
 ```bash
 BACKUP_PROVIDER=b2
@@ -146,18 +146,18 @@ If stable allowlisting is needed, the VM can use a **static external IP** so tha
 
 ```bash
 # Reserve a static IP (one-time)
-gcloud compute addresses create hamafx-cron-ip \
+gcloud compute addresses create kestrel-cron-ip \
   --region=us-central1 --project=gen-lang-client-0103421645
 
 # Attach it to the VM (requires the VM to be stopped briefly)
-gcloud compute instances stop hamafx-cron --zone=us-central1-a --project=gen-lang-client-0103421645
-gcloud compute instances describe hamafx-cron \
+gcloud compute instances stop kestrel-cron --zone=us-central1-a --project=gen-lang-client-0103421645
+gcloud compute instances describe kestrel-cron \
   --zone=us-central1-a --project=gen-lang-client-0103421645 \
   --format='get(networkInterfaces[0].accessConfigs[0].natIP)'
-gcloud compute instances add-access-config hamafx-cron \
+gcloud compute instances add-access-config kestrel-cron \
   --zone=us-central1-a --project=gen-lang-client-0103421645 \
   --address=<RESERVED_IP> --network-tier=PREMIUM
-gcloud compute instances start hamafx-cron --zone=us-central1-a --project=gen-lang-client-0103421645
+gcloud compute instances start kestrel-cron --zone=us-central1-a --project=gen-lang-client-0103421645
 ```
 
 Cost and availability depend on the active GCP billing account. The current
@@ -175,5 +175,5 @@ environment file in Secret Manager.
 ## Teardown
 
 ```bash
-gcloud compute instances delete hamafx-cron  --zone=us-central1-a --project=gen-lang-client-0103421645 --quiet
+gcloud compute instances delete kestrel-cron  --zone=us-central1-a --project=gen-lang-client-0103421645 --quiet
 ```

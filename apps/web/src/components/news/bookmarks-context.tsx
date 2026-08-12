@@ -15,7 +15,7 @@ interface BookmarksActions {
 const StateContext = createContext<BookmarksState | null>(null);
 const ActionsContext = createContext<BookmarksActions | null>(null);
 
-const STORAGE_KEY = 'hamafx:news:bookmarks';
+const STORAGE_KEY = 'kestrel:news:bookmarks';
 
 export function BookmarksProvider({ children }: { children: React.ReactNode }) {
   const [bookmarkIds, setBookmarkIds] = useLocalStorage<string[]>(STORAGE_KEY, []);

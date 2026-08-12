@@ -1,14 +1,14 @@
 @import 'tailwindcss';
 
 /* -------------------------------------------------------------------------
- * Theme tokens — Kestrel premium trading terminal design system (dark-only).
+ * Theme tokens — Kestrel expressive market workspace (dark-first).
  *
- * Sharp, data-first, with a distinctive brand identity. Near-black canvas,
- * refined grayscale surfaces, orange brand accent (#F07010), sharp geometry
- * (max rounded-sm / 2px). No glassmorphism, no gradients, no glow shadows,
- * no ambient orbs.
+ * Calm near-black surfaces, a warm signal-orange identity, and sharp data
+ * geometry give Kestrel a recognizable presence without turning the terminal
+ * into a noisy dashboard. Sans-serif UI copy pairs with JetBrains Mono for
+ * prices, symbols, charts, code, and technical output.
  *
- * Brand: orange accent (#F07010) used with extreme restraint. Market signals:
+ * Brand: orange is reserved for Kestrel identity and interaction. Market signals:
  * refined green/red/amber reserved for price/P&L data only.
  * System status: dedicated success/danger tokens (distinct from market
  * bull/bear) for form validation, toasts, and destructive actions.
@@ -32,7 +32,9 @@
   /* ── Brand — orange accent (#F07010). Used with EXTREME RESTRAINT. ── */
   --color-brand: #F56E0F;
   --color-brand-fg: #FFFFFF;
+  --color-brand-soft: #FF9A4D;
   --color-brand-glow: rgba(245, 110, 15, 0.15);
+  --color-brand-wash: rgba(245, 110, 15, 0.08);
   /* Subtle orange-tinted border — low light mixed with the brand colour.
      Used on "cool places" (active nav, hero panels, focus edges) to give
      a warm rim without recolouring the entire surface. */
@@ -74,10 +76,8 @@
   --shadow-glow-brand: none;
   --shadow-glow-accent: none;
 
-  /* ── Fonts — JetBrains Mono as primary. Sans stack is also JetBrains
-   *    Mono since the terminal aesthetic is monospace-first. Mono override
-   *    is used for numeric data, code, and data-dense grids. ── */
-  --font-sans: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  /* ── Fonts — expressive UI sans + technical mono. ── */
+  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   /* ── Type scale — refined hierarchy with tighter leading for data density ── */
@@ -175,7 +175,7 @@ html {
     color: var(--color-fg);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
-    text-rendering: geometricPrecision;
+    text-rendering: optimizeLegibility;
   }
 
   .tabular-nums {
@@ -191,7 +191,7 @@ html {
   }
 
   ::selection {
-    background-color: rgba(250, 250, 250, 0.2);
+    background-color: rgba(245, 110, 15, 0.28);
     color: var(--color-fg);
   }
 
@@ -244,6 +244,19 @@ html {
     outline: 2px solid var(--color-fg);
     outline-offset: 1px;
   }
+}
+
+/* -------------------------------------------------------------------------
+ * Brand atmosphere — expressive moments only (auth/onboarding/empty states)
+ * ------------------------------------------------------------------------- */
+.brand-atmosphere {
+  background:
+    radial-gradient(circle at 50% -8%, rgba(245, 110, 15, 0.16), transparent 34rem),
+    var(--color-bg);
+}
+
+.brand-signal-line {
+  background: linear-gradient(90deg, transparent, var(--color-brand), transparent);
 }
 
 /* -------------------------------------------------------------------------

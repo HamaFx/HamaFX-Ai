@@ -225,11 +225,11 @@ export function renderThreadToMarkdown(
 
 /**
  * Build the filename for a downloaded export. Format:
- *   hamafx-<thread-id-slug>-YYYYMMDD.md
+ *   kestrel-<thread-id-slug>-YYYYMMDD.md
  * The id slug is the first 8 hex chars of the UUID, lowercased.
  */
 export function exportFilename(thread: ExportThread, now: Date = new Date()): string {
   const slug = thread.id.replace(/-/g, '').slice(0, 8).toLowerCase();
   const yyyymmdd = `${now.getUTCFullYear()}${String(now.getUTCMonth() + 1).padStart(2, '0')}${String(now.getUTCDate()).padStart(2, '0')}`;
-  return `hamafx-${slug}-${yyyymmdd}.md`;
+  return `kestrel-${slug}-${yyyymmdd}.md`;
 }

@@ -33,6 +33,7 @@ import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
 import { NavTrigger } from '@/components/layout/nav-trigger';
+import { KestrelBrand } from '@/components/brand/kestrel-brand';
 import { useConfirm } from '@/components/ui/confirm-drawer';
 import { Tooltip } from '@/components/ui/tooltip';
 import { cn } from '@/lib/cn';
@@ -185,7 +186,14 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
         'border-b border-border bg-bg/90 backdrop-blur-md px-3 pt-safe',
       )}
     >
-      <NavTrigger />
+      <div className="flex min-w-0 shrink-0 items-center gap-2">
+        <NavTrigger />
+        <KestrelBrand
+          variant="mark"
+          href="/chat"
+          className="inline-flex"
+        />
+      </div>
 
       {/* Center: title + pinned symbol */}
       <div className="flex min-w-0 flex-1 items-center justify-center gap-1.5">

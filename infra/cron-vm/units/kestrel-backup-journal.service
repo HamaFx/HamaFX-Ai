@@ -1,0 +1,27 @@
+[Unit]
+Description=Kestrel nightly journal_entries JSON export → B2 (opt-in)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=kestrel
+Group=kestrel
+WorkingDirectory=/opt/kestrel
+EnvironmentFile=/opt/kestrel/.env
+# Keep this timer installed but skipped until the B2 account is configured.
+ExecCondition=/opt/kestrel/scripts/backup-storage-ready.sh
+ExecStart=/opt/kestrel/scripts/backup-journal.sh
+
+MemoryMax=256M
+TimeoutStartSec=300
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/kestrel /tmp
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=kestrel-backup-journal

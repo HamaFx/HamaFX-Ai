@@ -7,7 +7,7 @@
 // Phase B — UX_UPGRADE_PLAN.md item 14.
 //
 // GET /api/chat/threads/<uuid>/export?format=md (default)
-//   200 text/markdown, attachment filename=hamafx-<slug>-YYYYMMDD.md
+//   200 text/markdown, attachment filename=kestrel-<slug>-YYYYMMDD.md
 //
 // Auth: same NextAuth session gate as the rest of /api/chat.
 // IDOR: scoped by userId; non-owned threads return 404.

@@ -15,15 +15,14 @@ const WEB_DIR = join(import.meta.dirname, '..', 'src');
  * Keep in sync with proxy.ts `config.matcher`.
  */
 const MATCHER_REGEX =
-  /^((?!auth|share|api\/auth|api\/dev\/login|api\/cron|api\/telegram|api\/billing\/webhook|api\/health\/public|api\/admin\/architecture-explorer|debug|sw\.js|sw-precache\.json|_next\/static|_next\/image|favicon\.ico|manifest\.webmanifest|icons|robots\.txt|sitemap\.xml|d3\.v7\.min\.js|architecture-explorer\.html).)*$/;
+  /^((?!auth|share|api\/auth|api\/dev\/login|api\/cron|api\/telegram|api\/billing\/webhook|api\/health\/public|debug|sw\.js|sw-precache\.json|_next\/static|_next\/image|favicon\.ico|manifest\.webmanifest|icons|robots\.txt|sitemap\.xml).)*$/;
 
 /** Exclusion prefixes — routes intentionally NOT covered by middleware. */
 const EXCLUDED_PREFIXES = [
   'auth', 'share', 'api/auth', 'api/dev/login', 'api/cron', 'api/telegram',
-  'api/billing/webhook', 'api/health/public', 'api/admin/architecture-explorer',
+  'api/billing/webhook', 'api/health/public',
   'debug', 'sw.js', 'sw-precache.json', '_next/static', '_next/image',
   'favicon.ico', 'manifest.webmanifest', 'icons', 'robots.txt', 'sitemap.xml',
-  'd3.v7.min.js', 'architecture-explorer.html',
 ];
 
 /** Find all route.ts files recursively. */

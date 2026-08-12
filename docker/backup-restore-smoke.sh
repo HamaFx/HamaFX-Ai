@@ -10,7 +10,7 @@ set -eu
 # Never accept a caller-provided project name: cleanup below is destructive
 # to this project's volumes. The shell PID makes concurrent local/CI runs
 # independent without risking an operator's existing Compose project.
-PROJECT_NAME="hamafx-backup-smoke-$$"
+PROJECT_NAME="kestrel-backup-smoke-$$"
 export COMPOSE_PROJECT_NAME="$PROJECT_NAME"
 
 ROOT_DIR="$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)"
@@ -62,7 +62,7 @@ compose run --rm --no-deps backup /usr/local/bin/backup-healthcheck.sh
 compose exec -T db psql -v ON_ERROR_STOP=1 -U hamafx -d hamafx \
   -c "UPDATE p3_backup_smoke SET marker = 'after-backup' WHERE id = 1;" >/dev/null
 
-HAMAFX_RESTORE_CONFIRM=YES "$ROOT_DIR/docker/restore-db.sh" latest
+KESTREL_RESTORE_CONFIRM=YES "$ROOT_DIR/docker/restore-db.sh" latest
 
 marker="$(compose exec -T db psql -At -U hamafx -d hamafx \
   -c 'SELECT marker FROM p3_backup_smoke WHERE id = 1;' | tr -d '\r')"

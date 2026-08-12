@@ -51,10 +51,11 @@ function resolvePoolMax(): number {
   // Limit pool to 1 during test execution to prevent exhausting transaction poolers
   if (process.env.NODE_ENV === 'test') return 1;
 
-  // Workers set `HAMAFX_RUNTIME=worker` in the systemd unit's
+  // Workers set `KESTREL_RUNTIME=worker` in the systemd unit's
   // environment file so we can pick the right default without
   // pulling Vercel-specific env vars into @kestrel/db.
-  const isWorker = process.env.HAMAFX_RUNTIME === 'worker';
+  const isWorker =
+    (process.env.KESTREL_RUNTIME ?? process.env.HAMAFX_RUNTIME) === 'worker';
   const envOverride = isWorker ? process.env.WORKER_DB_POOL_MAX : process.env.DB_POOL_MAX;
   if (envOverride) {
     const n = Number(envOverride);
@@ -82,7 +83,8 @@ export type DbClient = ReturnType<typeof drizzle>;
 
 function resolveStatementTimeout(): number {
   if (process.env.NODE_ENV === 'test') return 30000;
-  const isWorker = process.env.HAMAFX_RUNTIME === 'worker';
+  const isWorker =
+    (process.env.KESTREL_RUNTIME ?? process.env.HAMAFX_RUNTIME) === 'worker';
   return isWorker ? DEFAULT_WORKER_STATEMENT_TIMEOUT : DEFAULT_WEB_STATEMENT_TIMEOUT;
 }
 
@@ -134,12 +136,12 @@ function resolveSslOptions(): false | { rejectUnauthorized: boolean; ca?: string
   if (process.env.DB_DISABLE_SSL === 'true') {
     if (
       process.env.NODE_ENV !== 'production' ||
-      process.env.HAMAFX_LOCAL_DOCKER === 'true'
+      (process.env.KESTREL_LOCAL_DOCKER ?? process.env.HAMAFX_LOCAL_DOCKER) === 'true'
     ) {
       return false;
     }
     throw new Error(
-      '[db] DB_DISABLE_SSL=true is only permitted with HAMAFX_LOCAL_DOCKER=true; ' +
+      '[db] DB_DISABLE_SSL=true is only permitted with KESTREL_LOCAL_DOCKER=true; ' +
         'configure verified TLS for production databases.',
     );
   }
@@ -190,7 +192,7 @@ export function getDb(): DbClient {
   // doesn't support prepared statements; postgres-js otherwise tries to use them.
   //
   // DB-2: TLS verification is mandatory for non-local production deployments.
-  // Local Compose explicitly opts out through HAMAFX_LOCAL_DOCKER=true and
+  // Local Compose explicitly opts out through KESTREL_LOCAL_DOCKER=true and
   // DB_DISABLE_SSL=true.
   _sql = postgres(url, {
     prepare: false,
@@ -237,11 +239,12 @@ export async function closeDb(): Promise<void> {
  * When false (self-host / legacy mode), the GUC is not set and policies
  * (if they exist) are bypassed by the connection role.
  *
- * Phase 3 §3.6 — gated behind HAMAFX_ENABLE_RLS env var so self-host
- * editions can skip RLS enforcement without code changes.
+ * Phase 3 §3.6 — gated behind KESTREL_ENABLE_RLS env var. The old
+ * HAMAFX_ENABLE_RLS name remains a read-only compatibility fallback.
  */
 function isRlsEnabled(): boolean {
-  return process.env.HAMAFX_ENABLE_RLS === 'true' || process.env.HAMAFX_ENABLE_RLS === '1';
+  const value = process.env.KESTREL_ENABLE_RLS ?? process.env.HAMAFX_ENABLE_RLS;
+  return value === 'true' || value === '1';
 }
 
 function assertTenantIsolationConfig(): void {
@@ -249,12 +252,12 @@ function assertTenantIsolationConfig(): void {
     process.env.MULTI_USER_ENABLED === 'true' || process.env.MULTI_USER_ENABLED === '1';
   if (multiUserEnabled && !isRlsEnabled()) {
     throw new Error(
-      '[db] MULTI_USER_ENABLED requires HAMAFX_ENABLE_RLS=true; refusing to open a database connection without tenant isolation.',
+      '[db] MULTI_USER_ENABLED requires KESTREL_ENABLE_RLS=true; refusing to open a database connection without tenant isolation.',
     );
   }
   if (isRlsEnabled()) {
     throw new Error(
-      '[db] RLS/multi-user mode is disabled in this open-source release until every user-data query establishes tenant context. Keep HAMAFX_ENABLE_RLS=0.',
+      '[db] RLS/multi-user mode is disabled in this open-source release until every user-data query establishes tenant context. Keep KESTREL_ENABLE_RLS=0.',
     );
   }
 }
@@ -423,7 +426,7 @@ let _adminClient: DbClient | null = null;
 let _adminSql: ReturnType<typeof postgres> | null = null;
 
 /**
- * Admin DB client that connects as the `hamafx_admin` role (BYPASSRLS).
+ * Admin DB client that connects as the `kestrel_admin` role (BYPASSRLS).
  *
  * Used by the worker, cron jobs, and migrations for cross-tenant operations
  * that must bypass Row-Level Security. Falls back to the regular `getDb()`

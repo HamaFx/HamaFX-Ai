@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
 
-export const alt = 'Kestrel Analysis';
+export const alt = 'Kestrel market analysis';
 export const size = { width: 1200, height: 630 };
 
 export default async function OGImage({ params }: { params: Promise<{ id: string }> }) {
@@ -32,16 +32,18 @@ export default async function OGImage({ params }: { params: Promise<{ id: string
             style={{
               width: 64,
               height: 64,
-              borderRadius: 16,
-              background: 'rgba(250, 250, 250, 0.12)',
+              borderRadius: 2,
+              background: 'rgba(245, 110, 15, 0.14)',
+              border: '1px solid rgba(245, 110, 15, 0.55)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: 32,
-              color: '#F0F0F0',
+              fontWeight: 800,
+              color: '#F56E0F',
             }}
           >
-            ✦
+            K
           </div>
           <div
             style={{
@@ -53,7 +55,7 @@ export default async function OGImage({ params }: { params: Promise<{ id: string
               Kestrel
             </span>
             <span style={{ fontSize: 20, color: '#808080', marginTop: 4 }}>
-              AI Trading Analysis
+              Market intelligence for gold, forex, and crypto
             </span>
           </div>
         </div>

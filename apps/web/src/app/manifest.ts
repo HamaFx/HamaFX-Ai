@@ -7,7 +7,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Kestrel',
     short_name: 'Kestrel',
-    description: 'AI trading copilot for forex & commodities',
+    description: 'AI market intelligence for gold, forex, and crypto',
     start_url: '/chat',
     display: 'standalone',
     orientation: 'portrait',

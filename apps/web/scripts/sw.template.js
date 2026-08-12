@@ -23,7 +23,7 @@
  * Requirements: 5.1, 5.2, 5.3, 5.5, 5.6, 5.11
  */
 
-const CACHE_NAME = 'hamafx-shell-v__BUILD_ID__';
+const CACHE_NAME = 'kestrel-shell-v__BUILD_ID__';
 const PRECACHE_URL = '/sw-precache.json';
 const NAV_TIMEOUT_MS = 3000;
 
@@ -215,7 +215,7 @@ self.addEventListener('push', (event) => {
       data: { url: data.url ?? '/alerts' },
       icon: '/icons/icon-192.png',
       badge: '/icons/icon-192.png',
-      tag: 'hamafx-alert',
+      tag: 'kestrel-alert',
       renotify: true,
     }),
   );

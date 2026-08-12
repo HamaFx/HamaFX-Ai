@@ -1,0 +1,24 @@
+[Unit]
+Description=Kestrel light cron — delete chat-image blobs older than 7 days
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=kestrel
+Group=kestrel
+EnvironmentFile=/opt/kestrel/.env
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/kestrel
+ExecStart=/usr/bin/curl -fsS -m 60 \
+  -H "Authorization: Bearer ${CRON_SECRET}" \
+  "${PRODUCTION_URL}/api/cron/cleanup-uploads"
+# A missing monitoring ID must not turn a successful cleanup into a failed unit.
+ExecStartPost=/bin/sh -c 'test -z "$HC_CLEANUP_UPLOADS_UUID" || /usr/bin/curl -fsS -m 5 "https://hc-ping.com/${HC_CLEANUP_UPLOADS_UUID}/0"'
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=kestrel-light-cleanup-uploads

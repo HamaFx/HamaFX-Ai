@@ -105,16 +105,16 @@ describe('tenant isolation configuration', () => {
   it('refuses a database connection when multi-user RLS is disabled', async () => {
     vi.stubEnv('DATABASE_URL', 'postgres://mock:5432/db');
     vi.stubEnv('MULTI_USER_ENABLED', '1');
-    vi.stubEnv('HAMAFX_ENABLE_RLS', '0');
+    vi.stubEnv('KESTREL_ENABLE_RLS', '0');
     const { getDb } = await import('../src/client');
-    expect(() => getDb()).toThrow(/MULTI_USER_ENABLED requires HAMAFX_ENABLE_RLS/i);
+    expect(() => getDb()).toThrow(/MULTI_USER_ENABLED requires KESTREL_ENABLE_RLS/i);
     vi.unstubAllEnvs();
   });
 
   it('refuses RLS mode in the OSS release even when explicitly enabled', async () => {
     vi.stubEnv('DATABASE_URL', 'postgres://mock:5432/db');
     vi.stubEnv('MULTI_USER_ENABLED', '0');
-    vi.stubEnv('HAMAFX_ENABLE_RLS', '1');
+    vi.stubEnv('KESTREL_ENABLE_RLS', '1');
     const { getDb } = await import('../src/client');
     expect(() => getDb()).toThrow(/RLS\/multi-user mode is disabled/i);
     vi.unstubAllEnvs();

@@ -34,7 +34,7 @@ const REQUIRED_SECRETS = [
   'BYOK_ENABLED',
   'MULTI_USER_ENABLED',
   'REGISTRATION_MODE',
-  'HAMAFX_ENABLE_RLS',
+  'KESTREL_ENABLE_RLS',
 ];
 
 describe('setup wizard structure', () => {
@@ -187,7 +187,7 @@ describe('generate-env.mjs CLI', () => {
   let dir: string;
 
   beforeEach(() => {
-    dir = mkdtempSync(resolve(tmpdir(), 'hamafx-genenv-'));
+    dir = mkdtempSync(resolve(tmpdir(), 'kestrel-genenv-'));
   });
 
   afterEach(() => {
@@ -228,6 +228,28 @@ describe('generate-env.mjs CLI', () => {
     const content = readFileSync(target, 'utf8');
     expect(content).toContain('AUTH_SECRET=already-set');
     expect(content).toContain('POSTGRES_PASSWORD=');
+  });
+
+  it('migrates the legacy RLS env key while preserving its value', () => {
+    const target = resolve(dir, '.env');
+    writeFileSync(target, 'HAMAFX_ENABLE_RLS=1\n');
+    execFileSync('node', [resolve(root, 'scripts/setup/lib/generate-env.mjs'), '--file', target]);
+
+    const content = readFileSync(target, 'utf8');
+    expect(content).toContain('KESTREL_ENABLE_RLS=1');
+    expect(content).not.toContain('HAMAFX_ENABLE_RLS=');
+  });
+
+  it('removes a deprecated alias even when canonical env keys are complete', () => {
+    const target = resolve(dir, '.env');
+    execFileSync('node', [resolve(root, 'scripts/setup/lib/generate-env.mjs'), '--file', target]);
+    writeFileSync(target, `${readFileSync(target, 'utf8')}HAMAFX_ENABLE_RLS=1\n`);
+
+    execFileSync('node', [resolve(root, 'scripts/setup/lib/generate-env.mjs'), '--file', target]);
+
+    const content = readFileSync(target, 'utf8');
+    expect(content).not.toContain('HAMAFX_ENABLE_RLS=');
+    expect(content).toContain('KESTREL_ENABLE_RLS=0');
   });
 });
 

@@ -34,7 +34,8 @@
 import {IconInfoCircle, IconX} from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
 
-const STORAGE_KEY = 'hfx_banner_dismissed:api-keys-from-chat';
+const STORAGE_KEY = 'kestrel:banner-dismissed:api-keys-from-chat';
+const LEGACY_STORAGE_KEY = 'hfx_banner_dismissed:api-keys-from-chat';
 
 export interface ApiKeysLandingBannerProps {
   /** Optional preserved prompt from the originating /chat deep link. */
@@ -48,8 +49,13 @@ export function ApiKeysLandingBanner({ prompt }: ApiKeysLandingBannerProps) {
   useEffect(() => {
     setHydrated(true);
     try {
-      if (window.localStorage.getItem(STORAGE_KEY) === '1') {
+      const saved =
+        window.localStorage.getItem(STORAGE_KEY) ??
+        window.localStorage.getItem(LEGACY_STORAGE_KEY);
+      if (saved === '1') {
         setDismissed(true);
+        window.localStorage.setItem(STORAGE_KEY, '1');
+        window.localStorage.removeItem(LEGACY_STORAGE_KEY);
       }
     } catch {
       console.warn('[settings] localStorage unavailable in private mode');

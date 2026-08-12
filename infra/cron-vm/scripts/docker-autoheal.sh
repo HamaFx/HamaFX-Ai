@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # infra/cron-vm/scripts/docker-autoheal.sh
 #
-# Runs every minute via hamafx-docker-autoheal.timer.
-# Checks if the hamafx-worker container is healthy.
+# Runs every minute via kestrel-docker-autoheal.timer.
+# Checks if the kestrel-worker container is healthy.
 # If unhealthy for 3 consecutive checks (3 minutes), restarts it.
 #
 # Docker's restart:unless-stopped handles crashes (exit code != 0),
@@ -10,8 +10,8 @@
 
 set -euo pipefail
 
-readonly CONTAINER="hamafx-worker"
-readonly STATE_FILE="/opt/hamafx/.autoheal-state"
+readonly CONTAINER="kestrel-worker"
+readonly STATE_FILE="/opt/kestrel/.autoheal-state"
 readonly MAX_UNHEALTHY=3
 
 log() { printf '%s [autoheal] %s\n' "$(date -u +%FT%TZ)" "$*"; }

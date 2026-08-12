@@ -122,7 +122,7 @@ function getSchemaTableColumns(): Map<string, string[]> {
 
 describe('Phase 6 — Task 28: Schema drift detection', () => {
   let dir: string;
-  beforeEach(() => { dir = mkdtempSync(join(tmpdir(), 'hamafx-drift-')); });
+  beforeEach(() => { dir = mkdtempSync(join(tmpdir(), 'kestrel-drift-')); });
   afterEach(async () => { await closePGliteDb(); });
 
   it('all tables in Drizzle schema exist in migrated database', async () => {

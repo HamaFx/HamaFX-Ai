@@ -91,7 +91,7 @@ jobs:
         working-directory: loadtest
         run: K6_ALLOW_SEED=true npm run seed
         env:
-          DATABASE_URL: postgres://hamafx:loadtest@localhost:5432/hamafx
+          DATABASE_URL: postgres://kestrel:loadtest@localhost:5432/kestrel
 
       # ── Smoke tests (read-mix + write-mix) ────────────────────────
       # The write-mix smoke test (smoke-write-mix.ts) matches the

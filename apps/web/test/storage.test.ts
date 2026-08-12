@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   CHAT_IMAGE_BUCKET_NAME,
   CHAT_IMAGE_MAX_BYTES,
+  migrateLegacyStorageNamespace,
   safeGetItem,
   safeSetItem,
   uploadChatImage,
@@ -17,6 +18,7 @@ beforeEach(() => {
     getItem: vi.fn((key: string) => store[key] ?? null),
     setItem: vi.fn((key: string, value: string) => { store[key] = value; }),
     removeItem: vi.fn((key: string) => { delete store[key]; }),
+    key: vi.fn((index: number) => Object.keys(store)[index] ?? null),
     clear: vi.fn(() => { for (const k in store) delete store[k]; }),
     get length() { return Object.keys(store).length; },
   });
@@ -80,6 +82,27 @@ describe('safeSetItem', () => {
 });
 
 describe('storage constants', () => {
+  it('migrates legacy HamaFX localStorage keys into the Kestrel namespace', () => {
+    localStorage.setItem('hamafx:dashboard-layout:v1', '[{"id":"w1"}]');
+    localStorage.setItem('hamafx:prefs', '{"timeFormat":"24h"}');
+
+    migrateLegacyStorageNamespace();
+
+    expect(localStorage.getItem('kestrel:dashboard-layout:v1')).toBe('[{"id":"w1"}]');
+    expect(localStorage.getItem('kestrel:prefs:v1')).toBe('{"timeFormat":"24h"}');
+    expect(localStorage.getItem('hamafx:dashboard-layout:v1')).toBeNull();
+    expect(localStorage.getItem('hamafx:prefs')).toBeNull();
+  });
+
+  it('preserves a legacy value when migration cannot parse it', () => {
+    localStorage.setItem('hamafx:broken', '{not-json');
+
+    migrateLegacyStorageNamespace();
+
+    expect(localStorage.getItem('hamafx:broken')).toBe('{not-json');
+    expect(localStorage.getItem('kestrel:broken')).toBeNull();
+  });
+
   it('exports the correct bucket name', () => {
     expect(CHAT_IMAGE_BUCKET_NAME).toBe('chat-images');
   });

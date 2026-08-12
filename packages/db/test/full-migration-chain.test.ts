@@ -133,7 +133,7 @@ describe('Phase 6 — Task 27: Full migration chain (all migrations on fresh PGl
   let dir: string;
 
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), 'hamafx-full-chain-'));
+    dir = mkdtempSync(join(tmpdir(), 'kestrel-full-chain-'));
   });
 
   afterEach(async () => {

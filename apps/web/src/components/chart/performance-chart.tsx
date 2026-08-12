@@ -98,7 +98,7 @@ export function PerformanceChart({
         layout: {
           background: { color: 'transparent' },
           textColor: colors.text,
-          fontFamily: getComputedStyle(el).getPropertyValue('--font-sans') || 'Geist Sans, system-ui, sans-serif',
+          fontFamily: getComputedStyle(el).getPropertyValue('--font-mono') || 'ui-monospace, monospace',
         },
         grid: {
           vertLines: { color: 'transparent' },

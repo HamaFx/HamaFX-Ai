@@ -28,21 +28,21 @@ describe('cron VM operational policy', () => {
 
   it('skips backup-dependent systemd units until B2 is ready', () => {
     for (const unit of [
-      'infra/cron-vm/units/hamafx-backup-db.service',
-      'infra/cron-vm/units/hamafx-backup-journal.service',
-      'infra/cron-vm/units/hamafx-verify-restore.service',
-      'infra/cron-vm/units/hamafx-tenant-export.service',
+      'infra/cron-vm/units/kestrel-backup-db.service',
+      'infra/cron-vm/units/kestrel-backup-journal.service',
+      'infra/cron-vm/units/kestrel-verify-restore.service',
+      'infra/cron-vm/units/kestrel-tenant-export.service',
     ]) {
-      expect(read(unit), unit).toContain('ExecCondition=/opt/hamafx/scripts/backup-storage-ready.sh');
+      expect(read(unit), unit).toContain('ExecCondition=/opt/kestrel/scripts/backup-storage-ready.sh');
     }
   });
 
   it('keeps tenant deletion rehearsal dry-run and protects the system account', () => {
     const script = read('infra/cron-vm/scripts/delete-tenant.sh');
-    const unit = read('infra/cron-vm/units/hamafx-tenant-delete.service');
+    const unit = read('infra/cron-vm/units/kestrel-tenant-delete.service');
 
     expect(unit).toContain('delete-tenant.sh __system__');
-    expect(unit).toMatch(/ExecStart=\/opt\/hamafx\/scripts\/delete-tenant\.sh __system__(?:\n|$)/);
+    expect(unit).toMatch(/ExecStart=\/opt\/kestrel\/scripts\/delete-tenant\.sh __system__(?:\n|$)/);
     expect(script).toContain('SAFETY CHECK PASSED');
     expect(script).toContain('chat_messages WHERE thread_id');
     expect(script).toContain('analysis_jobs');
@@ -73,25 +73,35 @@ describe('cron VM operational policy', () => {
     expect(readme).toContain('Do not restore separate heavy-job');
   });
 
+  it('guards the VM cutover against duplicate legacy containers and partial installs', () => {
+    const provisioner = read('infra/cron-vm/_provision-docker.sh');
+
+    expect(provisioner).toContain(
+      'docker compose -p hamafx --project-directory /opt/hamafx down --remove-orphans',
+    );
+    expect(provisioner).toContain('non-empty but incomplete while /opt/hamafx still exists');
+    expect(provisioner).toContain('refusing legacy migration');
+  });
+
   it('installs and protects the host systemd synchronization path', () => {
     const helper = read('infra/cron-vm/scripts/sync-systemd-units.sh');
     const provisioner = read('infra/cron-vm/_provision-docker.sh');
     const update = read('infra/cron-vm/scripts/docker-update.sh');
-    const sudoers = read('infra/cron-vm/sudoers.d/hamafx');
+    const sudoers = read('infra/cron-vm/sudoers.d/kestrel');
 
     expect(helper).toContain("TARGET_DIR='/etc/systemd/system'");
     expect(helper).toContain('! -L "$source"');
     expect(helper).toContain('MANAGED_UNITS');
-    expect(provisioner).toContain('/usr/local/sbin/hamafx-sync-systemd-units');
-    expect(update).toContain('/usr/local/sbin/hamafx-sync-systemd-units');
-    expect(sudoers).toContain('/usr/local/sbin/hamafx-sync-systemd-units');
+    expect(provisioner).toContain('/usr/local/sbin/kestrel-sync-systemd-units');
+    expect(update).toContain('/usr/local/sbin/kestrel-sync-systemd-units');
+    expect(sudoers).toContain('/usr/local/sbin/kestrel-sync-systemd-units');
   });
 
   it('provisions the documented billing DLQ timer', () => {
     const provisioner = read('infra/cron-vm/_provision-docker.sh');
-    const unit = read('infra/cron-vm/units/hamafx-billing-dlq.timer');
+    const unit = read('infra/cron-vm/units/kestrel-billing-dlq.timer');
 
-    expect(provisioner).toContain('hamafx-billing-dlq.timer');
+    expect(provisioner).toContain('kestrel-billing-dlq.timer');
     expect(unit).toContain('OnCalendar=hourly');
   });
 
@@ -110,7 +120,7 @@ describe('cron VM operational policy', () => {
   });
 
   it('does not fail cleanup when its optional healthcheck ID is missing', () => {
-    const unit = read('infra/cron-vm/units/hamafx-light-cleanup-uploads.service');
+    const unit = read('infra/cron-vm/units/kestrel-light-cleanup-uploads.service');
     expect(unit).toContain('test -z "$HC_CLEANUP_UPLOADS_UUID"');
   });
 });

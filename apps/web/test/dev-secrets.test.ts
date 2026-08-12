@@ -5,13 +5,13 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-// The SUT reads `.hamafx/dev-secrets.json` via process.cwd(). We need to
+// The SUT reads `.kestrel/dev-secrets.json` via process.cwd(). We need to
 // redirect it to a per-test temp directory. We do that by setting
 // HOME (used by some paths) and chdir to a temp dir before each test.
 let workdir = '';
 
 beforeEach(() => {
-  workdir = mkdtempSync(join(tmpdir(), 'hamafx-dev-secrets-'));
+  workdir = mkdtempSync(join(tmpdir(), 'kestrel-dev-secrets-'));
   vi.spyOn(process, 'cwd').mockReturnValue(workdir);
 });
 
@@ -51,7 +51,7 @@ describe('loadOrGenerateDevSecrets', () => {
     expect(process.env.ENCRYPTION_SECRET).toMatch(/^[0-9a-f]{64}$/);
     expect(process.env.CRON_SECRET).toMatch(/^[0-9a-f]{32}$/);
     // Persisted to disk.
-    const path = join(workdir, '.hamafx/dev-secrets.json');
+    const path = join(workdir, '.kestrel/dev-secrets.json');
     expect(existsSync(path)).toBe(true);
     const stored = JSON.parse(readFileSync(path, 'utf8'));
     expect(stored.NEXTAUTH_SECRET).toBe(process.env.NEXTAUTH_SECRET);
@@ -97,8 +97,8 @@ describe('loadOrGenerateDevSecrets', () => {
     process.env.NODE_ENV = 'development';
     // Write a garbage file to the expected path.
     const { mkdirSync, writeFileSync } = await import('node:fs');
-    const path = join(workdir, '.hamafx/dev-secrets.json');
-    mkdirSync(join(workdir, '.hamafx'), { recursive: true });
+    const path = join(workdir, '.kestrel/dev-secrets.json');
+    mkdirSync(join(workdir, '.kestrel'), { recursive: true });
     writeFileSync(path, '{ not valid json');
 
     const { loadOrGenerateDevSecrets } = await freshImport();

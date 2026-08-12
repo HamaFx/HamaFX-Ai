@@ -1,5 +1,5 @@
 {
-  "name": "hamafx-loadtest",
+  "name": "kestrel-loadtest",
   "version": "0.0.0",
   "private": true,
   "type": "module",

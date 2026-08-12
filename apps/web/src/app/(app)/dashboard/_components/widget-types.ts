@@ -59,7 +59,7 @@ export const DEFAULT_LAYOUT: WidgetConfig[] = [
  * truth. Versioned (`v1`) so we can ship migrations without losing
  * existing layouts.
  */
-export const LAYOUT_STORAGE_KEY = 'hamafx:dashboard-layout:v1';
+export const LAYOUT_STORAGE_KEY = 'kestrel:dashboard-layout:v1';
 
 /** Human-readable label rendered on the edit-mode toolbar. */
 export const WIDGET_LABELS: Record<WidgetType, string> = {

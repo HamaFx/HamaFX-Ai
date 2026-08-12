@@ -134,7 +134,7 @@ function backupEnvFile(filePath) {
 /**
  * Apply an upsert of `values` to the env file at `filePath`.
  *
- * options: { backup?: boolean, dryRun?: boolean, maskDiff?: boolean|function|string[], replace?: boolean }
+ * options: { backup?: boolean, dryRun?: boolean, maskDiff?: boolean|function|string[], replace?: boolean, removeKeys?: string[] }
  * With `replace`, keys that exist in the file but are absent from
  * `values` are dropped (used for a "fresh start" regeneration).
  * `maskDiff` defaults to secret-aware masking (see diffEnv).
@@ -144,11 +144,21 @@ function backupEnvFile(filePath) {
 export function upsertEnvFile(
   filePath,
   values,
-  { backup = true, dryRun = false, maskDiff = undefined, replace = false } = {},
+  {
+    backup = true,
+    dryRun = false,
+    maskDiff = undefined,
+    replace = false,
+    removeKeys = [],
+  } = {},
 ) {
   const existing = readEnvFile(filePath);
   const target = replace ? new Map() : new Map(existing.entries);
   let changed = false;
+
+  for (const key of removeKeys) {
+    if (target.delete(key)) changed = true;
+  }
 
   for (const [key, value] of Object.entries(values)) {
     if (/\r|\n/.test(String(value))) {

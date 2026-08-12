@@ -29,7 +29,7 @@
 //
 // References:
 //   - https://www.freedesktop.org/software/systemd/man/sd_notify.html
-//   - hamafx-worker.service uses `Type=notify` + `WatchdogSec=120`; the
+//   - kestrel-worker.service uses `Type=notify` + `WatchdogSec=120`; the
 //     bootstrap sends `READY=1` once the SignalR consumer is connected,
 //     and the tick handler sends `WATCHDOG=1` to keep the timer alive.
 //

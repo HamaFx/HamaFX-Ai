@@ -177,7 +177,7 @@ export async function run(ctx) {
   const child = spawn(manager.command, [...manager.prefix, 'dev:local'], {
     cwd: repoRoot,
     stdio: 'inherit',
-    env: { ...process.env, HAMAFX_LOCAL_DEV: '1' },
+    env: { ...process.env, KESTREL_LOCAL_DEV: '1' },
   });
   child.on('error', (err) => {
     warn(io, `Failed to start the app: ${err.message}`);

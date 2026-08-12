@@ -27,7 +27,7 @@
 // useState read per navigation — negligible, and well worth the
 // simplicity vs. a route-group restructure.
 
-import { Link } from 'next-view-transitions';
+import { KestrelBrand } from '@/components/brand/kestrel-brand';
 import { usePathname } from 'next/navigation';
 
 import { cn } from '@/lib/cn';
@@ -58,22 +58,13 @@ export function TopBar({ title, right }: TopBarProps) {
     >
       <NavTrigger />
 
-      <Link
+      <KestrelBrand
+        variant="mark"
+        showName
+        label={title ?? 'Kestrel'}
         href="/chat"
-        aria-label="Kestrel home"
-        className="group flex flex-1 items-center gap-2 px-1 text-sm font-semibold tracking-tight text-fg transition-opacity hover:opacity-80"
-      >
-        <span
-          aria-hidden="true"
-          className="relative inline-flex size-6 items-center justify-center rounded-sm bg-brand text-brand-fg"
-        >
-          <span className="text-xs font-bold">H</span>
-        </span>
-        <span className="text-fg">
-          {title ?? 'Kestrel'}
-          <span className="text-fg-subtle font-normal" aria-hidden>·Ai</span>
-        </span>
-      </Link>
+        className="group px-1 transition-opacity hover:opacity-80"
+      />
 
       <div className="flex min-w-[44px] items-center justify-end gap-2">{right}</div>
     </header>

@@ -4,7 +4,7 @@
 // economic_events. Phase 1c uses FRED only; the adapter has no failover
 // because there's only one provider. When FRED times out (which it does
 // once or twice an hour) we DON'T want the cron handler to 500 — that
-// just spams /var/log/hamafx-cron.log with FAIL lines and provides no
+// just spams /var/log/kestrel-cron.log with FAIL lines and provides no
 // actionable signal. Treat ProviderError as a "skip this tick" event:
 // the next tick will retry, the data we already have stays valid.
 

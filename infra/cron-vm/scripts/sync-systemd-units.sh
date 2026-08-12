@@ -1,40 +1,40 @@
 #!/usr/bin/env bash
 # Install Kestrel systemd units after a repository self-update.
 #
-# This file is installed as /usr/local/sbin/hamafx-sync-systemd-units with
+# This file is installed as /usr/local/sbin/kestrel-sync-systemd-units with
 # root ownership. It deliberately fetches the units from the fixed upstream
 # repository into a root-owned temporary directory; it never installs units
-# directly from the hamafx-writable checkout.
+# directly from the kestrel-writable checkout.
 
 set -euo pipefail
 
 if [[ "$EUID" -ne 0 ]]; then
-  echo 'hamafx-sync-systemd-units must run as root' >&2
+  echo 'kestrel-sync-systemd-units must run as root' >&2
   exit 1
 fi
 
-readonly REPO_URL='https://github.com/HamaFx/HamaFX-Ai.git'
+readonly REPO_URL='https://github.com/HamaFx/Kestrel.git'
 readonly TARGET_DIR='/etc/systemd/system'
 readonly MANAGED_UNITS=(
-  hamafx-light-news.service hamafx-light-news.timer
-  hamafx-light-calendar.service hamafx-light-calendar.timer
-  hamafx-light-alerts.service hamafx-light-alerts.timer
-  hamafx-light-warm-cache.service hamafx-light-warm-cache.timer
-  hamafx-light-cleanup-uploads.service hamafx-light-cleanup-uploads.timer
-  hamafx-backup-db.service hamafx-backup-db.timer
-  hamafx-backup-journal.service hamafx-backup-journal.timer
-  hamafx-verify-restore.service hamafx-verify-restore.timer
-  hamafx-tenant-export.service hamafx-tenant-export.timer
-  hamafx-tenant-delete.service hamafx-tenant-delete.timer
-  hamafx-billing-dlq.service hamafx-billing-dlq.timer
-  hamafx-disk-check.service hamafx-disk-check.timer
-  hamafx-docker-prune.service hamafx-docker-prune.timer
-  hamafx-update.service hamafx-update.timer
-  hamafx-docker-autoheal.service hamafx-docker-autoheal.timer
-  hamafx-webhook.service
+  kestrel-light-news.service kestrel-light-news.timer
+  kestrel-light-calendar.service kestrel-light-calendar.timer
+  kestrel-light-alerts.service kestrel-light-alerts.timer
+  kestrel-light-warm-cache.service kestrel-light-warm-cache.timer
+  kestrel-light-cleanup-uploads.service kestrel-light-cleanup-uploads.timer
+  kestrel-backup-db.service kestrel-backup-db.timer
+  kestrel-backup-journal.service kestrel-backup-journal.timer
+  kestrel-verify-restore.service kestrel-verify-restore.timer
+  kestrel-tenant-export.service kestrel-tenant-export.timer
+  kestrel-tenant-delete.service kestrel-tenant-delete.timer
+  kestrel-billing-dlq.service kestrel-billing-dlq.timer
+  kestrel-disk-check.service kestrel-disk-check.timer
+  kestrel-docker-prune.service kestrel-docker-prune.timer
+  kestrel-update.service kestrel-update.timer
+  kestrel-docker-autoheal.service kestrel-docker-autoheal.timer
+  kestrel-webhook.service
 )
 
-STAGE_DIR="$(mktemp -d -p /run hamafx-unit-sync.XXXXXX)"
+STAGE_DIR="$(mktemp -d -p /run kestrel-unit-sync.XXXXXX)"
 trap 'rm -rf "$STAGE_DIR"' EXIT
 REPO_DIR="$STAGE_DIR/repo"
 TREE_DIR="$STAGE_DIR/tree"
@@ -67,7 +67,7 @@ for source in "$SOURCE_DIR"/*.service "$SOURCE_DIR"/*.timer; do
       ;;
   esac
   if grep -Eq '(^|[[:space:]])(ExecStart|ExecStartPre|ExecStartPost|ExecCondition|ExecStop|ExecStopPost)=' "$source"; then
-    grep -Eq '^Exec(Start|StartPre|StartPost|Condition|Stop|StopPost)=(/usr/bin/(curl|python3|docker|bash|install)|/bin/(sh|sleep)|/opt/hamafx/scripts/[A-Za-z0-9_.-]+|/usr/local/sbin/[A-Za-z0-9_.-]+)' "$source" || {
+    grep -Eq '^Exec(Start|StartPre|StartPost|Condition|Stop|StopPost)=(/usr/bin/(curl|python3|docker|bash|install)|/bin/(sh|sleep)|/opt/kestrel/scripts/[A-Za-z0-9_.-]+|/usr/local/sbin/[A-Za-z0-9_.-]+)' "$source" || {
       echo "unsupported command in unit: $source" >&2
       exit 1
     }

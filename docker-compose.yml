@@ -22,6 +22,9 @@ services:
   db:
     image: pgvector/pgvector:pg16
     environment:
+      # Keep the logical database role names stable for existing Docker volumes.
+      # Container, path, and service identifiers use Kestrel; operators can
+      # migrate these database names separately when rotating a volume.
       POSTGRES_DB: hamafx
       POSTGRES_USER: hamafx
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run docker/init-secrets.sh to generate .env}
@@ -44,7 +47,7 @@ services:
 
   langfuse:
     image: langfuse/langfuse:3
-    container_name: hamafx-langfuse
+    container_name: kestrel-langfuse
     restart: unless-stopped
     profiles: ["observability"]
     ports:
@@ -137,7 +140,7 @@ services:
       - "127.0.0.1:3000:3000"
     environment:
       DATABASE_URL: postgres://hamafx:${POSTGRES_PASSWORD}@db:5432/hamafx
-      HAMAFX_LOCAL_DOCKER: "true"
+      KESTREL_LOCAL_DOCKER: "true"
       # The bundled Postgres service is plain TCP. This explicit local-only
       # flag prevents the production DB client from attempting TLS against it.
       DB_DISABLE_SSL: "true"
@@ -184,12 +187,12 @@ services:
       DATABASE_URL: postgres://hamafx:${POSTGRES_PASSWORD}@db:5432/hamafx
       NODE_ENV: production
       WORKER_MODE: docker
-      HAMAFX_LOCAL_DOCKER: "true"
+      KESTREL_LOCAL_DOCKER: "true"
       # The bundled Postgres service is plain TCP; production deployments
       # outside this Compose profile must not set this flag.
       DB_DISABLE_SSL: "true"
       # PERF-06: Worker pool — 3 is sufficient for tick-flush + cron inserts.
-      HAMAFX_RUNTIME: worker
+      KESTREL_RUNTIME: worker
       WORKER_DB_POOL_MAX: "3"
     env_file:
       - .env
@@ -219,6 +222,13 @@ services:
         max-size: "50m"
         max-file: "3"
 
+# Keep the historical volume names by default so moving an existing VM from
+# /opt/hamafx to /opt/kestrel cannot silently create empty replacement volumes.
+# These are compatibility identifiers, not user-facing branding. Existing
+# local installs with a different Compose project name can set these overrides
+# in .env before the first Kestrel start (for example, hamafx-ai_pgdata).
 volumes:
   pgdata:
+    name: ${POSTGRES_VOLUME_NAME:-hamafx_pgdata}
   backup-data:
+    name: ${BACKUP_VOLUME_NAME:-hamafx_backup-data}

@@ -8,16 +8,16 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/_load-env.sh" /opt/hamafx/.env
+source "$SCRIPT_DIR/_load-env.sh" /opt/kestrel/.env
 source "$SCRIPT_DIR/backup-storage.sh"
 
 HC_UUID="${HC_VERIFY_RESTORE_UUID:-}"
-TMP_DIR="$(mktemp -d -t hamafx-verify-XXXXXX)"
+TMP_DIR="$(mktemp -d -t kestrel-verify-XXXXXX)"
 DUMP_GZ="${TMP_DIR}/latest.dump.gz"
 DUMP="${TMP_DIR}/latest.dump"
-CONTAINER='hamafx-verify-pg'
+CONTAINER='kestrel-verify-pg'
 LOCAL_PG_PORT=55432
-TARGET_DB='hamafx_verify'
+TARGET_DB='kestrel_verify'
 
 cleanup() {
   docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
@@ -50,8 +50,8 @@ if [[ -z "$LATEST" ]]; then
   exit 1
 fi
 
-log "latest dump: B2 ${LATEST#hamafx:}"
-backup_storage_download_file "${LATEST#hamafx:*/}" "$DUMP_GZ"
+log "latest dump: B2 ${LATEST#kestrel:}"
+backup_storage_download_file "${LATEST#kestrel:*/}" "$DUMP_GZ"
 gunzip -c "$DUMP_GZ" > "$DUMP"
 
 log 'starting throwaway postgres container'
@@ -83,7 +83,7 @@ if ! PGPASSWORD=verify pg_restore \
   -h 127.0.0.1 -p "$LOCAL_PG_PORT" -U verify -d "$TARGET_DB" \
   "$DUMP"; then
   log 'pg_restore failed'
-  ping_hc fail "pg_restore failed for ${LATEST#hamafx:*/}"
+  ping_hc fail "pg_restore failed for ${LATEST#kestrel:*/}"
   exit 1
 fi
 

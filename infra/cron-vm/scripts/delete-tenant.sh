@@ -19,7 +19,7 @@
 set -euo pipefail
 
 # shellcheck source=./_load-env.sh
-source "$(dirname "${BASH_SOURCE[0]}")/_load-env.sh" /opt/hamafx/.env
+source "$(dirname "${BASH_SOURCE[0]}")/_load-env.sh" /opt/kestrel/.env
 
 USER_ID="${1:-}"
 CONFIRM=""
@@ -39,7 +39,7 @@ if [[ ! "$USER_ID" =~ ^[a-zA-Z0-9_-]+$ ]]; then
 fi
 
 DB_URL="${ADMIN_DATABASE_URL:-${DIRECT_URL:-${POSTGRES_URL_NON_POOLING:-${DATABASE_URL:-${POSTGRES_URL:-}}}}}"
-: "${DB_URL:?Set ADMIN_DATABASE_URL (preferred) or DIRECT_URL / POSTGRES_URL_NON_POOLING / DATABASE_URL / POSTGRES_URL in /opt/hamafx/.env}"
+: "${DB_URL:?Set ADMIN_DATABASE_URL (preferred) or DIRECT_URL / POSTGRES_URL_NON_POOLING / DATABASE_URL / POSTGRES_URL in /opt/kestrel/.env}"
 
 HC_UUID="${HC_TENANT_DELETE_UUID:-}"
 

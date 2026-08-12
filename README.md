@@ -17,10 +17,10 @@
 Chat with market data, technical structure, macro context, risk math, journals, alerts, and multi-agent analysis — using **your own AI provider keys** and your own infrastructure.
 
 <p>
-  <a href="https://github.com/HamaFx/HamaFX-Ai/actions/workflows/ci-fast.yml"><img src="https://img.shields.io/github/actions/workflow/status/HamaFx/HamaFX-Ai/ci-fast.yml?branch=main&style=flat-square&label=CI" alt="CI status"></a>
-  <a href="https://github.com/HamaFx/HamaFX-Ai/blob/main/LICENSE"><img src="https://img.shields.io/github/license/HamaFx/HamaFX-Ai?style=flat-square" alt="Apache 2.0 license"></a>
-  <a href="https://github.com/HamaFx/HamaFX-Ai/releases"><img src="https://img.shields.io/github/v/release/HamaFx/HamaFX-Ai?display_name=tag&style=flat-square&label=release" alt="Latest release"></a>
-  <a href="https://github.com/HamaFx/HamaFX-Ai"><img src="https://img.shields.io/github/stars/HamaFx/HamaFX-Ai?style=flat-square" alt="GitHub stars"></a>
+  <a href="https://github.com/HamaFx/Kestrel/actions/workflows/ci-fast.yml"><img src="https://img.shields.io/github/actions/workflow/status/HamaFx/Kestrel/ci-fast.yml?branch=main&style=flat-square&label=CI" alt="CI status"></a>
+  <a href="https://github.com/HamaFx/Kestrel/blob/main/LICENSE"><img src="https://img.shields.io/github/license/HamaFx/Kestrel?style=flat-square" alt="Apache 2.0 license"></a>
+  <a href="https://github.com/HamaFx/Kestrel/releases"><img src="https://img.shields.io/github/v/release/HamaFx/Kestrel?display_name=tag&style=flat-square&label=release" alt="Latest release"></a>
+  <a href="https://github.com/HamaFx/Kestrel"><img src="https://img.shields.io/github/stars/HamaFx/Kestrel?style=flat-square" alt="GitHub stars"></a>
 </p>
 
 <p>
@@ -63,7 +63,7 @@ Agent:  1. Reads current price and candles
 Kestrel is designed to be **self-hosted first**: you control the deployment, the database, the encryption secret, and which AI provider receives your prompts.
 
 <p align="center">
-  <img src="docs/assets/hamafx-workspace.png" alt="Kestrel illustrative trading workspace showing chat analysis, XAUUSD context, chart structure, risk posture, and macro events" width="100%">
+  <img src="docs/assets/kestrel-workspace.png" alt="Kestrel illustrative trading workspace showing chat analysis, XAUUSD context, chart structure, risk posture, and macro events" width="100%">
 </p>
 
 <p align="center"><sub>Illustrative workspace preview · synthetic values · dark, data-first trading-terminal design</sub></p>
@@ -105,7 +105,7 @@ You need:
 You can clone it with Git or download the repository as a ZIP from GitHub.
 
 ```bash
-git clone https://github.com/HamaFx/HamaFX-Ai.git
+git clone https://github.com/HamaFx/Kestrel.git
 cd Kestrel
 ```
 
@@ -218,7 +218,7 @@ Kestrel does not bundle AI access. You bring the provider account and pay the pr
 - **You control storage:** keys are encrypted in your database using your `ENCRYPTION_SECRET`.
 - **You control deployment:** run locally, on your own server, or with Docker.
 - **The server still handles requests:** a self-hosted Kestrel instance must access the key to call the selected provider. Protect the server, database, backups, and encryption secret accordingly.
-- **Never commit secrets:** keep `.env`, `.env.local`, `.hamafx/`, provider keys, database URLs, and service-account files out of Git.
+- **Never commit secrets:** keep `.env`, `.env.local`, `.kestrel/`, provider keys, database URLs, and service-account files out of Git.
 
 ---
 
@@ -252,7 +252,7 @@ The agent routes work to typed tools instead of relying on free-form model guess
 | **Actions and sharing**           | `set_alert`, `share_snapshot`                                                                                                                       |
 | **Research modes and operations** | `analyze_fundamental`, `analyze_chart_image`, `convene_committee`, `get_system_diagnostics`, `run_system_action`                                    |
 
-The exact catalogue is maintained in [`docs/knowledge/ai.json`](docs/knowledge/ai.json).
+The exact catalogue is maintained in [`packages/ai/src/tools/`](packages/ai/src/tools/).
 
 </details>
 
@@ -316,7 +316,7 @@ This public repository is intentionally conservative about multi-user hosting.
 - Shared multi-user PostgreSQL deployments.
 - Open registration for an instance shared by unrelated users.
 - Runtime `MULTI_USER_ENABLED=1`.
-- Runtime `HAMAFX_ENABLE_RLS=1`.
+- Runtime `KESTREL_ENABLE_RLS=1`.
 - Hosted billing and maintainer-operated SaaS infrastructure.
 
 The environment validation and runtime migration guard fail closed when unsupported shared modes are requested. This is a deliberate safety boundary, not a claim that tenant isolation is complete.
@@ -372,9 +372,9 @@ packages/
 ├── config/               Shared TypeScript, ESLint, and formatting configuration
 └── test-utils/           Factories, mocks, and shared Vitest helpers
 
-docs/                     Procedural guides and generated architecture knowledge
+docs/                     Procedural guides and a static architecture snapshot
 scripts/                  Setup wizard, local development, build and release helpers
-tools/                    Architecture Explorer and Lighthouse tooling
+tools/                    Lighthouse tooling
 ```
 
 The dependency direction is intentionally layered:
@@ -383,7 +383,7 @@ The dependency direction is intentionally layered:
 config → shared → db + indicators → data → ai → web + worker
 ```
 
-For a generated graph of the live codebase, see the [Architecture Explorer](docs/architecture-explorer.html) or the machine-readable [knowledge artifacts](docs/knowledge/).
+For a checked-in architecture snapshot, see the [Architecture Explorer HTML](docs/architecture-explorer.html) or the [machine-readable architecture JSON](docs/architecture-explorer.json). The snapshot is informational and is not regenerated during builds.
 
 ---
 
@@ -453,8 +453,8 @@ See the [testing guide](docs/09-testing.md) for test patterns, database isolatio
 | ------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | Install without guessing              | [`pnpm setup`](#-quick-start) and [First-run setup](docs/13-first-run-setup.md)                            |
 | Run the complete Docker stack         | [Self-hosting guide](docs/11-self-hosting.md)                                                              |
-| Understand the system                 | [Architecture guide](docs/01-architecture.md) and [Architecture Explorer](docs/architecture-explorer.html) |
-| Understand AI tools and flows         | [AI knowledge artifact](docs/knowledge/ai.json)                                                            |
+| Understand the system                 | [Architecture guide](docs/01-architecture.md) and [Architecture Explorer snapshot](docs/architecture-explorer.html) |
+| Understand AI tools and flows         | [AI tool source](packages/ai/src/tools/)                                                                   |
 | Understand security and secrets       | [Security guide](docs/10-security.md)                                                                      |
 | Run or write tests                    | [Testing guide](docs/09-testing.md)                                                                        |
 | Deploy the maintainer-hosted topology | [Deployment guide](docs/08-deployment.md)                                                                  |
@@ -462,7 +462,7 @@ See the [testing guide](docs/09-testing.md) for test patterns, database isolatio
 | Report a vulnerability                | [SECURITY.md](SECURITY.md)                                                                                 |
 | See project changes                   | [CHANGELOG.md](CHANGELOG.md)                                                                               |
 
-Generated documentation is produced by the [Architecture Explorer](tools/architecture-explorer/). Update generator source rather than hand-editing generated artifacts.
+The repository includes a checked-in Architecture Explorer HTML/JSON snapshot for reference. It is intentionally not part of the build or runtime and may become stale as the codebase evolves.
 
 ---
 
@@ -471,7 +471,7 @@ Generated documentation is produced by the [Architecture Explorer](tools/archite
 Contributions are welcome — whether that means fixing a bug, improving docs, adding a provider, writing tests, or making setup easier for the next person.
 
 ```bash
-git clone https://github.com/HamaFx/HamaFX-Ai.git
+git clone https://github.com/HamaFx/Kestrel.git
 cd Kestrel
 pnpm setup
 ```
@@ -523,6 +523,6 @@ Third-party providers, market-data services, charting services, and AI models ha
 
 **Built for better market research — not blind certainty.**
 
-[⭐ Star the project](https://github.com/HamaFx/HamaFX-Ai) · [🐛 Report a bug](https://github.com/HamaFx/HamaFX-Ai/issues/new/choose)
+[⭐ Star the project](https://github.com/HamaFx/Kestrel) · [🐛 Report a bug](https://github.com/HamaFx/Kestrel/issues/new/choose)
 
 </div>

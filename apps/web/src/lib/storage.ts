@@ -141,6 +141,49 @@ function bytesToHex(bytes: Uint8Array): string {
 export const CHAT_IMAGE_BUCKET_NAME = CHAT_IMAGES_BUCKET;
 export const CHAT_IMAGE_MAX_BYTES = MAX_UPLOAD_BYTES;
 
+const LEGACY_STORAGE_PREFIXES = ['hamafx:', 'hfx_'] as const;
+
+const LEGACY_STORAGE_ALIASES: Record<string, string> = {
+  'hamafx:prefs': 'kestrel:prefs:v1',
+  'hamafx:ai-prefs': 'kestrel:ai-prefs:v1',
+  'hfx_banner_dismissed:api-keys-from-chat': 'kestrel:banner-dismissed:api-keys-from-chat',
+  hfx_install_dismissed: 'kestrel:install-dismissed',
+};
+
+/**
+ * Move browser-local state from pre-rebrand namespaces to Kestrel keys.
+ * Existing Kestrel values always win, so a user never loses newer state.
+ */
+export function migrateLegacyStorageNamespace(): void {
+  if (typeof window === 'undefined') return;
+
+  try {
+    const legacyKeys: string[] = [];
+    for (let index = 0; index < localStorage.length; index += 1) {
+      const key = localStorage.key(index);
+      if (key && LEGACY_STORAGE_PREFIXES.some((prefix) => key.startsWith(prefix))) {
+        legacyKeys.push(key);
+      }
+    }
+
+    for (const oldKey of legacyKeys) {
+      const suffix = oldKey.startsWith('hamafx:')
+        ? oldKey.slice('hamafx:'.length)
+        : oldKey.slice('hfx_'.length);
+      const newKey = LEGACY_STORAGE_ALIASES[oldKey] ?? `kestrel:${suffix}`;
+      migrateLocalStorageKey(oldKey, newKey);
+    }
+  } catch {
+    // Storage may be unavailable in private browsing or restrictive contexts.
+  }
+}
+
+/** Migrate the legacy counterpart of a canonical Kestrel key before reading it. */
+export function migrateLegacyStorageKey(newKey: string): void {
+  if (!newKey.startsWith('kestrel:')) return;
+  migrateLegacyStorageNamespace();
+}
+
 export function safeGetItem<T>(key: string, fallback: T): T {
   try {
     if (typeof window === 'undefined') return fallback;
@@ -166,8 +209,7 @@ export function safeSetItem<T>(key: string, value: T): boolean {
  * Migrate a value stored under an old localStorage key to a new key.
  * The value is JSON-parsed, optionally transformed, and written under
  * the new key; the old key is then removed. If the new key already
- * exists, no action is taken. This follows the `hamafx:dashboard-layout:v1`
- * versioning precedent.
+ * exists, no action is taken.
  */
 export function migrateLocalStorageKey<T>(
   oldKey: string,
@@ -175,18 +217,33 @@ export function migrateLocalStorageKey<T>(
   transform?: (value: unknown) => T,
 ): void {
   if (typeof window === 'undefined') return;
-  if (window.localStorage.getItem(newKey) !== null) return;
-
-  const raw = window.localStorage.getItem(oldKey);
-  if (raw === null) return;
 
   try {
-    const parsed = JSON.parse(raw) as unknown;
-    const migrated = transform ? transform(parsed) : parsed;
-    window.localStorage.setItem(newKey, JSON.stringify(migrated));
+    if (localStorage.getItem(newKey) !== null) {
+      localStorage.removeItem(oldKey);
+      return;
+    }
+
+    const raw = localStorage.getItem(oldKey);
+    if (raw === null) return;
+
+    let migrated: unknown;
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      migrated = transform ? transform(parsed) : parsed;
+    } catch {
+      // Preserve the legacy value when it cannot be parsed or transformed.
+      // A failed migration must never destroy the user's only copy.
+      return;
+    }
+
+    try {
+      localStorage.setItem(newKey, JSON.stringify(migrated));
+      localStorage.removeItem(oldKey);
+    } catch {
+      // Preserve the legacy value when the new write is unavailable.
+    }
   } catch {
-    /* old value was corrupt; continue to remove the old key */
-  } finally {
-    window.localStorage.removeItem(oldKey);
+    // Storage may be unavailable or the old value may be corrupt.
   }
 }

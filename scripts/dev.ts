@@ -59,7 +59,7 @@ async function main() {
   if (hasDbUrl) {
     console.log(`📦 Database: remote Postgres`);
   } else {
-    console.log('📦 Database: embedded PGlite (.hamafx/data/)');
+    console.log('📦 Database: embedded PGlite (.kestrel/data/)');
     console.log('   (Run with docker compose up for full pgvector support)\n');
   }
 
@@ -70,7 +70,7 @@ async function main() {
     env: {
       ...process.env,
       // Tell the app to use local DB mode (PGlite fallback)
-      HAMAFX_LOCAL_DEV: '1',
+      KESTREL_LOCAL_DEV: '1',
     },
   });
   processes.push(nextDev);

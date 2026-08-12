@@ -9,7 +9,7 @@
 // whose date is ≥ 7 days ago.
 //
 // Triggered by a daily systemd timer on the GCE VM (see
-// infra/cron-vm/units/hamafx-light-cleanup-uploads.{service,timer}).
+// infra/cron-vm/units/kestrel-light-cleanup-uploads.{service,timer}).
 
 import { withCronAuth } from '@/lib/cron';
 import { getServerEnv } from '@/lib/env';

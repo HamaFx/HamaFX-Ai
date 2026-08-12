@@ -32,7 +32,7 @@ A fast-cut montage of eight one-second shots, all in the same dark premium tradi
 
 ### SCENE 2 — Reveal (8s)
 ```
-A logo made of three vertical orange bars like a candlestick chart draws itself with a crisp stroke animation on a black screen, then a full dark trading-terminal interface fades in behind it: a chat window with monospace text, a price ticker scrolling across the top edge, small green and red numbers. Below the logo, the word "HAMAFX.AI" appears in clean monospace type. Confident and elegant. Camera: slow smooth push-in toward the interface. A soft whoosh and a deep synth chord as the UI fades in. Dark premium terminal aesthetic: near-black background, flat charcoal panels, single orange accent, no glassmorphism, no gradients. Cinematic, 16:9.
+A logo made of three vertical orange bars like a candlestick chart draws itself with a crisp stroke animation on a black screen, then a full dark trading-terminal interface fades in behind it: a chat window with monospace text, a price ticker scrolling across the top edge, small green and red numbers. Below the logo, the word "KESTREL" appears in clean monospace type. Confident and elegant. Camera: slow smooth push-in toward the interface. A soft whoosh and a deep synth chord as the UI fades in. Dark premium terminal aesthetic: near-black background, flat charcoal panels, single orange accent, no glassmorphism, no gradients. Cinematic, 16:9.
 ```
 
 ### SCENE 3 — Ask (8s)

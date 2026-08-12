@@ -1,5 +1,5 @@
 # Kestrel VM Worker Docker Compose
-# Deployed to /opt/hamafx/docker-compose.yml on the GCE VM.
+# Deployed to /opt/kestrel/docker-compose.yml on the GCE VM.
 # Builds the worker image from the repo's Dockerfile.worker — no external registry needed.
 #
 # The frontend (apps/web) runs on Vercel. Supabase is external.
@@ -8,21 +8,21 @@
 services:
   worker:
     build:
-      context: /opt/hamafx/app
+      context: /opt/kestrel/app
       dockerfile: Dockerfile.worker
-    image: hamafx-worker:local
-    container_name: hamafx-worker
+    image: kestrel-worker:local
+    container_name: kestrel-worker
     restart: unless-stopped
 
-    # All secrets from /opt/hamafx/.env
+    # All secrets from /opt/kestrel/.env
     env_file:
-      - /opt/hamafx/.env
+      - /opt/kestrel/.env
 
     # Hardcoded env vars (override any .env values)
     environment:
       NODE_ENV: production
       WORKER_MODE: docker
-      HAMAFX_RUNTIME: worker
+      KESTREL_RUNTIME: worker
 
     # Ports bound to localhost ONLY — not accessible from the internet
     ports:

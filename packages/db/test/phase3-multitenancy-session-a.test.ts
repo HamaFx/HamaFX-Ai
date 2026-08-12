@@ -65,7 +65,7 @@ describe('Phase 3 Session A — multi-tenancy foundation', () => {
   let dir: string;
 
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), 'hamafx-phase3-mt-'));
+    dir = mkdtempSync(join(tmpdir(), 'kestrel-phase3-mt-'));
   });
 
   afterEach(async () => {

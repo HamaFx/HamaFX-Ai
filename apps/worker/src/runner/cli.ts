@@ -16,7 +16,7 @@
 
 // Heavy-job runner CLI. Invoked from systemd one-shot units:
 //
-//   ExecStart=/usr/bin/node /opt/hamafx/app/apps/worker/dist/runner/cli.js <name>
+//   ExecStart=/usr/bin/node /opt/kestrel/app/apps/worker/dist/runner/cli.js <name>
 //
 // Resolves env, builds a logger pre-tagged with the job name, pings
 // healthchecks.io start/success/fail, and runs the registered job

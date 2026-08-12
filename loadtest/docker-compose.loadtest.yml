@@ -16,15 +16,15 @@ services:
   db:
     image: pgvector/pgvector:pg16
     environment:
-      POSTGRES_DB: hamafx
-      POSTGRES_USER: hamafx
+      POSTGRES_DB: kestrel
+      POSTGRES_USER: kestrel
       POSTGRES_PASSWORD: loadtest
     ports:
       - "5432:5432"
     volumes:
       - pgdata-loadtest:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U hamafx -d hamafx"]
+      test: ["CMD-SHELL", "pg_isready -U kestrel -d kestrel"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -40,7 +40,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: postgres://hamafx:loadtest@db:5432/hamafx
+      DATABASE_URL: postgres://kestrel:loadtest@db:5432/kestrel
       NODE_ENV: development
       DB_DISABLE_SSL: "true"
       LIVE_TICKS_MAX_AGE_MS: "86400000"
@@ -95,7 +95,7 @@ services:
       - sh
       - -c
       - |
-        PGPASSWORD=loadtest psql -h db -U hamafx -d hamafx -f /seed.sql && echo "live_ticks seeded"
+        PGPASSWORD=loadtest psql -h db -U kestrel -d kestrel -f /seed.sql && echo "live_ticks seeded"
     volumes:
       - ./seed-live-ticks.sql:/seed.sql:ro
 

@@ -6,7 +6,7 @@
 //
 // Phase 8 PR-9: this route is now a **manual-fallback path**. The
 // scheduled invocation runs on the GCE worker VM via a systemd timer
-// (`hamafx-job-embedding-backfill.timer`), where it's not bound by the
+// (`kestrel-job-embedding-backfill.timer`), where it's not bound by the
 // 60s function ceiling. The route stays here so:
 //
 //   1. We can hand-trigger via curl during a worker outage:

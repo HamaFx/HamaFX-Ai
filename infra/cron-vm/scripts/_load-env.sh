@@ -1,4 +1,4 @@
-# Source-helper for /opt/hamafx/.env. Bash's `source` treats values as
+# Source-helper for /opt/kestrel/.env. Bash's `source` treats values as
 # shell — values like Vercel-pulled GOOGLE_APPLICATION_CREDENTIALS_JSON
 # blobs contain whitespace + literal "PRIVATE KEY" that bash then tries
 # to execute. systemd's EnvironmentFile= uses a stricter parser; this
@@ -6,10 +6,10 @@
 #
 # Usage:
 #   readonly HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-#   source "$HERE/_load-env.sh" /opt/hamafx/.env
+#   source "$HERE/_load-env.sh" /opt/kestrel/.env
 
-_load_hamafx_env() {
-  local file="${1:-/opt/hamafx/.env}"
+_load_kestrel_env() {
+  local file="${1:-/opt/kestrel/.env}"
   [[ -f "$file" ]] || return 0
   while IFS= read -r line || [[ -n "$line" ]]; do
     # Skip comments + blank lines.
@@ -32,4 +32,4 @@ _load_hamafx_env() {
   done < "$file"
 }
 
-_load_hamafx_env "$@"
+_load_kestrel_env "$@"

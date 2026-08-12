@@ -21,8 +21,8 @@ The full documentation set lives in [`docs/`](docs/). Start here:
 
 | Need | Where |
 |------|-------|
-| Report a bug | [Open a bug report issue](https://github.com/HamaFx/HamaFX-Ai/issues/new?template=bug_report.yml) |
-| Request a feature | [Open a feature request issue](https://github.com/HamaFx/HamaFX-Ai/issues/new?template=feature_request.yml) |
+| Report a bug | [Open a bug report issue](https://github.com/HamaFx/Kestrel/issues/new?template=bug_report.yml) |
+| Request a feature | [Open a feature request issue](https://github.com/HamaFx/Kestrel/issues/new?template=feature_request.yml) |
 | Report a security vulnerability | Email **security@kestrel.com** — see [SECURITY.md](SECURITY.md) |
 
 ### Questions and Discussion

@@ -24,13 +24,13 @@ backup_storage_require() {
 
   # Configure an in-memory rclone remote. Credentials never need to be
   # written to an rclone config file on disk.
-  export RCLONE_CONFIG_HAMAFX_TYPE=b2
-  export RCLONE_CONFIG_HAMAFX_ACCOUNT="$B2_KEY_ID"
-  export RCLONE_CONFIG_HAMAFX_KEY="$B2_APPLICATION_KEY"
+  export RCLONE_CONFIG_KESTREL_TYPE=b2
+  export RCLONE_CONFIG_KESTREL_ACCOUNT="$B2_KEY_ID"
+  export RCLONE_CONFIG_KESTREL_KEY="$B2_APPLICATION_KEY"
 }
 
 backup_remote() {
-  printf 'hamafx:%s/%s' "$B2_BUCKET" "$1"
+  printf 'kestrel:%s/%s' "$B2_BUCKET" "$1"
 }
 
 backup_storage_upload_stream() {

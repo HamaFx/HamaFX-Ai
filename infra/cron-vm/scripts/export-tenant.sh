@@ -20,7 +20,7 @@ set -euo pipefail
 
 # shellcheck source=./_load-env.sh
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/_load-env.sh" /opt/hamafx/.env
+source "$SCRIPT_DIR/_load-env.sh" /opt/kestrel/.env
 source "$SCRIPT_DIR/backup-storage.sh"
 
 USER_ID="${1:-}"
@@ -36,11 +36,11 @@ if [[ ! "$USER_ID" =~ ^[a-zA-Z0-9_-]+$ ]]; then
 fi
 
 DB_URL="${ADMIN_DATABASE_URL:-${DIRECT_URL:-${POSTGRES_URL_NON_POOLING:-${DATABASE_URL:-${POSTGRES_URL:-}}}}}"
-: "${DB_URL:?Set ADMIN_DATABASE_URL (preferred) or DIRECT_URL / POSTGRES_URL_NON_POOLING / DATABASE_URL / POSTGRES_URL in /opt/hamafx/.env}"
+: "${DB_URL:?Set ADMIN_DATABASE_URL (preferred) or DIRECT_URL / POSTGRES_URL_NON_POOLING / DATABASE_URL / POSTGRES_URL in /opt/kestrel/.env}"
 HC_UUID="${HC_TENANT_EXPORT_UUID:-}"
 DATE_UTC="$(date -u +%Y-%m-%d)"
 TARGET="tenant-exports/${USER_ID}/${DATE_UTC}.json"
-TMP_EXPORT="$(mktemp -t hamafx-tenant-export-XXXXXX.json)"
+TMP_EXPORT="$(mktemp -t kestrel-tenant-export-XXXXXX.json)"
 trap 'rm -f "$TMP_EXPORT"' EXIT
 
 ping_hc() {

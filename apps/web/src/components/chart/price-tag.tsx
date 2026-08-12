@@ -70,14 +70,14 @@ export function PriceTag({ symbol, referencePrice, className }: PriceTagProps) {
 
   if (isLoading) {
     return (
-      <span ref={elRef} className={cn('text-fg-subtle text-base tabular-nums animate-pulse', className)}>
+      <span ref={elRef} className={cn('text-fg-subtle text-base tabular-nums font-mono animate-pulse', className)}>
         —
       </span>
     );
   }
   if (isError || !tick) {
     return (
-      <span ref={elRef} className={cn('text-danger text-xs tabular-nums', className)}>price unavailable</span>
+      <span ref={elRef} className={cn('text-danger text-xs tabular-nums font-mono', className)}>price unavailable</span>
     );
   }
 
@@ -86,7 +86,7 @@ export function PriceTag({ symbol, referencePrice, className }: PriceTagProps) {
   const bear = delta !== null && delta < 0;
 
   return (
-    <span ref={elRef} className={cn('flex items-baseline gap-2', className)}>
+    <span ref={elRef} className={cn('flex items-baseline gap-2 font-mono', className)}>
       <AnimatedNumber
         value={tick.mid}
         decimals={decimals}

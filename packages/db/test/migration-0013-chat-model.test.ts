@@ -53,7 +53,7 @@ describe('Phase F — migration 0013_chat_model', () => {
   let dir: string;
 
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), 'hamafx-mig-'));
+    dir = mkdtempSync(join(tmpdir(), 'kestrel-mig-'));
   });
 
   afterEach(async () => {

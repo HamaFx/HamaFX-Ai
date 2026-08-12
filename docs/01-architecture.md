@@ -15,7 +15,7 @@ Kestrel is a Next.js web application plus a persistent worker, organized as a pn
 
 ### Local development
 
-`pnpm dev:local` uses embedded PGlite and generates development secrets under `.hamafx/dev-secrets.json`. This mode is for development and evaluation, not shared production use.
+`pnpm dev:local` uses embedded PGlite and generates development secrets under `.kestrel/dev-secrets.json`. This mode is for development and evaluation, not shared production use.
 
 ### Self-hosted Docker
 

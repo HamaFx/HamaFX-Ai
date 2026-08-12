@@ -24,7 +24,7 @@
 // created by the OLD file.
 //
 // This test simulates that pre-fix state and proves the self-heal
-// works without touching the real .hamafx/data/ directory.
+// works without touching the real .kestrel/data/ directory.
 
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -42,7 +42,7 @@ describe('applyMigrations — rename upgrade path (fd346ce)', () => {
   let dataDir: string;
 
   beforeEach(() => {
-    dataDir = mkdtempSync(join(tmpdir(), 'hamafx-pglite-test-'));
+    dataDir = mkdtempSync(join(tmpdir(), 'kestrel-pglite-test-'));
   });
 
   afterEach(async () => {

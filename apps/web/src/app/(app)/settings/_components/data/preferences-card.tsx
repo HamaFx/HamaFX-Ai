@@ -35,7 +35,7 @@ interface Prefs {
   reduceMotion: boolean;
 }
 
-const STORAGE_KEY = 'hamafx:prefs:v1';
+const STORAGE_KEY = 'kestrel:prefs:v1';
 
 const DEFAULTS: Prefs = {
   defaultSymbol: DEFAULT_WATCHLIST_SYMBOLS[0],

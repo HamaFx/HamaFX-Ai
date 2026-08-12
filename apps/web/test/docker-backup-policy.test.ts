@@ -49,7 +49,7 @@ describe('Docker-local backup policy', () => {
   });
 
   it('requires an explicit destructive-restore confirmation', () => {
-    expect(restore).toContain('HAMAFX_RESTORE_CONFIRM');
+    expect(restore).toContain('KESTREL_RESTORE_CONFIRM');
     expect(restore).toContain('=YES');
     expect(restore).toContain('docker compose stop app worker backup');
     expect(restore).toContain('docker compose run --rm --no-deps backup');

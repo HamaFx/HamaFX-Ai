@@ -17,7 +17,8 @@
 // PGlite client — in-process Postgres for local development.
 //
 // Activated when neither DATABASE_URL nor POSTGRES_URL is set.
-// Stores data in .hamafx/data/ (gitignored). Runs migrations on first boot.
+// Stores data in .kestrel/data/ (gitignored). Existing .hamafx/data/ stores
+// remain readable during upgrades. Runs migrations on first boot.
 //
 // NEVER import this module from Edge/middleware code — PGlite is Node-only.
 //
@@ -33,7 +34,14 @@ import { PGlite } from '@electric-sql/pglite';
 import { drizzle, type PgliteDatabase } from 'drizzle-orm/pglite';
 import * as schema from './schema/index';
 
-const DEFAULT_DATA_DIR = resolve('.hamafx/data');
+const DEFAULT_DATA_DIR = resolve('.kestrel/data');
+const LEGACY_DATA_DIR = resolve('.hamafx/data');
+
+function resolveDefaultDataDir(): string {
+  return existsSync(DEFAULT_DATA_DIR) || !existsSync(LEGACY_DATA_DIR)
+    ? DEFAULT_DATA_DIR
+    : LEGACY_DATA_DIR;
+}
 const MIGRATIONS_DIR = new URL('../drizzle', import.meta.url).pathname;
 
 let _pglite: PGlite | null = null;
@@ -142,10 +150,12 @@ const TAG_ALIASES: Record<string, string> = {
 
 /**
  * Get a PGlite drizzle instance. Pass `dataDir` to override the
- * default `.hamafx/data/` location (used by tests to isolate state).
+ * default `.kestrel/data/` location (used by tests to isolate state).
+ * A pre-existing `.hamafx/data/` directory is selected automatically
+ * until the operator migrates it.
  */
 export async function getPGliteDb(
-  dataDir: string = DEFAULT_DATA_DIR,
+  dataDir: string = resolveDefaultDataDir(),
 ): Promise<PgliteDatabase<typeof schema>> {
   if (_db && _activeDataDir === dataDir) return _db;
   // Reset module state when switching to a different data dir so the
@@ -169,7 +179,7 @@ export async function getPGliteDb(
  * and executes each chunk individually, silently skipping
  * any statement that references pgvector features.
  *
- * Pass `dataDir` to isolate state from the default `.hamafx/data/`
+ * Pass `dataDir` to isolate state from the default `.kestrel/data/`
  * location (used by tests).
  */
 export async function applyMigrations(dataDir?: string): Promise<void> {

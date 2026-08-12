@@ -286,7 +286,7 @@ describe('parseServerEnv — defaults and transforms', () => {
         ...MINIMAL_ENV,
         NODE_ENV: 'test',
         MULTI_USER_ENABLED: '1',
-        HAMAFX_ENABLE_RLS: '1',
+        KESTREL_ENABLE_RLS: '1',
       }),
     ).toThrow(/Multi-user\/RLS mode is disabled/i);
   });
@@ -296,9 +296,18 @@ describe('parseServerEnv — defaults and transforms', () => {
     expect(env.REGISTRATION_MODE).toBe('owner-first');
   });
 
+  it('accepts the legacy RLS variable as an upgrade fallback', () => {
+    const env = parseServerEnv({
+      ...MINIMAL_ENV,
+      NODE_ENV: 'test',
+      HAMAFX_ENABLE_RLS: '0',
+    });
+    expect(env.KESTREL_ENABLE_RLS).toBe(false);
+  });
+
   it('rejects multi-user mode without RLS', () => {
     expect(() => parseServerEnv({ ...MINIMAL_ENV, NODE_ENV: 'test', MULTI_USER_ENABLED: '1' })).toThrow(
-      /MULTI_USER_ENABLED requires HAMAFX_ENABLE_RLS/i,
+      /MULTI_USER_ENABLED requires KESTREL_ENABLE_RLS/i,
     );
   });
 
@@ -308,7 +317,7 @@ describe('parseServerEnv — defaults and transforms', () => {
         ...MINIMAL_ENV,
         NODE_ENV: 'test',
         MULTI_USER_ENABLED: '1',
-        HAMAFX_ENABLE_RLS: '1',
+        KESTREL_ENABLE_RLS: '1',
       }),
     ).toThrow(/Multi-user\/RLS mode is disabled/i);
   });
@@ -326,7 +335,7 @@ describe('parseServerEnv — defaults and transforms', () => {
         NODE_ENV: 'test',
         REGISTRATION_MODE: 'open',
         MULTI_USER_ENABLED: '1',
-        HAMAFX_ENABLE_RLS: '1',
+        KESTREL_ENABLE_RLS: '1',
       }),
     ).toThrow(/Multi-user\/RLS mode is disabled|REGISTRATION_MODE=open requires/i);
   });

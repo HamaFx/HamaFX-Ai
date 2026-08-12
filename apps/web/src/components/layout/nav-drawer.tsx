@@ -30,7 +30,7 @@
 //   - User identity display + nav item badges.
 
 import { IconBell,  IconBook,  IconCalendar,  IconSettings,  IconLayoutDashboard,  IconChartLine,  IconLogout,  IconMessageCircle,  IconNews,  IconShield } from '@tabler/icons-react';
-import Image from 'next/image';
+import { KestrelBrand } from '@/components/brand/kestrel-brand';
 import { Link } from 'next-view-transitions';
 import { usePathname } from 'next/navigation';
 import { useEffect, useMemo } from 'react';
@@ -120,7 +120,7 @@ export function NavDrawer({ userName, userEmail, userId: _userId, isAdmin }: { u
     }
   }
 
-  const initial = useMemo(() => (userName?.charAt(0)?.toUpperCase() ?? 'H'), [userName]);
+  const initial = useMemo(() => (userName?.charAt(0)?.toUpperCase() || 'K'), [userName]);
 
   return (
     <DrawerPrimitive.Root open={open} onOpenChange={setOpen} direction="left">
@@ -148,12 +148,9 @@ export function NavDrawer({ userName, userEmail, userId: _userId, isAdmin }: { u
 
           {/* Brand */}
           <div className="flex items-center px-5 pt-6 pb-3">
-            <Image
-              src="/brand/kestrel-logo.png"
-              alt="Kestrel"
-              width={108}
-              height={72}
-              className="shrink-0"
+            <KestrelBrand
+              variant="lockup"
+              className="w-32"
             />
           </div>
 

@@ -65,7 +65,7 @@ describe('Phase 2 — canonical symbol catalog activation', () => {
   let dataDir: string;
 
   beforeEach(() => {
-    dataDir = mkdtempSync(join(tmpdir(), 'hamafx-symbol-catalog-'));
+    dataDir = mkdtempSync(join(tmpdir(), 'kestrel-symbol-catalog-'));
   });
 
   afterEach(async () => {

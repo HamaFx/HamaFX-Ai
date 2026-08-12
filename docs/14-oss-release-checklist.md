@@ -5,7 +5,7 @@ This checklist applies to the public **single-user, self-hosted BYOK** release. 
 ## Release boundary
 
 - [ ] Describe the release as single-user self-hosted BYOK.
-- [ ] Keep `MULTI_USER_ENABLED=0`, `HAMAFX_ENABLE_RLS=0`, and `REGISTRATION_MODE=owner-first`.
+- [ ] Keep `MULTI_USER_ENABLED=0`, `KESTREL_ENABLE_RLS=0`, and `REGISTRATION_MODE=owner-first`.
 - [ ] Do not advertise open registration, shared hosting, or hosted billing as OSS features.
 - [ ] Review provider terms before redistributing market data or enabling commercial use.
 
@@ -21,7 +21,7 @@ This checklist applies to the public **single-user, self-hosted BYOK** release. 
 
 This checklist intentionally does **not** revoke or rotate credentials.
 
-- [ ] Keep local `.env*`, `.hamafx/`, provider keys, database URLs, and service-account material untracked.
+- [ ] Keep local `.env*`, `.kestrel/`, provider keys, database URLs, and service-account material untracked.
 - [ ] Run a secret scan against tracked files and the complete Git history before publication.
 - [ ] If a real credential is detected, stop publication and perform a separate operator-approved remediation.
 - [ ] Do not paste secret values into issues, commits, logs, or review comments.

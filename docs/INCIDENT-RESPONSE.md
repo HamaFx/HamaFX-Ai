@@ -45,7 +45,7 @@ non-critical deploys and prioritize reliability work.
 ### Status Page
 
 - **Tool:** Instatus or Better Stack status page
-- **URL:** `status.hamafx-ai.com` (or subdomain of choice)
+- **URL:** `status.kestrel-ai.com` (or subdomain of choice)
 - **Monitors:**
   - `/api/health` (1-min probe, 2-min grace)
   - Worker heartbeat (via healthchecks.io integration)

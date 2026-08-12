@@ -1,0 +1,29 @@
+[Unit]
+Description=Kestrel nightly Postgres dump → B2 (opt-in)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=kestrel
+Group=kestrel
+WorkingDirectory=/opt/kestrel
+EnvironmentFile=/opt/kestrel/.env
+# Keep this timer installed but skipped until the B2 account is configured.
+ExecCondition=/opt/kestrel/scripts/backup-storage-ready.sh
+ExecStart=/opt/kestrel/scripts/backup-db.sh
+
+# A full dump of the existing schema is well under 1G; this leaves
+# headroom for embeddings growth.
+MemoryMax=1G
+TimeoutStartSec=1800
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/kestrel /tmp
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=kestrel-backup-db

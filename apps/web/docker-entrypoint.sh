@@ -16,7 +16,7 @@ echo "Kestrel — AI trading copilot"
 # provide DIRECT_URL or POSTGRES_URL_NON_POOLING. Local Docker Compose opts into
 # the DATABASE_URL fallback explicitly because its `db:5432` URL is direct.
 MIGRATION_DATABASE_URL=${DIRECT_URL:-${POSTGRES_URL_NON_POOLING:-}}
-if [ -z "$MIGRATION_DATABASE_URL" ] && [ "$HAMAFX_LOCAL_DOCKER" = "true" ]; then
+if [ -z "$MIGRATION_DATABASE_URL" ] && [ "${KESTREL_LOCAL_DOCKER:-${HAMAFX_LOCAL_DOCKER:-}}" = "true" ]; then
   MIGRATION_DATABASE_URL=${DATABASE_URL:-}
 fi
 if [ -z "$MIGRATION_DATABASE_URL" ]; then

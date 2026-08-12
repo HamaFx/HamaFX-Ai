@@ -9,7 +9,7 @@ A fresh Docker installation is intentionally configured as:
 - `BYOK_ENABLED=1`: users provide their own AI provider keys.
 - `MULTI_USER_ENABLED=0`: the deployment is single-user by default.
 - `REGISTRATION_MODE=owner-first`: the first account is the owner; later public registration is closed.
-- `HAMAFX_ENABLE_RLS=0`: RLS mode is disabled in this OSS release because not every query path establishes tenant context.
+- `KESTREL_ENABLE_RLS=0`: RLS mode is disabled in this OSS release because not every query path establishes tenant context.
 - Sentry and Langfuse are opt-in; no external telemetry is enabled by default.
 
 Do not expose a fresh deployment to the public internet without setting up TLS, host firewall rules, backups, and a strong operator-managed secret store.
@@ -34,7 +34,7 @@ User-provided AI keys are encrypted at rest with AES-256-GCM using `ENCRYPTION_S
 
 ## Multi-user PostgreSQL isolation
 
-Shared/multi-user deployment is intentionally not supported by this OSS release. The environment parser and runtime migration entrypoint reject `MULTI_USER_ENABLED=1` or `HAMAFX_ENABLE_RLS=1` before the application starts or mutates the database. This is a safety boundary, not a claim that the current RLS implementation is complete. PGlite is supported only for local single-user development. The migration role must own the application tables or have equivalent `ALTER TABLE` privileges because the single-user migrator removes the unconditional RLS policies after applying the schema.
+Shared/multi-user deployment is intentionally not supported by this OSS release. The environment parser and runtime migration entrypoint reject `MULTI_USER_ENABLED=1` or `KESTREL_ENABLE_RLS=1` before the application starts or mutates the database. This is a safety boundary, not a claim that the current RLS implementation is complete. PGlite is supported only for local single-user development. The migration role must own the application tables or have equivalent `ALTER TABLE` privileges because the single-user migrator removes the unconditional RLS policies after applying the schema.
 
 ## Observability and data egress
 
@@ -54,7 +54,7 @@ Back up, rotate, and restore-test:
 - database credentials and database backups
 - `ADMIN_DATABASE_URL` credentials when multi-user mode is enabled
 
-Never commit `.env`, `.env.local`, `.hamafx/`, or provider credentials.
+Never commit `.env`, `.env.local`, `.kestrel/`, or provider credentials.
 
 ## Vulnerability reporting
 

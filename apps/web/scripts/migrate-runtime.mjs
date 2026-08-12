@@ -15,7 +15,7 @@ const databaseUrl =
   process.env.MIGRATION_DATABASE_URL ||
   process.env.DIRECT_URL ||
   process.env.POSTGRES_URL_NON_POOLING ||
-  (process.env.HAMAFX_LOCAL_DOCKER === 'true'
+  ((process.env.KESTREL_LOCAL_DOCKER ?? process.env.HAMAFX_LOCAL_DOCKER) === 'true'
     ? process.env.DATABASE_URL || process.env.POSTGRES_URL
     : undefined);
 
@@ -30,12 +30,14 @@ if (!databaseUrl) {
 // connection or applying migrations so an unsupported deployment cannot
 // mutate its database and fail only after the migration chain completes.
 const multiUserEnabled = ['1', 'true'].includes((process.env.MULTI_USER_ENABLED ?? '').toLowerCase());
-const rlsEnabled = ['1', 'true'].includes((process.env.HAMAFX_ENABLE_RLS ?? '').toLowerCase());
+const rlsEnabled = ['1', 'true'].includes(
+  (process.env.KESTREL_ENABLE_RLS ?? process.env.HAMAFX_ENABLE_RLS ?? '').toLowerCase(),
+);
 const registrationMode = process.env.REGISTRATION_MODE ?? 'owner-first';
 if (multiUserEnabled || rlsEnabled || registrationMode === 'open') {
   console.error(
     '[runtime-migrate] Multi-user/RLS and open-registration modes are disabled in this open-source release. ' +
-      'Set MULTI_USER_ENABLED=0, HAMAFX_ENABLE_RLS=0, and REGISTRATION_MODE=owner-first (or disabled) until every user-data query establishes tenant context.',
+      'Set MULTI_USER_ENABLED=0, KESTREL_ENABLE_RLS=0, and REGISTRATION_MODE=owner-first (or disabled) until every user-data query establishes tenant context.',
   );
   process.exit(1);
 }

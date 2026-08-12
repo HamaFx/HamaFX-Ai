@@ -23,7 +23,7 @@ import sys
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
 WEBHOOK_SECRET = os.environ.get("WEBHOOK_SECRET", "")
-UPDATE_SCRIPT = "/opt/hamafx/scripts/docker-update.sh"
+UPDATE_SCRIPT = "/opt/kestrel/scripts/docker-update.sh"
 PORT = int(os.environ.get("WEBHOOK_PORT", "9000"))
 
 
@@ -94,7 +94,7 @@ class WebhookHandler(BaseHTTPRequestHandler):
             flush=True,
         )
         subprocess.Popen(
-            ["/opt/hamafx/scripts/docker-update.sh"],
+            ["/opt/kestrel/scripts/docker-update.sh"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )

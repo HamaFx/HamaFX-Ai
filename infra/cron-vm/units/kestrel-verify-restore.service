@@ -1,0 +1,26 @@
+[Unit]
+Description=Kestrel weekly DB-restore rehearsal
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=kestrel
+Group=kestrel
+WorkingDirectory=/opt/kestrel
+EnvironmentFile=/opt/kestrel/.env
+# Restore verification is skipped until B2 has a configured backup source.
+ExecCondition=/opt/kestrel/scripts/backup-storage-ready.sh
+ExecStart=/opt/kestrel/scripts/verify-restore.sh
+
+MemoryMax=2G
+TimeoutStartSec=2400
+
+# Docker requires NoNewPrivileges=false; we rely on the docker-group
+# membership of the kestrel user (granted by _provision-docker.sh).
+NoNewPrivileges=false
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=kestrel-verify-restore

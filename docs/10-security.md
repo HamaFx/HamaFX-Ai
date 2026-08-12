@@ -95,7 +95,7 @@ Double-submit cookie pattern:
 - `NEXT_PUBLIC_*` env vars are explicitly safe to expose; everything else is server-only.
 - Stored in `.env` (or `.env.local` for local dev) and Vercel Environment Variables.
 - `packages/shared/src/env.ts` validates every required var at boot using Zod and throws clearly if anything is missing.
-- In development, secrets auto-generate to `.hamafx/dev-secrets.json` (gitignored).
+- In development, secrets auto-generate to `.kestrel/dev-secrets.json` (gitignored).
 
 ### BYOK Encryption
 
@@ -169,7 +169,7 @@ Same-origin only. No third party should call our API. If you ever build a Telegr
 - Supabase Free has automatic daily backups (limited retention).
 - The DB schema is in the repo; restoring from backup + replaying migrations is the recovery story.
 - `infra/cron-vm/RECOVERY.md` covers 5 disaster scenarios with concrete commands.
-- Weekly verified restore: `hamafx-verify-restore.timer` boots a throwaway Postgres, restores the latest dump, runs row-count assertions.
+- Weekly verified restore: `kestrel-verify-restore.timer` boots a throwaway Postgres, restores the latest dump, runs row-count assertions.
 
 ---
 
@@ -224,8 +224,8 @@ Protects internal cron endpoints.
 
 **Procedure:**
 1. Generate a new secure string: `openssl rand -hex 16`
-2. Update `CRON_SECRET` in Vercel and in `/opt/hamafx/.env` on the VM.
-3. Restart the worker: `systemctl restart hamafx-worker.service`.
+2. Update `CRON_SECRET` in Vercel and in `/opt/kestrel/.env` on the VM.
+3. Restart the worker: `systemctl restart kestrel-worker.service`.
 
 ### Database Passwords
 

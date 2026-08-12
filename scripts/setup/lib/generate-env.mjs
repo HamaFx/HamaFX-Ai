@@ -31,7 +31,7 @@ import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { upsertEnvFile } from './env.mjs';
+import { readEnvFile, upsertEnvFile } from './env.mjs';
 import {
   hasAllSecrets,
   loadSecretTemplate,
@@ -41,14 +41,17 @@ import {
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, '../../..');
+const LEGACY_ENV_ALIASES = {
+  HAMAFX_ENABLE_RLS: 'KESTREL_ENABLE_RLS',
+};
 
 // Cosmetic section grouping for freshly generated files. Every key listed
 // here MUST exist in secret-template.json (enforced by tests).
 const SECTIONS = [
-  ['Postgres', ['POSTGRES_PASSWORD']],
+  ['Postgres', ['POSTGRES_PASSWORD', 'POSTGRES_VOLUME_NAME']],
   [
     'Local Docker backups',
-    ['BACKUP_INTERVAL_SECONDS', 'BACKUP_RETENTION_DAYS', 'BACKUP_MAX_AGE_SECONDS'],
+    ['BACKUP_VOLUME_NAME', 'BACKUP_INTERVAL_SECONDS', 'BACKUP_RETENTION_DAYS', 'BACKUP_MAX_AGE_SECONDS'],
   ],
   ['Langfuse (LLM observability)', ['LANGFUSE_NEXTAUTH_SECRET', 'LANGFUSE_SALT']],
   ['NextAuth (app authentication)', ['AUTH_SECRET', 'NEXTAUTH_URL']],
@@ -56,7 +59,7 @@ const SECTIONS = [
   ['Encryption (BYOK key encryption at rest)', ['ENCRYPTION_SECRET']],
   [
     'Safe self-hosted defaults',
-    ['BYOK_ENABLED', 'MULTI_USER_ENABLED', 'REGISTRATION_MODE', 'HAMAFX_ENABLE_RLS'],
+    ['BYOK_ENABLED', 'MULTI_USER_ENABLED', 'REGISTRATION_MODE', 'KESTREL_ENABLE_RLS'],
   ],
 ];
 
@@ -103,12 +106,31 @@ async function main() {
       console.log('  To regenerate, delete it first: rm .env');
       return 0;
     }
-    if (hasAllSecrets(target)) {
+    const existing = readEnvFile(target).entries;
+    const legacyAliasesPresent = Object.entries(LEGACY_ENV_ALIASES).some(
+      ([legacyKey]) => existing.has(legacyKey),
+    );
+    if (hasAllSecrets(target) && !legacyAliasesPresent) {
       console.log('✓ .env already exists and is complete — leaving it untouched.');
       return 0;
     }
     const { missing } = missingSecrets(target);
-    const result = upsertEnvFile(target, missing, { backup: false });
+    const migratedLegacyKeys = [];
+    for (const [legacyKey, canonicalKey] of Object.entries(LEGACY_ENV_ALIASES)) {
+      if (existing.has(legacyKey)) {
+        // Preserve an operator's legacy value during the namespace migration
+        // when the canonical key is absent. If both exist, canonical wins and
+        // the deprecated alias is still removed for an unambiguous config.
+        if (missing[canonicalKey] !== undefined) {
+          missing[canonicalKey] = existing.get(legacyKey);
+        }
+        migratedLegacyKeys.push(legacyKey);
+      }
+    }
+    const result = upsertEnvFile(target, missing, {
+      backup: false,
+      removeKeys: migratedLegacyKeys,
+    });
     console.log(
       `✓ Completed missing secrets in .env (${result.diff.length} key${result.diff.length === 1 ? '' : 's'} added).`,
     );

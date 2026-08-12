@@ -8,10 +8,9 @@
 **Kestrel** is an open-source, multi-tenant, chat-driven AI trading copilot for **gold, forex, and crypto**: **XAUUSD** (primary), a canonical forex catalog, and supported Binance crypto pairs. It runs as a Next.js 16 PWA with a persistent Node.js worker daemon. The AI agent uses Vercel AI SDK v5 with 32 registered tools, domain-based model routing, and multi-agent committee deliberation.
 
 - **License**: Apache-2.0
-- **Status**: In production on Vercel + GCE VM. Phases 0–9 shipped (incl. multi-tenant v2.0). UX Upgrade Plan Phases A/B/C/D/E shipped. Architecture Explorer deployed (Phase 8 complete).
+- **Status**: In production on Vercel + GCE VM. Phases 0–9 shipped (incl. multi-tenant v2.0). UX Upgrade Plan Phases A/B/C/D/E shipped.
 - **Auth**: NextAuth.js v5 (Credentials provider, JWT strategy) + Drizzle adapter. BYOK per user (10-provider registry). Strict `userId` scoping on all user-data tables.
-- **Repo**: [github.com/HamaFx/HamaFX-Ai](https://github.com/HamaFx/HamaFX-Ai)
-- **Architecture Vault (Obsidian)**: [github.com/HamaFx/hamafx-architecture-vault](https://github.com/HamaFx/hamafx-architecture-vault)
+- **Repo**: [github.com/HamaFx/Kestrel](https://github.com/HamaFx/Kestrel)
 
 > **Auth status:** The auth system has been hardened. Features include: JWT session management, bcrypt password hashing, account lockout (5 attempts → 15 min), TOTP 2FA (enforced at login), timing-safe user enumeration prevention, signed `x-user-id` header (HMAC-SHA256) for route defense-in-depth, `userSessions` table for active session tracking with revoke support, and `tokenVersion` for "sign out everywhere". See [`auth.ts`](./apps/web/src/auth.ts) and [`auth.config.ts`](./apps/web/src/auth.config.ts) for the canonical implementation.
 
@@ -36,7 +35,7 @@
 | Lint | ESLint flat config in `packages/config/eslint` |
 | TypeScript | Strict mode with `noUncheckedIndexedAccess`; the web app currently opts out of `exactOptionalPropertyTypes` for compatibility |
 | AI Tools | 32 registered tool definitions in `packages/ai/src/tools/` |
-| Architecture Explorer | `tools/architecture-explorer/` — auto-generates interactive HTML, JSON model, Obsidian vault, and AI knowledge artifacts |
+| Architecture snapshot | `docs/architecture-explorer.html` + `docs/architecture-explorer.json` — static reference artifacts |
 | Request proxy | 190 lines. Handles auth, CSRF, CSP, request-id |
 
 ## Commands
@@ -63,23 +62,18 @@ pnpm lint
 
 # Build
 pnpm --filter @kestrel/web build
+```
 
-## Architecture Explorer Commands
+## Architecture snapshot
 
-# Scan the project and generate ALL artifacts (HTML, JSON, Obsidian vault, knowledge)
-cd tools/architecture-explorer
-npx tsx src/index.ts --root /path/to/Kestrel
-
-# Outputs (regenerated every run):
-#   docs/architecture-explorer.html     — Interactive graph explorer
-#   docs/architecture-explorer.json     — Full architecture model (1,399+ nodes)
-#   docs/obsidian/                      — Obsidian vault (1,343+ files)
-#   docs/knowledge/                     — 8 AI knowledge artifacts
-
-# Typecheck the explorer tool separately
-cd tools/architecture-explorer && npx tsc --noEmit
+The repository keeps `docs/architecture-explorer.html` and
+`docs/architecture-explorer.json` as static reference artifacts. They are
+not part of the application build or runtime and are updated manually when a
+refreshed architecture view is useful.
 
 ## Migrations
+
+```bash
 pnpm --filter @kestrel/db migrate:gen     # generate from schema changes
 pnpm --filter @kestrel/db migrate:apply   # apply to DATABASE_URL
 # Vercel prod deploys run scripts/predeploy-migrate.mjs automatically.
@@ -150,11 +144,8 @@ Kestrel/
 │   ├── config/           # Shared ESLint, Prettier, TS configs (not compiled)
 │   └── test-utils/       # Shared test factories, mocks, vitest helpers
 ├── tools/
-│   ├── architecture-explorer/  # 16 source files — auto-generates interactive graphs + artifacts
 │   └── lighthouse/       # Lighthouse performance audit runner
-├── docs/                 # Only procedural docs (auto-generated docs moved to docs/knowledge/)
-│   ├── knowledge/        # 8 AI knowledge artifacts (machine-readable JSON + markdown)
-│   └── obsidian/         # Auto-generated Obsidian vault (1,343+ files, open as vault)
+├── docs/                 # Procedural guides + static architecture snapshot
 ├── infra/cron-vm/        # GCE VM setup script + systemd units
 ├── scripts/              # dev.ts (local dev entrypoint), predeploy-migrate.mjs
 ```
@@ -174,9 +165,6 @@ Browser (PWA)
     │                    ├── compactThread() ──▶ rolling summary
     │                    ├── tryReserveBudget() ──▶ atomic budget guard
     │                    └── enforceCitations() ──▶ post-finish fact-check
-    │
-    ├── /api/admin/architecture-explorer ──▶ Serves interactive architecture graph
-    │                                          (admin-only, public/architecture-explorer.html)
     ├── /api/market/* ──▶ @kestrel/data ──▶ providers (BiQuote→Finnhub failover)
     │
     └── Request proxy (190 lines): NextAuth JWT check, CSRF, CSP, request-id
@@ -191,65 +179,38 @@ Worker (GCE VM, Docker)
 
 ## Key Patterns
 
-### 1. Architecture Explorer — Auto-Generated Documentation
+### 1. Architecture snapshot
 
-The project has a self-contained architecture explorer at `tools/architecture-explorer/`. Run it to generate up-to-date documentation from the live codebase — NO manual docs to maintain.
+The checked-in HTML and JSON are intentionally a static reference snapshot.
+They are useful for browsing the architecture or giving an AI agent a compact
+model, but they are not generated during builds and may become stale after
+substantial code changes.
 
-```bash
-cd tools/architecture-explorer && npx tsx src/index.ts --root /path/to/Kestrel
-```
-
-It generates **4 types of output** simultaneously:
-
-| Output | Location | Size | Purpose |
-|--------|----------|------|---------|
-| Interactive HTML | `docs/architecture-explorer.html` | ~1.5 MB | Full interactive graph with 17+ views, zoom, search, filters |
-| Machine Model | `docs/architecture-explorer.json` | ~2.1 MB | Complete architecture model (1,399+ nodes, 4,200+ edges) |
-| AI Knowledge | `docs/knowledge/*.json` + `knowledge.md` | ~200 KB | 8 ready-made artifacts for AI agents (see section below) |
-| Obsidian Vault | `docs/obsidian/` | ~6.5 MB | 1,343+ markdown files with wiki-links, config, and Canvas |
-
-### 2. AI Knowledge Artifacts (for AI agents)
-
-These files at `docs/knowledge/` are specifically designed for AI agents to understand the project without scanning the full codebase. Give these to any AI agent that needs project context:
-
-| File | Tokens | Content |
-|------|--------|---------|
-| `knowledge.md` | ~2.5K | Human-readable project overview |
-| `architecture.json` | ~7K | Layers, patterns, dependency chain |
-| `features.json` | ~0.8K | 12 features with module ownership |
-| `api.json` | ~14K | All API routes |
-| `database.json` | ~13K | All DB tables |
-| `ai.json` | ~2K | 32 tools, 4 agents, routing |
-| `dependencies.json` | ~5K | Package dependencies |
-| `flows.json` | ~1.5K | 4 sequence diagrams |
-
-**Recommendation:** For most AI agents, just give `knowledge.md` + `architecture.json` + `api.json` + `ai.json` (~25K tokens) — covers 90% of what an agent needs.
-
-### 3. Failover Everywhere
+### 2. Failover Everywhere
 
 Data layer uses `runWithFailover([{name, run()}])` with health-aware ordering. Pinned providers (live_ticks, candles_1m) keep position. SWR = stale-while-revalidate at every level.
 
-### 4. Atomic Budget Guard
+### 3. Atomic Budget Guard
 
 `tryReserveBudget()`: single `INSERT..ON CONFLICT DO UPDATE WHERE total+candidate <= cap`. Concurrent turns at 99% cap serialize correctly.
 
-### 5. Zod at Boundaries
+### 4. Zod at Boundaries
 
 Every data shape crossing package boundaries validates through `@kestrel/shared` schemas. Tool inputs → `InputSchema`, tool outputs → `ToolOutputMap`.
 
-### 6. AsyncLocalStorage for Context
+### 5. AsyncLocalStorage for Context
 
 `withToolContext()` eliminates global state. Each tool call has threadId, env, signal, budget snapshot via `getToolContext()`.
 
-### 7. Plan-Then-Act
+### 6. Plan-Then-Act
 
 For fundamental/technical turns: cheap model generates JSON plan, persisted as system message, rendered as "Thinking" pill in UI.
 
-### 8. Citation Enforcement
+### 7. Citation Enforcement
 
 `enforceCitations()` scans every assistant turn for unsupported price/event claims. Appends `data-citation-warning` part if model cites numbers without tool calls.
 
-### 9. DB-Access Convention (DIP-1)
+### 8. DB-Access Convention (DIP-1)
 
 **Rule:** Inside `packages/ai`, resolve `db` / `llmClient` via the typed DI container tokens (`DB`, `LLM_CLIENT` from `./tokens`). Everywhere else (`apps/web`, `apps/worker`, other packages), import `getDb` directly from `@kestrel/db`.
 
@@ -268,35 +229,11 @@ const db = getDb();
 
 **Rationale:** The AI runtime benefits from injectable `db`/`llmClient` for testing long agent flows. Next.js server actions/route handlers are already the composition edge and read cleanly with direct `getDb()`. The split prevents the test-footgun where `container.register('db', …)` silently fails to intercept direct `getDb()` importers.
 
-### 10. Obsidian Vault for Architecture Browsing
+### 9. Content Security Policy
 
-The auto-generated Obsidian vault at `docs/obsidian/` contains 1,343+ markdown files with YAML frontmatter and wiki-links. Open it as an Obsidian vault:
-
-- **Graph View**: 1,401 nodes, 4,220 edges, color-coded by type and layer
-- **12 dashboards**: Top connected nodes, risk distribution, package heatmap, hotspots, circular deps
-- **16 Package MOCs**: Per-package Maps of Content
-- **Architecture Canvas**: Interactive package dependency diagram
-- **Pre-configured**: `.obsidian/` with graph colors, CSS snippets, core plugins
-- **Standalone repo**: [github.com/HamaFx/hamafx-architecture-vault](https://github.com/HamaFx/hamafx-architecture-vault) for iOS sync via Obsidian Git plugin
-
-### 11. Deployment Preview: Architecture Explorer on Vercel
-
-The interactive architecture explorer is served at `/api/admin/architecture-explorer` (admin auth required). The HTML file is:
-- Generated by `tools/architecture-explorer/`
-- Copied to `apps/web/public/` by `scripts/predeploy-migrate.mjs` during Vercel builds
-- Served by the route handler with custom CSP (allows inline scripts)
-- Also directly accessible at `https://hamafx-ai.vercel.app/architecture-explorer.html` (no auth — the repo is public)
-
-### 12. Middleware CSP & Architecture Explorer Exception
-
-The request proxy at `apps/web/src/proxy.ts` (190 lines, Node.js runtime) sets a `Content-Security-Policy` with `'strict-dynamic'` and a per-request nonce. The architecture explorer route is explicitly **exempted** from this CSP at line 174 — the route handler sets its own permissive CSP instead, because the explorer's inline scripts don't carry the proxy nonce.
-
-The proxy matcher excludes these paths from processing:
-- `auth`, `share`, `api/auth/*`, `api/dev/login`, `api/cron/*`, `api/telegram/*`, `api/billing/webhook/*`
-- `debug`, `sw.js`, `sw-precache.json`, `_next/*`, `favicon.ico`, `manifest.webmanifest`
-- `icons`, `robots.txt`, `sitemap.xml`, `d3.v7.min.js`
-
-> **Regex note:** In the TypeScript matcher regex at `apps/web/src/proxy.ts`, dots in paths like `d3\.v7\.min\.js` use `\\.` because of double-escaping: the TS string literal escape turns `\\.` into `\.` in the regex, which matches a literal dot. When editing the matcher, follow the same convention as existing entries.
+The request proxy sets the application's standard per-request CSP nonce. The
+architecture HTML/JSON snapshot is not served by the app and has no runtime
+CSP exception or deployment-specific route.
 
 ## File Naming Conventions
 
@@ -317,7 +254,7 @@ The proxy matcher excludes these paths from processing:
 - Auth env is split: `getAuthEnv()` (Edge-safe) vs `getServerEnv()` (full)
 
 ### PGlite vs Postgres
-- PGlite runs embedded Postgres via WASM, stored in `.hamafx/data/`
+- PGlite runs embedded Postgres via WASM, stored in `.kestrel/data/`
 - pgvector NOT available in PGlite — vector tables use `real[]` fallback
 - When adding new DB features: ensure they work without pgvector
 - **drizzle-orm ≥0.45.2 error wrapping:** PGlite errors thrown through drizzle are wrapped with a `"Failed query: {SQL}"` prefix. The original PGlite error is stored in `err.cause`. Any code that inspects PGlite error messages (e.g., checking for `"already exists"`, `"does not exist"`, `"cannot insert multiple commands"`) must extract the underlying message via `err instanceof Error && err.cause instanceof Error ? err.cause.message : err.message`. See `packages/db/src/pglite-client.ts` (both `executeWithFallback()` and `applyMigrations()`) and the test files `schema-drift.test.ts` / `full-migration-chain.test.ts` for the canonical pattern.
@@ -332,18 +269,9 @@ The proxy matcher excludes these paths from processing:
 - Individual: `pnpm --filter @kestrel/worker test -- --run`
 
 ### CSP & Nonce System
-- The proxy sets a `'strict-dynamic'` CSP with a per-request nonce
-- Scripts must have a matching `nonce` attribute to execute
-- The architecture explorer is SKIPPED by this CSP (its inline scripts don't carry the nonce)
-- Instead, its route handler sets a permissive CSP: `script-src 'self' 'unsafe-inline'`
-- If adding a new route with inline scripts, either: (a) use the proxy nonce, or (b) skip CSP for that route
-- The static file `/d3.v7.min.js` is excluded from middleware processing entirely
-
-### Predeploy Copy Behavior
-- `scripts/predeploy-migrate.mjs` copies `docs/architecture-explorer.html` to `apps/web/public/` during Vercel builds
-- The `public/` directory is guaranteed to be available in Vercel serverless functions
-- On first run or after a fresh clone, `apps/web/public/architecture-explorer.html` won't exist until the architecture explorer is generated
-- The route handler returns a 404 fallback if the file is missing (not a crash)
+- The proxy sets a `'strict-dynamic'` CSP with a per-request nonce.
+- Scripts in application routes must carry a matching `nonce` attribute.
+- The architecture snapshot is documentation-only and is not copied into `public/`.
 
 ## What NOT to Change
 
@@ -354,7 +282,7 @@ The proxy matcher excludes these paths from processing:
 - **Provider failover**: `runWithFailover()` pattern. Don't add direct provider calls.
 - **Tool pattern**: `inputSchema → module augmentation → execute`. Don't break the tool registry.
 - **AsyncLocalStorage**: tools use `getToolContext()`. Don't use global state.
-- **Architecture Explorer generators**: These are the source of truth for project documentation. If you need to update project docs, update the generator code, not the generated output files.
+- **Architecture snapshot**: `docs/architecture-explorer.html` and `docs/architecture-explorer.json` are informational artifacts, not runtime dependencies.
 
 ## Admin Debugging & Logging
 
@@ -369,7 +297,6 @@ A dedicated `/admin` page is available for admin users. It provides a centralize
 - **User Management** — list users and their onboarding status
 - **Feature Flags** — toggle runtime feature flags
 - **Log Stream** — stream logs in real-time (dev only)
-- **Architecture Explorer** — link to the interactive graph explorer at `/api/admin/architecture-explorer`
 
 An **Onboarding Reset** card is also available in `/settings` for quick access.
 
@@ -401,23 +328,12 @@ The project uses a single pino logger from `packages/shared/src/logger.ts` acros
 
 ## Documentation Index
 
-The project uses **auto-generated documentation** wherever possible. Manual docs are kept only for procedural information that cannot be derived from code.
-
-### Auto-Generated (run `cd tools/architecture-explorer && npx tsx src/index.ts --root ..`)
+The project keeps procedural documentation alongside a small static architecture snapshot. The snapshot is not generated during builds and should be treated as informational.
 
 | Artifact | Description |
 |----------|-------------|
-| `docs/architecture-explorer.html` | Interactive D3.js graph explorer with 17+ architecture views |
-| `docs/architecture-explorer.json` | Full machine-readable architecture model (1,399+ nodes, 4,200+ edges) |
-| `docs/knowledge/knowledge.md` | Human-readable project overview (~2.5K tokens) |
-| `docs/knowledge/architecture.json` | Layers, patterns, dependency chain (~7K tokens) |
-| `docs/knowledge/features.json` | 12 features with module ownership |
-| `docs/knowledge/api.json` | All API routes (~14K tokens) |
-| `docs/knowledge/database.json` | All DB tables (~13K tokens) |
-| `docs/knowledge/ai.json` | 32 tools, 4 agents, routing |
-| `docs/knowledge/dependencies.json` | Package dependencies |
-| `docs/knowledge/flows.json` | Sequence diagrams |
-| `docs/obsidian/` | Full Obsidian vault (1,343+ files, pre-configured) |
+| `docs/architecture-explorer.html` | Self-contained interactive architecture snapshot |
+| `docs/architecture-explorer.json` | Machine-readable architecture snapshot |
 
 ### Manual (procedural — kept because they describe HOW to do things, not WHAT exists)
 

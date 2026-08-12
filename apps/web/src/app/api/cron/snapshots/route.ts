@@ -4,7 +4,7 @@
 //
 // Phase 8 PR-11: this route is now a **manual-fallback path**. The
 // scheduled invocation runs on the GCE worker via
-// `hamafx-job-snapshots.timer`. The route stays here for hand-triggering
+// `kestrel-job-snapshots.timer`. The route stays here for hand-triggering
 // during a worker outage. The worker version also tail-prunes
 // `candles_1m` to the trailing 14 days (this route does not).
 //

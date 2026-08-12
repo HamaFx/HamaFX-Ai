@@ -34,7 +34,7 @@ function downloadLog(lines: string[]) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `hamafx-logs-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.log`;
+  a.download = `kestrel-logs-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.log`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

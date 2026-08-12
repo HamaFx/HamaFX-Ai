@@ -16,13 +16,57 @@ const jetbrainsMono = JetBrains_Mono({
   adjustFontFallback: false,
 });
 
+function resolveMetadataBase(): URL | undefined {
+  const raw = process.env.NEXT_PUBLIC_APP_URL ?? process.env.APP_URL;
+  if (!raw) return undefined;
+
+  try {
+    return new URL(raw);
+  } catch {
+    if (process.env.NODE_ENV === 'production') {
+      console.warn('[metadata] ignoring invalid NEXT_PUBLIC_APP_URL/APP_URL');
+    }
+    return undefined;
+  }
+}
+
+const metadataBase = resolveMetadataBase();
+const socialImage = metadataBase ? '/brand/kestrel-social.png' : undefined;
+
 export const metadata: Metadata = {
+  ...(metadataBase ? { metadataBase } : {}),
   title: {
     default: 'Kestrel',
     template: '%s · Kestrel',
   },
-  description: 'AI trading copilot for forex & commodities.',
+  description: 'AI market intelligence for gold, forex, and crypto.',
   applicationName: 'Kestrel',
+  category: 'finance',
+  keywords: ['Kestrel', 'AI market intelligence', 'gold', 'forex', 'crypto', 'trading'],
+  openGraph: {
+    type: 'website',
+    siteName: 'Kestrel',
+    title: 'Kestrel — AI market intelligence',
+    description: 'See the market clearly with live context for gold, forex, and crypto.',
+    ...(socialImage
+      ? {
+          images: [
+            {
+              url: socialImage,
+              width: 1200,
+              height: 630,
+              alt: 'Kestrel — AI market intelligence for gold, forex, and crypto',
+            },
+          ],
+        }
+      : {}),
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Kestrel — AI market intelligence',
+    description: 'Live market context for gold, forex, and crypto.',
+    ...(socialImage ? { images: [socialImage] } : {}),
+  },
   formatDetection: {
     telephone: false,
     address: false,
@@ -33,7 +77,7 @@ export const metadata: Metadata = {
       { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
       { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
     ],
-    apple: [{ url: '/icons/apple-touch-icon-180.png', sizes: '180x180', type: 'image/png' }],
+    apple: [{ url: '/icons/apple-touch-icon-180.png', sizes: '180x180' }],
   },
 };
 
@@ -50,6 +94,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       className={jetbrainsMono.variable}
+      data-brand="kestrel"
       suppressHydrationWarning
     >
       <head>

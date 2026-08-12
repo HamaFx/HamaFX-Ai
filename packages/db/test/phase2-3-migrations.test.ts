@@ -80,7 +80,7 @@ describe('Phase 2 — data integrity constraints (migration 0028)', () => {
   let dir: string;
 
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), 'hamafx-phase2-'));
+    dir = mkdtempSync(join(tmpdir(), 'kestrel-phase2-'));
   });
 
   afterEach(async () => {
@@ -244,7 +244,7 @@ describe('Phase 3 — schema fixes (migration 0029)', () => {
   let dir: string;
 
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), 'hamafx-phase3-'));
+    dir = mkdtempSync(join(tmpdir(), 'kestrel-phase3-'));
   });
 
   afterEach(async () => {

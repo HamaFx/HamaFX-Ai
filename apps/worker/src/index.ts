@@ -281,7 +281,7 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
   await binanceConsumer.start(); // Binance WS
   symbolManager.start();
   // The consumer is connected and subscribed — tell systemd we're done
-  // bootstrapping. Pair with `Type=notify` in hamafx-worker.service so
+  // bootstrapping. Pair with `Type=notify` in kestrel-worker.service so
   // the unit only enters `active (running)` once we're ready.
   notifyReady();
   notifyStatus('signalr + binance ws connected; tick stream active');

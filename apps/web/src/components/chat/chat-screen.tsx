@@ -43,7 +43,7 @@
 //     "drift" feeling.
 
 import { useChat } from '@ai-sdk/react';
-import Image from 'next/image';
+import { KestrelBrand } from '@/components/brand/kestrel-brand';
 import type { Symbol } from '@kestrel/shared';
 import type { UIMessage } from 'ai';
 import {IconArrowDown, IconArrowBackUp, IconX} from '@tabler/icons-react';
@@ -456,19 +456,16 @@ interface EmptyChatStateProps {
 function EmptyChatState({ pinnedSymbol, disabled, onSelect }: EmptyChatStateProps) {
   return (
     <div className="flex min-h-[60svh] flex-col items-center justify-center gap-6 px-4 py-10 text-center">
-      {/* Brand logo — bird mark + wordmark */}
-      <Image
-        src="/brand/kestrel-logo.png"
-        alt="Kestrel"
-        width={144}
-        height={96}
-        className="opacity-95"
+      <KestrelBrand
+        variant="lockup"
+        decorative
         priority
+        className="w-44 opacity-95"
       />
 
-      <div className="flex flex-col gap-1">
-        <h2 className="text-fg text-lg font-semibold tracking-tight">Kestrel</h2>
-        <p className="text-fg-muted text-sm">Start a conversation</p>
+      <div className="flex max-w-sm flex-col gap-1">
+        <h2 className="text-fg text-lg font-semibold tracking-tight">What are you watching?</h2>
+        <p className="text-fg-muted text-sm leading-relaxed">Ask Kestrel about price action, macro risk, news, or your trading journal.</p>
       </div>
 
       <div className="w-full max-w-md">

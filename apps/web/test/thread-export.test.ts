@@ -233,12 +233,12 @@ describe('renderThreadToMarkdown — truncation', () => {
 describe('exportFilename — naming', () => {
   it('builds the slug from the first 8 hex chars of the UUID', () => {
     const name = exportFilename(THREAD, NOW);
-    expect(name).toBe('hamafx-a1b2c3d4-20260620.md');
+    expect(name).toBe('kestrel-a1b2c3d4-20260620.md');
   });
 
   it('zero-pads single-digit month and day', () => {
     const early = new Date('2026-01-05T00:00:00.000Z');
     const name = exportFilename(THREAD, early);
-    expect(name).toBe('hamafx-a1b2c3d4-20260105.md');
+    expect(name).toBe('kestrel-a1b2c3d4-20260105.md');
   });
 });

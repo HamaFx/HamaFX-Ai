@@ -19,10 +19,10 @@ describe('P3 production hardening policy', () => {
     expect(smoke).toContain('compose down --volumes --remove-orphans');
     expect(smoke).toContain('backup-db.sh --once');
     expect(smoke).not.toContain('backup sh /usr/local/bin/backup-db.sh');
-    expect(smoke).toContain('HAMAFX_RESTORE_CONFIRM=YES');
+    expect(smoke).toContain('KESTREL_RESTORE_CONFIRM=YES');
     expect(smoke).toContain('[ "$marker" != \'before-backup\' ]');
     expect(smoke).toContain("POSTGRES_PUBLISHED_PORT='127.0.0.1:0'");
-    expect(smoke).toContain('PROJECT_NAME="hamafx-backup-smoke-$$"');
+    expect(smoke).toContain('PROJECT_NAME="kestrel-backup-smoke-$$"');
     expect(statSync(backupEntrypointPath).mode & 0o777).toBe(0o755);
   });
 

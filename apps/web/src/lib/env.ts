@@ -11,7 +11,8 @@
 //
 // Phase 10 (setup UX): secrets are OPTIONAL in dev mode. The first call
 // to either getter triggers `loadOrGenerateDevSecrets()` which:
-//   - reads `.hamafx/dev-secrets.json` if present,
+//   - reads `.kestrel/dev-secrets.json` if present (falling back to the
+//     pre-rebrand `.hamafx/dev-secrets.json` during upgrades),
 //   - otherwise generates cryptographically-strong values,
 //   - persists them so BYOK-encrypted payloads survive restarts,
 //   - sets them on `process.env` so the schema validates clean.
@@ -59,17 +60,21 @@ let _serverEnv: ServerEnv | null = null;
 
 /**
  * Path where dev-mode generated secrets are persisted. Lives inside the
- * already-gitignored `.hamafx/` directory so it never reaches the public
+ * already-gitignored `.kestrel/` directory so it never reaches the public
  * repo. Mode 0600 on creation so other local users can't read the keys.
  */
-const DEV_SECRETS_PATH = resolve('.hamafx/dev-secrets.json');
+const DEV_SECRETS_PATH = resolve('.kestrel/dev-secrets.json');
+const LEGACY_DEV_SECRETS_PATH = resolve('.hamafx/dev-secrets.json');
 
 type DevSecretStore = Partial<Record<(typeof AUTO_GENERATED_SECRETS)[number], string>>;
 
 function readDevSecrets(): DevSecretStore {
   try {
-    if (!existsSync(DEV_SECRETS_PATH)) return {};
-    const raw = readFileSync(DEV_SECRETS_PATH, 'utf8');
+    const path = existsSync(DEV_SECRETS_PATH)
+      ? DEV_SECRETS_PATH
+      : LEGACY_DEV_SECRETS_PATH;
+    if (!existsSync(path)) return {};
+    const raw = readFileSync(path, 'utf8');
     const parsed = JSON.parse(raw);
     if (parsed && typeof parsed === 'object') return parsed as DevSecretStore;
   } catch {
@@ -79,7 +84,7 @@ function readDevSecrets(): DevSecretStore {
 }
 
 function writeDevSecrets(store: DevSecretStore): void {
-  mkdirSync(resolve('.hamafx'), { recursive: true });
+  mkdirSync(resolve('.kestrel'), { recursive: true });
   writeFileSync(DEV_SECRETS_PATH, JSON.stringify(store, null, 2), { mode: 0o600 });
 }
 

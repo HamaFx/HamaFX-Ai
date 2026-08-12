@@ -61,7 +61,7 @@
  */
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { copyFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -219,18 +219,6 @@ try {
   });
   console.log('[predeploy-migrate] OK — pending migrations applied');
 
-  // Copy architecture explorer HTML into the app directory for deployment.
-  // This ensures the admin-only /api/admin/architecture-explorer route works.
-  const srcHtml = resolve(repoRoot, 'docs', 'architecture-explorer.html');
-  // Copy to public/ so it's included in static build output and accessible at runtime
-  // via process.cwd() + '/public/architecture-explorer.html'
-  const dstDir = resolve(repoRoot, 'apps', 'web', 'public');
-  if (existsSync(srcHtml)) {
-    copyFileSync(srcHtml, resolve(dstDir, 'architecture-explorer.html'));
-    console.log('[predeploy-migrate] Copied architecture-explorer.html to public/ for admin route');
-  } else {
-    console.warn('[predeploy-migrate] Skipped: architecture-explorer.html not found in docs/');
-  }
 } catch (err) {
   console.error('[predeploy-migrate] FAILED — migration step errored.');
   console.error('[predeploy-migrate] The build will not proceed. Fix the migration and re-deploy.');

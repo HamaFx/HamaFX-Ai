@@ -3,7 +3,7 @@
 #
 # Usage:
 #   ./docker/restore-db.sh latest
-#   ./docker/restore-db.sh hamafx-20260810T030000Z.dump.gz
+#   ./docker/restore-db.sh kestrel-20260810T030000Z.dump.gz
 #
 # The backup volume is mounted only in the backup image. This command uses a
 # short-lived backup-image container to read the archive and connect to db over
@@ -49,8 +49,9 @@ case "$backup_path" in
   *) echo 'resolved backup path is outside the backup volume' >&2; exit 2 ;;
 esac
 
-if [ "${HAMAFX_RESTORE_CONFIRM:-}" != "YES" ]; then
-  echo 'Restore replaces the current database. Re-run with HAMAFX_RESTORE_CONFIRM=YES.' >&2
+restore_confirm=${KESTREL_RESTORE_CONFIRM:-${HAMAFX_RESTORE_CONFIRM:-}}
+if [ "$restore_confirm" != "YES" ]; then
+  echo 'Restore replaces the current database. Re-run with KESTREL_RESTORE_CONFIRM=YES.' >&2
   echo "Selected archive: $(basename "$backup_path")" >&2
   exit 2
 fi

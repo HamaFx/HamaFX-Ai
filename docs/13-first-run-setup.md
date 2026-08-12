@@ -5,7 +5,7 @@
 ## TL;DR
 
 ```bash
-git clone https://github.com/HamaFx/HamaFX-Ai.git
+git clone https://github.com/HamaFx/Kestrel.git
 cd Kestrel
 pnpm install
 echo 'GOOGLE_GENERATIVE_AI_API_KEY=AIza...' >> .env.local
@@ -28,7 +28,7 @@ In `NODE_ENV !== 'production'` (i.e. local dev and tests), the web app's `getSer
 | `ENCRYPTION_SECRET` | AES-256-GCM key for BYOK payloads | 32 bytes (64 hex chars) |
 | `CRON_SECRET` | Bearer token for `/api/cron/*` | 16 chars |
 
-They're generated with `crypto.randomBytes(N)`, persisted to `.hamafx/dev-secrets.json` (gitignored), and reloaded on the next boot. This means **encrypted BYOK keys survive restarts** in dev — the encrypted data and the encryption key move together.
+They're generated with `crypto.randomBytes(N)`, persisted to `.kestrel/dev-secrets.json` (gitignored), and reloaded on the next boot. This means **encrypted BYOK keys survive restarts** in dev — the encrypted data and the encryption key move together.
 
 In production every secret **must** be set explicitly via env. The schema's refinement rejects a missing value with a clear error message naming the variable.
 
@@ -99,7 +99,7 @@ Ctrl+C anywhere aborts cleanly with a friendly message (exit 130).
 - **Docker compose** (`./docker/init-secrets.sh && docker compose up -d`):
   Postgres 16 + pgvector + the app. Follow the env file instructions in the compose file. pgvector requires this mode — PGlite doesn't ship the vector extension. See [11-self-hosting.md](./11-self-hosting.md).
 
-- **Cloud** (Vercel + GCE VM): see [08-deployment.md](./08-deployment.md). All three secrets must be set in Vercel's dashboard; the VM reads from `/opt/hamafx/.env` on disk.
+- **Cloud** (Vercel + GCE VM): see [08-deployment.md](./08-deployment.md). All three secrets must be set in Vercel's dashboard; the VM reads from `/opt/kestrel/.env` on disk.
 
 ## What about the existing /settings/api-keys page?
 
@@ -121,8 +121,8 @@ You can mix and match providers — the routing layer in `packages/ai/src/model.
 | `Invalid environment configuration: AUTH_SECRET must be at least 32 chars` | Production env, secrets weren't auto-gen'd | Set the secret explicitly in your deployment env |
 | `No AI API keys configured` | Finished onboarding without picking a provider | Visit `/settings/api-keys`, paste a key |
 | `Daily AI budget exceeded (X / Y)` | Burned through today's quota | Wait until UTC midnight or raise `MAX_DAILY_USD` |
-| `relation does not exist` on a fresh DB | PGlite migration didn't run | `rm -rf .hamafx/data && pnpm dev:local` to start over |
-| Encrypted keys unreadable after restart | Dev secrets file got out of sync | `rm .hamafx/dev-secrets.json` to regenerate |
+| `relation does not exist` on a fresh DB | PGlite migration didn't run | `rm -rf .kestrel/data && pnpm dev:local` to start over |
+| Encrypted keys unreadable after restart | Dev secrets file got out of sync | `rm .kestrel/dev-secrets.json` to regenerate |
 
 ## Source Map
 

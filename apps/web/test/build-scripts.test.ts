@@ -71,7 +71,7 @@ describe('build scripts', () => {
 
     expect(existsSync(swFile)).toBe(true);
     const sw = readFileSync(swFile, 'utf8');
-    expect(sw).toContain(`hamafx-shell-v${buildId}`);
+    expect(sw).toContain(`kestrel-shell-v${buildId}`);
   });
 
   it('generate-sw fails the build when the template is missing', () => {

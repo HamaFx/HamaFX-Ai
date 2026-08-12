@@ -27,7 +27,7 @@
 
 import { trace, SpanStatusCode, type Span } from '@opentelemetry/api';
 
-const TRACER_NAME = 'hamafx-db';
+const TRACER_NAME = 'kestrel-db';
 
 /**
  * Wraps a query function with OpenTelemetry tracing.

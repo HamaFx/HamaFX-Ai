@@ -37,7 +37,8 @@
 import {IconDownload, IconShare, IconX} from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
 
-const STORAGE_KEY = 'hfx_install_dismissed';
+const STORAGE_KEY = 'kestrel:install-dismissed';
+const LEGACY_STORAGE_KEY = 'hfx_install_dismissed';
 const DISMISS_CAP = 3;
 
 interface BeforeInstallPromptEvent extends Event {
@@ -78,9 +79,15 @@ export function InstallNudge() {
 
     // Dismiss cap.
     try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
+      const raw =
+        window.localStorage.getItem(STORAGE_KEY) ??
+        window.localStorage.getItem(LEGACY_STORAGE_KEY);
       const count = raw ? Number(raw) : 0;
       if (Number.isFinite(count) && count >= DISMISS_CAP) setDismissed(true);
+      if (raw !== null && window.localStorage.getItem(STORAGE_KEY) === null) {
+        window.localStorage.setItem(STORAGE_KEY, raw);
+        window.localStorage.removeItem(LEGACY_STORAGE_KEY);
+      }
     } catch {
       /* localStorage may be unavailable in private mode */
     }

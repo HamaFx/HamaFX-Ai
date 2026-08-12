@@ -70,7 +70,7 @@ describe('Phase D2 — migration 0014_vision_embedding_model', () => {
   let dir: string;
 
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), 'hamafx-mig14-'));
+    dir = mkdtempSync(join(tmpdir(), 'kestrel-mig14-'));
   });
 
   afterEach(async () => {

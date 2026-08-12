@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 import { and, eq } from 'drizzle-orm';
 
-import Image from 'next/image';
+import { KestrelBrand } from '@/components/brand/kestrel-brand';
 
 import { auth } from '@/auth';
 import { buildCatalogForUser } from '@/lib/catalog-server';
@@ -45,17 +45,16 @@ export default async function OnboardingPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="text-center">
-        <Image
-          src="/brand/kestrel-logo.png"
-          alt="Kestrel"
-          width={144}
-          height={96}
-          className="mx-auto mb-4"
+      <div className="flex flex-col items-center text-center">
+        <KestrelBrand
+          variant="lockup"
+          decorative
           priority
+          className="mb-5 w-44 sm:w-52"
         />
-        <h1 className="text-fg text-2xl font-bold tracking-tight sm:text-3xl mb-2">Welcome to Kestrel</h1>
-        <p className="text-fg-subtle">Let's configure your workspace.</p>
+        <p className="text-brand text-caption mb-2 font-semibold uppercase tracking-[0.18em]">Your market view</p>
+        <h1 className="text-fg mb-2 text-2xl font-bold tracking-tight sm:text-3xl">Welcome to Kestrel</h1>
+        <p className="text-fg-muted max-w-md leading-relaxed">Set up your watchlist, data sources, and AI workspace for a clearer view of the markets.</p>
       </div>
       <OnboardingWizard
         initialName={session.user.name || ''}

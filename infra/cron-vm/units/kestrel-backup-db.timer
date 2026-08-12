@@ -1,0 +1,11 @@
+[Unit]
+Description=Nightly DB dump to B2 (opt-in) at 03:00 UTC
+
+[Timer]
+OnCalendar=*-*-* 03:00:00 UTC
+RandomizedDelaySec=120
+Persistent=true
+Unit=kestrel-backup-db.service
+
+[Install]
+WantedBy=timers.target

@@ -176,11 +176,7 @@ const proxy: any = auth(async (req) => {
   });
 
   // C-3: Set CSP header with per-request nonce.
-  // Skip for the architecture explorer — it's a standalone admin page
-  // with its own inline scripts that don't carry the proxy nonce.
-  if (req.nextUrl.pathname !== '/api/admin/architecture-explorer') {
-    setCspHeader(next, cspNonce);
-  }
+  setCspHeader(next, cspNonce);
 
   return next;
 });
@@ -193,6 +189,6 @@ export const config = {
   // unauthenticated uptime probe, /share is public, /auth is the login
   // surface. /api/billing/webhook is HMAC-signed (not session-auth).
   matcher: [
-    '/((?!auth|share|api/auth|api/dev/login|api/cron|api/telegram|api/billing/webhook|api/health/public|api/admin/architecture-explorer|debug|sw\\.js|sw-precache\\.json|_next/static|_next/image|favicon\\.ico|manifest\\.webmanifest|icons|robots\\.txt|sitemap\\.xml|d3\\.v7\\.min\\.js|architecture-explorer\\.html).*)',
+    '/((?!auth|share|api/auth|api/dev/login|api/cron|api/telegram|api/billing/webhook|api/health/public|debug|sw\\.js|sw-precache\\.json|_next/static|_next/image|favicon\\.ico|manifest\\.webmanifest|icons|robots\\.txt|sitemap\\.xml).*)',
   ],
 };

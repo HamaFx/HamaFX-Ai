@@ -33,7 +33,7 @@ import { z } from 'zod';
  * Development ergonomics: in NODE_ENV !== 'production' the secrets
  * are OPTIONAL. The web app's `getServerEnv()`/`getAuthEnv()` will
  * auto-generate cryptographically-strong values when missing and
- * persist them to `.hamafx/dev-secrets.json` so encrypted BYOK payloads
+ * persist them to `.kestrel/dev-secrets.json` so encrypted BYOK payloads
  * survive restarts. Production-time enforcement is applied at the
  * ServerEnvSchema refinement below.
  */
@@ -229,7 +229,7 @@ const RuntimeEnv = z.object({
   /** Public account creation policy. owner-first allows only the initial owner. */
   REGISTRATION_MODE: z.enum(['owner-first', 'open', 'disabled']).default('owner-first'),
   /** RLS is required whenever multi-user mode is enabled. */
-  HAMAFX_ENABLE_RLS: z
+  KESTREL_ENABLE_RLS: z
     .union([z.literal('0'), z.literal('1'), z.literal('true'), z.literal('false')])
     .default('0')
     .transform((v) => v === '1' || v === 'true'),
@@ -281,19 +281,19 @@ export const ServerEnvSchema = z
       path: ['AUTH_SECRET'],
     },
   )
-  .refine((env) => !env.MULTI_USER_ENABLED || env.HAMAFX_ENABLE_RLS, {
+  .refine((env) => !env.MULTI_USER_ENABLED || env.KESTREL_ENABLE_RLS, {
     message:
-      'MULTI_USER_ENABLED requires HAMAFX_ENABLE_RLS=true. Multi-user PostgreSQL deployments must fail closed instead of running without database tenant isolation.',
-    path: ['HAMAFX_ENABLE_RLS'],
+      'MULTI_USER_ENABLED requires KESTREL_ENABLE_RLS=true. Multi-user PostgreSQL deployments must fail closed instead of running without database tenant isolation.',
+    path: ['KESTREL_ENABLE_RLS'],
   })
-  .refine((env) => !env.MULTI_USER_ENABLED && !env.HAMAFX_ENABLE_RLS, {
+  .refine((env) => !env.MULTI_USER_ENABLED && !env.KESTREL_ENABLE_RLS, {
     message:
-      'Multi-user/RLS mode is disabled in this open-source release until every user-data query establishes tenant context. Keep MULTI_USER_ENABLED=0 and HAMAFX_ENABLE_RLS=0, and use owner-first registration.',
+      'Multi-user/RLS mode is disabled in this open-source release until every user-data query establishes tenant context. Keep MULTI_USER_ENABLED=0 and KESTREL_ENABLE_RLS=0, and use owner-first registration.',
     path: ['MULTI_USER_ENABLED'],
   })
-  .refine((env) => env.REGISTRATION_MODE !== 'open' || (env.MULTI_USER_ENABLED && env.HAMAFX_ENABLE_RLS), {
+  .refine((env) => env.REGISTRATION_MODE !== 'open' || (env.MULTI_USER_ENABLED && env.KESTREL_ENABLE_RLS), {
     message:
-      'REGISTRATION_MODE=open requires MULTI_USER_ENABLED=1 and HAMAFX_ENABLE_RLS=1; open registration is unsafe without tenant isolation.',
+      'REGISTRATION_MODE=open requires MULTI_USER_ENABLED=1 and KESTREL_ENABLE_RLS=1; open registration is unsafe without tenant isolation.',
     path: ['REGISTRATION_MODE'],
   });
 
@@ -373,7 +373,13 @@ export function pickAiEnv(env: Pick<ServerEnv, AiEnvKeys>) {
  * every missing/invalid variable. Cache the result at module-scope in callers.
  */
 export function parseServerEnv(input: NodeJS.ProcessEnv = process.env): ServerEnv {
-  const result = ServerEnvSchema.safeParse(input);
+  // Accept the pre-rebrand variable during upgrades, but normalize all
+  // application behavior to the Kestrel name before validation.
+  const normalized = { ...input };
+  if (normalized.KESTREL_ENABLE_RLS === undefined && normalized.HAMAFX_ENABLE_RLS !== undefined) {
+    normalized.KESTREL_ENABLE_RLS = normalized.HAMAFX_ENABLE_RLS;
+  }
+  const result = ServerEnvSchema.safeParse(normalized);
   if (!result.success) {
     const issues = result.error.issues
       .map((i) => `  - ${i.path.join('.') || '(root)'}: ${i.message}`)

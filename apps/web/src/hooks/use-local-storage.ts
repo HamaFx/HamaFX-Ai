@@ -18,6 +18,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { migrateLegacyStorageKey } from '@/lib/storage';
+
 export function useLocalStorage<T>(key: string, initialValue: T) {
   const [storedValue, setStoredValue] = useState<T>(initialValue);
   const [hydrated, setHydrated] = useState(false);
@@ -26,6 +28,7 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
 
   // Load from localStorage on mount and when key changes.
   useEffect(() => {
+    migrateLegacyStorageKey(key);
     try {
       const item = window.localStorage.getItem(key);
       if (item !== null) {

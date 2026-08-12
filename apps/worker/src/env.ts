@@ -29,7 +29,7 @@
 // `KEY=`, the value arrives as the literal empty string. zod's
 // `.optional()` only short-circuits on `undefined`. We pre-process every
 // optional-string field via `coerceEmptyToUndefined` so the operator
-// can leave a row blank in `/opt/hamafx/.env` without tripping the
+// can leave a row blank in `/opt/kestrel/.env` without tripping the
 // .min(1) check.
 
 import { z } from 'zod';
@@ -57,7 +57,7 @@ const WorkerEnvSchema = z.object({
   /**
    * healthchecks.io UUIDs. Optional — when missing, healthchecks become
    * no-ops so local dev / tests work without configuration. Production
-   * sets all of these via /opt/hamafx/.env.
+   * sets all of these via /opt/kestrel/.env.
    */
   HC_SIGNALR_UUID: optionalNonEmpty,
   HC_BACKUP_DB_UUID: optionalNonEmpty,
@@ -86,7 +86,7 @@ const WorkerEnvSchema = z.object({
   SENTRY_DSN: optionalUrl,
 
   /**
-   * Deployed commit SHA, written by `update.sh` to /opt/hamafx/.deployed-sha.
+   * Deployed commit SHA, written by `update.sh` to /opt/kestrel/.deployed-sha.
    * The bootstrap script reads the file and exports it before exec.
    * Used as a Sentry tag and embedded in healthcheck POST bodies so we can
    * pinpoint a regression to a specific deploy.

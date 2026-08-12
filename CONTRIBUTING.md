@@ -52,9 +52,9 @@ pnpm dev:local
 # → The onboarding wizard will guide you through adding your first AI provider key
 ```
 
-Fresh self-hosted deployments are single-user only. Shared PostgreSQL mode is intentionally disabled in this OSS release; do not set `MULTI_USER_ENABLED=1` or `HAMAFX_ENABLE_RLS=1`.
+Fresh self-hosted deployments are single-user only. Shared PostgreSQL mode is intentionally disabled in this OSS release; do not set `MULTI_USER_ENABLED=1` or `KESTREL_ENABLE_RLS=1`.
 
-Auth secrets (`AUTH_SECRET`, `ENCRYPTION_SECRET`, `CRON_SECRET`) auto-generate to `.hamafx/dev-secrets.json` on first boot. See [docs/08-agent-setup-run.md](docs/08-agent-setup-run.md) for full setup details.
+Auth secrets (`AUTH_SECRET`, `ENCRYPTION_SECRET`, `CRON_SECRET`) auto-generate to `.kestrel/dev-secrets.json` on first boot. See [docs/08-agent-setup-run.md](docs/08-agent-setup-run.md) for full setup details.
 
 ---
 
@@ -112,7 +112,7 @@ See [docs/01-architecture.md](docs/01-architecture.md) for the full architecture
 - Soft-delete via `deletedAt` timestamp column
 - pgvector for embeddings (`vector(1536)` in Postgres, `real[]` in PGlite)
 - **New tables must work in PGlite** — no RLS, no pgvector-specific features without fallback
-- **Shared deployments are blocked** — this OSS release rejects `MULTI_USER_ENABLED=1` and `HAMAFX_ENABLE_RLS=1` until every user-data query establishes tenant context.
+- **Shared deployments are blocked** — this OSS release rejects `MULTI_USER_ENABLED=1` and `KESTREL_ENABLE_RLS=1` until every user-data query establishes tenant context.
 
 ### 4.4 Error Handling
 
@@ -391,8 +391,8 @@ CI must pass before merge. E2E and AI evals run only on `main` and nightly (not 
 - **Architecture questions:** Read [docs/01-architecture.md](docs/01-architecture.md)
 - **Setup issues:** Read [docs/08-agent-setup-run.md](docs/08-agent-setup-run.md) (Common Failures & Fixes)
 - **Security questions:** Read [docs/05-security-auth-compliance.md](docs/05-security-auth-compliance.md)
-- **Bugs:** [Open an issue](https://github.com/HamaFx/HamaFX-Ai/issues) using the bug report template
-- **Feature requests:** [Open an issue](https://github.com/HamaFx/HamaFX-Ai/issues) using the feature request template
+- **Bugs:** [Open an issue](https://github.com/HamaFx/Kestrel/issues) using the bug report template
+- **Feature requests:** [Open an issue](https://github.com/HamaFx/Kestrel/issues) using the feature request template
 - **Security vulnerabilities:** See [SECURITY.md](SECURITY.md) — do NOT open a public issue
 
 ---
