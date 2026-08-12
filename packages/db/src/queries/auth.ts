@@ -16,9 +16,11 @@
 
 // Auth query helpers — login, registration, password reset, verification tokens.
 
-import { and, eq, gt, isNull, sql } from 'drizzle-orm';
+import { and, eq, gt, isNull, ne, sql } from 'drizzle-orm';
 import { DEFAULT_WATCHLIST_SYMBOLS } from '@kestrel/shared';
 import { getDb, schema } from '../client';
+
+const SYSTEM_USER_ID = '__system__';
 
 export interface AuthUserRow {
   id: string;
@@ -112,9 +114,12 @@ export async function createUserWithSettings(
       const [existingUser] = await tx
         .select({ id: schema.users.id })
         .from(schema.users)
-        .where(isNull(schema.users.deletedAt))
+        .where(and(
+          isNull(schema.users.deletedAt),
+          ne(schema.users.id, SYSTEM_USER_ID),
+        ))
         .limit(1);
-      if (existingUser) {
+      if (existingUser && existingUser.id !== SYSTEM_USER_ID) {
         throw new Error('INITIAL_USER_ALREADY_EXISTS');
       }
     }

@@ -7,11 +7,13 @@
 // The signIn callback becomes thin glue: validate inputs, delegate to
 // provisionUserOnSignIn, return its decision.
 
-import { and, eq, isNull, sql } from 'drizzle-orm';
+import { and, eq, isNull, ne, sql } from 'drizzle-orm';
 import { schema } from '@kestrel/db';
 import { getDb } from '@kestrel/ai';
 import { getServerEnv } from '@/lib/env';
 import { DEFAULT_WATCHLIST_SYMBOLS } from '@kestrel/shared';
+
+const SYSTEM_USER_ID = '__system__';
 
 // ── Typed inputs ──────────────────────────────────────────────────────
 
@@ -105,9 +107,14 @@ export async function provisionUserOnSignIn(input: SignInInput): Promise<SignInD
           const [existingUser] = await t
             .select({ id: schema.users.id })
             .from(schema.users)
-            .where(isNull(schema.users.deletedAt))
+            .where(and(
+              isNull(schema.users.deletedAt),
+              ne(schema.users.id, SYSTEM_USER_ID),
+            ))
             .limit(1);
-          if (existingUser) throw new Error('INITIAL_USER_ALREADY_EXISTS');
+          if (existingUser && existingUser.id !== SYSTEM_USER_ID) {
+            throw new Error('INITIAL_USER_ALREADY_EXISTS');
+          }
         }
         await t.insert(schema.users).values({
           id: newUserId,
