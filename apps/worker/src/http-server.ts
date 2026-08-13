@@ -43,7 +43,7 @@ export interface HealthServerDeps {
 
 /**
  * Create the HTTP server for health checks and BiQuote REST proxy.
- * Binds to 127.0.0.1:8081. Caller must call `server.listen()`.
+ * Caller must call `server.listen()` with the desired container bind address.
  */
 export function createHealthServer(deps: HealthServerDeps): http.Server {
   const { log, getLastTickAt, isSignalRConnected } = deps;

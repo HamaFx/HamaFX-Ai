@@ -491,8 +491,11 @@ export async function main(): Promise<void> {
       getDroppedTicks: () => worker.consumer.droppedTicks(),
     });
 
-    healthServer.listen(8081, '127.0.0.1', () => {
-      log.info('Health server listening on 127.0.0.1:8081');
+    // Bind on all container interfaces so Docker's published localhost port
+    // can reach the server. Compose keeps the host-side port bound to
+    // 127.0.0.1, so this does not expose the worker publicly.
+    healthServer.listen(8081, '0.0.0.0', () => {
+      log.info('Health server listening on 0.0.0.0:8081');
     });
 
     onShutdown(() => closeDb());
