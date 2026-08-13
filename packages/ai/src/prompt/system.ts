@@ -61,6 +61,17 @@ export interface UserPromptContext {
   language: string;
 }
 
+export function responseLanguageInstruction(language: string | null | undefined): string {
+  const locale = (language ?? '').trim().toLowerCase();
+  if (locale.startsWith('zh')) {
+    return 'Respond exclusively in Simplified Chinese unless the user explicitly asks for another language.';
+  }
+  if (locale.startsWith('en') || locale.length === 0) {
+    return 'Respond exclusively in English unless the user explicitly asks for another language. Do not switch to Chinese or another language because of model defaults or tool data.';
+  }
+  return `Respond in the user's configured language (${language}) unless the user explicitly asks for another language.`;
+}
+
 const BASE_PROMPT = `You are Kestrel, a trading copilot for supported **gold, forex, and crypto** instruments in the canonical symbol catalog.
 
 # Hard rules
@@ -107,7 +118,7 @@ export function buildSystemPrompt(
   // default symbol + timezone when relevant. Falls back gracefully if
   // the user context is missing (cron jobs, anonymous smoke tests).
   const userBlock = user
-    ? `\n# USER CONTEXT\n- Display name: ${user.displayName || '(unset)'}\n- Preferred default symbol: ${user.defaultSymbol}\n- Timezone: ${user.timezone}\n- Locale: ${user.language}\n\nWhen the user asks a general question without specifying a symbol, default to ${user.defaultSymbol}. Use ${user.timezone} when discussing times.\n`
+    ? `\n# USER CONTEXT\n- Display name: ${user.displayName || '(unset)'}\n- Preferred default symbol: ${user.defaultSymbol}\n- Timezone: ${user.timezone}\n- Locale: ${user.language}\n- Response language policy: ${responseLanguageInstruction(user.language)}\n\nWhen the user asks a general question without specifying a symbol, default to ${user.defaultSymbol}. Use ${user.timezone} when discussing times.\n`
     : '';
 
   if (!snapshot) return `${BASE_PROMPT}${userBlock}`;

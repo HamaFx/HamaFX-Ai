@@ -26,6 +26,7 @@ import { telemetryConfig } from '../../telemetry';
 import type { SharedContext, AgentOpinion, AgentName, AgentBias, ModelTier } from '../types';
 import { AGENT_TIMEOUTS } from '../types';
 import { extractUserMessageText } from '../context';
+import { responseLanguageInstruction } from '../../prompt/system';
 import { resolveAgentModel, safeParseJson } from './agent-model';
 
 export const baseOpinionSchema = z.object({
@@ -71,7 +72,7 @@ export abstract class BaseAgent {
       ? `\n\n${ctx.prefetchedData}\n\nPrefer the above pre-fetched data. Only call tools for data gaps or updates.\n`
       : '';
     const userText = extractUserMessageText(ctx.userMessage);
-    const fullSystem = `${this.systemPrompt()}\n\n${sharedPrompt}${prefetchedPrompt}`;
+    const fullSystem = `${this.systemPrompt()}\n\n## RESPONSE LANGUAGE\n${responseLanguageInstruction(ctx.userSettings.language)}\n\n${sharedPrompt}${prefetchedPrompt}`;
     const historyMessages = ctx.history && ctx.history.length > 0
       ? convertToModelMessages(ctx.history.filter((message) => message.role !== 'system'))
       : [];

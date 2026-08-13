@@ -22,6 +22,7 @@ import {
   getProvider,
 } from '../src/byok-providers';
 import { PROVIDER_IDS } from '@kestrel/shared/byok';
+import { normalizeHcnsecSse } from '../src/_providers/helpers';
 
 describe('BYOK_PROVIDERS', () => {
   it('contains every id from PROVIDER_IDS', () => {
@@ -95,6 +96,30 @@ describe('HCNSEC provider', () => {
       embedding: null,
     });
     expect(spec.supports).toEqual({ vision: false, embedding: false });
+  });
+});
+
+describe('HCNSEC stream normalization', () => {
+  it('combines split tool metadata into an SDK-compatible first chunk', () => {
+    const raw = [
+      `data: ${JSON.stringify({ id: 'req-1', model: 'DeepSeek-V4-Flash', choices: [{ index: 0, delta: { role: 'assistant', reasoning_content: 'reasoning ' }, finish_reason: null }] })}`,
+      `data: ${JSON.stringify({ id: 'req-1', model: 'DeepSeek-V4-Flash', choices: [{ index: 0, delta: { tool_calls: [{ index: 0, id: 'call-1', function: { arguments: '{"symbol":' } }] }, finish_reason: null }] })}`,
+      `data: ${JSON.stringify({ id: 'req-1', model: 'DeepSeek-V4-Flash', choices: [{ index: 0, delta: { tool_calls: [{ index: 0, function: { name: 'get_price', arguments: '"XAUUSD"}' } }] }, finish_reason: 'tool_calls' }] })}`,
+      'data: [DONE]',
+    ].join('\n\n');
+
+    const normalized = normalizeHcnsecSse(raw);
+    const firstEvent = normalized.split('\n\n')[0]?.replace(/^data: /, '');
+    const parsed = JSON.parse(firstEvent ?? '{}') as {
+      choices?: Array<{ delta?: { reasoning_content?: string; tool_calls?: Array<{ id?: string; function?: { name?: string; arguments?: string } }> } }>;
+    };
+    const delta = parsed.choices?.[0]?.delta;
+    expect(delta?.reasoning_content).toBe('reasoning ');
+    expect(delta?.tool_calls?.[0]).toMatchObject({
+      id: 'call-1',
+      function: { name: 'get_price', arguments: '{"symbol":"XAUUSD"}' },
+    });
+    expect(normalized).toContain('data: [DONE]');
   });
 });
 

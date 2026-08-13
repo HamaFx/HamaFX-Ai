@@ -18,7 +18,142 @@
 // spec files to keep them focused on data declarations.
 
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+import type { FetchFunction } from '@ai-sdk/provider-utils';
 import type { ByokProviderSpec, ModelDomain } from './types';
+
+/**
+ * HCNSEC occasionally emits tool-call metadata in separate SSE chunks
+ * (the name/ID may arrive after the first arguments chunk). The AI SDK's
+ * OpenAI-compatible parser requires the name and ID on the first chunk.
+ * This normalizer combines one HCNSEC tool response into one canonical SSE
+ * event before the SDK parses it. It is intentionally provider-specific.
+ */
+export function normalizeHcnsecSse(input: string): string {
+  const events = input
+    .split(/\r?\n\r?\n/)
+    .map((event) => event
+      .split(/\r?\n/)
+      .filter((line) => line.startsWith('data:'))
+      .map((line) => line.slice(5).trimStart())
+      .join('\n'))
+    .filter((data) => data.length > 0 && data !== '[DONE]');
+
+  const chunks: Array<Record<string, unknown>> = [];
+  for (const data of events) {
+    try {
+      const parsed = JSON.parse(data) as Record<string, unknown>;
+      if (!('choices' in parsed) && !('usage' in parsed)) continue;
+      chunks.push(parsed);
+    } catch {
+      // Ignore provider keep-alive/comment events and malformed telemetry.
+    }
+  }
+
+  // If the gateway returned an unrecognized stream, preserve it for the
+  // SDK's own parser instead of turning it into an empty "stop" response.
+  if (chunks.length === 0) return input;
+
+  const first = chunks[0] ?? {};
+  const firstChoice = Array.isArray(first.choices)
+    ? (first.choices[0] as Record<string, unknown> | undefined)
+    : undefined;
+  const firstDelta = firstChoice?.delta as Record<string, unknown> | undefined;
+  let content = '';
+  let reasoning = '';
+  let finishReason: string | null = null;
+  let usage: unknown;
+  const toolCalls = new Map<number, { id: string; name: string; arguments: string }>();
+
+  for (const chunk of chunks) {
+    if (chunk.usage !== undefined) usage = chunk.usage;
+    const choice = Array.isArray(chunk.choices)
+      ? (chunk.choices[0] as Record<string, unknown> | undefined)
+      : undefined;
+    if (!choice) continue;
+    if (typeof choice.finish_reason === 'string') finishReason = choice.finish_reason;
+    const delta = choice.delta as Record<string, unknown> | undefined;
+    if (!delta) continue;
+    if (typeof delta.content === 'string') content += delta.content;
+    const reasoningPart = typeof delta.reasoning_content === 'string'
+      ? delta.reasoning_content
+      : typeof delta.reasoning === 'string'
+        ? delta.reasoning
+        : '';
+    reasoning += reasoningPart;
+
+    if (!Array.isArray(delta.tool_calls)) continue;
+    for (const rawCall of delta.tool_calls) {
+      if (!rawCall || typeof rawCall !== 'object') continue;
+      const call = rawCall as Record<string, unknown>;
+      const index = typeof call.index === 'number' ? call.index : toolCalls.size;
+      const fn = call.function && typeof call.function === 'object'
+        ? call.function as Record<string, unknown>
+        : {};
+      const previous = toolCalls.get(index);
+      toolCalls.set(index, {
+        id: typeof call.id === 'string' ? call.id : previous?.id ?? `hcnsec-tool-${index}`,
+        name: typeof fn.name === 'string' ? fn.name : previous?.name ?? '',
+        arguments: (previous?.arguments ?? '') + (typeof fn.arguments === 'string' ? fn.arguments : ''),
+      });
+    }
+  }
+
+  const normalizedDelta: Record<string, unknown> = {};
+  const role = typeof firstDelta?.role === 'string' ? firstDelta.role : 'assistant';
+  normalizedDelta.role = role;
+  if (content.length > 0) normalizedDelta.content = content;
+  if (reasoning.length > 0) normalizedDelta.reasoning_content = reasoning;
+  if (toolCalls.size > 0) {
+    normalizedDelta.tool_calls = [...toolCalls.entries()].map(([index, call]) => ({
+      index,
+      id: call.id,
+      type: 'function',
+      function: { name: call.name, arguments: call.arguments },
+    }));
+  }
+
+  const normalized = {
+    id: typeof first.id === 'string' ? first.id : `hcnsec-${Date.now()}`,
+    created: typeof first.created === 'number' ? first.created : Math.floor(Date.now() / 1000),
+    model: typeof first.model === 'string' ? first.model : undefined,
+    choices: [{
+      index: 0,
+      delta: normalizedDelta,
+      finish_reason: finishReason ?? (toolCalls.size > 0 ? 'tool_calls' : 'stop'),
+    }],
+    ...(usage !== undefined ? { usage } : {}),
+  };
+
+  return `data: ${JSON.stringify(normalized)}\n\ndata: [DONE]\n\n`;
+}
+
+/**
+ * Fetch wrapper used only by HCNSEC. Tool-call responses are normalized
+ * after buffering; plain text streams retain their native low-latency path.
+ */
+export const hcnsecFetch: FetchFunction = async (input, init) => {
+  const body = typeof init?.body === 'string'
+    ? (() => {
+        try { return JSON.parse(init.body) as Record<string, unknown>; } catch { return null; }
+      })()
+    : null;
+  const hasTools = Array.isArray(body?.tools) && body.tools.length > 0;
+  const response = await fetch(input, init);
+  const contentType = response.headers.get('content-type')?.toLowerCase() ?? '';
+  if (!response.ok || !hasTools || !contentType.includes('text/event-stream') || !response.body) {
+    return response;
+  }
+
+  const raw = await response.text();
+  const headers = new Headers(response.headers);
+  headers.delete('content-length');
+  headers.delete('content-encoding');
+  return new Response(normalizeHcnsecSse(raw), {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+};
 
 /** Full capability set — vision + tools + jsonMode + streaming. */
 export const CAPS_FULL = {
@@ -40,6 +175,7 @@ export function openaiCompatibleFactory(
   name: string,
   baseURL: string,
   headers?: Record<string, string>,
+  fetch?: FetchFunction,
 ): ByokProviderSpec['factory'] {
   return (apiKey) => {
     const provider = createOpenAICompatible({
@@ -47,6 +183,7 @@ export function openaiCompatibleFactory(
       apiKey,
       baseURL,
       ...(headers ? { headers } : {}),
+      ...(fetch ? { fetch } : {}),
     });
     return (modelId) => provider(modelId);
   };

@@ -16,8 +16,19 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { buildSystemPrompt } from '../src/prompt/system';
+import { buildSystemPrompt, responseLanguageInstruction } from '../src/prompt/system';
 import { getMarketPhase, type MarketPhaseContext } from '@kestrel/shared';
+
+describe('responseLanguageInstruction', () => {
+  it('pins English output for English locales', () => {
+    expect(responseLanguageInstruction('en-US')).toContain('exclusively in English');
+    expect(responseLanguageInstruction('en-US')).toContain('Do not switch to Chinese');
+  });
+
+  it('preserves an explicitly configured Chinese locale', () => {
+    expect(responseLanguageInstruction('zh-CN')).toContain('Simplified Chinese');
+  });
+});
 
 describe('buildSystemPrompt', () => {
   it('returns the base prompt when given no snapshot', () => {

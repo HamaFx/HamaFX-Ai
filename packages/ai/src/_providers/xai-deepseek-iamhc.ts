@@ -14,7 +14,13 @@
  * limitations under the License.
  */
 
-import { CAPS_FULL, CAPS_TEXT, defineProvider, openaiCompatibleFactory } from './helpers';
+import {
+  CAPS_FULL,
+  CAPS_TEXT,
+  defineProvider,
+  hcnsecFetch,
+  openaiCompatibleFactory,
+} from './helpers';
 
 export const XAI = defineProvider({
   id: 'xai',
@@ -144,5 +150,5 @@ export const HCNSEC = defineProvider({
     { modelId: 'step-3.7-flash', label: 'Step 3.7 Flash', description: 'Step model currently listed by HCNSEC.', tier: 'pro', capabilities: CAPS_TEXT },
     { modelId: 'step-explore', label: 'Step Explore', description: 'Step exploration model currently listed by HCNSEC.', tier: 'pro', capabilities: CAPS_TEXT },
   ],
-  factory: openaiCompatibleFactory('hcnsec', 'https://api.hcnsec.cn/v1'),
+  factory: openaiCompatibleFactory('hcnsec', 'https://api.hcnsec.cn/v1', undefined, hcnsecFetch),
 });
