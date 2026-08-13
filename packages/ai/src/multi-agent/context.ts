@@ -107,7 +107,7 @@ async function prefetchCalendarBlock(): Promise<string> {
 }
 
 export async function buildSharedContext(args: BuildContextArgs): Promise<SharedContext> {
-  const { symbol, userId, threadId, userMessage, history, userSettings, customInstructions, env, signal } = args;
+  const { symbol, userId, threadId, userMessage, history, userSettings, displayName, customInstructions, env, signal } = args;
   const snapshot = await buildLiveSnapshot({ signal: signal ?? undefined, userId });
 
   // Q4: Pre-fetch common datasets once so all 4 specialists don't each
@@ -122,13 +122,14 @@ export async function buildSharedContext(args: BuildContextArgs): Promise<Shared
 
   const ctx: SharedContext = {
     symbol, threadId, userId, snapshot, userSettings, userMessage, history, signal, env,
+    displayName,
   };
   if (customInstructions !== undefined) ctx.customInstructions = customInstructions;
   if (prefetchedData) ctx.prefetchedData = prefetchedData;
   return ctx;
 }
 
-export function buildSharedSystemPrompt(ctx: SharedContext, displayName: string | null): string {
+export function buildSharedSystemPrompt(ctx: SharedContext, displayName: string | null = ctx.displayName ?? null): string {
   const userCtx = userContextFromSettings(displayName, ctx.userSettings);
   const basePrompt = buildSystemPrompt(ctx.snapshot, userCtx);
   let prompt = basePrompt;

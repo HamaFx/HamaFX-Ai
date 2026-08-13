@@ -71,6 +71,9 @@ export async function sendWebPush(
       payload,
       {
         TTL: 60,
+        // Bound the underlying HTTPS request so an unreachable push service
+        // cannot hold an alert claim indefinitely.
+        timeout: 30_000,
         vapidDetails: {
           subject: env.VAPID_SUBJECT ?? 'mailto:owner@kestrel.local',
           publicKey: env.VAPID_PUBLIC_KEY,

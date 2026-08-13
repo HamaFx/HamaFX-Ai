@@ -25,7 +25,8 @@
 // paths needed — communication is through the Postgres DB.
 
 import { schema } from '@kestrel/db';
-import { getDb } from '@kestrel/ai';
+import { getDb, ProgressTracker, selectAgents } from '@kestrel/ai';
+import type { ProgressEvent } from '@kestrel/ai';
 import { eq, asc, lt, and } from 'drizzle-orm';
 import { pickAiEnv } from '@kestrel/shared';
 import { traceIdStorage } from '@kestrel/shared/logger';
@@ -38,6 +39,31 @@ const MAX_JOBS_PER_RUN = 3;
 
 /** Maximum time a job can stay in 'running' before being considered stale. */
 const STALE_JOB_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+
+function reconstructHistory(raw: unknown): UIMessage[] {
+  if (!Array.isArray(raw)) return [];
+
+  return raw.flatMap((entry) => {
+    if (typeof entry !== 'object' || entry === null) return [];
+    const row = entry as {
+      id?: unknown;
+      role?: unknown;
+      content?: unknown;
+      parts?: unknown;
+    };
+    if (row.role !== 'user' && row.role !== 'assistant' && row.role !== 'system') return [];
+
+    const parts = Array.isArray(row.parts) && row.parts.length > 0
+      ? row.parts
+      : [{ type: 'text', text: typeof row.content === 'string' ? row.content : '' }];
+
+    return [{
+      id: typeof row.id === 'string' ? row.id : crypto.randomUUID(),
+      role: row.role,
+      parts: parts as UIMessage['parts'],
+    } as UIMessage];
+  });
+}
 
 export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult> {
   const db = getDb();
@@ -83,30 +109,48 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
     // entire job processing in the traceId context so all log lines from
     // this worker run carry the same traceId as the originating chat turn.
     const processJob = async () => {
+    const progressEvents: Array<Record<string, unknown>> = [];
+    let progressWrite = Promise.resolve();
     try {
       // Dynamically import the multi-agent orchestrator — the worker
       // bundle includes @kestrel/ai (used by initLangfuse).
       const { runMultiAgentChat, extractUserMessageText, resolveMode } = await import('@kestrel/ai');
       const { userSettings: userSettingsTable } = schema;
 
-      // Load user settings for context.
-      const [userSettings] = await db
-        .select()
-        .from(userSettingsTable)
-        .where(eq(userSettingsTable.userId, job.userId));
+      // Load user settings and identity for the same prompt context used by
+      // the synchronous web path.
+      const [[userSettings], [userRow]] = await Promise.all([
+        db
+          .select()
+          .from(userSettingsTable)
+          .where(eq(userSettingsTable.userId, job.userId)),
+        db
+          .select({ name: schema.users.name, email: schema.users.email })
+          .from(schema.users)
+          .where(eq(schema.users.id, job.userId)),
+      ]);
 
       if (!userSettings) {
         throw new Error(`User settings not found for userId=${job.userId}`);
       }
 
-      // Reconstruct the user message and history from serialized parts.
+      // Reconstruct the user message from serialized parts. Older callers
+      // may provide only content, so preserve the stored text as a reliable
+      // fallback instead of silently sending an empty prompt to every agent.
+      const storedParts = Array.isArray(job.userMessageParts) ? job.userMessageParts : [];
+      const hasTextPart = storedParts.some(
+        (part) => typeof part === 'object' && part !== null && (part as { type?: unknown }).type === 'text',
+      );
+      const userMessageParts = hasTextPart
+        ? storedParts
+        : [...storedParts, { type: 'text', text: job.userMessageText }];
       const userMessage: UIMessage = {
         id: crypto.randomUUID(),
         role: 'user',
-        parts: job.userMessageParts as UIMessage['parts'],
+        parts: userMessageParts as UIMessage['parts'],
       } as UIMessage;
 
-      const history: UIMessage[] = (Array.isArray(job.historyParts) ? job.historyParts : []) as UIMessage[];
+      const history = reconstructHistory(job.historyParts);
 
       // Extract user text and resolve mode from the queued mode value.
       // The route handler already resolved this to a non-'single' mode
@@ -115,16 +159,38 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
       // P6 fix: use the resolved mode instead of hardcoding 'full'.
       const resolvedMode = resolveMode((job.mode as AnalysisMode) ?? 'full', userText);
 
-      // Build progress handler that updates the job row.
-      const progressEvents: Array<Record<string, unknown>> = [];
-      const onProgress = (event: { type: string; [key: string]: unknown }) => {
-        progressEvents.push(event as Record<string, unknown>);
-        // Update the progress column asynchronously (fire-and-forget).
-        void db
-          .update(schema.analysisJobs)
-          .set({ progress: progressEvents, updatedAt: new Date() })
-          .where(eq(schema.analysisJobs.id, job.id))
-          .catch((err) => ctx.log.warn('Failed to update progress', { err: String(err) }));
+      // Build progress snapshots in the same data-stream shape consumed by
+      // the browser transport. The orchestrator emits raw lifecycle events,
+      // while the polling client expects `data-agent-progress` snapshots.
+      let progressTracker: ProgressTracker | null = null;
+      const onProgress = (event: ProgressEvent) => {
+        if (event.type === 'specialists_start') {
+          // Create the tracker from the actual effective specialist list so
+          // a budget-driven full → standard downgrade does not leave phantom
+          // agents stuck in `pending` state.
+          progressTracker = new ProgressTracker(resolvedMode, event.agents);
+        }
+        progressTracker ??= new ProgressTracker(resolvedMode, selectAgents(resolvedMode));
+        const publicEvent = event.type === 'agent_error'
+          ? { ...event, error: 'Agent unavailable. Please try again.' }
+          : event;
+        progressTracker.update(publicEvent);
+        const snapshot = progressTracker.buildPart() as unknown as Record<string, unknown>;
+        progressEvents.push(snapshot);
+
+        // Serialize progress writes. Without this chain, an earlier async
+        // update could finish after the final status update and overwrite the
+        // latest progress snapshot.
+        progressWrite = progressWrite.then(async () => {
+          try {
+            await db
+              .update(schema.analysisJobs)
+              .set({ progress: progressEvents, updatedAt: new Date() })
+              .where(eq(schema.analysisJobs.id, job.id));
+          } catch (err) {
+            ctx.log.warn('Failed to update progress', { err: String(err) });
+          }
+        });
       };
 
       // Run the multi-agent pipeline. Uses the shared pickAiEnv helper
@@ -137,12 +203,17 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
         userMessage,
         history,
         userSettings,
-        displayName: null,
+        displayName: userRow?.name?.trim() || (userRow?.email ? userRow.email.split('@')[0] : null) || null,
+        ...(userSettings.customInstructions ? { customInstructions: userSettings.customInstructions } : {}),
         env,
         signal: ctx.signal ?? null,
         analysisMode: resolvedMode,
         onProgress,
       });
+
+      // Ensure all progress snapshots have reached the database before the
+      // terminal status is written.
+      await progressWrite;
 
       // Mark as complete.
       await db
@@ -169,6 +240,7 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
       const msg = err instanceof Error ? err.message : String(err);
       ctx.log.error('Analysis job failed', { jobId: job.id, err: msg });
 
+      await progressWrite;
       await db
         .update(schema.analysisJobs)
         .set({

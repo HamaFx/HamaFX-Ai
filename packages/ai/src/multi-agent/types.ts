@@ -71,6 +71,7 @@ export interface SharedContext {
   prefetchedData?: string;
   // config
   userSettings: UserSettingsRow;
+  displayName?: string | null;
   customInstructions?: string;
   // io
   userMessage: UIMessage;

@@ -56,8 +56,9 @@ export function resolveAgentModel(
     if (sep >= 0) {
       const providerIdRaw = agentOverride.slice(0, sep) as ProviderId;
       try {
-        const res = resolveModelForProvider(providerIdRaw, ctx.userSettings, ctx.env);
-        return { model: res.model, modelId: `${providerIdRaw}/${agentOverride.slice(sep + 1)}`, providerId: providerIdRaw };
+        const requestedModelId = agentOverride.slice(sep + 1);
+        const res = resolveModelForProvider(providerIdRaw, ctx.userSettings, ctx.env, requestedModelId);
+        return { model: res.model, modelId: res.modelId, providerId: res.providerId };
       } catch { /* fall through */ }
     }
   }

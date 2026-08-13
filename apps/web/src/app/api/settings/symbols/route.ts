@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { withAuth, errorResponse, parseJsonBody } from '@/lib/api';
-import { getWatchlistWithCatalog, isSymbolInCatalog, getNextDisplayOrder, reorderWatchlist, addUserSymbol } from '@/lib/services/api-boundary';
+import { getWatchlistWithCatalog, isSymbolInCatalog, reorderWatchlist, addUserSymbol } from '@/lib/services/api-boundary';
 import { z } from 'zod';
 import { SymbolSchema } from '@/lib/services/api-boundary';
 
@@ -38,9 +38,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
       );
     }
 
-    const nextOrder = await getNextDisplayOrder(user.userId);
-
-    await addUserSymbol(user.userId, symbol, nextOrder);
+    await addUserSymbol(user.userId, symbol);
 
     return Response.json({ ok: true, symbol });
   } catch (err) {
@@ -50,7 +48,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
 
 // PATCH /api/settings/symbols - Reorder watchlist symbols
 const ReorderSchema = z.object({
-  symbols: z.array(z.string()),
+  symbols: z.array(SymbolSchema).max(100),
 });
 
 export const PATCH = withAuth<void>(async (req, { user }) => {

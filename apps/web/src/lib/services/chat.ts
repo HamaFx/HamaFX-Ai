@@ -16,6 +16,7 @@ import {
   listMessages as aiListMessages,
   listThreads as aiListThreads,
   updateThreadPinnedSymbol,
+  updateThreadAnalysisMode,
   type DbThread,
 } from '@kestrel/ai/persistence';
 
@@ -26,13 +27,14 @@ export interface ThreadDTO {
   userId: string;
   title: string | null;
   pinnedSymbol: string | null;
+  analysisMode: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
 
 export interface ThreadListResult {
   threads: ThreadDTO[];
-  nextCursor: number | null;
+  nextCursor: string | null;
 }
 
 export interface ThreadWithMessagesResult {
@@ -49,6 +51,7 @@ function toThreadDTO(t: DbThread, userId: string): ThreadDTO {
     userId,
     title: t.title,
     pinnedSymbol: t.pinnedSymbol,
+    analysisMode: t.analysisMode,
     createdAt: new Date(t.createdAt),
     updatedAt: new Date(t.updatedAt),
   };
@@ -59,9 +62,9 @@ function toThreadDTO(t: DbThread, userId: string): ThreadDTO {
 export async function listThreadsService(
   userId: string,
   limit = 50,
-  beforeMs: number | null = null,
+  beforeCursor: string | number | null = null,
 ): Promise<ThreadListResult> {
-  const { threads, nextCursor } = await aiListThreads(userId, limit, beforeMs);
+  const { threads, nextCursor } = await aiListThreads(userId, limit, beforeCursor);
   return { threads: threads.map((t) => toThreadDTO(t, userId)), nextCursor };
 }
 
@@ -98,4 +101,12 @@ export async function updateThreadPinnedSymbolService(
   pinnedSymbol: string | null,
 ): Promise<boolean> {
   return updateThreadPinnedSymbol(userId, id, pinnedSymbol);
+}
+
+export async function updateThreadAnalysisModeService(
+  userId: string,
+  id: string,
+  analysisMode: string | null,
+): Promise<boolean> {
+  return updateThreadAnalysisMode(userId, id, analysisMode);
 }

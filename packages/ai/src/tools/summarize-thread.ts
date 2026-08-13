@@ -131,13 +131,13 @@ export const summarizeThreadTool = tool({
     let remembered = false;
     if (input.remember) {
       try {
-        const ctx = maybeGetToolContext();
         await rememberThreadSynopsis({
           threadId,
+          userId: ctx.userId,
           synopsis,
           insights,
           env,
-          ...(ctx?.userSettings
+          ...(ctx.userSettings
             ? {
                 userSettings: {
                   aiApiKeys: ctx.userSettings.aiApiKeys,

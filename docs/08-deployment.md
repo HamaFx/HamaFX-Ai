@@ -239,6 +239,8 @@ installed but skipped safely; they do not report false success.
 
 ## Database migrations
 
+- Before production migration work, follow [`docs/15-production-migration-reconciliation.md`](15-production-migration-reconciliation.md).
+- `pnpm --filter @kestrel/db migrate:reconcile` is a strictly read-only report of migration hashes, duplicate briefing threads, required columns/indexes, and role/RLS state.
 - Schema lives in `packages/db/src/schema/*.ts`.
 - `pnpm --filter @kestrel/db migrate:gen` creates SQL.
 - `pnpm --filter @kestrel/db migrate:apply` runs against `DATABASE_URL`.

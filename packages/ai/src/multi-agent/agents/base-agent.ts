@@ -16,7 +16,7 @@
 
 // Multi-Agent Orchestration — abstract base agent.
 
-import { generateText, stepCountIs, type LanguageModel, type Tool } from 'ai';
+import { convertToModelMessages, generateText, stepCountIs, type LanguageModel, type Tool } from 'ai';
 import { z } from 'zod';
 import { supportsPromptCaching } from '../../model';
 import { estimateCostUsd } from '../../cost';
@@ -54,6 +54,17 @@ export abstract class BaseAgent {
       : '';
     const userText = extractUserMessageText(ctx.userMessage);
     const fullSystem = `${this.systemPrompt()}\n\n${sharedPrompt}${prefetchedPrompt}`;
+    const historyMessages = ctx.history && ctx.history.length > 0
+      ? convertToModelMessages(ctx.history.filter((message) => message.role !== 'system'))
+      : [];
+    const messages = [
+      ...historyMessages,
+      { role: 'user' as const, content: userText },
+    ];
+    const tools = this.tools();
+    for (const disabledTool of ctx.userSettings.disabledTools ?? []) {
+      delete tools[disabledTool];
+    }
     const toolContext: ToolContext = {
       threadId: ctx.threadId,
       userId: ctx.userId,
@@ -77,8 +88,8 @@ export abstract class BaseAgent {
         ...(supportsPromptCaching(modelId)
           ? { providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' as const } } } }
           : {}),
-        messages: [{ role: 'user' as const, content: userText }],
-        tools: this.tools(),
+        messages,
+        tools,
         stopWhen: stepCountIs(ctx.env.MAX_TOOL_ITERATIONS ?? 6),
         abortSignal: controller.signal,
         maxOutputTokens: 3000,

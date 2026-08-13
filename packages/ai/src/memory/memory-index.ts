@@ -23,7 +23,7 @@
 // Public surface:
 //   - rememberJournalEntry({ entryId })          — call after createEntry/updateEntry
 //   - rememberBriefing({ messageId, body })       — call from briefings/generate.ts
-//   - rememberThreadSynopsis({ threadId, synopsis }) — called by summarize_thread
+//   - rememberThreadSynopsis({ threadId, userId, synopsis }) — called by summarize_thread
 //   - searchMemory({ embedding, kinds, ... })     — used by search_knowledge
 //
 // Each `remember*` is best-effort and idempotent — on duplicate sourceId
@@ -256,6 +256,8 @@ export async function rememberBriefing(
 
 export interface RememberThreadSynopsisArgs {
   threadId: string;
+  /** The authenticated owner of the source thread. */
+  userId: string;
   synopsis: string;
   insights: ThreadInsight[];
   env?: Partial<EmbedEnv>;
@@ -271,6 +273,7 @@ export async function rememberThreadSynopsis(
   return upsertMemory({
     kind: 'thread_synopsis',
     sourceId: args.threadId,
+    userId: args.userId,
     symbol: null,
     text,
     meta: { insights: args.insights },

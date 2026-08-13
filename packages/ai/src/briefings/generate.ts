@@ -39,7 +39,7 @@ import {
   type Symbol,
 } from '@kestrel/shared';
 import { generateText, type UIMessage } from 'ai';
-import { and, asc, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { createCategorizedLogger } from '@kestrel/shared/logger';
 
 import { dailySpendUsd } from '../cost';
@@ -292,18 +292,8 @@ export async function emitWeeklyReview(userId: string): Promise<{ emitted: boole
     return { emitted: true };
   }
 
-  // Top 3 wins / losses / patterns from the same window.
-  const entries = await getDb()
-    .select()
-    .from(schema.journalEntries)
-    .where(
-      and(
-        eq(schema.journalEntries.outcome, 'win'),
-      ),
-    )
-    .orderBy(asc(schema.journalEntries.openedAt))
-    .limit(50);
-  void entries;
+  // The scoped `computeStats` result above already contains the weekly
+  // review metrics. Do not issue a second unscoped journal query here.
 
   const summary = await composeWeeklyReviewSummary(stats, env, userId);
   // Phase 1 hardening §10 — same idempotency-protection as event briefings.

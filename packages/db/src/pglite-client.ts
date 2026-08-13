@@ -58,7 +58,7 @@ let _activeDataDir: string | null = null;
  *
  * PGlite (WASM-embedded Postgres) does not support:
  *   - CREATE/ALTER ROLE (role management)
- *   - GRANT / ALTER DEFAULT PRIVILEGES (permissions model)
+ *   - GRANT / REVOKE / ALTER DEFAULT PRIVILEGES (permissions model)
  *   - Row-Level Security (ALTER TABLE ... ENABLE/FORCE ROW LEVEL SECURITY)
  *   - CREATE/DROP POLICY (RLS policies)
  * These are silently replaced with -- comments so migrations apply cleanly
@@ -77,9 +77,14 @@ export function sanitizeStatement(sql: string): string {
     return '-- [pglite] ROLE management skipped (not supported in embedded Postgres)';
   }
 
-  // Skip GRANT and ALTER DEFAULT PRIVILEGES (permissions not applicable in PGlite).
-  if (/^GRANT\b/i.test(trimmed) || /^ALTER\s+DEFAULT\s+PRIVILEGES\b/i.test(trimmed)) {
-    return '-- [pglite] GRANT/PRIVILEGES skipped (not applicable in embedded Postgres)';
+  // Skip GRANT, REVOKE, and ALTER DEFAULT PRIVILEGES (permissions are not
+  // applicable in PGlite, which does not provide Supabase API roles).
+  if (
+    /^GRANT\b/i.test(trimmed) ||
+    /^REVOKE\b/i.test(trimmed) ||
+    /^ALTER\s+DEFAULT\s+PRIVILEGES\b/i.test(trimmed)
+  ) {
+    return '-- [pglite] GRANT/REVOKE/PRIVILEGES skipped (not applicable in embedded Postgres)';
   }
 
   // Skip RLS-related statements (not supported in PGlite).

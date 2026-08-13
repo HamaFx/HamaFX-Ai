@@ -44,6 +44,7 @@ async function readChunks(
 
 describe('createKestrelChatTransport', () => {
   afterEach(() => {
+    vi.useRealTimers();
     vi.restoreAllMocks();
   });
 
@@ -66,7 +67,7 @@ describe('createKestrelChatTransport', () => {
     expect(transport).toBeDefined();
   });
 
-  it('closes legacy SSE text exactly once with the active text id and clears progress', async () => {
+  it('closes legacy SSE text exactly once and keeps completed progress visible', async () => {
     const progress = vi.fn();
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       sseResponse([
@@ -88,8 +89,49 @@ describe('createKestrelChatTransport', () => {
     const ends = chunks.filter((chunk) => chunk.type === 'text-end');
     expect(ends).toHaveLength(1);
     expect(ends[0]?.id).toBe('server-message-id');
-    expect(progress).toHaveBeenLastCalledWith(null);
+    expect(progress).toHaveBeenLastCalledWith({ agents: [], mode: 'quick' });
     expect(fetchMock).toHaveBeenCalled();
+  });
+
+  it('polls a queued full-mode job and emits its final metadata', async () => {
+    vi.useFakeTimers();
+    const progress = vi.fn();
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        type: 'analysis-queued',
+        jobId: 'job-123',
+        status: 'queued',
+      }), { status: 200, headers: { 'content-type': 'application/json' } }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        status: 'complete',
+        progress: [{
+          type: 'data-agent-progress',
+          data: { agents: [{ agentName: 'technical', status: 'done' }], mode: 'full' },
+        }],
+        result: {
+          finalText: 'full result',
+          messageId: 'message-123',
+          agentOpinions: [{ agentName: 'technical', bias: 'bullish' }],
+          mode: 'full',
+          totalCostUsd: 0.04,
+          totalLatencyMs: 1234,
+        },
+      }), { status: 200, headers: { 'content-type': 'application/json' } }));
+
+    const transport = createKestrelChatTransport({ api: '/api/chat', onAgentProgress: progress });
+    const stream = await transport.sendMessages({
+      chatId: 'thread-1',
+      messages: [],
+      abortSignal: new AbortController().signal,
+    });
+    const chunksPromise = readChunks(stream as ReadableStream<Record<string, unknown>>);
+    await vi.advanceTimersByTimeAsync(2_000);
+    const chunks = await chunksPromise;
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(progress).toHaveBeenCalledWith({ agents: [{ agentName: 'technical', status: 'done' }], mode: 'full' });
+    expect(chunks.some((chunk) => chunk.type === 'text-delta')).toBe(true);
+    expect(chunks.some((chunk) => chunk.type === 'data-multi-agent-meta')).toBe(true);
   });
 
   it('creates a matching text start/end pair when SSE ends without a text-start', async () => {

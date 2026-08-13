@@ -47,7 +47,12 @@ import { msPerTimeframe } from '@kestrel/shared';
 import { createCategorizedLogger } from '@kestrel/shared/logger';
 
 import { deliverAlert, type DeliveryResult } from './delivery';
-import { listEvaluable, setRulePreviousValue } from './persistence';
+import {
+  claimAlertDelivery,
+  listEvaluable,
+  releaseAlertDeliveryClaim,
+  setRulePreviousValue,
+} from './persistence';
 import { specFromRule, type RuleReading } from './spec';
 import { alertRuleRegistry } from './rule-registry';
 
@@ -366,14 +371,29 @@ export async function evaluateAlerts(
 
       matched += 1;
 
-      // Deliver across all configured channels. The delivery layer owns the
-      // markFired call: it only marks the alert fired AFTER Resend returns
-      // 2xx (see Requirements 7.5, 7.6 and packages/ai/src/alerts/delivery.ts).
-      // If delivery fails, the alert stays active so the next cron tick retries.
+      // Claim immediately before external delivery. The conditional UPDATE
+      // is the concurrency boundary: only one cron runner can hold the
+      // lease for an alert at a time. A failed delivery releases it; a
+      // crashed runner leaves a lease that a later tick can reclaim.
+      const claimAt = new Date();
+      const claimed = await claimAlertDelivery(alert.userId, alert.id, claimAt);
+      if (!claimed) {
+        skipped += 1;
+        continue;
+      }
+
       const alertEnv = userEnvMap.get(alert.userId) ?? globalEnv;
-      const result = await deliverAlert({ alert, reading, env: alertEnv });
-      deliveries.push(result);
-      if (result.ok) fired += 1;
+      try {
+        const result = await deliverAlert({ alert, reading, env: alertEnv, claimAt });
+        deliveries.push(result);
+        if (result.ok) fired += 1;
+        else await releaseAlertDeliveryClaim(alert.userId, alert.id, claimAt);
+      } catch (err) {
+        await releaseAlertDeliveryClaim(alert.userId, alert.id, claimAt).catch((releaseErr) => {
+          elog.warn('releaseAlertDeliveryClaim failed', { id: alert.id, err: String(releaseErr) });
+        });
+        throw err;
+      }
     } catch (err) {
       errors.push({
         alertId: alert.id,

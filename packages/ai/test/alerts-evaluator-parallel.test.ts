@@ -62,6 +62,8 @@ vi.mock('@kestrel/db', () => ({
 vi.mock('../src/alerts/persistence', () => ({
   listEvaluable: vi.fn(),
   setRulePreviousValue: vi.fn(async () => undefined),
+  claimAlertDelivery: vi.fn(async () => true),
+  releaseAlertDeliveryClaim: vi.fn(async () => undefined),
   markFiredForAlert: vi.fn(async () => undefined),
 }));
 

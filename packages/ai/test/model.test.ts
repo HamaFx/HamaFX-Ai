@@ -182,6 +182,26 @@ describe('resolveModelForProvider', () => {
     );
   });
 
+  it('uses an explicitly requested model instead of the technical default', () => {
+    __setByok({ google: 'a'.repeat(40) });
+    const requestedModel = BYOK_PROVIDERS.google.defaultModels.summary;
+    const result = resolveModelForProvider(
+      'google',
+      { aiApiKeys: null },
+      ENV,
+      requestedModel,
+    );
+    expect(result.bareModelId).toBe(requestedModel);
+    expect(result.modelId).toBe(`google/${requestedModel}`);
+  });
+
+  it('rejects an unknown explicitly requested model', () => {
+    __setByok({ google: 'a'.repeat(40) });
+    expect(() =>
+      resolveModelForProvider('google', { aiApiKeys: null }, ENV, 'not-a-real-model'),
+    ).toThrow(/Unknown model for provider google/);
+  });
+
   it('throws when provider has no API key', () => {
     __setByok({ google: 'goog-key' });
     expect(() =>

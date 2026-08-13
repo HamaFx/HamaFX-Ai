@@ -189,6 +189,10 @@ export const POST = withAuth<void>(async (req, { user }) => {
         // can be consumed by either an EventSource or the AI SDK transport.
         const encoder = new TextEncoder();
         const messageId = crypto.randomUUID();
+        const multiAgentTimeoutSignal = AbortSignal.timeout(ROUTE_TIMEOUT_MS);
+        const multiAgentSignal = req.signal
+          ? AbortSignal.any([req.signal, multiAgentTimeoutSignal])
+          : multiAgentTimeoutSignal;
         const stream = new ReadableStream({
           async start(controller) {
             const tracker = new ProgressTracker(
@@ -222,16 +226,22 @@ export const POST = withAuth<void>(async (req, { user }) => {
                 threadId: body.threadId,
                 userId: user.userId,
                 userMessage: last as UIMessage,
-                history: body.messages as UIMessage[],
+                // The latest user message is passed separately; history must
+                // contain only prior turns so the fusion prompt does not see
+                // the current question twice.
+                history: body.messages.slice(0, -1) as UIMessage[],
                 userSettings,
                 displayName: displayName ?? null,
                 ...(customInstructions ? { customInstructions } : {}),
                 env: pickAiEnv(env),
-                ...(req.signal ? { signal: req.signal } : { signal: null }),
+                signal: multiAgentSignal,
                 analysisMode,
                 onProgress: (event) => {
-                  tracker.update(event);
-                  send(tracker.buildPart());
+              const publicEvent = event.type === 'agent_error'
+                ? { ...event, error: 'Agent unavailable. Please try again.' }
+                : event;
+              tracker.update(publicEvent);
+              send(tracker.buildPart());
                 },
                 // P1-4/U1 — stream fusion text token-by-token as AI SDK text-delta chunks.
                 onTextChunk: (chunk) => {

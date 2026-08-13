@@ -29,7 +29,6 @@
 // ---------------------------------------------------------------------------
 
 import { test as base, expect, type Page } from '@playwright/test';
-import { ensureTestUser } from './test-utils';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -96,58 +95,34 @@ async function mockChatApi(page: Page, opts: ChatMockOptions = {}) {
 }
 
 // ---------------------------------------------------------------------------
-// Multi-agent SSE mock body (full mode — 4 agents)
+// Multi-agent SSE mock bodies — current ChatStreamEventSchema protocol.
 // ---------------------------------------------------------------------------
 
+const TEST_MESSAGE_ID = 'test-message-id';
+
 export const FULL_MODE_SSE = [
-  'data: {"type":"specialists_start","agents":["technical","fundamental","risk","sentiment"]}',
+  'data: {"type":"data-agent-progress","data":{"agents":[{"agentName":"technical","status":"running"},{"agentName":"fundamental","status":"pending"},{"agentName":"risk","status":"pending"},{"agentName":"sentiment","status":"pending"},{"agentName":"decision","status":"pending"}],"mode":"full"}}',
   '',
-  'data: {"type":"agent_start","agent":"technical"}',
+  'data: {"type":"data-agent-progress","data":{"agents":[{"agentName":"technical","status":"done","opinion":{"agentName":"technical","bias":"bullish","confidence":0.8,"reasoning":"Uptrend"}},{"agentName":"fundamental","status":"done","opinion":{"agentName":"fundamental","bias":"bullish","confidence":0.7,"reasoning":"Dovish Fed"}},{"agentName":"risk","status":"done","opinion":{"agentName":"risk","bias":"neutral","confidence":0.5,"reasoning":"Moderate risk"}},{"agentName":"sentiment","status":"done","opinion":{"agentName":"sentiment","bias":"bullish","confidence":0.6,"reasoning":"Positive news"}},{"agentName":"decision","status":"done"}],"mode":"full"}}',
   '',
-  'data: {"type":"agent_done","agent":"technical","opinion":{"agentName":"technical","bias":"bullish","confidence":0.8,"reasoning":"Uptrend","rawData":{},"costUsd":0.01,"latencyMs":1200,"model":"test"}}',
+  `data: {"type":"text-start","id":"${TEST_MESSAGE_ID}"}`,
   '',
-  'data: {"type":"agent_start","agent":"fundamental"}',
+  `data: {"type":"text-delta","id":"${TEST_MESSAGE_ID}","delta":"**Bottom Line:** XAUUSD is bullish with moderate confidence."}`,
   '',
-  'data: {"type":"agent_done","agent":"fundamental","opinion":{"agentName":"fundamental","bias":"bullish","confidence":0.7,"reasoning":"Dovish Fed","rawData":{},"costUsd":0.01,"latencyMs":1500,"model":"test"}}',
+  `data: {"type":"text-end","id":"${TEST_MESSAGE_ID}"}`,
   '',
-  'data: {"type":"agent_start","agent":"risk"}',
-  '',
-  'data: {"type":"agent_done","agent":"risk","opinion":{"agentName":"risk","bias":"neutral","confidence":0.5,"reasoning":"Moderate risk","rawData":{"hardVeto":false},"costUsd":0.01,"latencyMs":1000,"model":"test"}}',
-  '',
-  'data: {"type":"agent_start","agent":"sentiment"}',
-  '',
-  'data: {"type":"agent_done","agent":"sentiment","opinion":{"agentName":"sentiment","bias":"bullish","confidence":0.6,"reasoning":"Positive news","rawData":{},"costUsd":0.01,"latencyMs":800,"model":"test"}}',
-  '',
-  'data: {"type":"fusion_start"}',
-  '',
-  'data: {"type":"fusion_done"}',
-  '',
-  'data: {"type":"text","text":"**Bottom Line:** XAUUSD is bullish with moderate confidence."}',
-  '',
-  'data: {"type":"metadata","data":{"mode":"full","totalCostUsd":0.05,"totalLatencyMs":5000}}',
-  '',
-  'data: [DONE]',
+  `data: {"type":"data-multi-agent-meta","id":"${TEST_MESSAGE_ID}","data":{"agentOpinions":[],"mode":"full","totalCostUsd":0.05,"totalLatencyMs":5000},"transient":true}`,
   '',
 ].join('\n');
 
-// ---------------------------------------------------------------------------
-// Quick mode SSE mock (technical only)
-// ---------------------------------------------------------------------------
-
 export const QUICK_MODE_SSE = [
-  'data: {"type":"specialists_start","agents":["technical"]}',
+  'data: {"type":"data-agent-progress","data":{"agents":[{"agentName":"technical","status":"done","opinion":{"agentName":"technical","bias":"bullish","confidence":0.85,"reasoning":"Strong uptrend"}},{"agentName":"decision","status":"done"}],"mode":"quick"}}',
   '',
-  'data: {"type":"agent_start","agent":"technical"}',
+  `data: {"type":"text-start","id":"${TEST_MESSAGE_ID}"}`,
   '',
-  'data: {"type":"agent_done","agent":"technical","opinion":{"agentName":"technical","bias":"bullish","confidence":0.85,"reasoning":"Strong uptrend","rawData":{},"costUsd":0.01,"latencyMs":900,"model":"test"}}',
+  `data: {"type":"text-delta","id":"${TEST_MESSAGE_ID}","delta":"**Bottom Line:** Quick technical read — bullish."}`,
   '',
-  'data: {"type":"fusion_start"}',
-  '',
-  'data: {"type":"fusion_done"}',
-  '',
-  'data: {"type":"text","text":"**Bottom Line:** Quick technical read — bullish."}',
-  '',
-  'data: [DONE]',
+  `data: {"type":"text-end","id":"${TEST_MESSAGE_ID}"}`,
   '',
 ].join('\n');
 

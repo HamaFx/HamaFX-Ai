@@ -27,7 +27,7 @@ import {
   type AlertChannel,
   type AlertRule,
 } from '@kestrel/shared';
-import { and, asc, desc, eq, isNull } from 'drizzle-orm';
+import { and, asc, desc, eq, isNull, lt, or } from 'drizzle-orm';
 import { createCategorizedLogger } from '@kestrel/shared/logger';
 
 const plog = createCategorizedLogger('ai', { component: 'alerts-persistence' });
@@ -182,12 +182,69 @@ export async function updateAlert(userId: string, id: string, input: UpdateAlert
   return updated[0] ? rowToAlert(updated[0]) : null;
 }
 
-/** Mark fired + deactivate (one-shot semantics — see schemas/alerts.ts). */
-export async function markFired(userId: string, id: string, when = new Date()): Promise<void> {
+/**
+ * Atomically claim an alert for external delivery.
+ *
+ * Claims are leases rather than permanent flags: a crashed worker leaves a
+ * stale claim that a later cron tick can reclaim. The evaluator still owns
+ * the final fired-state transition.
+ */
+export async function claimAlertDelivery(
+  userId: string,
+  id: string,
+  claimedAt = new Date(),
+  leaseMs = 30 * 60_000,
+): Promise<boolean> {
+  const staleBefore = new Date(claimedAt.getTime() - leaseMs);
+  const claimed = await getDb()
+    .update(schema.alerts)
+    .set({ deliveryClaimedAt: claimedAt })
+    .where(
+      and(
+        eq(schema.alerts.id, id),
+        eq(schema.alerts.userId, userId),
+        eq(schema.alerts.active, true),
+        isNull(schema.alerts.firedAt),
+        or(isNull(schema.alerts.deliveryClaimedAt), lt(schema.alerts.deliveryClaimedAt, staleBefore)),
+      ),
+    )
+    .returning({ id: schema.alerts.id });
+  return claimed.length > 0;
+}
+
+/** Release a failed delivery claim without changing alert activation state. */
+export async function releaseAlertDeliveryClaim(
+  userId: string,
+  id: string,
+  claimedAt: Date,
+): Promise<void> {
   await getDb()
     .update(schema.alerts)
-    .set({ firedAt: when, active: false })
-    .where(and(eq(schema.alerts.id, id), eq(schema.alerts.userId, userId)));
+    .set({ deliveryClaimedAt: null })
+    .where(
+      and(
+        eq(schema.alerts.id, id),
+        eq(schema.alerts.userId, userId),
+        eq(schema.alerts.deliveryClaimedAt, claimedAt),
+      ),
+    );
+}
+
+/** Mark fired + deactivate (one-shot semantics — see schemas/alerts.ts). */
+export async function markFired(
+  userId: string,
+  id: string,
+  when = new Date(),
+  claimedAt?: Date,
+): Promise<boolean> {
+  const predicates = [eq(schema.alerts.id, id), eq(schema.alerts.userId, userId)];
+  if (claimedAt) predicates.push(eq(schema.alerts.deliveryClaimedAt, claimedAt));
+  const updated = await getDb()
+    .update(schema.alerts)
+    .set({ firedAt: when, active: false, deliveryClaimedAt: null })
+    .where(and(...predicates))
+    .returning({ id: schema.alerts.id });
+  return updated.length > 0;
 }
 
 /**
@@ -199,11 +256,16 @@ export async function markFiredSnoozed(
   userId: string,
   id: string,
   when = new Date(),
-): Promise<void> {
-  await getDb()
+  claimedAt?: Date,
+): Promise<boolean> {
+  const predicates = [eq(schema.alerts.id, id), eq(schema.alerts.userId, userId)];
+  if (claimedAt) predicates.push(eq(schema.alerts.deliveryClaimedAt, claimedAt));
+  const updated = await getDb()
     .update(schema.alerts)
-    .set({ lastFiredAt: when })
-    .where(and(eq(schema.alerts.id, id), eq(schema.alerts.userId, userId)));
+    .set({ lastFiredAt: when, deliveryClaimedAt: null })
+    .where(and(...predicates))
+    .returning({ id: schema.alerts.id });
+  return updated.length > 0;
 }
 
 /**
@@ -237,12 +299,15 @@ export function isInSnooze(
  * `alert.snoozeHours`. The delivery layer doesn't need to know
  * about the difference; it just calls this after a 2xx response.
  */
-export async function markFiredForAlert(alert: Alert, when = new Date()): Promise<void> {
+export async function markFiredForAlert(
+  alert: Alert,
+  when = new Date(),
+  claimedAt?: Date,
+): Promise<boolean> {
   if (alert.snoozeHours > 0) {
-    await markFiredSnoozed(alert.userId, alert.id, when);
-  } else {
-    await markFired(alert.userId, alert.id, when);
+    return markFiredSnoozed(alert.userId, alert.id, when, claimedAt);
   }
+  return markFired(alert.userId, alert.id, when, claimedAt);
 }
 
 /**

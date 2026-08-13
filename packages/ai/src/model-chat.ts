@@ -195,6 +195,7 @@ export function resolveModelForProvider(
   providerId: ProviderId,
   userSettings: Pick<UserSettingsRow, 'aiApiKeys'>,
   env: ResolveModelEnv,
+  requestedModelId?: string,
 ): ChatModelResolution {
   if (isCircuitOpen(providerId)) {
     throw new Error(
@@ -214,11 +215,14 @@ export function resolveModelForProvider(
   if (!spec) {
     throw new Error(`Unknown provider: ${providerId}`);
   }
-  const bareModelId = spec.defaultModels.technical;
+  const bareModelId = requestedModelId ?? spec.defaultModels.technical;
   if (!bareModelId) {
     throw new Error(
       `Provider ${providerId} has no default technical model configured.`,
     );
+  }
+  if (requestedModelId && !(spec.models ?? []).some((model) => model.modelId === requestedModelId)) {
+    throw new Error(`Unknown model for provider ${providerId}: ${requestedModelId}`);
   }
   return {
     model: spec.factory(apiKey)(bareModelId),

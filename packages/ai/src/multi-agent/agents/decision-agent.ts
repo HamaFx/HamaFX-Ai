@@ -91,7 +91,7 @@ Be concise but thorough. Use markdown formatting for readability.`;
     const { model, modelId } = resolveAgentModel(ctx, this.name, this.modelTier);
     const opinionsBlock = this.buildOpinionsBlock(opinions);
     const userText = extractUserMessageText(ctx.userMessage);
-    const sharedPrompt = buildSharedSystemPrompt(ctx, null);
+    const sharedPrompt = buildSharedSystemPrompt(ctx);
     const system = `${this.systemPrompt()}\n\n${sharedPrompt}`;
     const userMessage = `## User Question\n${userText}\n\n## Specialist Agent Opinions\n${opinionsBlock}\n\n## Your Task\nSynthesize the above opinions into a final response for the user. Follow the response format from your instructions.`;
     // Q3: include conversation history so follow-up turns have context.

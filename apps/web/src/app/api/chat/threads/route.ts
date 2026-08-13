@@ -20,9 +20,12 @@ export async function GET(req: Request): Promise<Response> {
   }
   try {
     const url = new URL(req.url);
-    const limit = Math.min(Number(url.searchParams.get('limit') ?? '50'), 100);
-    const beforeMs = url.searchParams.get('before') ? Number(url.searchParams.get('before')) : null;
-    const result = await listThreadsService(user.userId, limit, beforeMs);
+    const rawLimit = Number(url.searchParams.get('limit') ?? '50');
+    const limit = Number.isFinite(rawLimit)
+      ? Math.min(Math.max(Math.trunc(rawLimit), 1), 100)
+      : 50;
+    const beforeCursor = url.searchParams.get('before');
+    const result = await listThreadsService(user.userId, limit, beforeCursor);
     return Response.json(result);
   } catch (err) {
     return errorResponse(err);

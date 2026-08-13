@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-// Notification delivery. Phase 1d ships email via Resend (free tier).
-// Telegram + web-push are stubbed so the schema/UI can already accept them
-// — they'll wire up in Phase 2 per docs/10-roadmap.md.
+// Notification delivery for email, Telegram, and web-push channels. Each
+// provider is invoked with a bounded request timeout; the evaluator supplies
+// a database lease so concurrent cron runners do not deliver the same alert.
 //
 // We use plain fetch against Resend's API to avoid an extra dep; their API
 // is a single POST with a JSON body.
@@ -40,6 +40,7 @@ import {
 import { sendWebPush } from '../push/send';
 
 const alog = createCategorizedLogger('ai', { component: 'alerts-delivery' });
+const EXTERNAL_DELIVERY_TIMEOUT_MS = 30_000;
 
 export interface DeliveryResult {
   alertId: string;
@@ -52,29 +53,31 @@ interface DeliverArgs {
   alert: Alert;
   reading: RuleReading;
   env: EvaluatorEnv;
+  /** Lease acquired by the evaluator before invoking external providers. */
+  claimAt?: Date | undefined;
 }
 
-export async function deliverAlert({ alert, reading, env }: DeliverArgs): Promise<DeliveryResult> {
+export async function deliverAlert({ alert, reading, env, claimAt }: DeliverArgs): Promise<DeliveryResult> {
   // Pick the first configured channel that can actually deliver. Iterating
   // over alert.channels means the user controls priority.
   for (const ch of alert.channels) {
     if (ch === 'email') {
-      const r = await deliverEmail({ alert, reading, env });
+      const r = await deliverEmail({ alert, reading, env, claimAt });
       if (r.ok || r.message?.startsWith('not configured')) return r;
     }
     if (ch === 'telegram') {
-      const r = await deliverTelegram({ alert, reading, env });
+      const r = await deliverTelegram({ alert, reading, env, claimAt });
       if (r.ok || r.message?.startsWith('not configured')) return r;
     }
     if (ch === 'web-push') {
-      const r = await deliverWebPush({ alert, reading, env });
+      const r = await deliverWebPush({ alert, reading, env, claimAt });
       if (r.ok || r.message?.startsWith('not configured')) return r;
     }
   }
   return { alertId: alert.id, channel: 'none', ok: false, message: 'no channels' };
 }
 
-async function deliverEmail({ alert, reading, env }: DeliverArgs): Promise<DeliveryResult> {
+async function deliverEmail({ alert, reading, env, claimAt }: DeliverArgs): Promise<DeliveryResult> {
   if (!env.RESEND_API_KEY || !env.ALERT_FROM_EMAIL || !env.ALERT_TO_EMAIL) {
     // No Resend call happens, so there is no 2xx and we deliberately do NOT
     // call markFired. The alert will keep matching every cron tick until the
@@ -106,6 +109,7 @@ async function deliverEmail({ alert, reading, env }: DeliverArgs): Promise<Deliv
         subject,
         text: body,
       }),
+      signal: AbortSignal.timeout(EXTERNAL_DELIVERY_TIMEOUT_MS),
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'fetch failed';
@@ -135,8 +139,10 @@ async function deliverEmail({ alert, reading, env }: DeliverArgs): Promise<Deliv
   // 2xx response — only now do we mark the alert as fired. This is the single
   // point where markFired is called for the email channel; the evaluator does
   // not call it separately.
-  await markFiredForAlert(alert);
-  return { alertId: alert.id, channel: 'email', ok: true };
+  const finalized = await markFiredForAlert(alert, new Date(), claimAt);
+  return finalized
+    ? { alertId: alert.id, channel: 'email', ok: true }
+    : { alertId: alert.id, channel: 'email', ok: false, message: 'delivery claim lost after provider acceptance' };
 }
 
 function renderEmailBody(alert: Alert, reading: RuleReading): string {
@@ -168,7 +174,7 @@ function renderEmailBody(alert: Alert, reading: RuleReading): string {
 
 const TELEGRAM_API = 'https://api.telegram.org';
 
-async function deliverTelegram({ alert, reading, env }: DeliverArgs): Promise<DeliveryResult> {
+async function deliverTelegram({ alert, reading, env, claimAt }: DeliverArgs): Promise<DeliveryResult> {
   if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) {
     alog.warn('telegram channel not configured (TELEGRAM_*); skipping');
     return {
@@ -188,13 +194,12 @@ async function deliverTelegram({ alert, reading, env }: DeliverArgs): Promise<De
     const { sendTextMessage } = await import('../telegram/client');
     await sendTextMessage(env.TELEGRAM_BOT_TOKEN, env.TELEGRAM_CHAT_ID, text, {
       parseMode: 'MarkdownV2',
+      signal: AbortSignal.timeout(EXTERNAL_DELIVERY_TIMEOUT_MS),
     });
-    await markFiredForAlert(alert);
-    return {
-      alertId: alert.id,
-      channel: 'telegram',
-      ok: true,
-    };
+    const finalized = await markFiredForAlert(alert, new Date(), claimAt);
+    return finalized
+      ? { alertId: alert.id, channel: 'telegram', ok: true }
+      : { alertId: alert.id, channel: 'telegram', ok: false, message: 'delivery claim lost after provider acceptance' };
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'fetch failed';
     logErrorContext(err, 'alerts/telegram_delivery_failed', { alertId: alert.id }, 'telegram');
@@ -240,7 +245,7 @@ export function escapeMd(s: string): string {
 // On a single non-2xx, non-410 response we leave the alert un-fired so the
 // next cron tick retries — matching the email/Telegram retry semantics.
 
-async function deliverWebPush({ alert, reading, env }: DeliverArgs): Promise<DeliveryResult> {
+async function deliverWebPush({ alert, reading, env, claimAt }: DeliverArgs): Promise<DeliveryResult> {
   if (!env.VAPID_PUBLIC_KEY || !env.VAPID_PRIVATE_KEY) {
     return {
       alertId: alert.id,
@@ -306,8 +311,10 @@ async function deliverWebPush({ alert, reading, env }: DeliverArgs): Promise<Del
     alog.warn(`all push subscriptions were dead for alert ${alert.id}; marking fired anyway`);
   }
 
-  await markFiredForAlert(alert);
-  return { alertId: alert.id, channel: 'web-push', ok: true };
+  const finalized = await markFiredForAlert(alert, new Date(), claimAt);
+  return finalized
+    ? { alertId: alert.id, channel: 'web-push', ok: true }
+    : { alertId: alert.id, channel: 'web-push', ok: false, message: 'delivery claim lost after provider acceptance' };
 }
 
 export async function sendDirectNotification(

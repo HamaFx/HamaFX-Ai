@@ -16,7 +16,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { deriveForkedTitle } from '../src/persistence';
+import { deriveForkedTitle, InvalidThreadCursorError, listThreads } from '../src/persistence';
 
 describe('Phase C item 19 — deriveForkedTitle', () => {
   it('returns the text verbatim when short enough', () => {
@@ -58,5 +58,9 @@ describe('Phase C item 19 — deriveForkedTitle', () => {
 
   it('preserves inner whitespace and punctuation', () => {
     expect(deriveForkedTitle('hello, world!')).toBe('hello, world!');
+  });
+
+  it('rejects malformed pagination cursors instead of restarting at page one', async () => {
+    await expect(listThreads('user-1', 50, 'not-a-cursor')).rejects.toBeInstanceOf(InvalidThreadCursorError);
   });
 });

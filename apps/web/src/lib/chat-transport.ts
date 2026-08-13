@@ -232,7 +232,10 @@ function transformSseToDataStream(res: Response, onProgress: (p: AgentProgress |
         if (started && !ended) {
           controller.enqueue(encodeChunk({ type: 'text-end', id: activeTextId ?? id }));
         }
-        onProgress(null);
+        // Keep the completed committee state visible so users can expand
+        // the final opinions after the text stream finishes. A subsequent
+        // turn replaces it with a fresh pending snapshot.
+        if (!ended) onProgress(null);
         controller.close();
       }
     },
@@ -294,7 +297,14 @@ function pollJobToStreamResponse(
           let pollJson: {
             status?: string;
             progress?: Array<Record<string, unknown>>;
-            result?: { finalText?: string; messageId?: string | null };
+            result?: {
+              finalText?: string;
+              messageId?: string | null;
+              agentOpinions?: unknown[];
+              mode?: string;
+              totalCostUsd?: number;
+              totalLatencyMs?: number;
+            };
             error?: string;
           } = {};
           try {
@@ -323,7 +333,20 @@ function pollJobToStreamResponse(
               controller.enqueue(encodeChunk({ type: 'text-delta', id: finalId, delta: finalText }));
             }
             controller.enqueue(encodeChunk({ type: 'text-end', id: finalId }));
-            onProgress(null);
+            controller.enqueue(
+              encodeChunk({
+                type: 'data-multi-agent-meta',
+                id: finalId,
+                data: {
+                  agentOpinions: pollJson.result?.agentOpinions ?? [],
+                  mode: pollJson.result?.mode ?? 'full',
+                  totalCostUsd: pollJson.result?.totalCostUsd ?? 0,
+                  totalLatencyMs: pollJson.result?.totalLatencyMs ?? 0,
+                  messageId: finalId,
+                },
+                transient: true,
+              }),
+            );
             return;
           }
 

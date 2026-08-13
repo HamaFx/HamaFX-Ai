@@ -24,6 +24,7 @@ export {
   createThread,
   updateThreadTitle,
   updateThreadPinnedSymbol,
+  updateThreadAnalysisMode,
   deleteThread,
   deleteAllThreads,
   forkThread,
@@ -31,6 +32,8 @@ export {
   type DbThread,
   type ForkThreadInput,
   type ForkThreadResult,
+  type ThreadCursor,
+  InvalidThreadCursorError,
 } from './persistence/thread-persistence';
 
 export {

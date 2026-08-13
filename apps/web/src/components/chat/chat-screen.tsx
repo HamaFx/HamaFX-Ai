@@ -73,6 +73,10 @@ interface ChatScreenProps {
   initialMessages: UIMessage[];
   initialThreads: ThreadSummary[];
   pinnedSymbol: Symbol | null;
+  /** Default analysis mode loaded from the user's server-side settings. */
+  initialAnalysisMode?: AnalysisMode;
+  /** Whether the completed committee opinions should remain visible. */
+  initialShowAgentOpinions?: boolean;
   /** Server-side AI custom instructions. Using the DB value as the
    *  source of truth prevents cross-device drift from localStorage. */
   initialCustomInstructions?: string | null;
@@ -88,6 +92,8 @@ export function ChatScreen({
   initialMessages,
   initialThreads,
   pinnedSymbol,
+  initialAnalysisMode = 'auto',
+  initialShowAgentOpinions = true,
   initialCustomInstructions,
   autoSubmitPrompt,
 }: ChatScreenProps) {
@@ -96,7 +102,8 @@ export function ChatScreen({
   const scrollRef = useRef<HTMLDivElement>(null);
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null);
   const router = useRouter();
-  const [analysisMode, setAnalysisMode] = useState<AnalysisMode>('auto');
+  const [analysisMode, setAnalysisMode] = useState<AnalysisMode>(initialAnalysisMode);
+  const [showAgentOpinions] = useState(initialShowAgentOpinions);
 
   // One-shot model override.
   const modelOverrideRef = useRef<string | null>(null);
@@ -152,6 +159,12 @@ export function ChatScreen({
   useEffect(() => {
     onAgentProgressRef.current = (p) => setAgentProgress(p);
   });
+
+  useEffect(() => {
+    if (analysisMode === 'single' || !showAgentOpinions) {
+      setAgentProgress(null);
+    }
+  }, [analysisMode, showAgentOpinions]);
 
   const { messages, setMessages, sendMessage, regenerate, stop, status, error } = useChat({
     id: threadId,
@@ -245,6 +258,21 @@ export function ChatScreen({
     void regenerate();
   }, [regenerate]);
 
+  const handleAnalysisModeChange = useCallback((nextMode: AnalysisMode) => {
+    const previousMode = analysisMode;
+    setAnalysisMode(nextMode);
+    void apiMutate(`/api/chat/threads/${threadId}`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ analysisMode: nextMode }),
+    }).catch((err) => {
+      setAnalysisMode(previousMode);
+      toast.error('Could not save analysis mode', {
+        description: err instanceof Error ? err.message : 'Please try again.',
+      });
+    });
+  }, [analysisMode, threadId]);
+
   const handleEdit = useCallback(async (messageId: string, newText: string) => {
     // Read messages from the ref so this callback is stable across stream tokens
     // (avoids recreating it on every token, which would defeat MessageList's memo).
@@ -306,7 +334,7 @@ export function ChatScreen({
         threads={initialThreads}
         isStreaming={isStreaming}
         analysisMode={analysisMode}
-        onAnalysisModeChange={setAnalysisMode}
+        onAnalysisModeChange={handleAnalysisModeChange}
       />
 
       <div ref={setScrollContainer} className="scrollbar-hide no-overscroll relative flex-1 overflow-y-auto">
@@ -320,7 +348,7 @@ export function ChatScreen({
               />
             </div>
           ) : null}
-          {agentProgress && (
+          {showAgentOpinions && agentProgress && (
             <div className="px-3 py-2">
               <AgentDeliberation agents={agentProgress.agents} mode={agentProgress.mode} />
             </div>

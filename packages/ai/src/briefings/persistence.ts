@@ -20,9 +20,8 @@
 // We keep ONE Briefings_Thread for life: the cron handlers always reuse it,
 // and the chat sidebar pins it to the top via the `is_briefings` column.
 //
-// Phase A: added userId parameter. Briefings are still system-scoped (single
-// user), but the schema now requires user_id. Pass a constant system user ID
-// until Phase D implements per-user briefings.
+// Briefings are scoped to the authenticated user. The partial unique index
+// guarantees one dedicated briefing thread per user.
 
 import { schema } from '@kestrel/db';
 import { getDb } from '../db';
@@ -38,10 +37,9 @@ import type { Symbol } from '@kestrel/shared';
  * handlers call this once per invocation; on a fresh DB it inserts the
  * first row, on subsequent invocations it returns the same row.
  *
- * Phase 1 hardening §9 — the create + promote pair runs in one
- * transaction so a crash between the INSERT and the
- * `set({ isBriefings: true, ... })` UPDATE can't leave a sibling thread
- * row orphaned (which would silently break the sidebar pin).
+ * Phase 2 hardening — a partial unique index enforces the singleton at
+ * the database boundary, while the insert conflict fallback makes
+ * concurrent cron runners converge on the same winner.
  */
 export async function getOrCreateBriefingsThread(userId: string): Promise<DbThread> {
   const db = getDb();
@@ -52,45 +50,49 @@ export async function getOrCreateBriefingsThread(userId: string): Promise<DbThre
     .limit(1);
 
   const found = existing[0];
-  if (found) {
-    return {
-      id: found.id,
-      title: found.title,
-      titleSource:
-        found.titleSource === 'llm' || found.titleSource === 'fallback'
-          ? found.titleSource
-          : null,
-      pinnedSymbol: found.pinnedSymbol as DbThread['pinnedSymbol'],
-      modelOverride: found.modelOverride,
-      createdAt: found.createdAt.getTime(),
-      updatedAt: found.updatedAt.getTime(),
-    };
-  }
+  if (found) return rowToBriefingsThread(found);
 
-  return db.transaction(async (tx) => {
-    const inserted = await tx
-      .insert(schema.chatThreads)
-      .values({
-        userId,
-        title: 'Briefings',
-        titleSource: 'llm',
-        isBriefings: true,
-        pinnedSymbol: null,
-        modelOverride: null,
-      })
-      .returning();
-    const row = inserted[0]!;
-    return {
-      id: row.id,
-      title: row.title,
-      titleSource:
-        row.titleSource === 'llm' || row.titleSource === 'fallback' ? row.titleSource : 'llm',
-      pinnedSymbol: row.pinnedSymbol as DbThread['pinnedSymbol'],
-      modelOverride: row.modelOverride,
-      createdAt: row.createdAt.getTime(),
-      updatedAt: row.updatedAt.getTime(),
-    };
-  });
+  // The partial unique index on (user_id) for briefing rows is the
+  // concurrency boundary. If another cron runner wins the insert, this
+  // statement returns no row and the follow-up SELECT retrieves its row.
+  const inserted = await db
+    .insert(schema.chatThreads)
+    .values({
+      userId,
+      title: 'Briefings',
+      titleSource: 'llm',
+      isBriefings: true,
+      pinnedSymbol: null,
+      modelOverride: null,
+      analysisMode: null,
+    })
+    .onConflictDoNothing()
+    .returning();
+  const created = inserted[0];
+  if (created) return rowToBriefingsThread(created);
+
+  const raced = await db
+    .select()
+    .from(schema.chatThreads)
+    .where(and(eq(schema.chatThreads.isBriefings, true), eq(schema.chatThreads.userId, userId)))
+    .limit(1);
+  const winner = raced[0];
+  if (!winner) throw new Error(`failed to create or find briefings thread for user ${userId}`);
+  return rowToBriefingsThread(winner);
+}
+
+function rowToBriefingsThread(row: typeof schema.chatThreads.$inferSelect): DbThread {
+  return {
+    id: row.id,
+    title: row.title,
+    titleSource:
+      row.titleSource === 'llm' || row.titleSource === 'fallback' ? row.titleSource : null,
+    pinnedSymbol: row.pinnedSymbol as DbThread['pinnedSymbol'],
+    modelOverride: row.modelOverride,
+    analysisMode: row.analysisMode,
+    createdAt: row.createdAt.getTime(),
+    updatedAt: row.updatedAt.getTime(),
+  };
 }
 
 /** True when a briefing of `(eventId, kind)` has already been emitted. */

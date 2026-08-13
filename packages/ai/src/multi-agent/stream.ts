@@ -39,7 +39,11 @@ export class ProgressTracker {
   update(event: ProgressEvent): void {
     switch (event.type) {
       case 'specialists_start':
-        for (const name of event.agents) this.agents.set(name, { status: 'pending' });
+        // Rebuild the set from the orchestrator's effective specialist list.
+        // This matters when budget controls downgrade full → standard; stale
+        // agents must not remain visible as permanently pending.
+        this.agents = new Map(event.agents.map((name) => [name, { status: 'pending' as const }]));
+        this.agents.set('decision', { status: 'pending' });
         break;
       case 'agent_start':
         this.agents.set(event.agent, { status: 'running' });

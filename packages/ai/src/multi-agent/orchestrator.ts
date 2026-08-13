@@ -33,7 +33,7 @@ import { DecisionAgent } from './agents/decision-agent';
 import type { BaseAgent } from './agents/base-agent';
 import type {
   AnalysisMode, AgentOpinion, SpecialistAgentName,
-  SharedContext, MultiAgentResult, ProgressEvent, MultiAgentEnv,
+  SharedContext, MultiAgentResult, ProgressEvent, MultiAgentEnv, ResolvedMode,
 } from './types';
 import { MODE_COST_ESTIMATE } from './types';
 import type { UserSettingsRow } from '@kestrel/db/schema';
@@ -86,36 +86,43 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
     throw new BudgetExceededError(reservation.spent, reservation.max);
   }
 
-  // B2 fix — enforce monthly budget + provider thresholds before expensive multi-agent turns.
-  // Resolve the active provider once for the budget check (reuse single-agent semantics).
-  const activeProvider = resolveChatModel(userSettings, env).providerId;
-  const budgetCheck = await checkBudgetAlertsAndThresholds(userId, activeProvider);
-  if (budgetCheck.blocked) {
-    throw new Error(budgetCheck.blockedReason ?? 'Monthly budget limit reached');
-  }
-  // B2: honor nonEssentialDisabled by downgrading full → standard when near budget cap.
-  const effectiveMode = budgetCheck.nonEssentialDisabled && mode === 'full' ? 'standard' : mode;
-
-  // ── Persist the user message first ──
-  // This ensures the conversation survives even if all agents fail.
-  // Do this AFTER budget reservation succeeds but BEFORE any agent work.
-  await appendUserMessage(threadId, userMessage);
-
-  // Hoist symbol to function scope so Q2 signal extraction can use it.
+  // Every operation after a successful reservation must either reconcile or
+  // release it. Provider resolution, budget-alert checks, and message
+  // persistence can all fail before the main agent try/finally begins.
+  let effectiveMode: ResolvedMode = mode;
   const symbol = userSettings.defaultSymbol ?? 'XAUUSD';
-
-  // ── Run specialists + fusion with budget-leak guard ──
-  // Wrap the entire execution from shared-context build through
-  // reconciliation in try/finally so that any throw (buildSharedContext,
-  // Promise.all, fuse, etc.) before reconciliation releases the budget
-  // reservation. Without this guard repeated failures inflate
-  // daily_ai_spend and prematurely trip the BudgetExceededError guardrail.
-  let reconciled = false;
+  let setupComplete = false;
   let validOpinions: AgentOpinion[] = [];
   let finalText = '';
   let decisionCostUsd = 0;
   let totalCostUsd = 0;
   let totalLatencyMs = 0;
+
+  try {
+    // B2 fix — enforce monthly budget + provider thresholds before expensive multi-agent turns.
+    // Resolve the active provider once for the budget check (reuse single-agent semantics).
+    const activeProvider = resolveChatModel(userSettings, env).providerId;
+    const budgetCheck = await checkBudgetAlertsAndThresholds(userId, activeProvider);
+    if (budgetCheck.blocked) {
+      throw new Error(budgetCheck.blockedReason ?? 'Monthly budget limit reached');
+    }
+    // B2: honor nonEssentialDisabled by downgrading full → standard when near budget cap.
+    effectiveMode = budgetCheck.nonEssentialDisabled && mode === 'full' ? 'standard' : mode;
+
+    // ── Persist the user message first ──
+    // This ensures the conversation survives even if all agents fail.
+    // Do this AFTER budget reservation succeeds but BEFORE any agent work.
+    await appendUserMessage(threadId, userMessage);
+
+    setupComplete = true;
+
+    // ── Run specialists + fusion with budget-leak guard ──
+    // Wrap the entire execution from shared-context build through
+    // reconciliation in try/finally so that any throw (buildSharedContext,
+    // Promise.all, fuse, etc.) before reconciliation releases the budget
+    // reservation. Without this guard repeated failures inflate
+    // daily_ai_spend and prematurely trip the BudgetExceededError guardrail.
+    let reconciled = false;
 
   try {
     const ctxArgs: Parameters<typeof buildSharedContext>[0] = { symbol, userId, threadId, userMessage, history, userSettings, displayName, env, signal };
@@ -198,14 +205,26 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
       mlog.warn('applyBudgetDelta failed', { err: String(err) }),
     );
     reconciled = true;
-  } finally {
-    if (!reconciled) {
-      // Release the full reservation — any path that throws before
-      // reconciliation must not leave the reservation stuck.
-      await applyBudgetDelta(userId, -estimatedCost).catch((err) =>
-        mlog.warn('failed to release budget reservation after error', { err: String(err) }),
+    } finally {
+      if (!reconciled) {
+        // Release the full reservation — any path that throws before
+        // reconciliation must not leave the reservation stuck.
+        await applyBudgetDelta(userId, -estimatedCost).catch((err) =>
+          mlog.warn('failed to release budget reservation after error', { err: String(err) }),
+        );
+      }
+    }
+  } catch (err) {
+    // The reservation was created before the guarded setup stage. Release it
+    // only when provider checks, budget checks, or initial persistence fail.
+    // Errors from the main execution path already release in its inner
+    // finally block.
+    if (!setupComplete) {
+      await applyBudgetDelta(userId, -estimatedCost).catch((releaseErr) =>
+        mlog.warn('failed to release budget reservation during setup failure', { err: String(releaseErr) }),
       );
     }
+    throw err;
   }
 
   // ── Q2: Citation enforcement on multi-agent output ──

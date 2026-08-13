@@ -67,6 +67,12 @@ export default async function ChatThreadPage({ params, searchParams }: PageProps
   const customInstructions = settings?.customInstructions;
   if (!thread) notFound();
 
+  const savedModes = ['single', 'quick', 'standard', 'full', 'auto'] as const;
+  const threadMode = savedModes.includes(thread.analysisMode as (typeof savedModes)[number])
+    ? (thread.analysisMode as (typeof savedModes)[number])
+    : null;
+  const initialAnalysisMode = threadMode ?? settings?.defaultAnalysisMode ?? 'auto';
+
   const initialMessages = dbMessages
     .map((m) => {
       const msg = {
@@ -95,6 +101,8 @@ export default async function ChatThreadPage({ params, searchParams }: PageProps
         updatedAt: t.updatedAt,
       }))}
       pinnedSymbol={thread.pinnedSymbol}
+      initialAnalysisMode={initialAnalysisMode as 'single' | 'quick' | 'standard' | 'full' | 'auto'}
+      initialShowAgentOpinions={settings?.showAgentOpinions ?? true}
       initialCustomInstructions={customInstructions ?? null}
       autoSubmitPrompt={prompt ?? null}
     />
