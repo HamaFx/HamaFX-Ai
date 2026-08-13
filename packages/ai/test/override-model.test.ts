@@ -43,6 +43,7 @@ vi.mock('@kestrel/shared/encryption', () => ({
     'openrouter',
     'xai',
     'deepseek',
+    'hcnsec',
   ] as const,
   // Type stubs — not used at runtime, present so the type
   // signature satisfies the parser.

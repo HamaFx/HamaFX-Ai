@@ -39,6 +39,7 @@ export const PROVIDER_PRIORITY: ProviderId[] = [
   'groq',
   'deepseek',
   'iamhc',
+  'hcnsec',
 ];
 
 /**
@@ -78,6 +79,7 @@ export function envFallbackKeys(env: ResolveModelEnv): ByokPayload {
       ['xai', 'XAI_API_KEY'],
       ['deepseek', 'DEEPSEEK_API_KEY'],
       ['iamhc', 'IAMHC_API_KEY'],
+      ['hcnsec', 'HCNSEC_API_KEY'],
     ];
     for (const [field, envName] of map) {
       const val = processEnv[envName];

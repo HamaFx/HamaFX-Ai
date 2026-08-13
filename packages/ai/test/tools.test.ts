@@ -43,6 +43,7 @@ vi.mock('@kestrel/shared/encryption', () => ({
     'xai',
     'deepseek',
     'iamhc',
+    'hcnsec',
   ],
   decryptByok: () => null,
   encryptByok: () => '',

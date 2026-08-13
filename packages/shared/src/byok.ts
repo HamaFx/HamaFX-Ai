@@ -44,6 +44,7 @@ export const PROVIDER_IDS = [
   'xai',
   'deepseek',
   'iamhc',
+  'hcnsec',
 ] as const;
 export type ProviderId = (typeof PROVIDER_IDS)[number];
 
@@ -76,6 +77,8 @@ export interface ByokPayload {
   deepseek?: string;
   finnhub?: string;
   iamhc?: string;
+  /** HCNSEC OpenAI-compatible gateway API key. */
+  hcnsec?: string;
 }
 
 /**

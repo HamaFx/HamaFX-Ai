@@ -67,7 +67,7 @@ export interface ProviderBreakdown {
    *   'gemini-2.5-flash'               -> '' (no prefix, BYOK google)
    */
   provider: string;
-  /** Whether this provider maps to one of our 9 BYOK providers. */
+  /** Whether this provider maps to one of our registered BYOK providers. */
   byokProviderId: string | null;
   turns: number;
   inputTokens: number;
@@ -109,7 +109,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
  *
  * Convert an AI SDK model id like `google-vertex/gemini-2.5-flash`
  * into a provider id (the segment before the first `/`) and then
- * map it back to one of our 9 known BYOK providers.
+ * map it back to one of our known BYOK providers.
  *
  * Why the mapping matters: the agent persists the literal model id
  * it streams with (including the gateway/vertex prefix), but the

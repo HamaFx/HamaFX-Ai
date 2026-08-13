@@ -65,6 +65,7 @@ export default async function UsagePage() {
     'xai',
     'deepseek',
     'iamhc',
+    'hcnsec',
   ]);
 
   const canonicalizeProviderId = (prefix: string) => {

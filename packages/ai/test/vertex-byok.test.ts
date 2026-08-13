@@ -34,6 +34,7 @@ vi.mock('@kestrel/shared/encryption', () => ({
     'openrouter',
     'xai',
     'deepseek',
+    'hcnsec',
   ] as const,
   describeByok: () => 'none',
 }));

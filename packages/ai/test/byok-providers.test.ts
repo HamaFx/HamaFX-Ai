@@ -82,6 +82,22 @@ describe('BYOK_PROVIDERS', () => {
   });
 });
 
+describe('HCNSEC provider', () => {
+  it('uses the documented OpenAI-compatible endpoint and conservative defaults', () => {
+    const spec = BYOK_PROVIDERS.hcnsec;
+    expect(spec.baseURL).toBe('https://api.hcnsec.cn/v1');
+    expect(spec.docsUrl).toBe('https://hcnote.cn/2026/07/12/12831.html');
+    expect(spec.defaultModels).toMatchObject({
+      fundamental: 'DeepSeek-V4-Flash',
+      technical: 'DeepSeek-V4-Flash',
+      summary: 'Qwen3.6-27B',
+      vision: null,
+      embedding: null,
+    });
+    expect(spec.supports).toEqual({ vision: false, embedding: false });
+  });
+});
+
 describe('getProvider', () => {
   it('returns the spec for known ids', () => {
     expect(getProvider('google').id).toBe('google');

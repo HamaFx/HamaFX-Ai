@@ -24,7 +24,7 @@ import { VERTEX } from './vertex';
 import { ANTHROPIC } from './anthropic';
 import { OPENAI } from './openai';
 import { GROQ, MISTRAL, OPENROUTER } from './groq-mistral-openrouter';
-import { XAI, DEEPSEEK, IAMHC } from './xai-deepseek-iamhc';
+import { XAI, DEEPSEEK, IAMHC, HCNSEC } from './xai-deepseek-iamhc';
 import type { ByokProviderSpec, ModelDomain } from './types';
 
 export const BYOK_PROVIDERS: Record<ProviderId, ByokProviderSpec> = {
@@ -38,6 +38,7 @@ export const BYOK_PROVIDERS: Record<ProviderId, ByokProviderSpec> = {
   xai: XAI,
   deepseek: DEEPSEEK,
   iamhc: IAMHC,
+  hcnsec: HCNSEC,
 };
 
 /** Ordered list of all providers — handy for iterating in UI. */
