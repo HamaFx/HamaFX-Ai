@@ -19,6 +19,7 @@ readonly APP_DIR="/opt/kestrel/app"
 readonly COMPOSE_FILE="/opt/kestrel/docker-compose.yml"
 readonly LOCK_FILE="/opt/kestrel/.update.lock"
 readonly SHA_FILE="/opt/kestrel/.deployed-sha"
+readonly ENV_FILE="/opt/kestrel/.env"
 readonly CONTAINER="kestrel-worker"
 readonly UNIT_SYNC_HELPER='/usr/local/sbin/kestrel-sync-systemd-units'
 
@@ -42,6 +43,17 @@ ping_hc() {
 }
 
 log() { printf '%s [docker-update] %s\n' "$(date -u +%FT%TZ)" "$*"; }
+
+write_deployed_metadata() {
+  local sha="$1"
+
+  printf '%s\n' "$sha" > "$SHA_FILE"
+  if grep -q '^DEPLOYED_SHA=' "$ENV_FILE"; then
+    sed -i "s|^DEPLOYED_SHA=.*|DEPLOYED_SHA=$sha|" "$ENV_FILE"
+  else
+    printf 'DEPLOYED_SHA=%s\n' "$sha" >> "$ENV_FILE"
+  fi
+}
 
 sync_host_files_for_commit() {
   local commit="$1"
@@ -160,10 +172,16 @@ if ! docker compose -f "$COMPOSE_FILE" build --quiet 2>&1; then
   exit 1
 fi
 
+# Stage runtime metadata before recreating the container so its logs and
+# health diagnostics report the code that was actually deployed. Rollback
+# paths restore the previous metadata before starting the old image.
+write_deployed_metadata "$NEW_SHA"
+
 # Restart with the new image
 log "restarting container"
 if ! docker compose -f "$COMPOSE_FILE" up -d --force-recreate --no-deps worker 2>&1; then
   log "docker compose up failed — rolling back"
+  write_deployed_metadata "$PREV_SHA"
   docker tag kestrel-worker:rollback kestrel-worker:local 2>/dev/null || true
   docker compose -f "$COMPOSE_FILE" up -d --force-recreate --no-deps worker 2>/dev/null || true
   ping_hc fail "up failed at $NEW_SHA, rolled back"
@@ -178,6 +196,7 @@ sleep "$HEALTH_WAIT_SEC"
 HEALTH_STATUS=$(docker inspect --format='{{.State.Health.Status}}' "$CONTAINER" 2>/dev/null || echo "unknown")
 if [[ "$HEALTH_STATUS" != "healthy" ]]; then
   log "health check failed (status: $HEALTH_STATUS) — rolling back"
+  write_deployed_metadata "$PREV_SHA"
   docker tag kestrel-worker:rollback kestrel-worker:local 2>/dev/null || true
   sync_host_files_for_commit "$PREV_SHA" >/dev/null 2>&1 || true
   docker compose -f "$COMPOSE_FILE" build --quiet 2>/dev/null || true
@@ -186,14 +205,7 @@ if [[ "$HEALTH_STATUS" != "healthy" ]]; then
   exit 1
 fi
 
-# Success — record SHA
-echo "$NEW_SHA" > "$SHA_FILE"
-ENV_FILE='/opt/kestrel/.env'
-if grep -q '^DEPLOYED_SHA=' "$ENV_FILE"; then
-  sed -i "s|^DEPLOYED_SHA=.*|DEPLOYED_SHA=$NEW_SHA|" "$ENV_FILE"
-else
-  echo "DEPLOYED_SHA=$NEW_SHA" >> "$ENV_FILE"
-fi
+# Success — metadata was written before restart and is already current.
 
 # Prune old images to reclaim disk
 docker image prune -f >/dev/null 2>&1 || true
