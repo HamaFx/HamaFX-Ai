@@ -34,6 +34,24 @@ export const baseOpinionSchema = z.object({
   reasoning: z.string().min(1),
 });
 
+const GROQ_TOOL_LIMIT = 6;
+
+/**
+ * Groq's OpenAI-compatible function-calling models become unreliable when
+ * presented with a large specialist tool menu. Keep the highest-priority
+ * tools (agents declare them in priority order) while preserving the full
+ * tool set for providers with stronger tool-call handling.
+ */
+export function limitToolsForProvider(
+  modelId: string,
+  tools: Record<string, Tool>,
+): Record<string, Tool> {
+  if (!modelId.startsWith('groq/') || Object.keys(tools).length <= GROQ_TOOL_LIMIT) {
+    return tools;
+  }
+  return Object.fromEntries(Object.entries(tools).slice(0, GROQ_TOOL_LIMIT));
+}
+
 export abstract class BaseAgent {
   abstract readonly name: AgentName;
   abstract readonly modelTier: ModelTier;
@@ -61,7 +79,7 @@ export abstract class BaseAgent {
       ...historyMessages,
       { role: 'user' as const, content: userText },
     ];
-    const tools = this.tools();
+    const tools = limitToolsForProvider(modelId, this.tools());
     for (const disabledTool of ctx.userSettings.disabledTools ?? []) {
       delete tools[disabledTool];
     }

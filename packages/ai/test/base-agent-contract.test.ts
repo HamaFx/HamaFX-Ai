@@ -30,7 +30,8 @@
 // compliance only (LSP compliance).
 
 import { describe, it, expect } from 'vitest';
-import type { BaseAgent } from '../src/multi-agent/agents/base-agent';
+import type { Tool } from 'ai';
+import { limitToolsForProvider, type BaseAgent } from '../src/multi-agent/agents/base-agent';
 
 // PF-12: Load the tool registry (via side-effect imports) before tests run
 // so agent.tools() returns non-empty tool sets.
@@ -107,6 +108,20 @@ describe('BaseAgent contract (PF-12)', () => {
       });
     },
   );
+
+  describe('provider tool compatibility', () => {
+    it('limits Groq specialist tools but preserves other providers', () => {
+      const tools = Object.fromEntries(
+        Array.from({ length: 9 }, (_, index) => [
+          `tool_${index}`,
+          { description: `Tool ${index}` },
+        ]),
+      ) as unknown as Record<string, Tool>;
+
+      expect(Object.keys(limitToolsForProvider('groq/llama-3.3-70b-versatile', tools))).toHaveLength(6);
+      expect(Object.keys(limitToolsForProvider('google/gemini-2.5-flash', tools))).toHaveLength(9);
+    });
+  });
 
   describe('DecisionAgent (LSP-1 — not a BaseAgent, tested separately)', () => {
     const decision = new DecisionAgent();

@@ -26,7 +26,10 @@ export const GROQ = defineProvider({
   docsUrl: 'https://console.groq.com/docs/models',
   baseURL: 'https://api.groq.com/openai/v1',
   defaultModels: {
-    fundamental: 'openai/gpt-oss-120b',
+    // GPT-OSS emits reasoning_content that Groq's OpenAI-compatible
+    // transport rejects on tool-call continuation steps. Llama remains
+    // the compatible default for multi-agent tool use.
+    fundamental: 'llama-3.3-70b-versatile',
     technical: 'llama-3.3-70b-versatile',
     summary: 'llama-3.1-8b-instant',
     vision: 'meta-llama/llama-4-scout-17b-16e-instruct',

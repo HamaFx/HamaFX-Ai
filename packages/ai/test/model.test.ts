@@ -506,6 +506,10 @@ describe('testProviderKey — key validation', () => {
 });
 
 describe('defaultModelFor', () => {
+  it('uses a Groq tool-compatible model for fundamental analysis', () => {
+    expect(defaultModelFor('groq', 'fundamental')).toBe('llama-3.3-70b-versatile');
+  });
+
   it('returns the fundamental model for google', () => {
     expect(defaultModelFor('google', 'fundamental')).toBe(
       BYOK_PROVIDERS.google.defaultModels.fundamental,
