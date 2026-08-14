@@ -46,6 +46,28 @@ async function post(path, body) {
   }
 }
 
+async function ensureDataset() {
+  const response = await fetch(`${baseUrl}/api/public/v2/datasets`, {
+    method: 'POST',
+    headers: {
+      authorization: `Basic ${auth}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      name: datasetName,
+      description: 'Kestrel agent mode, specialist, tool, citation, sentiment, and fallback regression cases',
+      metadata: { source: 'packages/ai/src/eval/cases.json', version: '2026-08' },
+    }),
+  });
+  if (response.status === 409) return;
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Langfuse dataset creation returned HTTP ${response.status}: ${text.slice(0, 300)}`);
+  }
+}
+
+await ensureDataset();
+
 for (const item of cases) {
   await post('/dataset-items', {
     datasetName,
