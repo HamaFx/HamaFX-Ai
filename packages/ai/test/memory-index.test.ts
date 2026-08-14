@@ -77,4 +77,17 @@ describe('rememberThreadSynopsis', () => {
       }),
     );
   });
+
+  it('passes the active abort signal to embedding work', async () => {
+    const controller = new AbortController();
+    await rememberThreadSynopsis({
+      threadId: 'thread-b',
+      userId: 'user-b',
+      synopsis: 'A cancellable synopsis.',
+      insights: [],
+      signal: controller.signal,
+    });
+
+    expect(mockEmbedTexts).toHaveBeenCalledWith(expect.objectContaining({ signal: controller.signal }));
+  });
 });

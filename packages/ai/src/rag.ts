@@ -348,11 +348,13 @@ export async function embedQuery(
   options?: {
     aiEmbeddingModel?: string;
     userSettings?: Parameters<typeof embedTexts>[0]['userSettings'];
+    signal?: AbortSignal;
   },
 ): Promise<{ embedding: number[]; model: string }> {
   const args: Parameters<typeof embedTexts>[0] = { texts: [query] };
   if (options?.userSettings) args.userSettings = options.userSettings;
   if (options?.aiEmbeddingModel) args.env = { AI_EMBEDDING_MODEL: options.aiEmbeddingModel };
+  if (options?.signal) args.signal = options.signal;
   const r = await embedTexts(args);
   const e = r.embeddings[0];
   if (!e) throw new Error('embedQuery: provider returned no embedding');

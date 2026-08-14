@@ -83,6 +83,7 @@ async function upsertMemory(args: {
    * precedence over env.AI_EMBEDDING_MODEL.
    */
   userSettings?: EmbedUserSettings;
+  signal?: AbortSignal | null;
 }): Promise<{ stored: boolean; reason?: string }> {
   const text = args.text.trim();
   if (text.length === 0) return { stored: false, reason: 'empty' };
@@ -109,6 +110,7 @@ async function upsertMemory(args: {
       texts: [text],
       ...(args.userSettings ? { userSettings: args.userSettings } : {}),
       ...(env.AI_EMBEDDING_MODEL ? { env: { AI_EMBEDDING_MODEL: env.AI_EMBEDDING_MODEL } } : {}),
+      ...(args.signal ? { signal: args.signal } : {}),
     });
     const e = result.embeddings[0];
     if (!e) return { stored: false, reason: 'no_embedding' };
@@ -117,6 +119,8 @@ async function upsertMemory(args: {
   } catch {
     return { stored: false, reason: 'embed_failed' };
   }
+
+  if (args.signal?.aborted) return { stored: false, reason: 'aborted' };
 
   const db = getDb();
   // Atomic upsert (Phase 1 hardening §8). The previous DELETE + INSERT
@@ -181,6 +185,7 @@ export interface RememberJournalArgs {
   env?: Partial<EmbedEnv>;
   /** Phase D2 — user's embedding pick. */
   userSettings?: EmbedUserSettings;
+  signal?: AbortSignal | null;
 }
 
 /**
@@ -214,6 +219,7 @@ export async function rememberJournalEntry(
     userId: args.userId,
     ...(args.env ? { env: args.env } : {}),
     ...(args.userSettings ? { userSettings: args.userSettings } : {}),
+    ...(args.signal ? { signal: args.signal } : {}),
   });
 }
 
@@ -243,6 +249,7 @@ export interface RememberBriefingArgs {
   env?: Partial<EmbedEnv>;
   /** The owning user. Required for proper tenant isolation. */
   userId: string;
+  signal?: AbortSignal | null;
 }
 
 export async function rememberBriefing(
@@ -257,6 +264,7 @@ export async function rememberBriefing(
     occurredAt: new Date(args.occurredAtMs ?? Date.now()),
     ...(args.env ? { env: args.env } : {}),
     userId: args.userId,
+    ...(args.signal ? { signal: args.signal } : {}),
   });
 }
 
@@ -269,6 +277,7 @@ export interface RememberThreadSynopsisArgs {
   env?: Partial<EmbedEnv>;
   /** Phase D2 — user's embedding pick. */
   userSettings?: EmbedUserSettings;
+  signal?: AbortSignal | null;
 }
 
 export async function rememberThreadSynopsis(
@@ -286,6 +295,7 @@ export async function rememberThreadSynopsis(
     occurredAt: new Date(),
     ...(args.env ? { env: args.env } : {}),
     ...(args.userSettings ? { userSettings: args.userSettings } : {}),
+    ...(args.signal ? { signal: args.signal } : {}),
   });
 }
 

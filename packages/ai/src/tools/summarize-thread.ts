@@ -131,7 +131,7 @@ export const summarizeThreadTool = tool({
     let remembered = false;
     if (input.remember) {
       try {
-        await rememberThreadSynopsis({
+        const rememberResult = await rememberThreadSynopsis({
           threadId,
           userId: ctx.userId,
           synopsis,
@@ -145,8 +145,9 @@ export const summarizeThreadTool = tool({
                 },
               }
             : {}),
+          ...(ctx.signal ? { signal: ctx.signal } : {}),
         });
-        remembered = true;
+        remembered = rememberResult.stored;
       } catch (err) {
         if (env.LOG_PROMPTS) slog.warn('remember failed', { err: String(err) });
       }

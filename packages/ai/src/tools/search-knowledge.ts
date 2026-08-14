@@ -129,6 +129,7 @@ export const searchKnowledgeTool = tool({
       ...(ctx?.env?.AI_EMBEDDING_MODEL
         ? { aiEmbeddingModel: ctx.env.AI_EMBEDDING_MODEL }
         : {}),
+      ...(ctx?.signal ? { signal: ctx.signal } : {}),
     });
 
     const [newsRows, memoryRows] = await Promise.all([
