@@ -105,7 +105,10 @@ export async function verifyProduction() {
 
   if (process.env.WORKER_HEALTH_URL) {
     const workerUrl = requiredUrl('WORKER_HEALTH_URL', process.env.WORKER_HEALTH_URL);
-    await checkEndpoint('worker health', new URL('/health', workerUrl));
+    const workerHeaders = process.env.WORKER_HEALTH_TOKEN
+      ? { authorization: `Bearer ${process.env.WORKER_HEALTH_TOKEN}` }
+      : {};
+    await checkEndpoint('worker health', new URL('/health', workerUrl), workerHeaders);
   } else {
     console.log('[verify-production] worker health: skipped (set WORKER_HEALTH_URL to verify it)');
   }

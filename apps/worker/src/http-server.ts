@@ -26,6 +26,7 @@
 // optional pathway; its absence should be a soft degradation, not a
 // hard error that would trigger Sentry alerts on every proxy request.
 
+import { timingSafeEqual } from 'node:crypto';
 import * as http from 'http';
 import type { Logger } from './log.js';
 
@@ -49,6 +50,22 @@ export function createHealthServer(deps: HealthServerDeps): http.Server {
   const { log, getLastTickAt, isSignalRConnected } = deps;
   const BIQUOTE_BASE = process.env.BIQUOTE_BASE_URL ?? 'https://biquote.io';
   const PROXY_TOKEN = process.env.BIQUOTE_PROXY_TOKEN;
+  const HEALTH_TOKEN = process.env.WORKER_HEALTH_TOKEN;
+  const isProd = process.env.NODE_ENV === 'production';
+
+  function hasValidHealthToken(req: http.IncomingMessage): boolean {
+    // Development keeps the localhost health check convenient. Production
+    // requires a bearer token because this endpoint is reachable externally.
+    if (!HEALTH_TOKEN) return !isProd;
+    const provided = req.headers.authorization ?? '';
+    const expected = `Bearer ${HEALTH_TOKEN}`;
+    const providedBytes = Buffer.from(provided);
+    const expectedBytes = Buffer.from(expected);
+    return (
+      providedBytes.length === expectedBytes.length &&
+      timingSafeEqual(providedBytes, expectedBytes)
+    );
+  }
 
   // H-3: BIQUOTE_PROXY_TOKEN is required in production. Without it,
   // the proxy is wide open to anyone who can reach port 8081 (even
@@ -56,7 +73,6 @@ export function createHealthServer(deps: HealthServerDeps): http.Server {
   // PR-11: Downgraded from error to warn — a missing proxy token is a
   // configuration gap, not a server crash. The proxy returns 503 for
   // all requests when unconfigured; the health endpoint still works.
-  const isProd = process.env.NODE_ENV === 'production';
   if (isProd && !PROXY_TOKEN) {
     log.warn('BIQUOTE_PROXY_TOKEN is not set — BiQuote proxy will reject all requests');
   }
@@ -107,9 +123,15 @@ export function createHealthServer(deps: HealthServerDeps): http.Server {
       }
       return;
     }
-    // Health endpoint — returns real worker state (tick age, SignalR status, uptime)
-    // PR-11: Also reports whether the BiQuote proxy has a valid token configured.
+    // Health endpoint — returns real worker state (tick age, SignalR status, uptime).
+    // It is bearer-protected in production because the VM port is externally
+    // reachable for the Vercel production verifier.
     if (req.url === '/health' || req.url === '/api/health' || req.url === '/') {
+      if (!hasValidHealthToken(req)) {
+        res.writeHead(HEALTH_TOKEN ? 401 : 503, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ status: 'unauthorized' }));
+        return;
+      }
       const lastTickAt = getLastTickAt();
       const ageMs = Date.now() - lastTickAt;
       const healthy = lastTickAt > 0 && ageMs < 120_000;

@@ -24,9 +24,11 @@ services:
       WORKER_MODE: docker
       KESTREL_RUNTIME: worker
 
-    # Ports bound to localhost ONLY — not accessible from the internet
+    # Port 8081 is externally reachable only through the GCP firewall;
+    # /health requires WORKER_HEALTH_TOKEN. The BiQuote proxy remains
+    # bearer-protected separately and should not be used by Vercel.
     ports:
-      - "127.0.0.1:8081:8081"   # Health server + BiQuote proxy
+      - "8081:8081"   # Authenticated worker health endpoint
 
     # No persistent volumes — all state lives in Supabase Postgres.
     # The worker is stateless: in-memory tick buffer + candle aggregator
@@ -34,7 +36,7 @@ services:
 
     # Health check — replaces systemd WatchdogSec
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8081/health || exit 1"]
+      test: ["CMD-SHELL", "curl -fsS -H \"Authorization: Bearer $${WORKER_HEALTH_TOKEN}\" http://localhost:8081/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3

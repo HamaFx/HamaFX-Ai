@@ -60,8 +60,9 @@ RUN chown -R node:node /app
 USER node
 
 # SEC-3: Container HEALTHCHECK against the real worker health endpoint.
-# apps/worker/src/index.ts serves /health on port 8081 (127.0.0.1).
+# Production containers set WORKER_HEALTH_TOKEN; development containers may
+# omit it and use the unauthenticated development-only path.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD curl -fsS http://localhost:8081/health || exit 1
+  CMD-SHELL if [ -n "$WORKER_HEALTH_TOKEN" ]; then curl -fsS -H "Authorization: Bearer $WORKER_HEALTH_TOKEN" http://localhost:8081/health; else curl -fsS http://localhost:8081/health; fi
 
 CMD ["node", "dist/index.js"]

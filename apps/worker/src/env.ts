@@ -51,6 +51,8 @@ const WorkerEnvSchema = z.object({
 
   /** Optional override; defaults to https://biquote.io in the consumer. */
   BIQUOTE_BASE_URL: optionalUrl,
+  /** Bearer token required by the externally reachable health endpoint. */
+  WORKER_HEALTH_TOKEN: optionalNonEmpty,
   /** SignalR hub URL. Defaults to BiQuote's documented endpoint. */
   BIQUOTE_HUB_URL: z.string().url().default('https://biquote.io/hubs/tick'),
 

@@ -19,8 +19,8 @@ A GCE `e2-medium` instance that runs the Docker worker and fires lightweight cro
 
 The VM uses GCP default firewall rules (deny all inbound except SSH):
 - **SSH (port 22):** allowed from 0.0.0.0/0
-- **Port 8081:** NOT exposed externally — the health server binds to `127.0.0.1` only
-- **No other inbound ports** are needed
+- **Port 8081:** exposed for the Vercel worker-health probe; `/health` requires the `WORKER_HEALTH_TOKEN` bearer token
+- **No other worker inbound ports** are needed
 
 Firewall rules are configured by `_provision-docker.sh` during VM setup.
 
@@ -84,7 +84,7 @@ EOF"
 
 ## Monitoring
 
-The Docker worker is the always-on process. Use `docker logs` and the worker health endpoint for it; use `journalctl` for host timers and maintenance services.
+The Docker worker is the always-on process. Use `docker logs` and the worker health endpoint for it; use `journalctl` for host timers and maintenance services. The external health probe uses `WORKER_HEALTH_TOKEN`; never expose port 8081 without that token configured.
 
 ```bash
 # View recent journald output for any kestrel unit

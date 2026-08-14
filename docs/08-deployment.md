@@ -303,7 +303,8 @@ Run the read-only verification after Vercel deploy and after the worker update:
 
 ```bash
 PRODUCTION_URL=https://hamafx-ai.vercel.app \
-WORKER_HEALTH_URL=http://127.0.0.1:8081 \
+WORKER_HEALTH_URL=http://<worker-ip>:8081 \
+WORKER_HEALTH_TOKEN=<worker-health-token> \
 pnpm verify:production
 ```
 
@@ -342,6 +343,7 @@ Deployment acceptance checklist:
 - [ ] `DIRECT_URL` or `POSTGRES_URL_NON_POOLING` exists in Vercel Production.
 - [ ] Vercel logs show the predeploy migration safety check and no pending migrations.
 - [ ] Worker Docker health is `healthy` and `DEPLOYED_SHA` matches the deployed commit.
+- [ ] `WORKER_HEALTH_TOKEN` is configured on the VM and Vercel; port 8081 is never exposed without bearer protection.
 - [ ] Langfuse has all three credentials configured, or all three are intentionally absent.
 - [ ] `LANGFUSE_RECORD_IO=0` unless prompt/output capture has explicit approval.
 - [ ] `/admin` → System Health shows no stale ticks, dead outbox rows, budget errors, or trace sink failures.
