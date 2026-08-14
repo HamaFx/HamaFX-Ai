@@ -77,6 +77,8 @@ export interface RunDiagnosticContext {
   requestId?: string;
   /** Worker/job execution id, when the run is processed asynchronously. */
   runId?: string;
+  /** Durable queued analysis job id, when the run is processed asynchronously. */
+  jobId?: string;
   /** Epoch timestamp the run started. */
   startedAt: number;
   /** Ordered list of steps recorded during the run. */
@@ -106,6 +108,8 @@ export interface DiagnosticOptions {
   requestId?: string;
   /** Correlate the run with a worker/job execution. */
   runId?: string;
+  /** Correlate the run with a durable queued analysis job. */
+  jobId?: string;
 }
 
 export function withDiagnostics<T>(
@@ -120,6 +124,7 @@ export function withDiagnostics<T>(
     threadId,
     ...(options.requestId ? { requestId: options.requestId } : {}),
     ...(options.runId ? { runId: options.runId } : {}),
+    ...(options.jobId ? { jobId: options.jobId } : {}),
     startedAt: Date.now(),
     steps: [],
     errors: [],
@@ -343,6 +348,7 @@ function exportDiagnosticContextInternal(
     threadId: ctx.threadId,
     ...(ctx.requestId ? { requestId: ctx.requestId } : {}),
     ...(ctx.runId ? { runId: ctx.runId } : {}),
+    ...(ctx.jobId ? { jobId: ctx.jobId } : {}),
     startedAt: ctx.startedAt,
     durationMs: Date.now() - ctx.startedAt,
     stepCount: ctx.steps.length,

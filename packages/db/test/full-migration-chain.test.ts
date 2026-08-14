@@ -232,6 +232,16 @@ describe('Phase 6 — Task 27: Full migration chain (all migrations on fresh PGl
       `SELECT indexname FROM pg_indexes WHERE tablename = 'chat_telemetry' AND indexname = 'chat_telemetry_user_id_idx'`,
     );
     expect(droppedIdx).toHaveLength(0);
+
+    const { rows: correlationIdx } = await db.execute(
+      `SELECT indexname FROM pg_indexes
+       WHERE tablename IN ('chat_telemetry', 'chat_tool_telemetry')
+         AND indexname IN (
+           'chat_telemetry_trace_idx', 'chat_telemetry_run_idx', 'chat_telemetry_job_idx',
+           'chat_tool_telemetry_trace_idx', 'chat_tool_telemetry_run_idx', 'chat_tool_telemetry_job_idx'
+         )`,
+    );
+    expect(correlationIdx).toHaveLength(6);
   }, 30_000);
 
   it('cot_reports columns are bigint (Phase 2)', async () => {

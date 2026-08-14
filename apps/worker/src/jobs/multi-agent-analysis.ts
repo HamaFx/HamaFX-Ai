@@ -277,6 +277,7 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
       }), {
         ...(job.traceId ? { traceId: job.traceId } : {}),
         runId: job.workerRunId,
+        jobId: job.id,
       });
 
       // Ensure all progress snapshots have reached the database before the

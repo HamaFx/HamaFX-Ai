@@ -43,6 +43,12 @@ export const chatToolTelemetry = pgTable(
       .references(() => organization.id, { onDelete: 'cascade' }),
     /** May be null for tool calls that finished after the message saved. */
     messageId: uuid('message_id'),
+    /** Distributed diagnostic trace identifier; nullable for legacy rows. */
+    traceId: text('trace_id'),
+    /** Worker execution identifier when the tool runs asynchronously. */
+    runId: text('run_id'),
+    /** Durable analysis job identifier for queued Full-mode runs. */
+    jobId: text('job_id'),
     /** Tool name from `TOOL_NAMES`. */
     tool: text('tool').notNull(),
     /** End-to-end latency from invoke → settle, milliseconds. */
@@ -62,6 +68,9 @@ export const chatToolTelemetry = pgTable(
     index('chat_tool_telemetry_user_id_idx').on(t.userId),
     index('tool_telemetry_created_idx').on(t.createdAt),
     index('tool_telemetry_thread_idx').on(t.threadId, t.createdAt),
+    index('chat_tool_telemetry_trace_idx').on(t.traceId, t.createdAt),
+    index('chat_tool_telemetry_run_idx').on(t.runId, t.createdAt),
+    index('chat_tool_telemetry_job_idx').on(t.jobId, t.createdAt),
     index('tool_telemetry_tool_idx').on(t.tool),
   ],
 );

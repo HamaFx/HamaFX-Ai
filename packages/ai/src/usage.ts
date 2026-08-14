@@ -29,6 +29,9 @@ export interface TelemetryRow {
   id: string;
   threadId: string | null;
   messageId: string | null;
+  traceId: string | null;
+  runId: string | null;
+  jobId: string | null;
   model: string;
   inputTokens: number;
   outputTokens: number;
@@ -266,6 +269,9 @@ function rowToTelemetry(row: typeof schema.chatTelemetry.$inferSelect): Telemetr
     id: row.id,
     threadId: row.threadId,
     messageId: row.messageId,
+    traceId: row.traceId,
+    runId: row.runId,
+    jobId: row.jobId,
     model: row.model,
     inputTokens: row.inputTokens ?? 0,
     outputTokens: row.outputTokens ?? 0,

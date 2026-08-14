@@ -89,6 +89,12 @@ export const chatTelemetry = pgTable(
       .default(sql`current_setting('app.current_tenant', true)`)
       .references(() => organization.id, { onDelete: 'cascade' }),
     messageId: uuid('message_id'),
+    /** Distributed diagnostic trace identifier; nullable for legacy rows. */
+    traceId: text('trace_id'),
+    /** Worker execution identifier when the turn runs asynchronously. */
+    runId: text('run_id'),
+    /** Durable analysis job identifier for queued Full-mode runs. */
+    jobId: text('job_id'),
     model: text('model').notNull(),
     inputTokens: integer('input_tokens').notNull().default(0),
     outputTokens: integer('output_tokens').notNull().default(0),
@@ -112,6 +118,9 @@ export const chatTelemetry = pgTable(
     // queries on user_id alone.
     index('telemetry_created_idx').on(t.createdAt),
     index('telemetry_thread_idx').on(t.threadId),
+    index('chat_telemetry_trace_idx').on(t.traceId, t.createdAt),
+    index('chat_telemetry_run_idx').on(t.runId, t.createdAt),
+    index('chat_telemetry_job_idx').on(t.jobId, t.createdAt),
     // PERF-03: Composite index for the 30-day usage range query in computeUsage().
     // The query filters WHERE userId = ? AND createdAt >= ? AND createdAt <= ?
     // — leading with userId then createdAt lets Postgres range-scan this index

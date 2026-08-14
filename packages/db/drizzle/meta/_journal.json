@@ -512,6 +512,13 @@
       "when": 1786673000002,
       "tag": "0073_fix_message_idempotency_index",
       "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1786719600000,
+      "tag": "0074_telemetry_correlation_ids",
+      "breakpoints": true
     }
   ]
 }

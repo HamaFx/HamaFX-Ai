@@ -59,6 +59,7 @@ function correlationMetadata(): Record<string, AttributeValue> {
     traceId: context.traceId,
     ...(context.requestId ? { requestId: context.requestId } : {}),
     ...(context.runId ? { runId: context.runId } : {}),
+    ...(context.jobId ? { jobId: context.jobId } : {}),
     threadId: context.threadId,
     userId: context.userId,
   };

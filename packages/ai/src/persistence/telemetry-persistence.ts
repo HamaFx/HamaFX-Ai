@@ -22,6 +22,7 @@ import { getDb } from '../db';
 import { createCategorizedLogger } from '@kestrel/shared/logger';
 
 import { estimateCostUsd } from '../cost';
+import { getDiagnosticContext } from '../diagnostics/run-context';
 
 const perlog = createCategorizedLogger('ai', { component: 'persistence' });
 
@@ -33,6 +34,10 @@ export interface TelemetryInput {
   threadId: string;
   userId?: string | null;
   messageId: string | null;
+  /** Optional explicit correlation overrides; active diagnostics fill gaps. */
+  traceId?: string | null;
+  runId?: string | null;
+  jobId?: string | null;
   model: string;
   inputTokens: number;
   outputTokens: number;
@@ -65,12 +70,16 @@ export interface TelemetryInput {
 
 export async function recordTelemetry(t: TelemetryInput): Promise<void> {
   const userId = t.userId ?? '__system__';
+  const context = getDiagnosticContext();
   await getDb()
     .insert(schema.chatTelemetry)
     .values({
       userId,
       threadId: t.threadId,
       messageId: t.messageId,
+      traceId: t.traceId ?? context?.traceId ?? null,
+      runId: t.runId ?? context?.runId ?? null,
+      jobId: t.jobId ?? context?.jobId ?? null,
       model: t.model,
       inputTokens: t.inputTokens,
       outputTokens: t.outputTokens,
@@ -89,6 +98,10 @@ export interface ToolTelemetryInput {
   threadId: string | null;
   userId?: string | null;
   messageId: string | null;
+  /** Optional explicit correlation overrides; active diagnostics fill gaps. */
+  traceId?: string | null;
+  runId?: string | null;
+  jobId?: string | null;
   tool: string;
   ms: number;
   ok: boolean;
@@ -99,12 +112,16 @@ export interface ToolTelemetryInput {
 export async function recordToolTelemetry(t: ToolTelemetryInput): Promise<boolean> {
   try {
     const userId = t.userId ?? '__system__';
+    const context = getDiagnosticContext();
     await getDb()
       .insert(schema.chatToolTelemetry)
       .values({
         userId,
         threadId: t.threadId,
         messageId: t.messageId,
+        traceId: t.traceId ?? context?.traceId ?? null,
+        runId: t.runId ?? context?.runId ?? null,
+        jobId: t.jobId ?? context?.jobId ?? null,
         tool: t.tool,
         ms: t.ms,
         ok: t.ok,
