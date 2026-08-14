@@ -263,10 +263,12 @@ export const POST = withAuth<void>(async (req, { user }) => {
                 ...(requestId ? { requestId } : {}),
                 onProgress: (event) => {
                   const publicEvent = event.type === 'agent_error'
-                    ? { ...event, error: 'Agent unavailable. Please try again.' }
+                    ? { ...event, error: 'Required agent failed. Full analysis cannot continue.' }
                     : event.type === 'fusion_error'
-                      ? { ...event, error: 'Decision agent unavailable. Specialist fallback is being prepared.' }
-                      : event;
+                      ? { ...event, error: 'Decision agent failed. Full analysis cannot continue.' }
+                      : event.type === 'analysis_error'
+                        ? { ...event, error: 'Full analysis stopped. No partial answer was returned.' }
+                        : event;
                   tracker.update(publicEvent);
                   send(tracker.buildPart());
                 },
@@ -285,10 +287,9 @@ export const POST = withAuth<void>(async (req, { user }) => {
               // the Langfuse trace is visible even when the function freezes.
               await flushLangfuse();
 
-              // Fusion output is published transactionally. If the decision
-              // stream failed, the orchestrator returns a specialist fallback
-              // without invoking onTextChunk; emit that fallback rather than
-              // ending an empty assistant message.
+              // Fusion output is published transactionally. Strict Full mode
+              // throws before this point if any required agent or the Decision
+              // agent fails, so no partial assistant message can be emitted.
               if (!textStreamed && result.finalText) {
                 startText();
                 send({ type: 'text-delta', id: messageId, delta: result.finalText });

@@ -118,7 +118,19 @@ export type ProgressEvent =
   | { type: 'agent_error'; agent: AgentName; error: string }
   | { type: 'fusion_start' }
   | { type: 'fusion_done' }
-  | { type: 'fusion_error'; error: string };
+  | { type: 'fusion_error'; error: string }
+  | {
+      type: 'analysis_error';
+      stage: 'specialists' | 'decision';
+      failedAgents: SpecialistAgentName[];
+      error: string;
+    }
+  | {
+      type: 'analysis_retry';
+      attempt: number;
+      maxAttempts: number;
+      error: string;
+    };
 
 // ── Multi-Agent Result ──────────────────────────────────────────────────
 

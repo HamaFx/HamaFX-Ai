@@ -38,6 +38,8 @@ interface AgentProgress {
 interface AgentDeliberationProps {
   agents: AgentProgress[];
   mode: string;
+  status?: 'complete' | 'failed' | 'retrying';
+  error?: string;
 }
 
 const AGENT_META: Record<
@@ -64,8 +66,10 @@ const BIAS_TOKEN: Record<AgentOpinion['bias'], string> = {
   neutral: 'text-fg-muted',
 };
 
-export function AgentDeliberation({ agents, mode }: AgentDeliberationProps) {
+export function AgentDeliberation({ agents, mode, status, error }: AgentDeliberationProps) {
   const hasDone = agents.some((a) => a.status === 'done');
+  const isFailed = status === 'failed';
+  const isRetrying = status === 'retrying';
   const allDone = agents.length > 0 && agents.every((a) => a.status === 'done' || a.status === 'error');
   const doneCount = agents.filter((a) => a.status === 'done').length;
 
@@ -138,7 +142,7 @@ export function AgentDeliberation({ agents, mode }: AgentDeliberationProps) {
 
       {/* Zone 3 — Verdict reveal */}
       <AnimatePresence>
-        {allDone ? (
+        {allDone && !isFailed && !isRetrying ? (
           <m.div
             key="verdict"
             initial={{ opacity: 0, scale: 0.9, y: 8 }}
@@ -213,6 +217,25 @@ export function AgentDeliberation({ agents, mode }: AgentDeliberationProps) {
           </m.div>
         ) : null}
       </AnimatePresence>
+
+      {isFailed || isRetrying ? (
+        <div
+          role="status"
+          className={cn(
+            'rounded-sm p-3 text-sm',
+            isFailed ? 'border border-danger/30 bg-danger/10 text-danger' : 'border border-warn/30 bg-warn/10 text-warn',
+          )}
+        >
+          <div className="font-semibold">
+            {isRetrying ? 'Full analysis is being retried' : 'Full analysis was not completed'}
+          </div>
+          <p className="mt-1 text-xs leading-relaxed">
+            {error ?? (isRetrying
+              ? 'A temporary error occurred. Retrying the same Full-mode analysis.'
+              : 'A required agent failed. No partial answer was returned.')}
+          </p>
+        </div>
+      ) : null}
     </div>
   );
 }

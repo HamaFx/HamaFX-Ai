@@ -15,112 +15,128 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { MultiAgentStrictFailureError } from '../../src/multi-agent/orchestrator';
 import { ProgressTracker } from '../../src/multi-agent/stream';
 import type { AgentOpinion, ResolvedMode } from '../../src/multi-agent/types';
 
-describe('fallback — ProgressTracker error handling', () => {
-  it('tracks agent errors in progress', () => {
+describe('strict multi-agent failure handling', () => {
+  it('keeps failed specialist progress and blocks the Decision agent', () => {
     const tracker = new ProgressTracker('full' as ResolvedMode, ['technical', 'fundamental', 'risk', 'sentiment']);
     tracker.update({ type: 'specialists_start', agents: ['technical', 'fundamental', 'risk', 'sentiment'] });
     tracker.update({ type: 'agent_start', agent: 'technical' });
     tracker.update({ type: 'agent_error', agent: 'technical', error: 'Model timeout' });
     tracker.update({ type: 'agent_start', agent: 'fundamental' });
+
     const opinion: AgentOpinion = {
-      agentName: 'fundamental', bias: 'bullish', confidence: 0.7,
-      reasoning: 'Fed dovish', rawData: {}, costUsd: 0.01, latencyMs: 2000, model: 'm1',
+      agentName: 'fundamental',
+      bias: 'bullish',
+      confidence: 0.7,
+      reasoning: 'Fed dovish',
+      rawData: {},
+      costUsd: 0.01,
+      latencyMs: 2000,
+      model: 'm1',
     };
     tracker.update({ type: 'agent_done', agent: 'fundamental', opinion });
-    tracker.update({ type: 'fusion_start' });
-    tracker.update({ type: 'fusion_done' });
+    tracker.update({
+      type: 'analysis_error',
+      stage: 'specialists',
+      failedAgents: ['technical'],
+      error: 'Full analysis stopped because a required specialist failed. No partial answer was returned.',
+    });
 
+    const part = tracker.buildPart();
     const agents = tracker.getAgents();
-    const tech = agents.find((a) => a.agentName === 'technical');
-    const fund = agents.find((a) => a.agentName === 'fundamental');
-    const decision = agents.find((a) => a.agentName === 'decision');
+    const technical = agents.find((agent) => agent.agentName === 'technical');
+    const fundamental = agents.find((agent) => agent.agentName === 'fundamental');
+    const decision = agents.find((agent) => agent.agentName === 'decision');
 
-    expect(tech?.status).toBe('error');
-    expect(tech?.error).toBe('Model timeout');
-    expect(fund?.status).toBe('done');
-    expect(fund?.opinion).toBeDefined();
-    expect(decision?.status).toBe('done');
+    expect(technical?.status).toBe('error');
+    expect(technical?.error).toBe('Model timeout');
+    expect(fundamental?.status).toBe('done');
+    expect(fundamental?.opinion).toBeDefined();
+    expect(decision?.status).toBe('error');
+    expect(part.data.status).toBe('failed');
+    expect(part.data.error).toContain('No partial answer');
   });
 
-  it('handles all specialists failing', () => {
-    const tracker = new ProgressTracker('standard' as ResolvedMode, ['technical', 'fundamental']);
-    tracker.update({ type: 'specialists_start', agents: ['technical', 'fundamental'] });
-    tracker.update({ type: 'agent_error', agent: 'technical', error: 'Error 1' });
-    tracker.update({ type: 'agent_error', agent: 'fundamental', error: 'Error 2' });
-    tracker.update({ type: 'fusion_start' });
-    tracker.update({ type: 'fusion_done' });
-
-    const agents = tracker.getAgents();
-    const errors = agents.filter((a) => a.status === 'error');
-    expect(errors).toHaveLength(2);
-  });
-
-  it('handles partial completion (some done, some error)', () => {
+  it('marks the complete run failed when all specialists fail', () => {
     const tracker = new ProgressTracker('full' as ResolvedMode, ['technical', 'fundamental', 'risk', 'sentiment']);
     tracker.update({ type: 'specialists_start', agents: ['technical', 'fundamental', 'risk', 'sentiment'] });
-
-    // Technical succeeds
-    tracker.update({ type: 'agent_start', agent: 'technical' });
+    tracker.update({ type: 'agent_error', agent: 'technical', error: 'Error 1' });
+    tracker.update({ type: 'agent_error', agent: 'fundamental', error: 'Error 2' });
+    tracker.update({ type: 'agent_error', agent: 'risk', error: 'Error 3' });
+    tracker.update({ type: 'agent_error', agent: 'sentiment', error: 'Error 4' });
     tracker.update({
-      type: 'agent_done', agent: 'technical',
-      opinion: { agentName: 'technical', bias: 'bullish', confidence: 0.8, reasoning: 'Up', rawData: {}, costUsd: 0.01, latencyMs: 1000, model: 'm1' },
+      type: 'analysis_error',
+      stage: 'specialists',
+      failedAgents: ['technical', 'fundamental', 'risk', 'sentiment'],
+      error: 'Full analysis stopped because required specialists failed.',
     });
 
-    // Fundamental fails
-    tracker.update({ type: 'agent_error', agent: 'fundamental', error: 'Timeout' });
-
-    // Risk succeeds
-    tracker.update({ type: 'agent_start', agent: 'risk' });
-    tracker.update({
-      type: 'agent_done', agent: 'risk',
-      opinion: { agentName: 'risk', bias: 'neutral', confidence: 0.5, reasoning: 'Moderate', rawData: { hardVeto: false }, costUsd: 0.01, latencyMs: 1200, model: 'm2' },
-    });
-
-    // Sentiment fails
-    tracker.update({ type: 'agent_error', agent: 'sentiment', error: 'API error' });
-
-    tracker.update({ type: 'fusion_start' });
-    tracker.update({ type: 'fusion_done' });
-
+    const part = tracker.buildPart();
     const agents = tracker.getAgents();
-    expect(agents.filter((a) => a.status === 'done')).toHaveLength(3); // tech, risk, decision
-    expect(agents.filter((a) => a.status === 'error')).toHaveLength(2); // fund, sentiment
-  });
-});
+    const errors = agents.filter((agent) => agent.status === 'error');
 
-describe('fallback — DecisionAgent with missing opinions', () => {
-  it('buildOpinionsBlock notes when no agents available', () => {
-    // Test the fallback message that would be shown when all specialists fail
-    const fallbackMessage = 'No specialist agents were available for this analysis. Provide a general response based on your own knowledge.';
-    expect(fallbackMessage).toContain('No specialist agents');
-    expect(fallbackMessage).toContain('general response');
+    expect(errors).toHaveLength(5);
+    expect(part.data.status).toBe('failed');
   });
 
-  it('orchestrator fallback concatenates opinions when decision fails', () => {
-    // When the Decision agent fails, the orchestrator concatenates
-    // specialist reasoning as a raw response
-    const opinions: AgentOpinion[] = [
-      { agentName: 'technical', bias: 'bullish', confidence: 0.8, reasoning: 'Uptrend', rawData: {}, costUsd: 0.01, latencyMs: 1000, model: 'm1' },
-      { agentName: 'risk', bias: 'neutral', confidence: 0.5, reasoning: 'Moderate risk', rawData: {}, costUsd: 0.01, latencyMs: 1200, model: 'm2' },
-    ];
-    const fallbackText = opinions
-      .map((o) => `**${o.agentName.charAt(0).toUpperCase() + o.agentName.slice(1)} Agent** (${o.bias}, ${Math.round(o.confidence * 100)}% confidence)\n${o.reasoning}`)
-      .join('\n\n---\n\n');
-    const fullText = `⚠️ The Decision agent encountered an error. Here are the individual specialist opinions:\n\n${fallbackText}`;
+  it('does not treat partial specialist completion as a successful committee', () => {
+    const tracker = new ProgressTracker('full' as ResolvedMode, ['technical', 'fundamental', 'risk', 'sentiment']);
+    tracker.update({ type: 'specialists_start', agents: ['technical', 'fundamental', 'risk', 'sentiment'] });
+    tracker.update({
+      type: 'agent_done',
+      agent: 'technical',
+      opinion: {
+        agentName: 'technical',
+        bias: 'bullish',
+        confidence: 0.8,
+        reasoning: 'Up',
+        rawData: {},
+        costUsd: 0.01,
+        latencyMs: 1000,
+        model: 'm1',
+      },
+    });
+    tracker.update({ type: 'agent_error', agent: 'fundamental', error: 'Timeout' });
+    tracker.update({
+      type: 'agent_done',
+      agent: 'risk',
+      opinion: {
+        agentName: 'risk',
+        bias: 'neutral',
+        confidence: 0.5,
+        reasoning: 'Moderate',
+        rawData: { hardVeto: false },
+        costUsd: 0.01,
+        latencyMs: 1200,
+        model: 'm2',
+      },
+    });
+    tracker.update({ type: 'agent_error', agent: 'sentiment', error: 'API error' });
+    tracker.update({
+      type: 'analysis_error',
+      stage: 'specialists',
+      failedAgents: ['fundamental', 'sentiment'],
+      error: 'Full analysis stopped because required specialists failed.',
+    });
 
-    expect(fullText).toContain('⚠️');
-    expect(fullText).toContain('Technical Agent');
-    expect(fullText).toContain('Risk Agent');
-    expect(fullText).toContain('80% confidence');
-    expect(fullText).toContain('---');
+    const part = tracker.buildPart();
+    const agents = tracker.getAgents();
+
+    expect(agents.filter((agent) => agent.status === 'done')).toHaveLength(2);
+    expect(agents.filter((agent) => agent.status === 'error')).toHaveLength(3);
+    expect(part.data.status).toBe('failed');
   });
 
-  it('orchestrator fallback handles all agents failing', () => {
-    const fallbackText = 'I apologize, but all analysis agents encountered errors. Please try again or switch to single-agent mode.';
-    expect(fallbackText).toContain('all analysis agents');
-    expect(fallbackText).toContain('single-agent mode');
+  it('represents strict failures without creating a partial response', () => {
+    const error = new MultiAgentStrictFailureError('specialists', ['sentiment']);
+
+    expect(error).toBeInstanceOf(Error);
+    expect(error.code).toBe('MULTI_AGENT_INCOMPLETE');
+    expect(error.stage).toBe('specialists');
+    expect(error.failedAgents).toEqual(['sentiment']);
+    expect(error.message).toContain('sentiment');
   });
 });

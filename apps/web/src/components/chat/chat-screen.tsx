@@ -360,7 +360,12 @@ export function ChatScreen({
           ) : null}
           {showAgentOpinions && agentProgress && (
             <div className="px-3 py-2">
-              <AgentDeliberation agents={agentProgress.agents} mode={agentProgress.mode} />
+              <AgentDeliberation
+                agents={agentProgress.agents}
+                mode={agentProgress.mode}
+                status={agentProgress.status}
+                error={agentProgress.error}
+              />
             </div>
           )}
           {isEmpty ? (

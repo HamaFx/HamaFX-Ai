@@ -21,4 +21,12 @@ describe('isRetryableAnalysisError', () => {
   ])('does not retry permanent error: %s', (message) => {
     expect(isRetryableAnalysisError(new Error(message))).toBe(false);
   });
+
+  it('classifies a strict Full-mode error by its preserved underlying cause', () => {
+    const error = new Error('Full mode could not complete', {
+      cause: new Error('provider request timed out'),
+    });
+
+    expect(isRetryableAnalysisError(error)).toBe(true);
+  });
 });

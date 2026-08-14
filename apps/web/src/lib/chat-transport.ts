@@ -47,6 +47,8 @@ export interface AgentProgress {
     error?: string;
   }>;
   mode: string;
+  status?: 'complete' | 'failed' | 'retrying';
+  error?: string;
 }
 
 export interface KestrelChatTransportOptions {
@@ -251,10 +253,9 @@ function transformSseToDataStream(res: Response, onProgress: (p: AgentProgress |
         if (started && !ended) {
           controller.enqueue(encodeChunk({ type: 'text-end', id: activeTextId ?? id }));
         }
-        // Keep the completed committee state visible so users can expand
-        // the final opinions after the text stream finishes. A subsequent
-        // turn replaces it with a fresh pending snapshot.
-        if (!ended) onProgress(null);
+        // Keep the terminal committee state visible after both success and
+        // failure. A subsequent turn replaces it with a fresh snapshot.
+        if (!ended && !emittedError && !protocolError) onProgress(null);
         controller.close();
       }
     },
@@ -394,8 +395,12 @@ function pollJobToStreamResponse(
 
           if (pollJson.status === 'failed') {
             hasError = true;
-            controller.enqueue(encodeChunk({ type: 'error', errorText: pollJson.error ?? 'Background analysis failed.' }));
-            onProgress(null);
+            controller.enqueue(encodeChunk({
+              type: 'error',
+              errorText: pollJson.error ?? 'Full analysis could not be completed. No partial answer was returned.',
+            }));
+            // Keep the terminal failed-agent snapshot visible. Clearing it here
+            // made the UI appear to reset immediately after showing progress.
             return;
           }
 

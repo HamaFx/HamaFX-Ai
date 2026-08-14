@@ -168,4 +168,47 @@ describe('createKestrelChatTransport', () => {
     expect(chunks[0]?.id).toBe('server-message-id');
     expect(chunks[1]?.id).toBe('server-message-id');
   });
+
+  it('keeps failed Full-mode progress and emits no partial text', async () => {
+    vi.useFakeTimers();
+    const progress = vi.fn();
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        type: 'analysis-queued',
+        jobId: 'job-strict',
+        status: 'queued',
+      }), { status: 200, headers: { 'content-type': 'application/json' } }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        status: 'failed',
+        progress: [{
+          type: 'data-agent-progress',
+          data: {
+            mode: 'full',
+            status: 'failed',
+            error: 'Full analysis stopped. No partial answer was returned.',
+            agents: [
+              { agentName: 'technical', status: 'done' },
+              { agentName: 'sentiment', status: 'error', error: 'Required agent failed.' },
+              { agentName: 'decision', status: 'error', error: 'Full analysis stopped.' },
+            ],
+          },
+        }],
+        error: 'Full analysis could not be completed. No partial answer was returned.',
+      }), { status: 200, headers: { 'content-type': 'application/json' } }));
+
+    const transport = createKestrelChatTransport({ api: '/api/chat', onAgentProgress: progress });
+    const stream = await transport.sendMessages({
+      chatId: 'thread-1',
+      messages: [],
+      abortSignal: new AbortController().signal,
+    });
+    const chunksPromise = readChunks(stream as ReadableStream<Record<string, unknown>>);
+    await vi.advanceTimersByTimeAsync(2_000);
+    const chunks = await chunksPromise;
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(chunks.some((chunk) => chunk.type === 'text-delta')).toBe(false);
+    expect(chunks.some((chunk) => chunk.type === 'error')).toBe(true);
+    expect(progress).toHaveBeenLastCalledWith(expect.objectContaining({ status: 'failed' }));
+  });
 });

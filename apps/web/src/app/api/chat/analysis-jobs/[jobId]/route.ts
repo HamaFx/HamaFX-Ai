@@ -33,7 +33,9 @@ export const GET = withAuth<{ jobId: string }>(async (req, ctx) => {
     result: job.result ?? null,
     // Keep provider/database details in server logs only. The polling
     // endpoint is user-facing and should expose a stable public message.
-    error: job.status === 'failed' ? 'Background analysis failed. Please try again.' : null,
+    error: job.status === 'failed'
+      ? 'Full analysis could not be completed. No partial answer was returned.'
+      : null,
     createdAt: job.createdAt?.toISOString(),
     completedAt: job.completedAt?.toISOString() ?? null,
   });

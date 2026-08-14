@@ -42,8 +42,17 @@ const STALE_JOB_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
 const MAX_ANALYSIS_ATTEMPTS = 3;
 
 export function isRetryableAnalysisError(error: unknown): boolean {
-  const message = error instanceof Error ? error.message : String(error);
-  return /(?:timeout|timed?\s*out|aborted|network|fetch\s*failed|rate\s*limit|too\s*many\s*requests|temporar(?:y|ily)|connection|ECONNRESET|5\d\d)/i.test(message);
+  const messages: string[] = [];
+  let current: unknown = error;
+  const seen = new Set<unknown>();
+
+  while (current && !seen.has(current)) {
+    seen.add(current);
+    messages.push(current instanceof Error ? current.message : String(current));
+    current = current instanceof Error ? current.cause : undefined;
+  }
+
+  return /(?:timeout|timed?\s*out|aborted|network|fetch\s*failed|rate\s*limit|too\s*many\s*requests|temporar(?:y|ily)|connection|ECONNRESET|5\d\d)/i.test(messages.join(' '));
 }
 
 function reconstructHistory(raw: unknown): UIMessage[] {
@@ -116,6 +125,7 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
     const processJob = async () => {
       const progressEvents: Array<Record<string, unknown>> = [];
       let progressWrite = Promise.resolve();
+      let progressTracker: ProgressTracker | null = null;
       try {
         // Dynamically import the multi-agent orchestrator — the worker
         // bundle includes @kestrel/ai (used by initLangfuse).
@@ -186,23 +196,25 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
       // Build progress snapshots in the same data-stream shape consumed by
       // the browser transport. The orchestrator emits raw lifecycle events,
       // while the polling client expects `data-agent-progress` snapshots.
-      let progressTracker: ProgressTracker | null = null;
+      // Full mode is strict: failed-agent progress remains visible until the
+      // terminal job status is observed; it is never replaced by a partial result.
       const onProgress = (event: ProgressEvent) => {
         if (event.type === 'specialists_start' && resolvedMode === 'full' && event.agents.length !== 4) {
           throw new Error(`Full mode invariant violated: expected 4 specialists, received ${event.agents.length}`);
         }
         if (event.type === 'specialists_start') {
           // Create the tracker from the actual effective specialist list so
-          // a budget-driven full → standard downgrade does not leave phantom
-          // agents stuck in `pending` state.
+          // retries never leave phantom agents stuck in `pending` state.
           progressTracker = new ProgressTracker(resolvedMode, event.agents);
         }
         progressTracker ??= new ProgressTracker(resolvedMode, selectAgents(resolvedMode));
         const publicEvent = event.type === 'agent_error'
-          ? { ...event, error: 'Agent unavailable. Please try again.' }
+          ? { ...event, error: 'Required agent failed. Full analysis cannot continue.' }
           : event.type === 'fusion_error'
-            ? { ...event, error: 'Decision agent unavailable. Specialist fallback is being prepared.' }
-            : event;
+            ? { ...event, error: 'Decision agent failed. Full analysis cannot continue.' }
+            : event.type === 'analysis_error'
+              ? { ...event, error: 'Full analysis stopped. No partial answer was returned.' }
+              : event;
         progressTracker.update(publicEvent);
         const snapshot = progressTracker.buildPart() as unknown as Record<string, unknown>;
         progressEvents.push(snapshot);
@@ -298,6 +310,48 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
         const nextError = retryable
           ? `Attempt ${job.attemptCount}/${MAX_ANALYSIS_ATTEMPTS} failed; retrying automatically.`
           : msg;
+
+        // A failure can happen after all visible agents report done (for
+        // example during budget reconciliation or final persistence). Make
+        // that retry/terminal state explicit so the UI never leaves a
+        // successful committee verdict beside an incomplete job.
+        const failedProgressTracker = progressTracker as ProgressTracker | null;
+        const currentProgress = failedProgressTracker?.buildPart().data;
+        const needsRetryState = retryable && currentProgress?.status !== 'retrying';
+        const needsFailureState = !retryable && currentProgress?.status !== 'failed';
+        if (failedProgressTracker && (needsRetryState || needsFailureState)) {
+          failedProgressTracker.update(retryable
+            ? {
+                type: 'analysis_retry',
+                attempt: job.attemptCount,
+                maxAttempts: MAX_ANALYSIS_ATTEMPTS,
+                error: 'Full analysis encountered a temporary error and is being retried.',
+              }
+            : {
+                type: 'analysis_error',
+                stage: 'decision',
+                failedAgents: [],
+                error: 'Full analysis failed before a complete result was committed. No partial answer was returned.',
+              });
+          progressEvents.push(failedProgressTracker.buildPart() as unknown as Record<string, unknown>);
+          progressWrite = progressWrite.then(async () => {
+            try {
+              await db
+                .update(schema.analysisJobs)
+                .set({ progress: progressEvents, updatedAt: new Date() })
+                .where(
+                  and(
+                    eq(schema.analysisJobs.id, job.id),
+                    eq(schema.analysisJobs.status, 'running'),
+                    eq(schema.analysisJobs.workerRunId, workerRunId),
+                  ),
+                );
+            } catch (progressErr) {
+              ctx.log.warn('Failed to persist terminal failure progress', { err: String(progressErr) });
+            }
+          });
+        }
+
         ctx.log.error('Analysis job failed', {
           jobId: job.id,
           err: msg,
@@ -310,7 +364,9 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
         .update(schema.analysisJobs)
         .set({
           status: nextStatus,
-          error: nextError,
+          error: nextStatus === 'failed'
+            ? 'Full analysis could not be completed. No partial answer was returned.'
+            : nextError,
           completedAt: retryable ? null : new Date(),
           startedAt: retryable ? null : job.startedAt,
           workerRunId: retryable ? null : workerRunId,

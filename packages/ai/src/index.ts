@@ -312,6 +312,7 @@ export { recordModelSuccess, recordModelFailure, isCircuitOpen, _resetCircuits }
 // Multi-Agent Orchestration
 export {
   runMultiAgentChat,
+  MultiAgentStrictFailureError,
   type RunMultiAgentArgs,
   selectAgents,
   autoDetectMode,

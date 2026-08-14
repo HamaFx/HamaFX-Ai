@@ -16,7 +16,11 @@
 
 // Public barrel for the multi-agent orchestration module.
 
-export { runMultiAgentChat, type RunMultiAgentArgs } from './orchestrator';
+export {
+  runMultiAgentChat,
+  MultiAgentStrictFailureError,
+  type RunMultiAgentArgs,
+} from './orchestrator';
 export { selectAgents, autoDetectMode, resolveMode, MODE_OPTIONS, type ModeMeta } from './modes';
 export type { AnalysisMode, ResolvedMode, AgentName, AgentBias, AgentOpinion, SharedContext, MultiAgentResult, ProgressEvent, MultiAgentEnv, ModelTier } from './types';
 export { AGENT_MODEL_TIER, MODE_COST_ESTIMATE, AGENT_TIMEOUTS } from './types';

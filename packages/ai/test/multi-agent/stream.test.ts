@@ -67,4 +67,19 @@ describe('ProgressTracker', () => {
       error: 'provider unavailable',
     });
   });
+
+  it('marks a temporary retry without presenting a completed verdict', () => {
+    const tracker = new ProgressTracker('full' as ResolvedMode, ['technical', 'fundamental', 'risk', 'sentiment']);
+    tracker.update({ type: 'fusion_done' });
+    tracker.update({
+      type: 'analysis_retry',
+      attempt: 1,
+      maxAttempts: 3,
+      error: 'Temporary provider failure; retrying Full mode.',
+    });
+
+    const part = tracker.buildPart();
+    expect(part.data.status).toBe('retrying');
+    expect(part.data.error).toContain('retrying Full mode');
+  });
 });

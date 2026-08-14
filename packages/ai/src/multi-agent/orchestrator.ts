@@ -60,6 +60,24 @@ const AGENT_FACTORIES: Record<SpecialistAgentName, () => BaseAgent> = {
   sentiment: () => new SentimentAgent(),
 };
 
+export class MultiAgentStrictFailureError extends Error {
+  readonly code = 'MULTI_AGENT_INCOMPLETE';
+  readonly stage: 'specialists' | 'decision';
+  readonly failedAgents: SpecialistAgentName[];
+
+  constructor(
+    stage: 'specialists' | 'decision',
+    failedAgents: SpecialistAgentName[],
+    cause?: unknown,
+  ) {
+    const agentText = failedAgents.length > 0 ? ` Failed agents: ${failedAgents.join(', ')}.` : '';
+    super(`Full mode could not complete at the ${stage} stage.${agentText}`, { cause });
+    this.name = 'MultiAgentStrictFailureError';
+    this.stage = stage;
+    this.failedAgents = failedAgents;
+  }
+}
+
 export interface RunMultiAgentArgs {
   threadId: string;
   userId: string;
@@ -188,7 +206,8 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
     // on low-tier BYOK keys. Default 3, minimum 1, overridable via env.
     const concurrency = Math.max(1, env.MULTI_AGENT_CONCURRENCY ?? 3);
     const limit = limitConcurrency(concurrency);
-    const failedAgents: string[] = [];
+    const failedAgents: SpecialistAgentName[] = [];
+    const failedAgentReasons: string[] = [];
     const opinions = await Promise.all(
       specialists.map(async (agent) => {
         return limit(async () => {
@@ -220,7 +239,8 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
             const msg = err instanceof Error ? err.message : String(err);
             recordError(err);
             completeStep(`agent:${agent.name}`, 'failed', Date.now() - agentStartMs, { error: msg });
-            failedAgents.push(agent.name);
+            failedAgents.push(agent.name as SpecialistAgentName);
+            failedAgentReasons.push(`${agent.name}: ${msg}`);
             logErrorContext(err, 'multi-agent/agent_failed', { agentName: agent.name }, 'ai');
             void recordTelemetry({
               userId,
@@ -268,10 +288,35 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
       }).catch((err) => mlog.warn('specialist telemetry failed', { err: String(err) }));
     }
 
-    completeStep('specialists', 'completed', Date.now() - startMs, {
+    const specialistFailure = effectiveMode === 'full' && failedAgents.length > 0;
+    completeStep('specialists', specialistFailure ? 'failed' : 'completed', Date.now() - startMs, {
       succeeded: validOpinions.map((opinion) => opinion.agentName),
       failed: failedAgents,
+      strict: effectiveMode === 'full',
     });
+
+    if (specialistFailure) {
+      const failure = new MultiAgentStrictFailureError(
+        'specialists',
+        failedAgents,
+        new Error(failedAgentReasons.join('; ')),
+      );
+      recordError(failure);
+      mlog.error('strict Full-mode run stopped after specialist failure', {
+        userId,
+        threadId,
+        failedAgents,
+        succeededAgents: validOpinions.map((opinion) => opinion.agentName),
+      });
+      onProgress?.({
+        type: 'analysis_error',
+        stage: 'specialists',
+        failedAgents,
+        error: 'Full analysis stopped because a required specialist failed. No partial answer was returned.',
+      });
+      throw failure;
+    }
+
     recordStep('fusion', { availableAgents: validOpinions.map((opinion) => opinion.agentName), unavailableAgents: failedAgents });
     mlog.info('multi-agent fusion started', {
       userId,
@@ -327,10 +372,32 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
         availableAgents: validOpinions.map((opinion) => opinion.agentName),
         unavailableAgents: failedAgents,
       }, 'ai');
+      const decisionError = err instanceof Error ? err.message : String(err);
       onProgress?.({
         type: 'fusion_error',
-        error: err instanceof Error ? err.message : String(err),
+        error: decisionError,
       });
+
+      if (effectiveMode === 'full') {
+        const failure = new MultiAgentStrictFailureError('decision', [], err);
+        recordError(failure);
+        mlog.error('strict Full-mode run stopped after Decision-agent failure', {
+          userId,
+          threadId,
+          availableAgents: validOpinions.map((opinion) => opinion.agentName),
+          failedAgents,
+        });
+        onProgress?.({
+          type: 'analysis_error',
+          stage: 'decision',
+          failedAgents: [],
+          error: 'Full analysis stopped because the Decision agent failed. No partial answer was returned.',
+        });
+        throw failure;
+      }
+
+      // Quick and Standard retain their existing non-strict behavior. Full
+      // mode never reaches this fallback branch.
       if (validOpinions.length > 0) {
         finalText = validOpinions
           .map((o) => `**${o.agentName.charAt(0).toUpperCase() + o.agentName.slice(1)} Agent** (${o.bias}, ${Math.round(o.confidence * 100)}% confidence)\n${o.reasoning}`)

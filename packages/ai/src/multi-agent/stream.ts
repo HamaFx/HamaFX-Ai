@@ -23,12 +23,16 @@ export interface AgentProgressPart {
   data: {
     agents: Array<{ agentName: string; status: 'pending' | 'running' | 'done' | 'error'; opinion?: AgentOpinion; error?: string }>;
     mode: ResolvedMode;
+    status?: 'complete' | 'failed' | 'retrying';
+    error?: string;
   };
 }
 
 export class ProgressTracker {
   private agents: Map<string, { status: 'pending' | 'running' | 'done' | 'error'; opinion?: AgentOpinion; error?: string }> = new Map();
   private mode: ResolvedMode;
+  private terminalStatus: 'complete' | 'failed' | 'retrying' | undefined;
+  private terminalError: string | undefined;
 
   constructor(mode: ResolvedMode, agentNames: string[]) {
     this.mode = mode;
@@ -40,8 +44,8 @@ export class ProgressTracker {
     switch (event.type) {
       case 'specialists_start':
         // Rebuild the set from the orchestrator's effective specialist list.
-        // This matters when budget controls downgrade full → standard; stale
-        // agents must not remain visible as permanently pending.
+        // Explicit Full mode is never downgraded; this also prevents stale
+        // agents from remaining visible as permanently pending after retries.
         this.agents = new Map(event.agents.map((name) => [name, { status: 'pending' as const }]));
         this.agents.set('decision', { status: 'pending' });
         break;
@@ -59,9 +63,22 @@ export class ProgressTracker {
         break;
       case 'fusion_done':
         this.agents.set('decision', { status: 'done' });
+        this.terminalStatus = 'complete';
+        this.terminalError = undefined;
         break;
       case 'fusion_error':
         this.agents.set('decision', { status: 'error', error: event.error });
+        break;
+      case 'analysis_error':
+        this.terminalStatus = 'failed';
+        this.terminalError = event.error;
+        if (this.agents.get('decision')?.status !== 'done') {
+          this.agents.set('decision', { status: 'error', error: event.error });
+        }
+        break;
+      case 'analysis_retry':
+        this.terminalStatus = 'retrying';
+        this.terminalError = event.error;
         break;
     }
   }
@@ -76,6 +93,8 @@ export class ProgressTracker {
           ...(state.error ? { error: state.error } : {}),
         })),
         mode: this.mode,
+        ...(this.terminalStatus ? { status: this.terminalStatus } : {}),
+        ...(this.terminalError ? { error: this.terminalError } : {}),
       },
     };
   }
