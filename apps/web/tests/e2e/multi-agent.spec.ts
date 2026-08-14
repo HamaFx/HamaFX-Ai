@@ -22,7 +22,7 @@
 // verification that the correct mode is sent in the request body.
 // ---------------------------------------------------------------------------
 
-import { test, expect, FULL_MODE_SSE, QUICK_MODE_SSE } from './fixtures';
+import { test, expect, FULL_MODE_SSE, QUICK_MODE_SSE, STANDARD_MODE_SSE } from './fixtures';
 
 test.describe('Multi-Agent Chat', () => {
   test('full mode shows 4 agent progress indicators', async ({ authedPage, mockChatApi }) => {
@@ -255,5 +255,67 @@ test.describe('Multi-Agent Chat', () => {
 
     // Multi-Agent deliberation panel should NOT appear
     await expect(page.getByText('Multi-Agent')).not.toBeVisible();
+  });
+
+  test('standard mode executes technical and fundamental specialists', async ({ authedPage }) => {
+    const page = authedPage;
+    let modeSeen: string | undefined;
+    await page.route('**/api/chat', (route) => {
+      modeSeen = route.request().postDataJSON()?.analysisMode;
+      route.fulfill({
+        status: 200,
+        contentType: 'text/event-stream',
+        headers: { 'Cache-Control': 'no-cache', Connection: 'keep-alive' },
+        body: STANDARD_MODE_SSE,
+      });
+    });
+
+    await page.getByRole('button', { name: /analysis mode/i }).click();
+    await page.getByRole('menuitem', { name: /standard/i }).click();
+    await page.getByRole('textbox').fill('Analyze XAUUSD with technical and fundamental context.');
+    await page.getByRole('textbox').press('Enter');
+
+    await expect.poll(() => modeSeen, { timeout: 15_000 }).toBe('standard');
+    await expect(page.getByLabel('Technical agent: done')).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByLabel('Fundamental agent: done')).toBeVisible();
+  });
+
+  test('full mode survives one transient worker poll failure', async ({ authedPage }) => {
+    const page = authedPage;
+    let pollCount = 0;
+    await page.route('**/api/chat/analysis-jobs/full-retry-job', (route) => {
+      pollCount += 1;
+      if (pollCount === 1) {
+        return route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'worker restarting' }) });
+      }
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          status: 'complete',
+          result: {
+            finalText: '**Bottom Line:** worker recovered and completed the Full-mode decision.',
+            agentOpinions: [],
+            mode: 'full',
+            totalCostUsd: 0.01,
+            totalLatencyMs: 3000,
+            messageId: 'retry-assistant-message',
+          },
+        }),
+      });
+    });
+    await page.route('**/api/chat', (route) => route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ type: 'analysis-queued', jobId: 'full-retry-job', status: 'queued' }),
+    }));
+
+    await page.getByRole('button', { name: /analysis mode/i }).click();
+    await page.getByRole('menuitem', { name: /full/i }).click();
+    await page.getByRole('textbox').fill('Run Full mode while the worker restarts.');
+    await page.getByRole('textbox').press('Enter');
+
+    await expect(page.getByText(/worker recovered and completed/i)).toBeVisible({ timeout: 20_000 });
+    await expect.poll(() => pollCount, { timeout: 20_000 }).toBeGreaterThanOrEqual(2);
   });
 });

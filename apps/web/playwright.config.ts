@@ -175,6 +175,9 @@ export default defineConfig({
     // Never reuse an already-running server: it may have been started with
     // AUTH_MODE=legacy or a different signing secret.
     reuseExistingServer: false,
-    timeout: isCI ? 120_000 : 30_000,
+    // Next's first compile can exceed 30s on the repository's network-backed
+    // workspace. Keep local runs deterministic instead of failing before the
+    // browser suite starts; CI retains the stricter production-like timeout.
+    timeout: isCI ? 120_000 : 90_000,
   },
 });

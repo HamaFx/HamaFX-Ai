@@ -232,6 +232,9 @@ export async function computeHealthSloService(
     if (operational.traceFailed > 0) {
       anomalies.push(`${operational.traceFailed} diagnostic trace(s) failed to complete`);
     }
+    if (operational.traceTotal > 0 && operational.providerFallbackTraces / operational.traceTotal > 0.05) {
+      anomalies.push(`Provider fallback usage is above threshold: ${operational.providerFallbackTraces}/${operational.traceTotal} traces used fallback`);
+    }
   }
 
   // ── Langfuse ────────────────────────────────────────────────────────────

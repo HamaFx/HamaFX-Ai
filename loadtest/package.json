@@ -12,6 +12,7 @@
     "load": "k6 run tests/load-read-mix.ts",
     "load:market": "k6 run tests/load-market-read.ts",
     "load:write": "k6 run tests/load-write-mix.ts",
+    "load:full": "k6 run tests/load-full-mode.ts",
     "stress": "k6 run tests/stress-market-read.ts",
     "stress:write": "k6 run tests/stress-write-mix.ts",
     "smoke:config": "k6 run tests/smoke-config-mix.ts",

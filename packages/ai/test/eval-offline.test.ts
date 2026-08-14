@@ -246,4 +246,53 @@ describe('eval offline — Phase 0.7', () => {
     expect(r.ok).toBe(true);
     expect(r.assertions?.some((a) => a.kind === 'missing_tool' && a.detail === 'compute_risk')).toBe(true);
   });
+
+  it('scores Full-mode agent lifecycle coverage from streamed progress', async () => {
+    const fullPromptPath = join(tmpDir, 'full-mode.json');
+    await writeFile(fullPromptPath, JSON.stringify([
+      {
+        id: 'offline-full',
+        prompt: 'Run Full mode on XAUUSD.',
+        analysisMode: 'full',
+        expectedAgents: ['technical', 'fundamental', 'risk', 'sentiment', 'decision'],
+        expectedAgentStatuses: {
+          technical: 'done', fundamental: 'done', risk: 'done', sentiment: 'error', decision: 'done',
+        },
+        mustContainSubstrings: ['XAUUSD'],
+      },
+    ]));
+    server.use(
+      http.post('http://localhost:9999/api/chat', () => {
+        const agents = [
+          { agentName: 'technical', status: 'done' },
+          { agentName: 'fundamental', status: 'done' },
+          { agentName: 'risk', status: 'done' },
+          { agentName: 'sentiment', status: 'error', error: 'unavailable' },
+          { agentName: 'decision', status: 'done' },
+        ];
+        const stream = makeStream([
+          JSON.stringify({ type: 'data-agent-progress', data: { mode: 'full', agents } }),
+          JSON.stringify({ type: 'text-start', id: 't0' }),
+          JSON.stringify({ type: 'text-delta', id: 't0', delta: 'XAUUSD committee result is degraded but complete.' }),
+          JSON.stringify({ type: 'text-end', id: 't0' }),
+          JSON.stringify({ type: 'finish' }),
+        ]);
+        return new HttpResponse(stream, { headers: { 'content-type': 'text/event-stream' } });
+      }),
+    );
+
+    const { results, score } = await runEvals({
+      baseUrl: 'http://localhost:9999',
+      cookie: 'authjs.session-token=test',
+      outDir: tmpDir,
+      promptsPath: fullPromptPath,
+      timeoutMs: 5000,
+      onProgress: () => {},
+    });
+
+    expect(results[0]?.agentProgress[0]?.agents).toHaveLength(5);
+    expect(results[0]?.assertions).toEqual([]);
+    expect(score.overallPassRate).toBe(1);
+    expect(score.agentCoverageRate).toBe(1);
+  });
 });

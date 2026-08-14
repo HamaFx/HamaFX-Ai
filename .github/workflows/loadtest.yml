@@ -14,6 +14,10 @@ on:
         options:
           - legacy
           - session
+      enableFullMode:
+        description: 'Run guarded Full-mode queue/worker load (real LLM cost; session auth required)'
+        default: false
+        type: boolean
   schedule:
     # Nightly at 3 AM UTC — offset from the existing 0 AM eval cron
     - cron: '0 3 * * *'
@@ -126,6 +130,19 @@ jobs:
           flags: >-
             -e K6_BASE_URL=http://localhost:3000
             -e K6_AUTH_MODE=${{ inputs.authMode || 'legacy' }}
+          fail-fast: false
+
+      - name: Run guarded Full-mode queue load
+        if: ${{ inputs.enableFullMode == true }}
+        uses: grafana/run-k6-action@v1
+        with:
+          path: loadtest/dist/tests/load-full-mode.js
+          flags: >-
+            -e K6_BASE_URL=http://localhost:3000
+            -e K6_AUTH_MODE=session
+            -e K6_ENABLE_FULL_MODE=true
+            -e K6_FULL_MODE_VUS=2
+            -e K6_FULL_MODE_ITERS=1
           fail-fast: false
 
       - name: Upload k6 results

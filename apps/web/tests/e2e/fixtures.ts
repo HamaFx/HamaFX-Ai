@@ -115,6 +115,17 @@ export const FULL_MODE_SSE = [
   '',
 ].join('\n');
 
+export const STANDARD_MODE_SSE = [
+  'data: {"type":"data-agent-progress","data":{"agents":[{"agentName":"technical","status":"done","opinion":{"agentName":"technical","bias":"bullish","confidence":0.8,"reasoning":"Uptrend"}},{"agentName":"fundamental","status":"done","opinion":{"agentName":"fundamental","bias":"bullish","confidence":0.7,"reasoning":"Macro supportive"}}],"mode":"standard"}}',
+  '',
+  `data: {"type":"text-start","id":"${TEST_MESSAGE_ID}"}`,
+  '',
+  `data: {"type":"text-delta","id":"${TEST_MESSAGE_ID}","delta":"**Bottom Line:** Standard technical and fundamental read — bullish."}`,
+  '',
+  `data: {"type":"text-end","id":"${TEST_MESSAGE_ID}"}`,
+  '',
+].join('\n');
+
 export const QUICK_MODE_SSE = [
   'data: {"type":"data-agent-progress","data":{"agents":[{"agentName":"technical","status":"done","opinion":{"agentName":"technical","bias":"bullish","confidence":0.85,"reasoning":"Strong uptrend"}},{"agentName":"decision","status":"done"}],"mode":"quick"}}',
   '',

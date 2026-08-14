@@ -36,7 +36,11 @@ import { dirname, isAbsolute, resolve } from 'node:path';
 import { performance } from 'node:perf_hooks';
 import { fileURLToPath } from 'node:url';
 
-import { consumeUIMessageStream, type ParsedToolCall } from './parse-stream';
+import {
+  consumeUIMessageStream,
+  type AgentProgressSnapshot,
+  type ParsedToolCall,
+} from './parse-stream';
 
 // --- types -----------------------------------------------------------------
 
@@ -68,10 +72,22 @@ export interface PromptDef {
   expectedTools?: string[];
   forbiddenTools?: string[];
   mustContainSubstrings?: string[];
+  /** Optional mode sent with this case, e.g. quick, standard, or full. */
+  analysisMode?: 'single' | 'quick' | 'standard' | 'full' | 'auto';
+  /** Every listed specialist must appear in an observed progress snapshot. */
+  expectedAgents?: string[];
+  /** Final observed status required for each specialist. */
+  expectedAgentStatuses?: Record<string, string>;
 }
 
 export interface AssertionFailure {
-  kind: 'missing_tool' | 'forbidden_tool' | 'missing_substring';
+  kind:
+    | 'missing_tool'
+    | 'forbidden_tool'
+    | 'missing_substring'
+    | 'wrong_mode'
+    | 'missing_agent'
+    | 'wrong_agent_status';
   detail: string;
 }
 
@@ -82,6 +98,7 @@ export interface PromptResult {
   totalMs: number;
   text: string;
   toolCalls: ParsedToolCall[];
+  agentProgress: AgentProgressSnapshot[];
   ok: boolean;
   error?: string;
   /**
@@ -96,6 +113,15 @@ export interface PromptResult {
 export interface RunEvalsResult {
   results: PromptResult[];
   reportPath: string;
+  score: EvaluationScore;
+}
+
+export interface EvaluationScore {
+  total: number;
+  transportPassRate: number;
+  assertionPassRate: number;
+  agentCoverageRate: number | null;
+  overallPassRate: number;
 }
 
 // --- public API ------------------------------------------------------------
@@ -122,7 +148,11 @@ export async function runEvals(args: RunEvalsArgs): Promise<RunEvalsResult> {
       cookie: args.cookie,
       timeoutMs,
     });
-    if (result.ok && (prompt.expectedTools || prompt.forbiddenTools || prompt.mustContainSubstrings)) {
+    if (
+      result.ok &&
+      (prompt.expectedTools || prompt.forbiddenTools || prompt.mustContainSubstrings ||
+        prompt.analysisMode || prompt.expectedAgents || prompt.expectedAgentStatuses)
+    ) {
       result.assertions = evaluateAssertions(prompt, result);
     }
     results.push(result);
@@ -135,13 +165,15 @@ export async function runEvals(args: RunEvalsArgs): Promise<RunEvalsResult> {
     log(`[${i + 1}/${total}] ${prompt.id} ${result.totalMs}ms ${tag}`);
   }
 
+  const score = calculateScore(results);
   const reportPath = await writeReport({
     outDir: args.outDir,
     baseUrl: args.baseUrl,
     results,
+    score,
   });
 
-  return { results, reportPath };
+  return { results, reportPath, score };
 }
 
 // --- per-prompt fetch ------------------------------------------------------
@@ -171,6 +203,7 @@ async function runOnePrompt(args: RunOnePromptArgs): Promise<PromptResult> {
       totalMs: 0,
       text: '',
       toolCalls: [],
+      agentProgress: [],
       ok: false,
       error: err instanceof Error ? err.message : String(err),
     };
@@ -188,6 +221,7 @@ async function runOnePrompt(args: RunOnePromptArgs): Promise<PromptResult> {
         parts: [{ type: 'text', text: prompt.prompt }],
       },
     ],
+    ...(prompt.analysisMode ? { analysisMode: prompt.analysisMode } : {}),
   });
 
   const controller = new AbortController();
@@ -218,6 +252,7 @@ async function runOnePrompt(args: RunOnePromptArgs): Promise<PromptResult> {
         totalMs,
         text: '',
         toolCalls: [],
+        agentProgress: [],
         ok: false,
         error: `HTTP ${response.status} ${response.statusText}${text ? `: ${text.slice(0, 500)}` : ''}`,
       };
@@ -232,6 +267,7 @@ async function runOnePrompt(args: RunOnePromptArgs): Promise<PromptResult> {
         totalMs: parsed.totalMs,
         text: parsed.text,
         toolCalls: parsed.toolCalls,
+        agentProgress: parsed.agentProgress,
         ok: false,
         error: `stream error: ${parsed.errors.join('; ')}`,
       };
@@ -243,6 +279,7 @@ async function runOnePrompt(args: RunOnePromptArgs): Promise<PromptResult> {
       totalMs: parsed.totalMs,
       text: parsed.text,
       toolCalls: parsed.toolCalls,
+      agentProgress: parsed.agentProgress,
       ok: true,
     };
   } catch (err) {
@@ -260,6 +297,7 @@ async function runOnePrompt(args: RunOnePromptArgs): Promise<PromptResult> {
       totalMs,
       text: '',
       toolCalls: [],
+      agentProgress: [],
       ok: false,
       error: message,
     };
@@ -343,6 +381,9 @@ async function loadPrompts(path: string): Promise<PromptDef[]> {
         expectedTools?: unknown;
         forbiddenTools?: unknown;
         mustContainSubstrings?: unknown;
+        analysisMode?: unknown;
+        expectedAgents?: unknown;
+        expectedAgentStatuses?: unknown;
       };
       const def: PromptDef = { id: obj.id, prompt: obj.prompt };
       if (Array.isArray(obj.expectedTools)) {
@@ -354,6 +395,17 @@ async function loadPrompts(path: string): Promise<PromptDef[]> {
       if (Array.isArray(obj.mustContainSubstrings)) {
         def.mustContainSubstrings = obj.mustContainSubstrings.filter(
           (s): s is string => typeof s === 'string',
+        );
+      }
+      if (obj.analysisMode === 'single' || obj.analysisMode === 'quick' || obj.analysisMode === 'standard' || obj.analysisMode === 'full' || obj.analysisMode === 'auto') {
+        def.analysisMode = obj.analysisMode;
+      }
+      if (Array.isArray(obj.expectedAgents)) {
+        def.expectedAgents = obj.expectedAgents.filter((s): s is string => typeof s === 'string');
+      }
+      if (obj.expectedAgentStatuses && typeof obj.expectedAgentStatuses === 'object') {
+        def.expectedAgentStatuses = Object.fromEntries(
+          Object.entries(obj.expectedAgentStatuses).filter((entry): entry is [string, string] => typeof entry[0] === 'string' && typeof entry[1] === 'string'),
         );
       }
       out.push(def);
@@ -372,6 +424,24 @@ async function loadPrompts(path: string): Promise<PromptDef[]> {
 function evaluateAssertions(prompt: PromptDef, result: PromptResult): AssertionFailure[] {
   const failures: AssertionFailure[] = [];
   const calledTools = new Set(result.toolCalls.map((t) => t.name));
+  if (prompt.analysisMode && prompt.analysisMode !== 'auto') {
+    const observedModes = new Set(result.agentProgress.map((snapshot) => snapshot.mode).filter((mode): mode is string => Boolean(mode)));
+    if (observedModes.size > 0 && !observedModes.has(prompt.analysisMode)) {
+      failures.push({ kind: 'wrong_mode', detail: `expected ${prompt.analysisMode}, observed ${[...observedModes].join(', ')}` });
+    }
+  }
+  const latestAgents = new Map<string, string>();
+  for (const snapshot of result.agentProgress) {
+    for (const agent of snapshot.agents) latestAgents.set(agent.agentName, agent.status);
+  }
+  for (const agent of prompt.expectedAgents ?? []) {
+    if (!latestAgents.has(agent)) failures.push({ kind: 'missing_agent', detail: agent });
+  }
+  for (const [agent, expectedStatus] of Object.entries(prompt.expectedAgentStatuses ?? {})) {
+    if (latestAgents.get(agent) !== expectedStatus) {
+      failures.push({ kind: 'wrong_agent_status', detail: `${agent}: expected ${expectedStatus}, observed ${latestAgents.get(agent) ?? 'missing'}` });
+    }
+  }
   for (const t of prompt.expectedTools ?? []) {
     if (!calledTools.has(t)) {
       failures.push({ kind: 'missing_tool', detail: t });
@@ -397,30 +467,33 @@ interface WriteReportArgs {
   outDir: string;
   baseUrl: string;
   results: PromptResult[];
+  score: EvaluationScore;
 }
 
 const MAX_OUTPUT_CHARS = 2000;
 
 async function writeReport(args: WriteReportArgs): Promise<string> {
-  const { outDir, baseUrl, results } = args;
+  const { outDir, baseUrl, results, score } = args;
   const stamp = utcStamp(new Date());
   const reportPath = isAbsolute(outDir)
     ? resolve(outDir, `${stamp}.md`)
     : resolve(process.cwd(), outDir, `${stamp}.md`);
 
   await mkdir(dirname(reportPath), { recursive: true });
-  await writeFile(reportPath, buildMarkdown({ baseUrl, results, stamp }), 'utf-8');
+  await writeFile(reportPath, buildMarkdown({ baseUrl, results, stamp, score }), 'utf-8');
   return reportPath;
 }
+
 
 interface BuildMarkdownArgs {
   baseUrl: string;
   results: PromptResult[];
   stamp: string;
+  score: EvaluationScore;
 }
 
 function buildMarkdown(args: BuildMarkdownArgs): string {
-  const { baseUrl, results, stamp } = args;
+  const { baseUrl, results, stamp, score } = args;
   const total = results.length;
   const failed = results.filter((r) => !r.ok).length;
   const ok = total - failed;
@@ -443,6 +516,10 @@ function buildMarkdown(args: BuildMarkdownArgs): string {
   }
   lines.push(`- Avg TTFT: ${avgTtft === null ? 'n/a' : `${avgTtft}ms`}`);
   lines.push(`- Avg total: ${avgTotal === null ? 'n/a' : `${avgTotal}ms`}`);
+  lines.push(`- Transport pass rate: ${(score.transportPassRate * 100).toFixed(1)}%`);
+  lines.push(`- Assertion pass rate: ${(score.assertionPassRate * 100).toFixed(1)}%`);
+  lines.push(`- Agent coverage: ${score.agentCoverageRate === null ? 'n/a' : `${(score.agentCoverageRate * 100).toFixed(1)}%`}`);
+  lines.push(`- Overall pass rate: ${(score.overallPassRate * 100).toFixed(1)}%`);
   lines.push('');
   lines.push('---');
   lines.push('');
@@ -471,6 +548,13 @@ function buildMarkdown(args: BuildMarkdownArgs): string {
       lines.push('```');
       lines.push('');
       continue;
+    }
+    if (r.agentProgress.length > 0) {
+      const latest = r.agentProgress[r.agentProgress.length - 1];
+      lines.push(`**Agent progress** — mode: ${latest?.mode ?? 'unknown'}`);
+      lines.push('');
+      for (const agent of latest?.agents ?? []) lines.push(`- ${agent.agentName}: ${agent.status}`);
+      lines.push('');
     }
     lines.push('**Tool calls**');
     lines.push('');
@@ -513,6 +597,24 @@ function buildMarkdown(args: BuildMarkdownArgs): string {
   }
 
   return `${lines.join('\n')}\n`;
+}
+
+function calculateScore(results: PromptResult[]): EvaluationScore {
+  const total = results.length;
+  if (total === 0) {
+    return { total: 0, transportPassRate: 0, assertionPassRate: 0, agentCoverageRate: null, overallPassRate: 0 };
+  }
+  const transportPassed = results.filter((result) => result.ok).length;
+  const assertionPassed = results.filter((result) => result.ok && (result.assertions?.length ?? 0) === 0).length;
+  const agentCases = results.filter((result) => result.agentProgress.length > 0 || result.assertions?.some((a) => a.kind === 'missing_agent' || a.kind === 'wrong_agent_status'));
+  const agentClean = agentCases.filter((result) => !result.assertions?.some((a) => a.kind === 'missing_agent' || a.kind === 'wrong_agent_status')).length;
+  return {
+    total,
+    transportPassRate: transportPassed / total,
+    assertionPassRate: assertionPassed / total,
+    agentCoverageRate: agentCases.length > 0 ? agentClean / agentCases.length : null,
+    overallPassRate: assertionPassed / total,
+  };
 }
 
 function summarizeJson(value: unknown, max: number): string {
@@ -659,7 +761,7 @@ async function main(): Promise<void> {
       ? fileURLToPath(new URL('./cases.json', import.meta.url))
       : fileURLToPath(new URL('./prompts.json', import.meta.url)));
 
-  const { results, reportPath } = await runEvals({
+  const { results, reportPath, score } = await runEvals({
     baseUrl: f.baseUrl,
     cookie: f.cookie,
     outDir: f.outDir,
@@ -670,6 +772,7 @@ async function main(): Promise<void> {
   const failed = results.filter((r) => !r.ok).length;
   const dirty = results.filter((r) => r.ok && (r.assertions?.length ?? 0) > 0).length;
   process.stdout.write(`\nReport: ${reportPath}\n`);
+  process.stdout.write(`Score: ${(score.overallPassRate * 100).toFixed(1)}% overall, ${(score.transportPassRate * 100).toFixed(1)}% transport\n`);
   process.stdout.write(
     `Done. ${results.length - failed}/${results.length} succeeded, ${failed} failed${dirty > 0 ? `, ${dirty} with assertion failures` : ''}.\n`,
   );

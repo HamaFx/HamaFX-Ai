@@ -79,6 +79,7 @@ k6 run -e K6_BASE_URL=http://localhost:3000 -e K6_AUTH_MODE=session \
 | **Spike** | `tests/spike-read-mix.ts` | Sudden surge → recovery | Manual only |
 | **Soak** | `tests/soak-read-mix.ts` | Detect memory leaks over hours | Manual only |
 | **Chat** | `tests/load-chat.ts` | LLM streaming latency (guarded) | Manual only |
+| **Full mode** | `tests/load-full-mode.ts` | Queue/worker completion and polling recovery (guarded) | Manual only |
 
 ## npm Scripts
 
@@ -105,6 +106,10 @@ npm run seed           # Seed users for Strategy B
 | `K6_TARGET_RPS` | varies | Target requests/sec for load profiles |
 | `K6_SOAK_DURATION` | `1h` | Duration for soak test |
 | `K6_ENABLE_CHAT` | unset | Must be `true` to run chat load test |
+| `K6_ENABLE_FULL_MODE` | unset | Must be `true` to run Full-mode queue load; requires session auth |
+| `K6_FULL_MODE_VUS` | `2` | Concurrent Full-mode virtual users |
+| `K6_FULL_MODE_ITERS` | `2` | Full-mode iterations per VU |
+| `K6_FULL_MODE_MAX_POLLS` | `30` | Maximum 2-second worker polls per job |
 | `K6_LOADTEST_RELAXED` | `true` for Docker SUT | Relax p95/p99 thresholds 2-4× (POST endpoints slower w/o cache) |
 | `K6_CRON_SECRET` | unset | For cron endpoint tests |
 
@@ -137,6 +142,18 @@ Every run produces:
 All other test types are `workflow_dispatch` only.
 
 k6 **never gates PRs** — it's a dedicated workflow, separate from `ci-fast.yml`.
+
+### Full-mode queue test
+
+```bash
+# Use a throwaway/staging deployment and session-auth seeded users.
+K6_ENABLE_FULL_MODE=true K6_AUTH_MODE=session \\
+  k6 run tests/load-full-mode.ts
+```
+
+This test is intentionally never part of the default nightly load profile. It
+creates real Full-mode analyses and can consume provider quota. It records
+enqueue failures, worker poll counts, completion rate, and terminal failures.
 
 ## Out of Scope
 

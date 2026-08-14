@@ -42,10 +42,10 @@ function requiredUrl(name, value) {
   return parsed;
 }
 
-async function checkEndpoint(name, url) {
+async function checkEndpoint(name, url, headers = {}) {
   const response = await fetch(url, {
     signal: AbortSignal.timeout(timeoutMs),
-    headers: { accept: 'application/json' },
+    headers: { accept: 'application/json', ...headers },
   });
   let body = null;
   try {
@@ -108,6 +108,16 @@ export async function verifyProduction() {
     await checkEndpoint('worker health', new URL('/health', workerUrl));
   } else {
     console.log('[verify-production] worker health: skipped (set WORKER_HEALTH_URL to verify it)');
+  }
+
+  if (process.env.VERIFY_ALERTS === '1') {
+    const cronSecret = process.env.PRODUCTION_CRON_SECRET ?? process.env.CRON_SECRET;
+    if (!cronSecret) throw new Error('CRON_SECRET or PRODUCTION_CRON_SECRET is required when VERIFY_ALERTS=1');
+    await checkEndpoint('SLO alert contract', new URL('/api/health/alerts', productionUrl), {
+      authorization: `Bearer ${cronSecret}`,
+    });
+  } else {
+    console.log('[verify-production] SLO alert contract: skipped (set VERIFY_ALERTS=1 to verify it)');
   }
 
   verifyMigrationConfiguration();

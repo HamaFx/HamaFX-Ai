@@ -103,5 +103,44 @@
     "expectedTools": ["replay_setup"],
     "forbiddenTools": [],
     "mustContainSubstrings": ["EURUSD"]
+  },
+  {
+    "id": "mode-quick",
+    "prompt": "Give me a quick technical read on XAUUSD.",
+    "analysisMode": "quick",
+    "expectedAgents": ["technical"],
+    "expectedAgentStatuses": {"technical": "done"},
+    "mustContainSubstrings": ["XAUUSD"]
+  },
+  {
+    "id": "mode-standard",
+    "prompt": "Analyze XAUUSD structure and macro context.",
+    "analysisMode": "standard",
+    "expectedAgents": ["technical", "fundamental"],
+    "expectedAgentStatuses": {"technical": "done", "fundamental": "done"},
+    "mustContainSubstrings": ["XAUUSD"]
+  },
+  {
+    "id": "mode-full",
+    "prompt": "Run a full committee analysis of XAUUSD and give me the decision.",
+    "analysisMode": "full",
+    "expectedAgents": ["technical", "fundamental", "risk", "sentiment", "decision"],
+    "expectedAgentStatuses": {"technical": "done", "fundamental": "done", "risk": "done", "sentiment": "done", "decision": "done"},
+    "mustContainSubstrings": ["XAUUSD"]
+  },
+  {
+    "id": "mode-full-sentiment-degraded",
+    "prompt": "Complete the full XAUUSD committee analysis even if sentiment is unavailable.",
+    "analysisMode": "full",
+    "expectedAgents": ["technical", "fundamental", "risk", "sentiment", "decision"],
+    "expectedAgentStatuses": {"technical": "done", "fundamental": "done", "risk": "done", "sentiment": "error", "decision": "done"},
+    "mustContainSubstrings": ["XAUUSD"]
+  },
+  {
+    "id": "mode-single",
+    "prompt": "What is the current XAUUSD price?",
+    "analysisMode": "single",
+    "expectedTools": ["get_price"],
+    "mustContainSubstrings": ["XAUUSD"]
   }
 ]

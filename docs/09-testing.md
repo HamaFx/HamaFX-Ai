@@ -195,7 +195,7 @@ pnpm --filter @kestrel/ai eval -- \
   --out docs/eval
 ```
 
-15 acceptance prompts in `packages/ai/src/eval/cases.json`. Each prompt specifies expected tools and forbidden tools. The runner creates a fresh thread per prompt, POSTs to `/api/chat`, captures the SSE stream, and writes a markdown report.
+The checked-in acceptance dataset in `packages/ai/src/eval/cases.json` covers tools, Quick/Standard/Full/Single modes, all four specialists, the Decision stage, and degraded sentiment. Each prompt specifies expected tools, agent lifecycle/status assertions, and forbidden tools or text requirements. The runner creates a fresh thread per prompt, POSTs to `/api/chat`, captures the SSE stream, and writes a scored markdown report with transport, assertion, and agent-coverage rates.
 
 ### Case Format
 
@@ -208,6 +208,17 @@ pnpm --filter @kestrel/ai eval -- \
   "mustContainSubstrings": []
 }
 ```
+
+### Evaluation dataset and scoring
+
+`packages/ai/src/eval/cases.json` is the versioned acceptance dataset. It
+covers tool selection, Quick/Standard/Full/Single modes, all four specialists,
+the Decision stage, and degraded sentiment. `--cases` reports transport,
+assertion, and agent-coverage rates; a non-zero exit means a case failed.
+
+The optional `pnpm eval:publish` command publishes only prompts and expected
+metadata to a Langfuse dataset. It never uploads user conversations or model
+outputs and requires explicit Langfuse credentials.
 
 ## E2E Testing (Playwright)
 

@@ -284,6 +284,19 @@ installed but skipped safely; they do not report false success.
 
 If something feels slow or expensive, look at Vercel function logs + `chat_telemetry` first, then `journalctl` on the VM, then healthchecks.io for "what stopped firing".
 
+## Local production-like verification
+
+Before diagnosing a local build or E2E failure, run the read-only guard:
+
+```bash
+pnpm verify:local
+```
+
+It fails when `.env.local` leaves `AUTH_MODE=legacy` or disables database TLS
+verification, because either setting can produce misleading auth/prerender
+failures. Temporary overrides require explicit `ALLOW_LEGACY_LOCAL=1` or
+`ALLOW_INSECURE_LOCAL_TLS=1` and should never be copied to Vercel.
+
 ## Production verification (Phase 10)
 
 Run the read-only verification after Vercel deploy and after the worker update:
@@ -306,8 +319,19 @@ pnpm verify:production
 ```
 
 The command checks `/api/health/public`, optionally checks the worker health
-endpoint, validates that production has a direct migration connection, and
-fails on partial Langfuse configuration. It never applies migrations or prints
+endpoint and the bearer-authenticated `/api/health/alerts` contract, validates
+that production has a direct migration connection, and fails on partial
+Langfuse configuration. External monitors should poll the alert contract with
+`Authorization: Bearer $CRON_SECRET`; it returns `503` with the failed SLI keys
+and anomalies so alert payloads remain actionable. Example:
+
+```bash
+curl --fail-with-body -H "Authorization: Bearer $CRON_SECRET" \\
+  https://hamafx-ai.vercel.app/api/health/alerts
+```
+
+Use `VERIFY_ALERTS=1 PRODUCTION_CRON_SECRET=...` with `verify:production` to
+validate this contract after a deploy. It never applies migrations or prints
 secret values. Vercel production builds run
 `scripts/predeploy-migrate.mjs` automatically; that script performs the
 hash-safety check and applies pending migrations before `next build`.

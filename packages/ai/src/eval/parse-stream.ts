@@ -33,6 +33,17 @@ export interface ParsedToolCall {
   resultSummary: string | null;
 }
 
+export interface AgentProgressEntry {
+  agentName: string;
+  status: string;
+  error?: string;
+}
+
+export interface AgentProgressSnapshot {
+  mode: string | null;
+  agents: AgentProgressEntry[];
+}
+
 export interface ParsedStreamResult {
   /** Wall-clock ms from `startedAt` to the first non-empty text part. */
   ttftMs: number | null;
@@ -42,6 +53,8 @@ export interface ParsedStreamResult {
   text: string;
   /** One entry per `tool-*` part on the final assistant message. */
   toolCalls: ParsedToolCall[];
+  /** Agent lifecycle snapshots emitted by multi-agent streams. */
+  agentProgress: AgentProgressSnapshot[];
   /**
    * Stream-level errors emitted by the server (e.g. AI Gateway billing /
    * upstream provider failures). Each entry is the verbatim `errorText` from
@@ -79,6 +92,7 @@ export async function consumeUIMessageStream(
   let ttftMs: number | null = null;
   let lastMessage: UIMessage | null = null;
   const errors: string[] = [];
+  const agentProgress: AgentProgressSnapshot[] = [];
 
   // Tee the SSE-decoded chunk stream: one branch feeds `readUIMessageStream`
   // for normal message reconstruction, the other surfaces `type: 'error'`
@@ -93,13 +107,18 @@ export async function consumeUIMessageStream(
       while (true) {
         const { value, done } = await reader.read();
         if (done) return;
-        if (
-          value &&
-          typeof value === 'object' &&
-          (value as { type?: unknown }).type === 'error'
-        ) {
-          const text = (value as { errorText?: unknown }).errorText;
-          errors.push(typeof text === 'string' ? text : JSON.stringify(value));
+        if (value && typeof value === 'object') {
+          const chunk = value as {
+            type?: unknown;
+            errorText?: unknown;
+            data?: unknown;
+          };
+          if (chunk.type === 'error') {
+            errors.push(typeof chunk.errorText === 'string' ? chunk.errorText : JSON.stringify(value));
+          }
+          if (chunk.type === 'data-agent-progress' && isAgentProgressData(chunk.data)) {
+            agentProgress.push(chunk.data);
+          }
         }
       }
     } finally {
@@ -119,7 +138,7 @@ export async function consumeUIMessageStream(
   const text = lastMessage ? extractText(lastMessage) : '';
   const toolCalls = lastMessage ? extractToolCalls(lastMessage) : [];
 
-  return { ttftMs, totalMs, text, toolCalls, errors };
+  return { ttftMs, totalMs, text, toolCalls, agentProgress, errors };
 }
 
 // --- helpers ---------------------------------------------------------------
@@ -142,6 +161,14 @@ function extractText(message: UIMessage): string {
     .filter(isTextPart)
     .map((p) => p.text)
     .join('');
+}
+
+function isAgentProgressData(value: unknown): value is AgentProgressSnapshot {
+  if (typeof value !== 'object' || value === null) return false;
+  const data = value as { mode?: unknown; agents?: unknown };
+  if (typeof data.mode !== 'string' || !Array.isArray(data.agents)) return false;
+  const agents = data.agents.filter((agent): agent is Record<string, unknown> => typeof agent === 'object' && agent !== null);
+  return agents.every((agent) => typeof agent.agentName === 'string' && typeof agent.status === 'string');
 }
 
 function extractToolCalls(message: UIMessage): ParsedToolCall[] {

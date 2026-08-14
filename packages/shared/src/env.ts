@@ -232,6 +232,8 @@ const RuntimeEnv = z.object({
     .union([z.literal('0'), z.literal('1'), z.literal('true'), z.literal('false')])
     .default('0')
     .transform((v) => v === '1' || v === 'true'),
+  /** Window used by the bearer-authenticated health alert endpoint. */
+  ALERT_WINDOW_HOURS: z.coerce.number().int().min(1).max(24).default(1),
 
   // Retention values are consumed by the shared web/worker cleanup path.
   TELEMETRY_RETENTION_DAYS: z.coerce.number().int().min(1).max(3650).default(90),
