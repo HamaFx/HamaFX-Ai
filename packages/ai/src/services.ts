@@ -26,6 +26,9 @@
 // won't duplicate registrations.
 
 import { container } from '@kestrel/shared';
+// Import the DI-backed DB wrapper for its one-time registration of DB.
+// Consumers still resolve through the typed DB token.
+import './db';
 import { VercelLlmClient } from './llm-client';
 import { LLM_CLIENT } from './tokens';
 

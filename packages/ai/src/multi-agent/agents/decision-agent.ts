@@ -23,8 +23,9 @@
 import { generateText, streamText, convertToModelMessages, type Tool, type ModelMessage } from 'ai';
 import { checkBudgetAlertsAndThresholds, estimateCostUsd } from '../../cost';
 import { withToolContext, type ToolContext } from '../../tool-context';
-import { getDb } from '../../db';
 import { telemetryConfig } from '../../telemetry';
+import { container } from '@kestrel/shared';
+import { DB } from '../../tokens';
 import { resolveAgentModel } from './agent-model';
 import { buildSharedSystemPrompt, extractUserMessageText } from '../context';
 import type { AgentName, AgentBias, ModelTier, AgentOpinion, SharedContext, MultiAgentEnv } from '../types';
@@ -133,7 +134,7 @@ Be concise but thorough. Use markdown formatting for readability.`;
       // B1 fix: use env.MAX_DAILY_USD instead of hardcoded 100.
       budget: { spent: 0, max: execCtx.userSettings.maxDailyUsd ?? execCtx.env.MAX_DAILY_USD },
       userSettings: execCtx.userSettings,
-      db: getDb(),  // P0-2 — inject DB client
+      db: container.resolve(DB),  // P0-2 — inject DB client
       toolTelemetryBuffer: [],  // M4: batch telemetry inserts
     };
     const timeoutMs = AGENT_TIMEOUTS[this.name] ?? 30_000;

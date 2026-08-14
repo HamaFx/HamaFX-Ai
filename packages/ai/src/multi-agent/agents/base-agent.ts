@@ -21,8 +21,9 @@ import { z } from 'zod';
 import { supportsPromptCaching } from '../../model';
 import { checkBudgetAlertsAndThresholds, estimateCostUsd } from '../../cost';
 import { withToolContext, type ToolContext } from '../../tool-context';
-import { getDb } from '../../db';
 import { telemetryConfig } from '../../telemetry';
+import { container } from '@kestrel/shared';
+import { DB } from '../../tokens';
 import type { SharedContext, AgentOpinion, AgentName, AgentBias, ModelTier } from '../types';
 import { AGENT_TIMEOUTS } from '../types';
 import { extractUserMessageText } from '../context';
@@ -97,7 +98,7 @@ export abstract class BaseAgent {
       // B1 fix: use env.MAX_DAILY_USD instead of hardcoded 100.
       budget: { spent: 0, max: ctx.userSettings.maxDailyUsd ?? ctx.env.MAX_DAILY_USD },
       userSettings: ctx.userSettings,
-      db: getDb(),  // P0-2 — inject DB client
+      db: container.resolve(DB),  // P0-2 — inject DB client
       toolTelemetryBuffer: [],  // M4: batch telemetry inserts
     };
     const timeoutMs = AGENT_TIMEOUTS[this.name] ?? 15_000;

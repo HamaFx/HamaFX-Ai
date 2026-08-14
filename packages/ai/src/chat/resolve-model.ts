@@ -28,6 +28,7 @@ import {
   resolveChatModel,
   resolveOverrideModel,
   resolveModelForProvider,
+  resolveVisionModel,
 } from '../model';
 import { toModelDomain } from '../model-resolution';
 import type { RoutingDecision } from '../routing';
@@ -84,7 +85,14 @@ export async function resolveModelForTurn(
   let resolvedModelId: string;
   let providerId: ProviderId;
 
-  if (typeof currentModelOverride === 'string' && currentModelOverride.length > 0) {
+  // Images require the dedicated vision setting/capability. Do not let the
+  // ordinary chat-model preference route an image turn to a text-only model.
+  if (routing.domain === 'vision') {
+    const vision = resolveVisionModel(settings, env);
+    resolvedModel = vision.model;
+    resolvedModelId = vision.modelId;
+    providerId = vision.providerId;
+  } else if (typeof currentModelOverride === 'string' && currentModelOverride.length > 0) {
     const resolved = resolveOverrideModel({
       override: currentModelOverride,
       userSettings: settings,

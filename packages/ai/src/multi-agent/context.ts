@@ -26,7 +26,8 @@ import { getCandles } from '@kestrel/data';
 // P0-2: multi-agent pre-fetch still uses getDb() directly since
 // ToolContext is not set up in the multi-agent pipeline yet.
 import { schema } from '@kestrel/db';
-import { getDb as getDbDirect } from '../db';
+import { container } from '@kestrel/shared';
+import { DB } from '../tokens';
 import { gte, lte, and } from 'drizzle-orm';
 
 function userContextFromSettings(displayName: string | null, settings: UserSettingsRow) {
@@ -52,12 +53,16 @@ export interface BuildContextArgs {
 }
 
 /** Q4: Pre-fetch candles for common timeframes — share across all specialists. */
-async function prefetchCandlesBlock(symbol: string): Promise<string> {
+async function prefetchCandlesBlock(symbol: string, signal: AbortSignal | null): Promise<string> {
   const tfs = ['1h', '4h', '1d'] as const;
   const lines: string[] = [];
   for (const tf of tfs) {
+    if (signal?.aborted) throw signal.reason instanceof Error ? signal.reason : new DOMException('Aborted', 'AbortError');
     try {
-      const candles = await getCandles(symbol, tf, { count: 50 });
+      const candles = await getCandles(symbol, tf, {
+        count: 50,
+        ...(signal ? { signal } : {}),
+      });
       if (candles.length > 0) {
         const last = candles[candles.length - 1]!;
         // Show last 5 closes for trend context, not just the final bar.
@@ -69,7 +74,8 @@ async function prefetchCandlesBlock(symbol: string): Promise<string> {
       } else {
         lines.push(`- ${symbol} ${tf}: no candles available`);
       }
-    } catch {
+    } catch (err) {
+      if (signal?.aborted) throw err;
       lines.push(`- ${symbol} ${tf}: fetch failed`);
     }
   }
@@ -79,7 +85,7 @@ async function prefetchCandlesBlock(symbol: string): Promise<string> {
 /** Q4: Pre-fetch upcoming calendar events — share across all specialists. */
 async function prefetchCalendarBlock(): Promise<string> {
   try {
-    const db = getDbDirect();
+    const db = container.resolve(DB);
     const now = new Date();
     const weekOut = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     const rows = await db
@@ -113,7 +119,7 @@ export async function buildSharedContext(args: BuildContextArgs): Promise<Shared
   // Q4: Pre-fetch common datasets once so all 4 specialists don't each
   // re-fetch the same candle data / calendar events independently.
   const [candlesBlock, calendarBlock] = await Promise.all([
-    prefetchCandlesBlock(symbol),
+    prefetchCandlesBlock(symbol, signal),
     prefetchCalendarBlock(),
   ]);
   const prefetchedData = [candlesBlock, calendarBlock]
