@@ -108,7 +108,10 @@ export async function runChat(args: RunChatArgs) {
   // every tool call, agent run, and persistence step can be traced.
   // If an error propagates out, we record it in the diagnostic context
   // and attach the (redacted) trace to the error for Sentry.
-  return withDiagnostics(userId, threadId, () => runChatInner(args), { deferCompletion: true }).catch((err) => {
+  return withDiagnostics(userId, threadId, () => runChatInner(args), {
+    deferCompletion: true,
+    ...(args.requestId ? { requestId: args.requestId } : {}),
+  }).catch((err) => {
     // withDiagnostics attaches the completed failure trace before it leaves
     // its AsyncLocalStorage scope. Keep this catch as a compatibility
     // fallback for callers that throw outside that wrapper.
@@ -252,6 +255,10 @@ async function runChatInner(args: RunChatArgs): Promise<any> {
   // The attempt callback handles model resolution, planning, and streaming.
 
   let fallbackInfo: FallbackPartPayload | null = null;
+  // A stream can report lifecycle callbacks asynchronously. Keep one
+  // terminal state so a late error cannot downgrade a completed trace or
+  // reconcile/release the same turn twice.
+  let streamTerminal: 'pending' | 'completed' | 'failed' = 'pending';
 
   // resolveCtx is a shared object — checkedProviders persists across attempts.
   const checkedProviders = new Set<string>();
@@ -456,14 +463,56 @@ async function runChatInner(args: RunChatArgs): Promise<any> {
         stopWhen: stepCountIs(env.MAX_TOOL_ITERATIONS),
 
         onError: async ({ error }) => {
+          if (streamTerminal === 'completed') {
+            alog.warn('late chat stream error after completion', {
+              threadId,
+              model: resolvedModelId,
+              providerId,
+              err: error instanceof Error ? error.message : String(error),
+            });
+            return;
+          }
+          streamTerminal = 'failed';
           // A stream can fail after streamText() has returned, bypassing
           // the retry-loop catch and onFinish. Release the reservation so
           // a disconnected/provider-failed turn cannot strand daily spend.
           recordError(error);
+          completeStep('stream_text', 'failed', Date.now() - startedAt, {
+            error: error instanceof Error ? error.message : String(error),
+          });
+          alog.error('chat stream failed after handoff', {
+            threadId,
+            model: resolvedModelId,
+            providerId,
+            err: error instanceof Error ? error.message : String(error),
+          });
+          void recordTelemetry({
+            userId,
+            threadId,
+            messageId: null,
+            model: resolvedModelId,
+            inputTokens: 0,
+            outputTokens: 0,
+            toolCalls: 0,
+            ms: Date.now() - startedAt,
+            kind: 'turn_failed',
+          }).catch((telemetryErr) =>
+            alog.error('failed to persist stream failure telemetry', { err: String(telemetryErr) }),
+          );
           await budget.release();
+          await persistDiagnosticContext(diagnosticContext, 'failed');
         },
 
         onFinish: async ({ usage, finishReason, response }) => {
+          if (streamTerminal === 'failed') {
+            alog.warn('chat stream finished after a recorded failure', {
+              threadId,
+              model: resolvedModelId,
+              providerId,
+            });
+            return;
+          }
+          streamTerminal = 'completed';
           const actualCost = estimateCostUsd(
             resolvedModelId,
             usage?.inputTokens ?? 0,
@@ -632,6 +681,7 @@ async function runChatInner(args: RunChatArgs): Promise<any> {
     // reservation, including persistence, snapshot, compaction, routing,
     // and model-resolution failures.
     await budget.release();
+    await persistDiagnosticContext(diagnosticContext, 'failed');
     throw err;
   }
 }

@@ -65,6 +65,15 @@ describe('withDiagnostics — context propagation', () => {
     expect(result).toBe('success');
   });
 
+  it('preserves request and worker run correlation in the exported trace', async () => {
+    const exported = await withDiagnostics('user-3', 'thread-3', async () =>
+      exportDiagnosticContext(),
+      { requestId: 'request-1', runId: 'worker-run-1' },
+    );
+    expect(exported?.requestId).toBe('request-1');
+    expect(exported?.runId).toBe('worker-run-1');
+  });
+
   it('propagates errors from the wrapped function', async () => {
     await expect(
       withDiagnostics('user-4', 'thread-4', async () => {

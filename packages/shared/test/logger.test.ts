@@ -22,6 +22,8 @@ import {
   createCategorizedLogger,
   logErrorContext,
   logForAgent,
+  requestIdStorage,
+  runIdStorage,
   traceIdStorage,
 } from '../src/logger';
 
@@ -112,6 +114,16 @@ describe('traceIdStorage', () => {
   it('returns undefined outside a diagnostic scope', () => {
     expect(traceIdStorage.getStore()).toBeUndefined();
   });
+
+  it('keeps request and worker run identifiers available for log correlation', () => {
+    const result = requestIdStorage.run('request-123', () =>
+      runIdStorage.run('run-456', () => ({
+        requestId: requestIdStorage.getStore(),
+        runId: runIdStorage.getStore(),
+      })),
+    );
+    expect(result).toEqual({ requestId: 'request-123', runId: 'run-456' });
+  });
 });
 
 describe('logErrorContext', () => {
@@ -137,14 +149,20 @@ describe('logErrorContext', () => {
     expect((logObject.error as Record<string, unknown>).message).toBe('Something broke');
   });
 
-  it('includes traceId when inside a diagnostic scope', () => {
+  it('includes all correlation identifiers inside a diagnostic scope', () => {
     const err = new Error('Something broke');
-    traceIdStorage.run('trace-abc', () => {
-      logErrorContext(err, 'testOperation');
-    });
+    traceIdStorage.run('trace-abc', () =>
+      requestIdStorage.run('request-abc', () =>
+        runIdStorage.run('run-abc', () => {
+          logErrorContext(err, 'testOperation');
+        }),
+      ),
+    );
 
     const logObject = errorSpy.mock.calls[0][0] as Record<string, unknown>;
     expect(logObject.traceId).toBe('trace-abc');
+    expect(logObject.requestId).toBe('request-abc');
+    expect(logObject.runId).toBe('run-abc');
   });
 
   it('enriches with error pattern metadata for known errors', () => {

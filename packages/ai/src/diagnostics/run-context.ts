@@ -31,7 +31,12 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { randomUUID } from 'node:crypto';
 
-import { traceIdStorage } from '@kestrel/shared/logger';
+import {
+  createCategorizedLogger,
+  requestIdStorage,
+  runIdStorage,
+  traceIdStorage,
+} from '@kestrel/shared/logger';
 
 import { redactSecrets } from './redact';
 import { persistTrace, type PersistedTrace } from './trace-persistence';
@@ -67,6 +72,10 @@ export interface RunDiagnosticContext {
   userId: string;
   /** Thread ID for this chat turn. */
   threadId: string;
+  /** HTTP request correlation id, when the run originated from a request. */
+  requestId?: string;
+  /** Worker/job execution id, when the run is processed asynchronously. */
+  runId?: string;
   /** Epoch timestamp the run started. */
   startedAt: number;
   /** Ordered list of steps recorded during the run. */
@@ -78,6 +87,7 @@ export interface RunDiagnosticContext {
 // AsyncLocalStorage propagates the context through the entire async call
 // chain — tools, agents, persistence — without explicit threading.
 const diagnosticStore = new AsyncLocalStorage<RunDiagnosticContext>();
+const dlog = createCategorizedLogger('ai', { component: 'diagnostics' });
 
 /**
  * Wrap an async function in a diagnostic context. All code inside `fn`
@@ -91,6 +101,10 @@ export interface DiagnosticOptions {
   deferCompletion?: boolean;
   /** Preserve a trace id supplied by a distributed worker/job boundary. */
   traceId?: string;
+  /** Correlate the run with its originating HTTP request. */
+  requestId?: string;
+  /** Correlate the run with a worker/job execution. */
+  runId?: string;
 }
 
 export function withDiagnostics<T>(
@@ -103,34 +117,43 @@ export function withDiagnostics<T>(
     traceId: options.traceId ?? randomUUID(),
     userId,
     threadId,
+    ...(options.requestId ? { requestId: options.requestId } : {}),
+    ...(options.runId ? { runId: options.runId } : {}),
     startedAt: Date.now(),
     steps: [],
     errors: [],
   };
 
-  // Set traceId in AsyncLocalStorage so the logger auto-injects it into
-  // every log line inside this diagnostic scope.
-  return traceIdStorage.run(ctx.traceId, () =>
-    diagnosticStore.run(ctx, async () => {
-      try {
-        const result = await fn();
-        if (!options.deferCompletion) await maybePersistTrace(ctx);
-        return result;
-      } catch (err) {
-        recordError(err);
-        await maybePersistTrace(ctx, 'failed');
-        if (err instanceof Error) {
-          try {
-            (err as Error & { diagnosticContext?: unknown }).diagnosticContext =
-              exportDiagnosticContextInternal(ctx, 'failed');
-          } catch {
-            // Read-only error object — preserve the original failure.
-          }
+  // Set correlation values in AsyncLocalStorage so the logger auto-injects
+  // them into every log line inside this diagnostic scope.
+  const runBody = () => diagnosticStore.run(ctx, async () => {
+    try {
+      const result = await fn();
+      if (!options.deferCompletion) await maybePersistTrace(ctx);
+      return result;
+    } catch (err) {
+      recordError(err);
+      await maybePersistTrace(ctx, 'failed');
+      if (err instanceof Error) {
+        try {
+          (err as Error & { diagnosticContext?: unknown }).diagnosticContext =
+            exportDiagnosticContextInternal(ctx, 'failed');
+        } catch {
+          // Read-only error object — preserve the original failure.
         }
-        throw err;
       }
-    }),
-  );
+      throw err;
+    }
+  });
+
+  const runWithOptionalRunId = () =>
+    options.runId ? runIdStorage.run(options.runId, runBody) : runBody();
+  const runWithOptionalRequestId = () =>
+    options.requestId
+      ? requestIdStorage.run(options.requestId, runWithOptionalRunId)
+      : runWithOptionalRunId();
+
+  return traceIdStorage.run(ctx.traceId, runWithOptionalRequestId);
 }
 
 export async function persistDiagnosticContext(
@@ -159,8 +182,15 @@ async function maybePersistTrace(
       trace,
     };
     await persistTrace(persisted);
-  } catch {
-    // Persistence failures must never block the chat turn.
+  } catch (err) {
+    // Persistence failures must never block the chat turn, but they must be
+    // visible with the trace identity so a missing trace is diagnosable.
+    const traceId = ctx.traceId;
+    dlog.error('trace persistence failed', {
+      traceId,
+      status,
+      err: err instanceof Error ? err.message : String(err),
+    });
   }
 }
 
@@ -298,6 +328,8 @@ function exportDiagnosticContextInternal(
     traceId: ctx.traceId,
     userId: ctx.userId,
     threadId: ctx.threadId,
+    ...(ctx.requestId ? { requestId: ctx.requestId } : {}),
+    ...(ctx.runId ? { runId: ctx.runId } : {}),
     startedAt: ctx.startedAt,
     durationMs: Date.now() - ctx.startedAt,
     stepCount: ctx.steps.length,

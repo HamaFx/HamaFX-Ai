@@ -41,9 +41,9 @@ const MAX_JOBS_PER_RUN = 3;
 const STALE_JOB_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
 const MAX_ANALYSIS_ATTEMPTS = 3;
 
-function isRetryableAnalysisError(error: unknown): boolean {
+export function isRetryableAnalysisError(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error);
-  return /(?:timeout|timed?\\s*out|aborted|network|fetch\\s*failed|rate\\s*limit|too\\s*many\\s*requests|temporar(?:y|ily)|connection|ECONNRESET|5\\d\\d)/i.test(message);
+  return /(?:timeout|timed?\s*out|aborted|network|fetch\s*failed|rate\s*limit|too\s*many\s*requests|temporar(?:y|ily)|connection|ECONNRESET|5\d\d)/i.test(message);
 }
 
 function reconstructHistory(raw: unknown): UIMessage[] {
@@ -272,14 +272,17 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
         analysisMode: resolvedMode,
         idempotencyKey: `analysis-job:${job.id}`,
         onProgress,
-      }), job.traceId ? { traceId: job.traceId } : {});
+      }), {
+        ...(job.traceId ? { traceId: job.traceId } : {}),
+        runId: job.workerRunId,
+      });
 
       // Ensure all progress snapshots have reached the database before the
       // terminal status is written.
       await progressWrite;
 
       // Mark as complete.
-      await db
+      const completedRows = await db
         .update(schema.analysisJobs)
         .set({
           status: 'complete',
@@ -301,9 +304,18 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
             eq(schema.analysisJobs.status, 'running'),
             eq(schema.analysisJobs.workerRunId, job.workerRunId),
           ),
-        );
+        )
+        .returning({ id: schema.analysisJobs.id });
 
-      ctx.log.info('Analysis job completed', { jobId: job.id, costUsd: result.totalCostUsd, latencyMs: result.totalLatencyMs });
+      if (completedRows.length !== 1) {
+        ctx.log.warn('Analysis job completion skipped because the lease was lost', {
+          jobId: job.id,
+          workerRunId: job.workerRunId,
+        });
+        return;
+      }
+
+      ctx.log.info('Analysis job completed', { jobId: job.id, workerRunId: job.workerRunId, costUsd: result.totalCostUsd, latencyMs: result.totalLatencyMs });
       processed++;
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
@@ -320,7 +332,7 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
         });
 
       await progressWrite;
-      await db
+      const failedRows = await db
         .update(schema.analysisJobs)
         .set({
           status: nextStatus,
@@ -336,8 +348,16 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
             eq(schema.analysisJobs.status, 'running'),
             eq(schema.analysisJobs.workerRunId, job.workerRunId),
           ),
-        );
-        processed++;
+        )
+        .returning({ id: schema.analysisJobs.id });
+
+      if (failedRows.length !== 1) {
+        ctx.log.warn('Analysis job failure update skipped because the lease was lost', {
+          jobId: job.id,
+          workerRunId: job.workerRunId,
+        });
+      }
+      processed++;
       }
     };
 
@@ -397,8 +417,10 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
     await db
       .delete(schema.analysisJobs)
       .where(lt(schema.analysisJobs.completedAt, retentionCutoff));
-  } catch {
-    // Best-effort cleanup — ignore failures.
+  } catch (err) {
+    ctx.log.warn('Analysis job retention cleanup failed', {
+      err: err instanceof Error ? err.message : String(err),
+    });
   }
 
   ctx.log.info('Analysis job poll complete', { processed });

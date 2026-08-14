@@ -50,4 +50,6 @@ export interface RunChatArgs {
   customInstructions?: string;
   /** Aborts streaming + tool calls when the client disconnects. */
   signal?: AbortSignal;
+  /** HTTP request id used to correlate route logs with the AI trace. */
+  requestId?: string;
 }

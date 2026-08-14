@@ -242,6 +242,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
               const persistedHistory = persistedMessagesToUi(
                 await listMessages(user.userId, body.threadId, 200),
               );
+              const requestId = req.headers.get('x-request-id') ?? undefined;
               const result = await withDiagnostics(user.userId, body.threadId, () => runMultiAgentChat({
                 threadId: body.threadId,
                 userId: user.userId,
@@ -256,6 +257,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
                 env: pickAiEnv(env),
                 signal: multiAgentSignal,
                 analysisMode,
+                ...(requestId ? { requestId } : {}),
                 onProgress: (event) => {
               const publicEvent = event.type === 'agent_error'
                 ? { ...event, error: 'Agent unavailable. Please try again.' }
@@ -271,7 +273,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
                   startText();
                   send({ type: 'text-delta', id: messageId, delta: chunk });
                 },
-              }));
+              }), requestId ? { requestId } : {});
 
               // Fusion output is published transactionally. If the decision
               // stream failed, the orchestrator returns a specialist fallback
@@ -354,6 +356,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
       ...(customInstructions ? { customInstructions } : {}),
       env: pickAiEnv(env),
       signal,
+      ...(req.headers.get('x-request-id') ? { requestId: req.headers.get('x-request-id')! } : {}),
     });
 
     return result.toUIMessageStreamResponse();

@@ -53,6 +53,10 @@ export type LogCategory = (typeof LOG_CATEGORIES)[number];
 // this value so every log line inside a diagnostic scope automatically
 // includes the traceId without manual passing.
 export const traceIdStorage = new AsyncLocalStorage<string>();
+/** Correlates logs with the originating HTTP request when available. */
+export const requestIdStorage = new AsyncLocalStorage<string>();
+/** Correlates logs with a worker/job execution when available. */
+export const runIdStorage = new AsyncLocalStorage<string>();
 
 /** Custom pino destination that forwards log lines to stdout and the log stream hub. */
 class TeeDestination extends Writable {
@@ -136,6 +140,17 @@ function getCurrentTraceId(): string | undefined {
   return traceIdStorage.getStore();
 }
 
+function getCurrentCorrelation(): Record<string, string> {
+  const traceId = getCurrentTraceId();
+  const requestId = requestIdStorage.getStore();
+  const runId = runIdStorage.getStore();
+  return {
+    ...(traceId ? { traceId } : {}),
+    ...(requestId ? { requestId } : {}),
+    ...(runId ? { runId } : {}),
+  };
+}
+
 /** Best-effort parse of file/line from a stack trace. */
 function parseStack(stack: string | undefined): { file?: string; line?: number } {
   if (!stack) return {};
@@ -190,7 +205,7 @@ export function logErrorContext(
   context: Record<string, unknown> = {},
   category: LogCategory = 'system',
 ): void {
-  const traceId = getCurrentTraceId();
+  const correlation = getCurrentCorrelation();
   const pattern = findErrorPattern(err);
   const error = buildErrorObject(err);
 
@@ -198,7 +213,7 @@ export function logErrorContext(
     {
       category,
       operation,
-      ...(traceId ? { traceId } : {}),
+      ...correlation,
       error,
       ...context,
       ...(pattern
@@ -247,8 +262,7 @@ export function createCategorizedLogger(
     msgOrObj: string | Record<string, unknown>,
     metaOrMsg?: Record<string, unknown> | string,
   ): void {
-    const traceId = getCurrentTraceId();
-    const traceMeta = traceId ? { traceId } : {};
+    const traceMeta = getCurrentCorrelation();
 
     if (typeof msgOrObj === 'string') {
       // string-first: log.info('msg', { meta })
@@ -298,12 +312,12 @@ export function logForAgent(
   operation: string,
   data: AgentLogData,
 ): void {
-  const traceId = getCurrentTraceId();
+  const correlation = getCurrentCorrelation();
   const report = data.error
     ? generateBugReport(data.error, {
         operation,
         module: data.module,
-        trace: traceId ? { traceId } : null,
+        trace: correlation,
       })
     : null;
 
@@ -313,7 +327,7 @@ export function logForAgent(
       operation,
       module: data.module,
       category: data.category,
-      ...(traceId ? { traceId } : {}),
+      ...correlation,
       ...(report ? { bugReport: report } : {}),
       ...(data.context ?? {}),
       ...(data.suggestedFix ? { suggestedFix: data.suggestedFix } : {}),

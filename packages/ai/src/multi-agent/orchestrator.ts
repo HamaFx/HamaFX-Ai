@@ -25,6 +25,7 @@ import { saveAgentOpinions } from './persistence';
 import { appendUserMessage, appendAssistantMessage, recordTelemetry } from '../persistence';
 import { enforceCitations } from '../verification';
 import { logErrorContext, createCategorizedLogger } from '@kestrel/shared/logger';
+import { completeStep, recordError, recordStep } from '../diagnostics';
 import { TechnicalAgent } from './agents/technical-agent';
 import { FundamentalAgent } from './agents/fundamental-agent';
 import { RiskAgent } from './agents/risk-agent';
@@ -67,6 +68,8 @@ export interface RunMultiAgentArgs {
   onTextChunk?: (chunk: string) => void;
   /** Durable key used to make worker retries message-idempotent. */
   idempotencyKey?: string;
+  /** HTTP request id used to correlate route logs with the AI trace. */
+  requestId?: string;
 }
 
 export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiAgentResult> {
@@ -74,6 +77,17 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
   const startMs = Date.now();
   const userText = extractUserMessageText(userMessage);
   const mode = resolveMode(analysisMode, userText);
+  recordStep('multi_agent_start', {
+    requestedMode: analysisMode,
+    resolvedMode: mode,
+    symbol: userSettings.defaultSymbol ?? 'XAUUSD',
+  });
+  mlog.info('multi-agent run started', {
+    userId,
+    threadId,
+    requestedMode: analysisMode,
+    resolvedMode: mode,
+  });
 
   if (mode === 'single') {
     throw new Error('runMultiAgentChat called with single mode — use runChat() instead');
@@ -144,9 +158,21 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
   try {
     const ctxArgs: Parameters<typeof buildSharedContext>[0] = { symbol, userId, threadId, userMessage, history, userSettings, displayName, env, signal };
     if (customInstructions !== undefined) ctxArgs.customInstructions = customInstructions;
+    recordStep('shared_context', { symbol });
     const ctx = await buildSharedContext(ctxArgs);
+    completeStep('shared_context', 'completed', Date.now() - startMs, {
+      snapshot: Boolean(ctx.snapshot),
+      prefetchedData: Boolean(ctx.prefetchedData),
+    });
     const specialistNames = selectAgents(effectiveMode);
     const specialists = specialistNames.map((name) => AGENT_FACTORIES[name]());
+    recordStep('specialists', { agents: specialistNames, mode: effectiveMode });
+    mlog.info('multi-agent specialists selected', {
+      userId,
+      threadId,
+      mode: effectiveMode,
+      agents: specialistNames,
+    });
 
     onProgress?.({ type: 'specialists_start', agents: specialistNames });
 
@@ -159,14 +185,33 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
       specialists.map(async (agent) => {
         return limit(async () => {
           const agentStartMs = Date.now();
+          recordStep(`agent:${agent.name}`, { phase: 'start' });
+          mlog.info('specialist started', { userId, threadId, agent: agent.name });
           onProgress?.({ type: 'agent_start', agent: agent.name });
           try {
             const agentCtx: SharedContext = { ...ctx };
             const opinion = await agent.run(agentCtx);
+            completeStep(`agent:${agent.name}`, 'completed', opinion.latencyMs, {
+              model: opinion.model,
+              providerId: opinion.providerId,
+              inputTokens: opinion.inputTokens,
+              outputTokens: opinion.outputTokens,
+              toolCount: Array.isArray(opinion.rawData._tools) ? opinion.rawData._tools.length : 0,
+            });
+            mlog.info('specialist completed', {
+              userId,
+              threadId,
+              agent: agent.name,
+              model: opinion.model,
+              providerId: opinion.providerId,
+              latencyMs: opinion.latencyMs,
+            });
             onProgress?.({ type: 'agent_done', agent: agent.name, opinion });
             return opinion;
           } catch (err) {
             const msg = err instanceof Error ? err.message : String(err);
+            recordError(err);
+            completeStep(`agent:${agent.name}`, 'failed', Date.now() - agentStartMs, { error: msg });
             failedAgents.push(agent.name);
             logErrorContext(err, 'multi-agent/agent_failed', { agentName: agent.name }, 'ai');
             void recordTelemetry({
@@ -184,6 +229,13 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
                 'multi_specialist_risk_failed' |
                 'multi_specialist_sentiment_failed',
             }).catch((telemetryErr) => mlog.warn('specialist failure telemetry failed', { err: String(telemetryErr) }));
+            mlog.error('specialist failed', {
+              userId,
+              threadId,
+              agent: agent.name,
+              elapsedMs: Date.now() - agentStartMs,
+              err: msg,
+            });
             onProgress?.({ type: 'agent_error', agent: agent.name, error: msg });
             return null;
           }
@@ -208,6 +260,17 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
       }).catch((err) => mlog.warn('specialist telemetry failed', { err: String(err) }));
     }
 
+    completeStep('specialists', 'completed', Date.now() - startMs, {
+      succeeded: validOpinions.map((opinion) => opinion.agentName),
+      failed: failedAgents,
+    });
+    recordStep('fusion', { availableAgents: validOpinions.map((opinion) => opinion.agentName), unavailableAgents: failedAgents });
+    mlog.info('multi-agent fusion started', {
+      userId,
+      threadId,
+      availableAgents: validOpinions.map((opinion) => opinion.agentName),
+      unavailableAgents: failedAgents,
+    });
     onProgress?.({ type: 'fusion_start' });
 
     const decisionAgent = new DecisionAgent();
@@ -232,9 +295,30 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
       decisionOutputTokens = decisionResult.outputTokens ?? 0;
       decisionModelId = decisionResult.modelId;
       decisionProviderId = decisionResult.providerId;
+      completeStep('fusion', 'completed', Date.now() - startMs, {
+        model: decisionResult.modelId,
+        providerId: decisionResult.providerId,
+        inputTokens: decisionResult.inputTokens,
+        outputTokens: decisionResult.outputTokens,
+      });
+      mlog.info('multi-agent fusion completed', {
+        userId,
+        threadId,
+        model: decisionResult.modelId,
+        providerId: decisionResult.providerId,
+      });
       onProgress?.({ type: 'fusion_done' });
     } catch (err) {
-      logErrorContext(err, 'multi-agent/decision_agent_failed', {}, 'ai');
+      recordError(err);
+      completeStep('fusion', 'failed', Date.now() - startMs, {
+        error: err instanceof Error ? err.message : String(err),
+      });
+      logErrorContext(err, 'multi-agent/decision_agent_failed', {
+        userId,
+        threadId,
+        availableAgents: validOpinions.map((opinion) => opinion.agentName),
+        unavailableAgents: failedAgents,
+      }, 'ai');
       onProgress?.({ type: 'fusion_done' });
       if (validOpinions.length > 0) {
         finalText = validOpinions
@@ -360,6 +444,21 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
     ms: totalLatencyMs,
     kind: 'multi_agent_turn',
   }).catch((err) => mlog.warn('recordTelemetry failed', { err: String(err) }));
+
+  completeStep('multi_agent_start', 'completed', Date.now() - startMs, {
+    totalCostUsd,
+    specialistCount: validOpinions.length,
+    mode: effectiveMode,
+  });
+  mlog.info('multi-agent run completed', {
+    userId,
+    threadId,
+    mode: effectiveMode,
+    specialistCount: validOpinions.length,
+    totalCostUsd,
+    totalLatencyMs,
+    messageId: persistedMessageId,
+  });
 
   return {
     finalText,

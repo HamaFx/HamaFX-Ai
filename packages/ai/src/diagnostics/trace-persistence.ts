@@ -54,17 +54,29 @@ export async function persistTrace(trace: PersistedTrace): Promise<void> {
 
 async function persistToDb(trace: PersistedTrace): Promise<void> {
   const db = getDb();
-  await db.insert(schema.diagnosticTraces).values({
-    id: trace.traceId,
-    userId: trace.userId,
-    threadId: trace.threadId,
-    startedAt: new Date(trace.startedAt),
-    durationMs: trace.durationMs,
-    stepCount: trace.stepCount,
-    errorCount: trace.errorCount,
-    status: trace.status,
-    trace: trace.trace,
-  });
+  await db
+    .insert(schema.diagnosticTraces)
+    .values({
+      id: trace.traceId,
+      userId: trace.userId,
+      threadId: trace.threadId,
+      startedAt: new Date(trace.startedAt),
+      durationMs: trace.durationMs,
+      stepCount: trace.stepCount,
+      errorCount: trace.errorCount,
+      status: trace.status,
+      trace: trace.trace,
+    })
+    .onConflictDoUpdate({
+      target: schema.diagnosticTraces.id,
+      set: {
+        durationMs: trace.durationMs,
+        stepCount: trace.stepCount,
+        errorCount: trace.errorCount,
+        status: trace.status,
+        trace: trace.trace,
+      },
+    });
 }
 
 async function persistToFile(trace: PersistedTrace): Promise<void> {
