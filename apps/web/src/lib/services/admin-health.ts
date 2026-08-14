@@ -12,6 +12,7 @@ import { sql } from 'drizzle-orm';
 import type { SQLWrapper } from 'drizzle-orm';
 
 import type { HealthSloResponse, SliSnapshot } from './admin-dtos';
+import { createScopedLoggerWithContext } from '@/lib/logger';
 
 export interface ComputeHealthSloOptions {
   hours: number;
@@ -533,7 +534,11 @@ async function queryOperationalAggregate(
       traceFailed: Number(row.trace_failed ?? 0),
       providerFallbackTraces: Number(row.provider_fallback_traces ?? 0),
     };
-  } catch {
+  } catch (error) {
+    createScopedLoggerWithContext({ component: 'admin-health', query: 'operational-aggregate' }).error(
+      { err: error instanceof Error ? error.message : String(error) },
+      'health SLI operational aggregate query failed',
+    );
     return null;
   }
 }
