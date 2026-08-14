@@ -28,6 +28,7 @@
 
 import type { Tool } from 'ai';
 import { withTelemetry } from './with-telemetry';
+import { createCategorizedLogger } from '@kestrel/shared/logger';
 
 /**
  * ToolPlugin — metadata about a registered tool.
@@ -64,6 +65,8 @@ export interface ToolPlugin {
  * const tools = toolRegistry.resolve(plan.allowedTools);
  * ```
  */
+const registryLog = createCategorizedLogger('ai', { component: 'tool-registry' });
+
 export class ToolRegistry {
   private tools = new Map<string, ToolPlugin>();
 
@@ -96,6 +99,13 @@ export class ToolRegistry {
       return Object.fromEntries(
         [...this.tools.entries()].map(([name, plugin]) => [name, plugin.tool]),
       );
+    }
+    const unknownNames = names.filter((name) => !this.tools.has(name));
+    if (unknownNames.length > 0) {
+      registryLog.warn('tool resolution omitted unknown names', {
+        requested: names,
+        unknown: unknownNames,
+      });
     }
     return Object.fromEntries(
       names

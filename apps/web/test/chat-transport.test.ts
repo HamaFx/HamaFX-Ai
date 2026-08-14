@@ -134,6 +134,23 @@ describe('createKestrelChatTransport', () => {
     expect(chunks.some((chunk) => chunk.type === 'data-multi-agent-meta')).toBe(true);
   });
 
+  it('surfaces malformed SSE instead of presenting truncated text as complete', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(
+      'data: {"type":"text-start","id":"server-message-id"}\\n\\ndata: {not-json}\\n\\n',
+      { status: 200, headers: { 'content-type': 'text/event-stream; charset=utf-8' } },
+    ));
+
+    const transport = createKestrelChatTransport({ api: '/api/chat' });
+    const stream = await transport.sendMessages({
+      chatId: 'thread-1',
+      messages: [],
+      abortSignal: new AbortController().signal,
+    });
+    const chunks = await readChunks(stream as ReadableStream<Record<string, unknown>>);
+
+    expect(chunks.some((chunk) => chunk.type === 'error')).toBe(true);
+  });
+
   it('creates a matching text start/end pair when SSE ends without a text-start', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       sseResponse([{ type: 'text-end', id: 'server-message-id' }]),

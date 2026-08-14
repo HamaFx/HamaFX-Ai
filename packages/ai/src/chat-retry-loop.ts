@@ -36,6 +36,7 @@ import type { BudgetHandle } from './budget-reservation';
 import type { ProviderId } from '@kestrel/shared/encryption';
 import type { RoutingDecision } from './routing';
 import { createCategorizedLogger } from '@kestrel/shared/logger';
+import { completeStep, recordStep } from './diagnostics';
 
 const alog = createCategorizedLogger('ai', { component: 'retry-loop' });
 
@@ -121,6 +122,10 @@ export async function runChatWithFallback<T>(args: RetryLoopArgs<T>): Promise<T>
     providerId = undefined;
     bareModelId = undefined;
 
+    recordStep('provider_attempt', {
+      attempt: attempts,
+      modelOverride: currentModelOverride ?? null,
+    });
     const attemptResult = await args.attempt({
       currentModelOverride,
       nonEssentialDisabled,
@@ -128,6 +133,11 @@ export async function runChatWithFallback<T>(args: RetryLoopArgs<T>): Promise<T>
     });
 
     if (attemptResult.success) {
+      completeStep('provider_attempt', 'completed', undefined, {
+        providerId: attemptResult.providerId,
+        modelId: attemptResult.bareModelId,
+        attempt: attempts,
+      });
       return attemptResult.value as T;
     }
 
@@ -138,6 +148,13 @@ export async function runChatWithFallback<T>(args: RetryLoopArgs<T>): Promise<T>
     if (attemptResult.nonEssentialDisabled !== undefined) {
       nonEssentialDisabled = attemptResult.nonEssentialDisabled;
     }
+
+    completeStep('provider_attempt', 'failed', undefined, {
+      providerId,
+      modelId: bareModelId,
+      attempt: attempts,
+      error: lastError instanceof Error ? lastError.message : String(lastError),
+    });
 
     // ── Client disconnect — no retry ──
     if (args.signal?.aborted) {
@@ -181,12 +198,22 @@ export async function runChatWithFallback<T>(args: RetryLoopArgs<T>): Promise<T>
       throw lastError;
     }
 
+    recordStep('provider_fallback', {
+      attempt: attempts,
+      fromProvider: providerId ?? currentProvider,
+      fromModel: bareModelId ?? currentModelOverride ?? null,
+      toProvider: nextFallback.providerId,
+      toModel: nextFallback.modelId,
+      reason: decision.reason,
+    });
     alog.warn('Fallback triggered', {
       attempts,
       provider: String(providerId),
+      model: bareModelId,
       reason: decision.reason,
       message: decision.message,
       nextProvider: nextFallback.providerId,
+      nextModel: nextFallback.modelId,
     });
 
     // Build fallback part for the UI.

@@ -38,6 +38,9 @@
 import type { UIMessage } from 'ai';
 import type { ResolveModelEnv } from './model';
 import { classifyTurnLLM } from './semantic-routing';
+import { createCategorizedLogger } from '@kestrel/shared/logger';
+
+const routingLog = createCategorizedLogger('ai', { component: 'routing' });
 
 // P2-1 — Keyword patterns externalized to routing-keywords.ts.
 // Keep the config auditable and tunable without modifying domain logic.
@@ -138,8 +141,13 @@ export async function routeTurn(args: RouteTurnOptions): Promise<RoutingDecision
         };
       }
       // Fall through to keyword scoring on low confidence or failure.
-    } catch {
-      // Fall through to keyword scoring.
+      routingLog.debug('semantic routing returned no confident classification', { elapsedMs: Date.now() - startMs });
+    } catch (err) {
+      // Fall through to keyword scoring, but preserve the reason in logs.
+      routingLog.warn('semantic routing failed; using keyword routing', {
+        elapsedMs: Date.now() - startMs,
+        err: err instanceof Error ? err.message : String(err),
+      });
     }
   }
 

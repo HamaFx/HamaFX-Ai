@@ -21,6 +21,7 @@
 // runChatInner(), this module makes the budget contract explicit
 // and independently testable.
 
+import { createCategorizedLogger } from '@kestrel/shared/logger';
 import {
   applyBudgetDelta,
   BudgetExceededError,
@@ -30,6 +31,8 @@ import {
 } from './cost';
 
 export { BudgetExceededError };
+
+const blog = createCategorizedLogger('ai', { component: 'budget-guard' });
 
 /** Result of reserving budget for a turn. */
 export interface BudgetReservation {
@@ -81,7 +84,15 @@ export async function reconcileBudget(
 ): Promise<void> {
   const delta = actualCostUsd - reservedUsd;
   if (Math.abs(delta) < 0.0001) return; // No meaningful difference
-  await applyBudgetDelta(userId, delta).catch(() => {});
+  await applyBudgetDelta(userId, delta).catch((err) => {
+    blog.error('budget reconciliation failed', {
+      userId,
+      actualCostUsd,
+      reservedUsd,
+      delta,
+      err: String(err),
+    });
+  });
 }
 
 /**
@@ -93,6 +104,12 @@ export async function releaseBudget(
   userId: string,
 ): Promise<void> {
   if (reservation.released) return;
-  await applyBudgetDelta(userId, -(reservation.reservedUsd)).catch(() => {});
+  await applyBudgetDelta(userId, -(reservation.reservedUsd)).catch((err) => {
+    blog.error('budget release failed', {
+      userId,
+      reservedUsd: reservation.reservedUsd,
+      err: String(err),
+    });
+  });
   (reservation as { released: boolean }).released = true;
 }

@@ -18,6 +18,9 @@
 // and improve testability.
 
 import { recordToolTelemetry } from '../persistence';
+import { createCategorizedLogger } from '@kestrel/shared/logger';
+
+const hlog = createCategorizedLogger('ai', { component: 'chat-telemetry' });
 
 /**
  * Count the number of tool-call parts across a set of model response messages.
@@ -45,9 +48,29 @@ export function countToolCalls(messages: readonly { content: unknown }[]): numbe
  */
 export async function flushBatchedTelemetry(
   entries: Array<{ threadId: string | null; userId?: string | null; tool: string; ms: number; ok: boolean; errorCode?: string | null; outputChars?: number | null }>,
-): Promise<void> {
-  if (entries.length === 0) return;
-  await Promise.all(entries.map((e) =>
-    recordToolTelemetry({ ...e, messageId: null }).catch(() => {}),
-  ));
+): Promise<{ attempted: number; failed: number }> {
+  if (entries.length === 0) return { attempted: 0, failed: 0 };
+  const results = await Promise.all(
+    entries.map(async (e) => {
+      try {
+        return await recordToolTelemetry({ ...e, messageId: null });
+      } catch (err) {
+        hlog.error('tool telemetry sink threw unexpectedly', {
+          tool: e.tool,
+          threadId: e.threadId,
+          err: String(err),
+        });
+        return false;
+      }
+    }),
+  );
+  const failed = results.filter((ok) => !ok).length;
+  if (failed > 0) {
+    hlog.error('tool telemetry batch partially failed', {
+      attempted: entries.length,
+      failed,
+      tools: entries.map((entry) => entry.tool),
+    });
+  }
+  return { attempted: entries.length, failed };
 }

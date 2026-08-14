@@ -60,6 +60,7 @@ export async function buildLiveSnapshot(
   let copilotHealth: LiveSnapshot['copilotHealth'] = undefined;
 
   let activeSymbols: string[] = [...SYMBOLS];
+  const missingPriceSymbols: string[] = [];
 
   const db = getDb();
 
@@ -78,7 +79,11 @@ export async function buildLiveSnapshot(
         dbLatencyMs,
         lastResonanceSync,
       };
-    } catch {
+    } catch (err) {
+      clog.warn('live snapshot health query failed', {
+        userId: opts.userId,
+        err: err instanceof Error ? err.message : String(err),
+      });
       copilotHealth = {
         status: 'unhealthy',
         dbLatencyMs: -1,
@@ -113,11 +118,28 @@ export async function buildLiveSnapshot(
           setTimeout(() => reject(new Error('timeout')), timeoutMs)
         );
         prices[s] = await Promise.race([fetchPromise, timeoutPromise]);
-      } catch {
-        // Swallow — missing prices are signalled to the model by absence.
+      } catch (err) {
+        // Missing prices remain non-fatal, but never invisible: the model
+        // receives an incomplete snapshot and the trace records which feeds
+        // were unavailable.
+        missingPriceSymbols.push(s);
+        clog.warn('live snapshot price unavailable', {
+          symbol: s,
+          userId: opts.userId,
+          err: err instanceof Error ? err.message : String(err),
+        });
       }
     })
   );
+
+  if (missingPriceSymbols.length > 0) {
+    clog.warn('live snapshot is incomplete', {
+      userId: opts.userId,
+      missingSymbols: missingPriceSymbols,
+      missingCount: missingPriceSymbols.length,
+      requestedCount: activeSymbols.length,
+    });
+  }
 
   return {
     asOf: now.toISOString(),

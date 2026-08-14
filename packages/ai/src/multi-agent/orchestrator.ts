@@ -350,10 +350,18 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
     // ── Budget reconciliation ── adjust reserved estimate to actual cost ──
     // Always reconcile, even when totalCostUsd is 0 (all specialists failed).
     const costDelta = totalCostUsd - estimatedCost;
-    await applyBudgetDelta(userId, costDelta).catch((err) =>
-      mlog.warn('applyBudgetDelta failed', { err: String(err) }),
-    );
-    reconciled = true;
+    try {
+      await applyBudgetDelta(userId, costDelta);
+      reconciled = true;
+    } catch (err) {
+      mlog.error('multi-agent budget reconciliation failed; releasing reservation', {
+        userId,
+        threadId,
+        costDelta,
+        err: String(err),
+      });
+      throw err;
+    }
     } finally {
       if (!reconciled) {
         // Release the full reservation — any path that throws before
@@ -397,7 +405,14 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
         ? [{ content: specialistToolNames.map((t) => ({ type: 'tool-call' as const, toolName: t })) }]
         : [],
     });
-  } catch { /* citation enforcer should never crash the pipeline */ }
+  } catch (err) {
+    recordError(err);
+    mlog.error('multi-agent citation enforcement failed', {
+      userId,
+      threadId,
+      err: err instanceof Error ? err.message : String(err),
+    });
+  }
 
   // ── Persist the assistant message ──
   let parts: UIMessage['parts'] = [{ type: 'text', text: finalText }];

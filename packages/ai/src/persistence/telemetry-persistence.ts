@@ -96,7 +96,7 @@ export interface ToolTelemetryInput {
   outputChars?: number | null;
 }
 
-export async function recordToolTelemetry(t: ToolTelemetryInput): Promise<void> {
+export async function recordToolTelemetry(t: ToolTelemetryInput): Promise<boolean> {
   try {
     const userId = t.userId ?? '__system__';
     await getDb()
@@ -111,7 +111,14 @@ export async function recordToolTelemetry(t: ToolTelemetryInput): Promise<void> 
         errorCode: t.errorCode ?? null,
         outputChars: t.outputChars ?? null,
       });
+    return true;
   } catch (err) {
-    perlog.warn('tool telemetry insert failed', { err: String(err) });
+    perlog.error('tool telemetry insert failed', {
+      threadId: t.threadId,
+      tool: t.tool,
+      ok: t.ok,
+      err: String(err),
+    });
+    return false;
   }
 }

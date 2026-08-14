@@ -32,6 +32,9 @@
 import { generateObject } from 'ai';
 import { z } from 'zod';
 import { resolveModel, type ResolveModelEnv } from './model';
+import { createCategorizedLogger } from '@kestrel/shared/logger';
+
+const semanticLog = createCategorizedLogger('ai', { component: 'semantic-routing' });
 
 const ClassificationSchema = z.object({
   domain: z.enum(['fundamental', 'technical', 'summary', 'vision', 'generic']),
@@ -147,8 +150,13 @@ EXAMPLES:
       return classification;
     }
     return null;
-  } catch {
-    // Any failure → null (caller falls back to keyword scoring).
+  } catch (err) {
+    // Any failure → null (caller falls back to keyword scoring), but keep
+    // the provider/model failure visible for debugging.
+    semanticLog.warn('semantic classifier unavailable; keyword routing will be used', {
+      modelId,
+      err: err instanceof Error ? err.message : String(err),
+    });
     return null;
   } finally {
     clearTimeout(timeout);

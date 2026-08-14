@@ -27,6 +27,9 @@ import { classifyStreamError } from '../../fallback';
 import { pickNextFallbackProvider } from '../../model-resolution';
 import { checkBudgetAlertsAndThresholds } from '../../cost';
 import type { SharedContext, ModelTier, AgentName } from '../types';
+import { createCategorizedLogger } from '@kestrel/shared/logger';
+
+const modelLog = createCategorizedLogger('ai', { component: 'multi-agent-model' });
 
 /**
  * Map ModelTier to the ModelDomain used by resolveChatModel's tier selection.
@@ -65,7 +68,13 @@ export function resolveAgentModel(
         const requestedModelId = agentOverride.slice(sep + 1);
         const res = resolveModelForProvider(providerIdRaw, ctx.userSettings, ctx.env, requestedModelId);
         return { model: res.model, modelId: res.modelId, providerId: res.providerId };
-      } catch { /* fall through */ }
+      } catch (err) {
+        modelLog.warn('agent model override could not be resolved; using fallback resolution', {
+          agentName,
+          override: agentOverride,
+          err: err instanceof Error ? err.message : String(err),
+        });
+      }
     }
   }
   // Q1 fix: pass the agent's model tier as a domain to model resolution so
@@ -92,9 +101,13 @@ export function resolveAgentModel(
         domain,
       );
       return { model: res.model, modelId: res.modelId, providerId: res.providerId };
-    } catch {
-      // Invalid or unavailable explicit provider — retain the normal
-      // priority-based tier fallback below.
+    } catch (err) {
+      modelLog.warn('selected chat provider could not resolve agent tier; using priority fallback', {
+        agentName,
+        providerId: selectedProvider,
+        domain,
+        err: err instanceof Error ? err.message : String(err),
+      });
     }
   }
 
@@ -144,9 +157,16 @@ export async function withAgentModelFallback<T>(
         next.modelId ?? undefined,
         domain,
       ));
-    } catch {
+    } catch (err) {
       // A configured fallback can still be unavailable (circuit open,
-      // unsupported model, or malformed key); continue to the next one.
+      // unsupported model, or malformed key); continue to the next one, but
+      // leave an explicit breadcrumb so the provider swap is explainable.
+      modelLog.warn('configured agent fallback could not be resolved', {
+        agentName,
+        providerId: next.providerId,
+        modelId: next.modelId,
+        err: err instanceof Error ? err.message : String(err),
+      });
     }
   }
 

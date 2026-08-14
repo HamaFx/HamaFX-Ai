@@ -75,12 +75,15 @@ function transformSseToDataStream(res: Response, onProgress: (p: AgentProgress |
   const id = crypto.randomUUID();
   let started = false;
   let ended = false;
+  let emittedError = false;
+  let protocolError: string | null = null;
   let activeTextId: string | null = null;
   let pendingFlush: ReturnType<typeof setTimeout> | null = null;
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       if (!res.body) {
+        controller.enqueue(encodeChunk({ type: 'error', errorText: 'Chat stream returned no response body.' }));
         onProgress(null);
         controller.close();
         return;
@@ -112,13 +115,19 @@ function transformSseToDataStream(res: Response, onProgress: (p: AgentProgress |
             try {
               parsed = JSON.parse(raw) as Record<string, unknown>;
             } catch {
+              protocolError ??= 'Chat stream contained malformed JSON.';
               continue;
             }
-            if (!parsed) continue;
+            if (!parsed) {
+              protocolError ??= 'Chat stream contained an empty event.';
+              continue;
+            }
 
             const streamEvent = ChatStreamEventSchema.safeParse(parsed);
             if (!streamEvent.success) {
-              // Unknown / malformed event — don't crash the stream.
+              // Do not turn a truncated/unknown event into a successful
+              // assistant message. Surface the protocol failure explicitly.
+              protocolError ??= 'Chat stream contained an unsupported or malformed event.';
               continue;
             }
             const event = streamEvent.data;
@@ -171,6 +180,7 @@ function transformSseToDataStream(res: Response, onProgress: (p: AgentProgress |
                 break;
               }
               case 'error': {
+                emittedError = true;
                 controller.enqueue(encodeChunk({ type: 'error', errorText: event.errorText }));
                 break;
               }
@@ -188,7 +198,9 @@ function transformSseToDataStream(res: Response, onProgress: (p: AgentProgress |
             try {
               const parsed = JSON.parse(raw) as Record<string, unknown>;
               const streamEvent = ChatStreamEventSchema.safeParse(parsed);
-              if (streamEvent.success) {
+              if (!streamEvent.success) {
+                protocolError ??= 'Chat stream ended with a malformed event.';
+              } else {
                 const event = streamEvent.data;
                 if (event.type === 'text-end') {
                   const textId = activeTextId ?? event.id;
@@ -217,18 +229,25 @@ function transformSseToDataStream(res: Response, onProgress: (p: AgentProgress |
                 } else if (event.type === 'data-multi-agent-meta') {
                   controller.enqueue(encodeChunk({ type: event.type, id: event.id, data: event.data, transient: event.transient }));
                 } else if (event.type === 'error') {
+                  emittedError = true;
                   controller.enqueue(encodeChunk({ type: 'error', errorText: event.errorText }));
                 }
               }
             } catch {
-              // Ignore a malformed unterminated final line.
+              protocolError ??= 'Chat stream ended with malformed JSON.';
             }
           }
         }
-      } catch {
-        // Reader cancelled (e.g. stop pressed) — close quietly.
+      } catch (err) {
+        // Reader cancellation is still a terminal condition. Preserve the
+        // user's explicit stop as a quiet close, but surface other reader
+        // failures instead of presenting truncated text as complete.
+        protocolError ??= err instanceof Error ? err.message : String(err);
       } finally {
         flush();
+        if (protocolError && !emittedError) {
+          controller.enqueue(encodeChunk({ type: 'error', errorText: protocolError }));
+        }
         if (started && !ended) {
           controller.enqueue(encodeChunk({ type: 'text-end', id: activeTextId ?? id }));
         }
@@ -260,6 +279,7 @@ function pollJobToStreamResponse(
       const startPoll = Date.now();
       let pollIntervalMs = MIN_POLL_MS;
       let hasError = false;
+      let consecutivePollFailures = 0;
       let closed = false;
 
       const closeOnce = () => {
@@ -286,13 +306,29 @@ function pollJobToStreamResponse(
             if (abortSignal) requestInit.signal = abortSignal;
             pollRes = await fetch(`/api/chat/analysis-jobs/${jobId}`, requestInit);
           } catch {
-            // Network error — backoff and retry.
-          }
-
-          if (!pollRes?.ok) {
+            // Network error — backoff and retry, but do not hide a persistent
+            // transport failure behind the five-minute timeout.
+            consecutivePollFailures += 1;
+            if (consecutivePollFailures >= 3) {
+              hasError = true;
+              controller.enqueue(encodeChunk({ type: 'error', errorText: 'Unable to reach the background analysis worker.' }));
+              return;
+            }
             pollIntervalMs = Math.min(pollIntervalMs + 2_000, MAX_POLL_MS);
             continue;
           }
+
+          if (!pollRes?.ok) {
+            consecutivePollFailures += 1;
+            if (pollRes?.status === 404 || consecutivePollFailures >= 3) {
+              hasError = true;
+              controller.enqueue(encodeChunk({ type: 'error', errorText: pollRes?.status === 404 ? 'Background analysis job was not found.' : 'Unable to poll the background analysis worker.' }));
+              return;
+            }
+            pollIntervalMs = Math.min(pollIntervalMs + 2_000, MAX_POLL_MS);
+            continue;
+          }
+          consecutivePollFailures = 0;
 
           let pollJson: {
             status?: string;
@@ -310,6 +346,12 @@ function pollJobToStreamResponse(
           try {
             pollJson = (await pollRes.json()) as typeof pollJson;
           } catch {
+            consecutivePollFailures += 1;
+            if (consecutivePollFailures >= 3) {
+              hasError = true;
+              controller.enqueue(encodeChunk({ type: 'error', errorText: 'Background analysis returned invalid status data.' }));
+              return;
+            }
             pollIntervalMs = Math.min(pollIntervalMs + 2_000, MAX_POLL_MS);
             continue;
           }
@@ -353,6 +395,13 @@ function pollJobToStreamResponse(
           if (pollJson.status === 'failed') {
             hasError = true;
             controller.enqueue(encodeChunk({ type: 'error', errorText: pollJson.error ?? 'Background analysis failed.' }));
+            onProgress(null);
+            return;
+          }
+
+          if (pollJson.status !== 'pending' && pollJson.status !== 'running') {
+            hasError = true;
+            controller.enqueue(encodeChunk({ type: 'error', errorText: 'Background analysis returned an unknown job status.' }));
             onProgress(null);
             return;
           }

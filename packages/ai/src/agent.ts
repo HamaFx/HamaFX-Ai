@@ -356,7 +356,9 @@ async function runChatInner(args: RunChatArgs): Promise<any> {
                 : plannerResult.reason === 'budget'
                   ? 'plan_skipped_budget'
                   : 'plan_failed',
-          });
+          }).catch((telemetryErr) =>
+            alog.error('planner telemetry failed', { threadId, err: String(telemetryErr) }),
+          );
         } catch (err) {
           alog.warn('planner threw — falling back', { err: String(err) });
         }
@@ -591,7 +593,12 @@ async function runChatInner(args: RunChatArgs): Promise<any> {
             }
             const buffer = toolContext.toolTelemetryBuffer;
             if (buffer && buffer.length > 0) {
-              await flushBatchedTelemetry(buffer);
+              const telemetryFlush = await flushBatchedTelemetry(buffer);
+              recordStep('tool_telemetry_flush', {
+                attempted: telemetryFlush.attempted,
+                failed: telemetryFlush.failed,
+              });
+              buffer.length = 0;
             }
 
             await recordTelemetry({
@@ -657,11 +664,21 @@ async function runChatInner(args: RunChatArgs): Promise<any> {
           return client.streamText(streamTextOpts as unknown as Parameters<typeof client.streamText>[0]);
         });
         completeStep('stream_text', 'completed');
-        return { success: true, value: result };
+        return {
+          success: true,
+          value: result,
+          providerId,
+          bareModelId,
+        };
       } catch (err) {
         const buffer = toolContext.toolTelemetryBuffer;
         if (buffer && buffer.length > 0) {
-          flushBatchedTelemetry(buffer).catch(() => {});
+          void flushBatchedTelemetry(buffer).catch((telemetryErr) =>
+            alog.error('tool telemetry flush failed after stream error', {
+              threadId,
+              err: String(telemetryErr),
+            }),
+          );
         }
         return {
           success: false,

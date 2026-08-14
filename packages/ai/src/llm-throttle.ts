@@ -26,6 +26,9 @@
 // user's exhaustion doesn't delay calls for others on the same instance.
 
 import type { RateLimitData } from './rate-limits';
+import { createCategorizedLogger } from '@kestrel/shared/logger';
+
+const throttleLog = createCategorizedLogger('ai', { component: 'llm-throttle' });
 
 interface ThrottleEntry {
   /** ExactOptionalPropertyTypes-safe: use `| undefined` not `?` */
@@ -67,8 +70,9 @@ export function noteLlmRateLimit(key: string, data: RateLimitData): void {
           ? parseReset(data.resetTokens, now)
           : existing?.resetTokensMs ?? 0,
     });
-  } catch {
-    // Fail-open — this is a soft governor.
+  } catch (err) {
+    // Fail-open — this is a soft governor, but the bypass must be visible.
+    throttleLog.warn('failed to record provider rate-limit state', { err: String(err) });
   }
 }
 
@@ -109,8 +113,10 @@ export async function awaitLlmHeadroom(
       }
       store.delete(key);
     }
-  } catch {
-    // Fail-open — never block a chat turn due to a governor bug.
+  } catch (err) {
+    // Fail-open — never block a chat turn due to a governor bug, but do not
+    // hide that the governor was bypassed.
+    throttleLog.warn('LLM headroom governor failed open', { key, err: String(err) });
   }
 }
 

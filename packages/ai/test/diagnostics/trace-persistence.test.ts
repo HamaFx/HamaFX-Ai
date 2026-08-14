@@ -54,7 +54,9 @@ describe('persistTrace', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    const valuesFn = vi.fn().mockResolvedValue(undefined);
+    const valuesFn = vi.fn();
+    const upsertFn = vi.fn().mockResolvedValue(undefined);
+    valuesFn.mockReturnValue({ onConflictDoUpdate: upsertFn });
     mockInsert.mockReturnValue({ values: valuesFn });
     mockTransaction.mockImplementation((cb: (tx: unknown) => Promise<unknown>) =>
       cb({
@@ -79,6 +81,8 @@ describe('persistTrace', () => {
     expect(inserted.durationMs).toBe(100);
     expect(inserted.stepCount).toBe(3);
     expect(inserted.status).toBe('completed');
+    const upsert = valuesFn.values.mock.results[0]!.value as { onConflictDoUpdate: ReturnType<typeof vi.fn> };
+    expect(upsert.onConflictDoUpdate).toHaveBeenCalled();
   });
 
   it('does not throw when database insert fails', async () => {

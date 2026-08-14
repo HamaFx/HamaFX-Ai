@@ -36,6 +36,9 @@ import {
   PROVIDER_PRIORITY,
   envFallbackKeys,
 } from './model-helpers';
+import { createCategorizedLogger } from '@kestrel/shared/logger';
+
+const modelChatLog = createCategorizedLogger('ai', { component: 'model-chat' });
 
 // -----------------------------------------------------------------------
 // Phase F — single-model resolution
@@ -261,7 +264,10 @@ export function derivePlannerModel(
       return `${chat.providerId}/${summary}`;
     }
     return chat.modelId;
-  } catch {
+  } catch (err) {
+    modelChatLog.warn('planner model derivation fell back to default model', {
+      err: err instanceof Error ? err.message : String(err),
+    });
     return null;
   }
 }

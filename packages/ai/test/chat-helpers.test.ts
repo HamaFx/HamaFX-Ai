@@ -1,12 +1,14 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
-// Mock persistence before importing helpers
-vi.mock('../src/persistence', () => ({
+// Mock persistence before importing helpers.
+const { recordToolTelemetry } = vi.hoisted(() => ({
   recordToolTelemetry: vi.fn(),
+}));
+vi.mock('../src/persistence', () => ({
+  recordToolTelemetry,
 }));
 
 import { countToolCalls, flushBatchedTelemetry } from '../src/chat/helpers';
-import { recordToolTelemetry } from '../src/persistence';
 
 describe('countToolCalls', () => {
   it('returns 0 for empty messages', () => {
@@ -70,36 +72,52 @@ describe('countToolCalls', () => {
 
 describe('flushBatchedTelemetry', () => {
   beforeEach(() => {
-    vi.mocked(recordToolTelemetry).mockReset();
+    recordToolTelemetry.mockReset();
   });
 
   it('does nothing for empty entries', async () => {
-    await flushBatchedTelemetry([]);
+    await expect(flushBatchedTelemetry([])).resolves.toEqual({ attempted: 0, failed: 0 });
     expect(recordToolTelemetry).not.toHaveBeenCalled();
   });
 
   it('flushes entries to recordToolTelemetry', async () => {
-    vi.mocked(recordToolTelemetry).mockResolvedValue(undefined);
+    recordToolTelemetry.mockResolvedValue(true);
 
-    await flushBatchedTelemetry([
+    const result = await flushBatchedTelemetry([
       { threadId: 't1', userId: 'u1', tool: 'get_price', ms: 100, ok: true },
       { threadId: 't1', userId: 'u1', tool: 'get_candles', ms: 200, ok: false, errorCode: 'TIMEOUT' },
     ]);
 
+    expect(result).toEqual({ attempted: 2, failed: 0 });
     expect(recordToolTelemetry).toHaveBeenCalledTimes(2);
     expect(recordToolTelemetry).toHaveBeenCalledWith(
       expect.objectContaining({ tool: 'get_price', ok: true }),
     );
   });
 
-  it('swallows errors from recordToolTelemetry', async () => {
-    vi.mocked(recordToolTelemetry).mockRejectedValue(new Error('DB error'));
+  it('reports partial sink failures instead of resolving as an invisible success', async () => {
+    recordToolTelemetry
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(true);
 
-    // Should not throw
+    const result = await flushBatchedTelemetry([
+      { threadId: 'thread-1', tool: 'get_price', ms: 10, ok: true },
+      { threadId: 'thread-1', tool: 'get_candles', ms: 20, ok: true },
+      { threadId: 'thread-1', tool: 'get_indicators', ms: 30, ok: true },
+    ]);
+
+    expect(result).toEqual({ attempted: 3, failed: 1 });
+    expect(recordToolTelemetry).toHaveBeenCalledTimes(3);
+  });
+
+  it('reports an unexpected telemetry sink throw as a failed entry', async () => {
+    recordToolTelemetry.mockRejectedValue(new Error('DB error'));
+
     await expect(
       flushBatchedTelemetry([
         { threadId: 't1', userId: 'u1', tool: 'get_price', ms: 100, ok: true },
       ]),
-    ).resolves.toBeUndefined();
+    ).resolves.toEqual({ attempted: 1, failed: 1 });
   });
 });
