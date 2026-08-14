@@ -54,6 +54,24 @@ export function limitToolsForProvider(
   return Object.fromEntries(Object.entries(tools).slice(0, GROQ_TOOL_LIMIT));
 }
 
+/** Extract tool names from an AI SDK response without coupling callers to provider shapes. */
+export function extractToolNamesFromMessages(messages: readonly unknown[] | undefined): string[] {
+  if (!messages) return [];
+  const names = new Set<string>();
+  for (const message of messages) {
+    if (!message || typeof message !== 'object') continue;
+    const content = (message as { content?: unknown }).content;
+    if (!Array.isArray(content)) continue;
+    for (const part of content) {
+      if (!part || typeof part !== 'object') continue;
+      const candidate = part as { type?: unknown; toolName?: unknown };
+      if (candidate.type === 'tool-call' && typeof candidate.toolName === 'string') {
+        names.add(candidate.toolName);
+      }
+    }
+  }
+  return [...names];
+}
 export abstract class BaseAgent {
   abstract readonly name: AgentName;
   abstract readonly modelTier: ModelTier;
@@ -127,12 +145,17 @@ export abstract class BaseAgent {
       const outputTokens = result.usage?.outputTokens ?? 0;
       const costUsd = estimateCostUsd(modelId, inputTokens, outputTokens);
       const parsed = this.parseOutput(result.text);
+      const toolNames = extractToolNamesFromMessages(result.response?.messages);
+      const rawData = {
+        ...parsed.rawData,
+        _tools: toolNames,
+      };
       return {
         agentName: this.name,
         bias: parsed.bias,
         confidence: parsed.confidence,
         reasoning: parsed.reasoning,
-        rawData: parsed.rawData,
+        rawData,
         costUsd,
         latencyMs,
         model: modelId,

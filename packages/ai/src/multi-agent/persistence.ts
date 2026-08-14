@@ -17,7 +17,8 @@
 // Multi-Agent Orchestration — opinion persistence.
 
 import { schema } from '@kestrel/db';
-import { getDb } from '../db';
+import { container } from '@kestrel/shared';
+import { DB } from '../tokens';
 import { and, asc, eq } from 'drizzle-orm';
 import type { AgentOpinionRow } from '@kestrel/db/schema';
 
@@ -39,7 +40,7 @@ export interface SaveOpinionsArgs {
 }
 
 export async function saveAgentOpinions(args: SaveOpinionsArgs): Promise<void> {
-  const db = getDb();
+  const db = container.resolve(DB);
   if (args.opinions.length === 0) return;
   await db.insert(schema.agentOpinions).values(
     args.opinions.map((op) => ({
@@ -61,14 +62,14 @@ export async function saveAgentOpinions(args: SaveOpinionsArgs): Promise<void> {
 
 /** S1 fix — scope agent opinion queries by userId to prevent cross-tenant data leaks. */
 export async function listAgentOpinions(userId: string, threadId: string): Promise<AgentOpinionRow[]> {
-  const db = getDb();
+  const db = container.resolve(DB);
   return db.select().from(schema.agentOpinions)
     .where(and(eq(schema.agentOpinions.userId, userId), eq(schema.agentOpinions.threadId, threadId)))
     .orderBy(asc(schema.agentOpinions.createdAt));
 }
 
 export async function listMessageOpinions(userId: string, messageId: string): Promise<AgentOpinionRow[]> {
-  const db = getDb();
+  const db = container.resolve(DB);
   return db.select().from(schema.agentOpinions)
     .where(and(eq(schema.agentOpinions.userId, userId), eq(schema.agentOpinions.messageId, messageId)))
     .orderBy(asc(schema.agentOpinions.createdAt));

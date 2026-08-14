@@ -31,7 +31,7 @@
 
 import { describe, it, expect } from 'vitest';
 import type { Tool } from 'ai';
-import { limitToolsForProvider, type BaseAgent } from '../src/multi-agent/agents/base-agent';
+import { extractToolNamesFromMessages, limitToolsForProvider, type BaseAgent } from '../src/multi-agent/agents/base-agent';
 
 // PF-12: Load the tool registry (via side-effect imports) before tests run
 // so agent.tools() returns non-empty tool sets.
@@ -108,6 +108,20 @@ describe('BaseAgent contract (PF-12)', () => {
       });
     },
   );
+
+  describe('tool provenance', () => {
+    it('extracts unique tool-call names from model response messages', () => {
+      expect(extractToolNamesFromMessages([
+        { content: [{ type: 'tool-call', toolName: 'get_candles' }] },
+        { content: [{ type: 'tool-call', toolName: 'get_indicators' }, { type: 'tool-call', toolName: 'get_candles' }] },
+        { content: [{ type: 'tool-result', toolName: 'ignored_tool' }] },
+      ])).toEqual(['get_candles', 'get_indicators']);
+    });
+
+    it('handles provider messages without structured content', () => {
+      expect(extractToolNamesFromMessages([{ content: 'plain text' }, null, undefined])).toEqual([]);
+    });
+  });
 
   describe('provider tool compatibility', () => {
     it('limits Groq specialist tools but preserves other providers', () => {
