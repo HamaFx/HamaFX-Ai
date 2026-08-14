@@ -242,6 +242,54 @@ describe('Phase 6 — Task 27: Full migration chain (all migrations on fresh PGl
          )`,
     );
     expect(correlationIdx).toHaveLength(6);
+
+    const { rows: analysisJobIdempotencyIdx } = await db.execute(
+      `SELECT indexname FROM pg_indexes
+       WHERE tablename = 'analysis_jobs'
+         AND indexname = 'analysis_jobs_user_idempotency_uk'`,
+    );
+    expect(analysisJobIdempotencyIdx).toHaveLength(1);
+  }, 30_000);
+
+  it('deduplicates analysis jobs by user and idempotency key', async () => {
+    const db = await getPGliteDb(dir);
+    await applyAll(db);
+
+    await db.execute(`
+      INSERT INTO "organization" ("id", "name")
+      VALUES ('org-job-test', 'Job Test Org')
+    `);
+    await db.execute(`
+      INSERT INTO "user" ("id", "email")
+      VALUES ('user-job-test', 'job-test@example.com')
+    `);
+    await db.execute(`
+      INSERT INTO "chat_threads" ("id", "user_id", "tenant_id")
+      VALUES ('00000000-0000-0000-0000-000000000001', 'user-job-test', 'org-job-test')
+    `);
+    await db.execute(`
+      INSERT INTO "analysis_jobs" (
+        "id", "user_id", "thread_id", "user_message_text",
+        "user_message_parts", "history_parts", "mode", "status", "idempotency_key"
+      ) VALUES (
+        '00000000-0000-0000-0000-000000000011', 'user-job-test',
+        '00000000-0000-0000-0000-000000000001', 'Analyze gold',
+        '[]'::jsonb, '[]'::jsonb, 'full', 'pending', 'full:thread:message-1'
+      )
+    `);
+
+    await expect(
+      db.execute(`
+        INSERT INTO "analysis_jobs" (
+          "id", "user_id", "thread_id", "user_message_text",
+          "user_message_parts", "history_parts", "mode", "status", "idempotency_key"
+        ) VALUES (
+          '00000000-0000-0000-0000-000000000012', 'user-job-test',
+          '00000000-0000-0000-0000-000000000001', 'Analyze gold again',
+          '[]'::jsonb, '[]'::jsonb, 'full', 'pending', 'full:thread:message-1'
+        );
+      `),
+    ).rejects.toThrow();
   }, 30_000);
 
   it('cot_reports columns are bigint (Phase 2)', async () => {

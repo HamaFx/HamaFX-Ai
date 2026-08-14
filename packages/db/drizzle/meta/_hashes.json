@@ -291,6 +291,14 @@
     {
       "tag": "0073_fix_message_idempotency_index",
       "hash": "5e1b1bf15c2d745204400276881226fb48804dd27000ef7dbcf75c0f3e8e2514"
+    },
+    {
+      "tag": "0074_telemetry_correlation_ids",
+      "hash": "ce60fe22a924888cc38f0d3887771fc9da62e81e59a82f918f11d689a4d21733"
+    },
+    {
+      "tag": "0075_analysis_job_idempotency",
+      "hash": "dbd5d1f150b25e67ad09bbc1ce83da0cf49bebfa5963fbee72380a3f3e35cc4c"
     }
   ]
 }

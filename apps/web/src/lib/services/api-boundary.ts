@@ -77,6 +77,7 @@ export { BudgetExceededError } from '@kestrel/ai/cost';
 export {
   withRateLimit,
   batchDeleteThreads,
+  enqueueAnalysisJob,
   getAnalysisJob,
   getActiveUserIds,
   runRetentionCleanup,

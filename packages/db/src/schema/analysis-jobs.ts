@@ -21,7 +21,7 @@
 // the analysis when it finds pending work. The client polls the API
 // endpoint until status='complete' or 'failed'.
 
-import { pgTable, text, timestamp, jsonb, varchar, uuid, integer } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, jsonb, varchar, uuid, integer, uniqueIndex } from 'drizzle-orm/pg-core';
 import { users } from './auth';
 import { chatThreads } from './chat';
 
@@ -45,6 +45,9 @@ export const analysisJobs = pgTable('analysis_jobs', {
 
   /** The resolved analysis mode (always 'full' for now, but extensible). */
   mode: varchar('mode', { length: 20 }).notNull().default('full'),
+
+  /** Stable client request key used to deduplicate repeated queue submissions. */
+  idempotencyKey: text('idempotency_key'),
 
   /** Status: pending → running → complete | failed. */
   status: varchar('status', { length: 20 }).notNull().default('pending'),
@@ -89,4 +92,7 @@ export const analysisJobs = pgTable('analysis_jobs', {
     name: 'idx_analysis_jobs_user',
     columns: [table.userId],
   },
+  // A regular unique index permits multiple NULL keys while making retries
+  // for the same authenticated user and message resolve to one job.
+  uniqueIndex('analysis_jobs_user_idempotency_uk').on(table.userId, table.idempotencyKey),
 ]);

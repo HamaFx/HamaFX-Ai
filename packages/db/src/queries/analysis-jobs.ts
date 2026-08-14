@@ -24,6 +24,37 @@ export type AnalysisJobRow = typeof schema.analysisJobs.$inferSelect;
 export type AnalysisJobInsert = typeof schema.analysisJobs.$inferInsert;
 
 /**
+ * Insert a queued analysis job exactly once for a user and idempotency key.
+ * Concurrent retries converge on the row created by the winning insert.
+ */
+export async function enqueueAnalysisJob(
+  input: Omit<AnalysisJobInsert, 'idempotencyKey'> & { idempotencyKey: string },
+): Promise<AnalysisJobRow | null> {
+  const db = getDb();
+  const inserted = await db
+    .insert(schema.analysisJobs)
+    .values(input)
+    .onConflictDoNothing({
+      target: [schema.analysisJobs.userId, schema.analysisJobs.idempotencyKey],
+    })
+    .returning();
+
+  if (inserted[0]) return inserted[0];
+
+  const [existing] = await db
+    .select()
+    .from(schema.analysisJobs)
+    .where(
+      and(
+        eq(schema.analysisJobs.userId, input.userId),
+        eq(schema.analysisJobs.idempotencyKey, input.idempotencyKey),
+      ),
+    )
+    .limit(1);
+  return existing ?? null;
+}
+
+/**
  * Claim the oldest pending analysis job with FOR UPDATE SKIP LOCKED.
  * Returns the claimed job or null if none available.
  */
@@ -43,7 +74,7 @@ export async function claimNextPendingJob(): Promise<AnalysisJobRow | null> {
 
     const now = new Date();
     const workerRunId = `${process.env.HOSTNAME ?? 'worker'}-${randomUUID()}`;
-    await tx
+    const [claimed] = await tx
       .update(schema.analysisJobs)
       .set({
         status: 'running',
@@ -52,22 +83,67 @@ export async function claimNextPendingJob(): Promise<AnalysisJobRow | null> {
         workerRunId,
         attemptCount: sql`${schema.analysisJobs.attemptCount} + 1`,
       })
-      .where(and(eq(schema.analysisJobs.id, job.id), eq(schema.analysisJobs.status, 'pending')));
+      .where(and(eq(schema.analysisJobs.id, job.id), eq(schema.analysisJobs.status, 'pending')))
+      .returning();
 
-    return {
-      ...job,
-      status: 'running',
-      startedAt: now,
-      updatedAt: now,
-      workerRunId,
-      attemptCount: job.attemptCount + 1,
-    };
+    if (!claimed) return null;
+    return claimed;
   });
 }
 
 /**
- * Mark stale running jobs as failed.
- * Jobs running longer than `staleCutoff` are considered crashed.
+ * Recover stale running jobs using the same bounded-attempt policy as the
+ * worker. Expired jobs are requeued while attempts remain and become
+ * terminally failed after the maximum attempt count.
+ */
+export async function recoverStaleJobs(
+  staleCutoff: Date,
+  maxAttempts: number,
+): Promise<{ requeued: number; failed: number }> {
+  const db = getDb();
+  const now = new Date();
+  const [requeued, failed] = await Promise.all([
+    db
+      .update(schema.analysisJobs)
+      .set({
+        status: 'pending',
+        error: 'Worker lease expired; retrying automatically.',
+        startedAt: null,
+        workerRunId: null,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(schema.analysisJobs.status, 'running'),
+          lt(schema.analysisJobs.updatedAt, staleCutoff),
+          sql`${schema.analysisJobs.attemptCount} < ${maxAttempts}`,
+        ),
+      )
+      .returning({ id: schema.analysisJobs.id }),
+    db
+      .update(schema.analysisJobs)
+      .set({
+        status: 'failed',
+        error: 'Job timed out — maximum worker attempts reached.',
+        completedAt: now,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(schema.analysisJobs.status, 'running'),
+          lt(schema.analysisJobs.updatedAt, staleCutoff),
+          sql`${schema.analysisJobs.attemptCount} >= ${maxAttempts}`,
+        ),
+      )
+      .returning({ id: schema.analysisJobs.id }),
+  ]);
+
+  return { requeued: requeued.length, failed: failed.length };
+}
+
+/**
+ * Legacy helper retained for callers that want all stale jobs terminally
+ * failed. New worker paths should use `recoverStaleJobs`.
  */
 export async function failStaleJobs(staleCutoff: Date): Promise<void> {
   const db = getDb();

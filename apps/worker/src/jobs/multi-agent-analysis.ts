@@ -24,10 +24,10 @@
 // same @kestrel/ai import as the Vercel route handler. No new network
 // paths needed — communication is through the Postgres DB.
 
-import { schema } from '@kestrel/db';
+import { recoverStaleJobs as recoverStaleAnalysisJobs, claimNextPendingJob, schema } from '@kestrel/db';
 import { getDb, ProgressTracker, selectAgents } from '@kestrel/ai';
 import type { ProgressEvent } from '@kestrel/ai';
-import { eq, asc, lt, and, sql } from 'drizzle-orm';
+import { eq, lt, and } from 'drizzle-orm';
 import { pickAiEnv } from '@kestrel/shared';
 import { traceIdStorage } from '@kestrel/shared/logger';
 import type { UIMessage } from 'ai';
@@ -76,43 +76,9 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
   let processed = 0;
 
   for (let i = 0; i < MAX_JOBS_PER_RUN; i++) {
-    // Claim the oldest pending job with FOR UPDATE SKIP LOCKED so
-    // multiple worker instances don't race for the same job.
-    const claimResult = await db.transaction(async (tx) => {
-      const pending = await tx
-        .select()
-        .from(schema.analysisJobs)
-        .where(eq(schema.analysisJobs.status, 'pending'))
-        .orderBy(asc(schema.analysisJobs.createdAt))
-        .limit(1)
-        .for('update', { skipLocked: true });
-
-      if (pending.length === 0) return null;
-      const job = pending[0]!;
-      const workerRunId = `${process.env.HOSTNAME ?? 'worker'}-${crypto.randomUUID()}`;
-      const now = new Date();
-
-      // Mark as running and issue a unique lease token. All later writes
-      // must include this token so a stale worker can never overwrite a
-      // newer worker's terminal state.
-      await tx
-        .update(schema.analysisJobs)
-        .set({
-          status: 'running',
-          startedAt: now,
-          updatedAt: now,
-          workerRunId,
-          attemptCount: sql`${schema.analysisJobs.attemptCount} + 1`,
-        })
-        .where(
-          and(
-            eq(schema.analysisJobs.id, job.id),
-            eq(schema.analysisJobs.status, 'pending'),
-          ),
-        );
-
-      return { ...job, workerRunId, attemptCount: job.attemptCount + 1 };
-    });
+    // The database query layer owns FOR UPDATE SKIP LOCKED claim semantics
+    // so web/worker consumers cannot silently diverge.
+    const claimResult = await claimNextPendingJob();
 
     if (!claimResult) {
       ctx.log.info('No pending analysis jobs — done.');
@@ -120,6 +86,11 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
     }
 
     const job = claimResult;
+    const workerRunId = job.workerRunId;
+    if (!workerRunId) {
+      ctx.log.error('Claimed analysis job has no worker lease token', { jobId: job.id });
+      continue;
+    }
     ctx.log.info('Claimed analysis job', { jobId: job.id, userId: job.userId, traceId: job.traceId });
 
     // Refresh the lease while a long analysis is running. `updatedAt` is
@@ -132,7 +103,7 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
           and(
             eq(schema.analysisJobs.id, job.id),
             eq(schema.analysisJobs.status, 'running'),
-            eq(schema.analysisJobs.workerRunId, job.workerRunId),
+            eq(schema.analysisJobs.workerRunId, workerRunId),
           ),
         )
         .catch((err) => ctx.log.warn('Analysis job lease heartbeat failed', { err: String(err) }));
@@ -248,7 +219,7 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
                 and(
                   eq(schema.analysisJobs.id, job.id),
                   eq(schema.analysisJobs.status, 'running'),
-                  eq(schema.analysisJobs.workerRunId, job.workerRunId),
+                  eq(schema.analysisJobs.workerRunId, workerRunId),
                 ),
               );
           } catch (err) {
@@ -276,7 +247,7 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
         onProgress,
       }), {
         ...(job.traceId ? { traceId: job.traceId } : {}),
-        runId: job.workerRunId,
+        runId: workerRunId,
         jobId: job.id,
       });
 
@@ -305,7 +276,7 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
           and(
             eq(schema.analysisJobs.id, job.id),
             eq(schema.analysisJobs.status, 'running'),
-            eq(schema.analysisJobs.workerRunId, job.workerRunId),
+            eq(schema.analysisJobs.workerRunId, workerRunId),
           ),
         )
         .returning({ id: schema.analysisJobs.id });
@@ -313,12 +284,12 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
       if (completedRows.length !== 1) {
         ctx.log.warn('Analysis job completion skipped because the lease was lost', {
           jobId: job.id,
-          workerRunId: job.workerRunId,
+          workerRunId: workerRunId,
         });
         return;
       }
 
-      ctx.log.info('Analysis job completed', { jobId: job.id, workerRunId: job.workerRunId, costUsd: result.totalCostUsd, latencyMs: result.totalLatencyMs });
+      ctx.log.info('Analysis job completed', { jobId: job.id, workerRunId: workerRunId, costUsd: result.totalCostUsd, latencyMs: result.totalLatencyMs });
       processed++;
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
@@ -342,14 +313,14 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
           error: nextError,
           completedAt: retryable ? null : new Date(),
           startedAt: retryable ? null : job.startedAt,
-          workerRunId: retryable ? null : job.workerRunId,
+          workerRunId: retryable ? null : workerRunId,
           updatedAt: new Date(),
         })
         .where(
           and(
             eq(schema.analysisJobs.id, job.id),
             eq(schema.analysisJobs.status, 'running'),
-            eq(schema.analysisJobs.workerRunId, job.workerRunId),
+            eq(schema.analysisJobs.workerRunId, workerRunId),
           ),
         )
         .returning({ id: schema.analysisJobs.id });
@@ -357,7 +328,7 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
       if (failedRows.length !== 1) {
         ctx.log.warn('Analysis job failure update skipped because the lease was lost', {
           jobId: job.id,
-          workerRunId: job.workerRunId,
+          workerRunId: workerRunId,
         });
       }
       processed++;
@@ -381,38 +352,14 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
   // this cleanup changes it back to pending. Jobs that exhausted their
   // bounded attempts become failed and remain visible to the client.
   const staleCutoff = new Date(Date.now() - STALE_JOB_TIMEOUT_MS);
-  await db
-    .update(schema.analysisJobs)
-    .set({
-      status: 'pending',
-      error: 'Worker lease expired; retrying automatically.',
-      startedAt: null,
-      workerRunId: null,
-      updatedAt: new Date(),
-    })
-    .where(
-      and(
-        eq(schema.analysisJobs.status, 'running'),
-        lt(schema.analysisJobs.updatedAt, staleCutoff),
-        sql`${schema.analysisJobs.attemptCount} < ${MAX_ANALYSIS_ATTEMPTS}`,
-      ),
-    );
-
-  await db
-    .update(schema.analysisJobs)
-    .set({
-      status: 'failed',
-      error: 'Job timed out — maximum worker attempts reached.',
-      completedAt: new Date(),
-      updatedAt: new Date(),
-    })
-    .where(
-      and(
-        eq(schema.analysisJobs.status, 'running'),
-        lt(schema.analysisJobs.updatedAt, staleCutoff),
-        sql`${schema.analysisJobs.attemptCount} >= ${MAX_ANALYSIS_ATTEMPTS}`,
-      ),
-    );
+  const staleRecovery = await recoverStaleAnalysisJobs(staleCutoff, MAX_ANALYSIS_ATTEMPTS);
+  if (staleRecovery.requeued > 0 || staleRecovery.failed > 0) {
+    ctx.log.warn('Recovered stale analysis jobs', {
+      requeued: staleRecovery.requeued,
+      failed: staleRecovery.failed,
+      maxAttempts: MAX_ANALYSIS_ATTEMPTS,
+    });
+  }
 
   // Clean up old completed/failed jobs older than 7 days.
   const retentionCutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);

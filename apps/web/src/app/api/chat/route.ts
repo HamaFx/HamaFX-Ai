@@ -16,7 +16,6 @@ import {
   BudgetExceededError,
   ChatStreamEventSchema,
   extractUserMessageText,
-  getDb,
   getThread,
   listMessages,
   getUserWithSettings,
@@ -26,8 +25,8 @@ import {
   resolveMode,
   runChat,
   runMultiAgentChat,
+  enqueueAnalysisJob,
   flushLangfuse,
-  schema,
   traceIdStorage,
   withRateLimit,
   withDiagnostics,
@@ -152,7 +151,6 @@ export const POST = withAuth<void>(async (req, { user }) => {
     const analysisMode = body.analysisMode ?? 'single';
 
     if (analysisMode !== 'single') {
-      const db = getDb();
       const { settings: userSettings, user: userRow } = await getUserWithSettings(user.userId);
 
       if (!userSettings)
@@ -169,24 +167,25 @@ export const POST = withAuth<void>(async (req, { user }) => {
         if (resolvedMode === 'full') {
           const requestId = req.headers.get('x-request-id') ?? undefined;
           return withDiagnostics(user.userId, body.threadId, async () => {
-            const [job] = await db
-              .insert(schema.analysisJobs)
-              .values({
-                userId: user.userId,
-                threadId: body.threadId,
-                userMessageText: userText,
-                userMessageParts: (last as UIMessage).parts,
-                // The worker reloads authoritative history from chat_messages.
-                // Keep this column populated only for backward compatibility;
-                // never use the client snapshot as model context.
-                historyParts: [],
-                mode: 'full',
-                status: 'pending',
-                // OBS-1: propagate the diagnostic traceId so worker
-                // logs can be correlated with this chat turn.
-                traceId: getDiagnosticTraceId() ?? crypto.randomUUID(),
-              })
-            .returning({ id: schema.analysisJobs.id });
+            const job = await enqueueAnalysisJob({
+              userId: user.userId,
+              threadId: body.threadId,
+              userMessageText: userText,
+              userMessageParts: (last as UIMessage).parts,
+              // The worker reloads authoritative history from chat_messages.
+              // Keep this column populated only for backward compatibility;
+              // never use the client snapshot as model context.
+              historyParts: [],
+              mode: 'full',
+              status: 'pending',
+              // The UI message ID is stable across transport retries. Scope
+              // it to the thread so the same client ID cannot collide across
+              // conversations or users.
+              idempotencyKey: `full:${body.threadId}:${last.id}`,
+              // OBS-1: propagate the diagnostic traceId so worker
+              // logs can be correlated with this chat turn.
+              traceId: getDiagnosticTraceId() ?? crypto.randomUUID(),
+            });
 
             if (!job) {
               return Response.json(
