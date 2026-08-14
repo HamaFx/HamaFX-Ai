@@ -514,7 +514,15 @@ async function queryOperationalAggregate(
         (SELECT COUNT(*) FROM ai_budget_reservations WHERE created_at >= ${since} AND status IN ('reconciled', 'released') AND last_error IS NOT NULL)::text AS budget_errors,
         (SELECT COUNT(*) FROM diagnostic_traces WHERE created_at >= ${since})::text AS trace_total,
         (SELECT COUNT(*) FROM diagnostic_traces WHERE created_at >= ${since} AND status = 'failed')::text AS trace_failed,
-        (SELECT COUNT(*) FROM diagnostic_traces WHERE created_at >= ${since} AND COALESCE(trace, '{}'::jsonb) @? '$.steps[*] ? (@.name == "provider_fallback")')::text AS provider_fallback_traces
+        (SELECT COUNT(*)
+          FROM diagnostic_traces AS dt
+          WHERE dt.created_at >= ${since}
+            AND EXISTS (
+              SELECT 1
+              FROM jsonb_array_elements(COALESCE(dt.trace -> 'steps', '[]'::jsonb)) AS step
+              WHERE step ->> 'name' = 'provider_fallback'
+            )
+        )::text AS provider_fallback_traces
     `);
     const rows = extractRows(result);
     const row = rows[0] as Record<string, string> | undefined;
