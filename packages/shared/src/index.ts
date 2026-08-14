@@ -102,6 +102,7 @@ export * from './billing';
 
 // Errors & Logging
 export * from './errors';
+export * from './observability';
 // Logger is server-only (uses node:async_hooks / node:stream). Import from
 // '@kestrel/shared/logger' directly in server/worker code; do NOT re-export
 // here to keep the client bundle free of Node built-ins.

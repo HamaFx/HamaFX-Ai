@@ -31,6 +31,7 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { randomUUID } from 'node:crypto';
 
+import type { ObservabilityEventName } from '@kestrel/shared';
 import {
   createCategorizedLogger,
   requestIdStorage,
@@ -227,6 +228,18 @@ export function recordStep(
   }
 
   ctx.steps.push(step);
+}
+
+/**
+ * Record a typed lifecycle event using the shared observability contract.
+ * The event name is also used as the diagnostic step name so existing
+ * diagnostic consumers remain backward compatible.
+ */
+export function recordLifecycleStep(
+  event: ObservabilityEventName,
+  metadata?: Record<string, unknown>,
+): void {
+  recordStep(event, metadata);
 }
 
 /**

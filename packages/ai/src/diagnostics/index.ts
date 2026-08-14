@@ -24,6 +24,7 @@ export {
   persistDiagnosticContext,
   getDiagnosticContext,
   recordStep,
+  recordLifecycleStep,
   completeStep,
   recordError,
   exportDiagnosticContext,

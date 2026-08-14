@@ -20,6 +20,7 @@ import {
   withDiagnostics,
   getDiagnosticContext,
   recordStep,
+  recordLifecycleStep,
   completeStep,
   recordError,
   exportDiagnosticContext,
@@ -93,6 +94,15 @@ describe('recordStep — step recording', () => {
       expect(ctx!.steps[0]!.status).toBe('started');
       expect(ctx!.steps[0]!.metadata).toEqual({ symbol: 'XAUUSD' });
       expect(ctx!.steps[0]!.timestamp).toBeGreaterThan(0);
+    });
+  });
+
+  it('records typed lifecycle events using the shared contract', async () => {
+    await withDiagnostics('user-1', 'thread-1', async () => {
+      recordLifecycleStep('provider_fallback', { fromProvider: 'google', toProvider: 'openai' });
+      const ctx = getDiagnosticContext();
+      expect(ctx!.steps[0]!.name).toBe('provider_fallback');
+      expect(ctx!.steps[0]!.metadata).toEqual({ fromProvider: 'google', toProvider: 'openai' });
     });
   });
 
