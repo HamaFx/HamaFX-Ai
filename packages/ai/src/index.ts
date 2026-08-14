@@ -291,6 +291,7 @@ export { telemetryConfig, type TelemetryConfigOptions } from './telemetry';
 // The default `getLlmClient()` returns a `VercelLlmClient` that wraps
 // the Vercel AI SDK. Override via `setLlmClient()` (e.g. in tests).
 export { getLlmClient, setLlmClient, VercelLlmClient } from './llm-client';
+export { replayPersistenceFailures } from './persistence-recovery';
 export type { LlmClient, GenerateTextOpts, GenerateTextResult, StreamTextOpts, StreamTextResult } from './llm-client';
 
 export {

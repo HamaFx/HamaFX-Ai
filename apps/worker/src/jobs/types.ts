@@ -78,6 +78,7 @@ export type JobName =
   | 'alerts'
   | 'multi-agent-analysis'
   | 'budget-recovery'
+  | 'persistence-recovery'
   | 'retention';
 
 /**

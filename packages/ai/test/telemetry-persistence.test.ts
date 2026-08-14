@@ -21,6 +21,7 @@ const { insertValues, db } = vi.hoisted(() => {
   const insertBuilder = {
     values: insertValues,
     onConflictDoUpdate: vi.fn().mockResolvedValue(undefined),
+    onConflictDoNothing: vi.fn().mockResolvedValue(undefined),
   };
   insertValues.mockReturnValue(insertBuilder);
   const db = {

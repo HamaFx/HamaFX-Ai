@@ -21,6 +21,8 @@ import { schema } from '@kestrel/db';
 import { getDb } from '../db';
 import { createCategorizedLogger } from '@kestrel/shared/logger';
 
+import { enqueuePersistenceFailure } from '../persistence-outbox';
+
 const log = createCategorizedLogger('ai', { component: 'trace-persistence' });
 
 export interface PersistedTrace {
@@ -40,8 +42,12 @@ export interface PersistedTrace {
  * Never throws — persistence failures are logged but must not affect the
  * chat turn.
  */
+export async function persistTraceStrict(trace: PersistedTrace): Promise<void> {
+  await persistToDb(trace);
+}
+
 export async function persistTrace(trace: PersistedTrace): Promise<void> {
-  const operations: Array<Promise<void>> = [persistToDb(trace)];
+  const operations: Array<Promise<void>> = [persistTraceStrict(trace)];
   if (process.env.DEBUG_TRACE_PATH) operations.push(persistToFile(trace));
 
   const results = await Promise.allSettled(operations);
@@ -53,30 +59,43 @@ export async function persistTrace(trace: PersistedTrace): Promise<void> {
 }
 
 async function persistToDb(trace: PersistedTrace): Promise<void> {
-  const db = getDb();
-  await db
-    .insert(schema.diagnosticTraces)
-    .values({
-      id: trace.traceId,
-      userId: trace.userId,
-      threadId: trace.threadId,
-      startedAt: new Date(trace.startedAt),
-      durationMs: trace.durationMs,
-      stepCount: trace.stepCount,
-      errorCount: trace.errorCount,
-      status: trace.status,
-      trace: trace.trace,
-    })
-    .onConflictDoUpdate({
-      target: schema.diagnosticTraces.id,
-      set: {
+  try {
+    const db = getDb();
+    await db
+      .insert(schema.diagnosticTraces)
+      .values({
+        id: trace.traceId,
+        userId: trace.userId,
+        threadId: trace.threadId,
+        startedAt: new Date(trace.startedAt),
         durationMs: trace.durationMs,
         stepCount: trace.stepCount,
         errorCount: trace.errorCount,
         status: trace.status,
         trace: trace.trace,
-      },
+      })
+      .onConflictDoUpdate({
+        target: schema.diagnosticTraces.id,
+        set: {
+          durationMs: trace.durationMs,
+          stepCount: trace.stepCount,
+          errorCount: trace.errorCount,
+          status: trace.status,
+          trace: trace.trace,
+        },
+      });
+  } catch (err) {
+    await enqueuePersistenceFailure({
+      userId: trace.userId,
+      operation: 'diagnostic.trace',
+      dedupeKey: `diagnostic.trace:${trace.traceId}`,
+      threadId: trace.threadId,
+      traceId: trace.traceId,
+      payload: trace as unknown as Record<string, unknown>,
+      error: err,
     });
+    throw err;
+  }
 }
 
 async function persistToFile(trace: PersistedTrace): Promise<void> {

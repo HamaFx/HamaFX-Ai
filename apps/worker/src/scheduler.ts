@@ -61,6 +61,7 @@ const SKIP_DAILY_LOCK = new Set<keyof typeof JOBS>([
   'embedding-backfill',
   'multi-agent-analysis',
   'budget-recovery',
+  'persistence-recovery',
 ]);
 
 export function startScheduler(log: Logger): () => void {

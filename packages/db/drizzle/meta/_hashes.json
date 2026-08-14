@@ -303,6 +303,10 @@
     {
       "tag": "0076_ai_budget_reservation_ledger",
       "hash": "f6698576bd16240b47155ab919172e18a8d82400a135ea99deef26b04c871d92"
+    },
+    {
+      "tag": "0077_persistence_outbox",
+      "hash": "10a25cdf331fa79137fcecf024d3489dab853b48dc4e1ad1c771c6996b650ba4"
     }
   ]
 }

@@ -117,7 +117,7 @@ const EXPECTED_TABLES = [
   'news_articles', 'news_embeddings', 'economic_events', 'snapshots',
   'briefings_emitted', 'cot_reports', 'shared_snapshots',
   'push_subscriptions', 'memory_embeddings', 'daily_ai_spend',
-  'ai_budget_reservations',
+  'ai_budget_reservations', 'persistence_outbox',
   'rate_limits', 'live_ticks', 'candles_1m', 'provider_throttle',
   'intermarket_resonance', 'audit_logs', 'provider_tests',
   'symbol_catalog', 'cron_runs',
@@ -261,6 +261,19 @@ describe('Phase 6 — Task 27: Full migration chain (all migrations on fresh PGl
          )`,
     );
     expect(budgetIndexes).toHaveLength(3);
+
+    const { rows: outboxIndexes } = await db.execute(
+      `SELECT indexname FROM pg_indexes
+       WHERE indexname IN (
+           'persistence_outbox_dedupe_uk',
+           'persistence_outbox_pending_idx',
+           'persistence_outbox_tenant_idx',
+           'persistence_outbox_trace_idx',
+           'chat_telemetry_idempotency_uk',
+           'chat_tool_telemetry_idempotency_uk'
+         )`,
+    );
+    expect(outboxIndexes).toHaveLength(6);
   }, 30_000);
 
   it('creates tenant-safe budget reservations and supports terminal state changes', async () => {

@@ -22,6 +22,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
 
@@ -95,6 +96,8 @@ export const chatTelemetry = pgTable(
     runId: text('run_id'),
     /** Durable analysis job identifier for queued Full-mode runs. */
     jobId: text('job_id'),
+    /** Stable writer/replay key; nullable for legacy telemetry rows. */
+    idempotencyKey: text('idempotency_key'),
     model: text('model').notNull(),
     inputTokens: integer('input_tokens').notNull().default(0),
     outputTokens: integer('output_tokens').notNull().default(0),
@@ -121,6 +124,7 @@ export const chatTelemetry = pgTable(
     index('chat_telemetry_trace_idx').on(t.traceId, t.createdAt),
     index('chat_telemetry_run_idx').on(t.runId, t.createdAt),
     index('chat_telemetry_job_idx').on(t.jobId, t.createdAt),
+    uniqueIndex('chat_telemetry_idempotency_uk').on(t.idempotencyKey),
     // PERF-03: Composite index for the 30-day usage range query in computeUsage().
     // The query filters WHERE userId = ? AND createdAt >= ? AND createdAt <= ?
     // — leading with userId then createdAt lets Postgres range-scan this index

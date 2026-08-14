@@ -15,7 +15,7 @@
  */
 
 import { sql } from 'drizzle-orm';
-import { boolean, index, integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { boolean, index, integer, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 
 import { organization, users } from './auth';
 
@@ -49,6 +49,8 @@ export const chatToolTelemetry = pgTable(
     runId: text('run_id'),
     /** Durable analysis job identifier for queued Full-mode runs. */
     jobId: text('job_id'),
+    /** Stable writer/replay key; nullable for legacy telemetry rows. */
+    idempotencyKey: text('idempotency_key'),
     /** Tool name from `TOOL_NAMES`. */
     tool: text('tool').notNull(),
     /** End-to-end latency from invoke → settle, milliseconds. */
@@ -71,6 +73,7 @@ export const chatToolTelemetry = pgTable(
     index('chat_tool_telemetry_trace_idx').on(t.traceId, t.createdAt),
     index('chat_tool_telemetry_run_idx').on(t.runId, t.createdAt),
     index('chat_tool_telemetry_job_idx').on(t.jobId, t.createdAt),
+    uniqueIndex('chat_tool_telemetry_idempotency_uk').on(t.idempotencyKey),
     index('tool_telemetry_tool_idx').on(t.tool),
   ],
 );

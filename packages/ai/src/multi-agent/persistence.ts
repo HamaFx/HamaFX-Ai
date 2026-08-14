@@ -21,6 +21,8 @@ import { container } from '@kestrel/shared';
 import { DB } from '../tokens';
 import { and, asc, eq } from 'drizzle-orm';
 import type { AgentOpinionRow } from '@kestrel/db/schema';
+import { enqueuePersistenceFailure } from '../persistence-outbox';
+import { getDiagnosticContext } from '../diagnostics/run-context';
 
 export interface SaveOpinionsArgs {
   userId: string;
@@ -42,24 +44,41 @@ export interface SaveOpinionsArgs {
 export async function saveAgentOpinions(args: SaveOpinionsArgs): Promise<void> {
   const db = container.resolve(DB);
   if (args.opinions.length === 0) return;
-  await db.insert(schema.agentOpinions).values(
-    args.opinions.map((op) => ({
+  try {
+    await db.insert(schema.agentOpinions).values(
+      args.opinions.map((op) => ({
+        userId: args.userId,
+        threadId: args.threadId,
+        messageId: args.messageId,
+        agentName: op.agentName,
+        bias: op.bias,
+        confidence: op.confidence,
+        reasoning: op.reasoning,
+        rawData: op.rawData,
+        model: op.model,
+        costUsd: op.costUsd,
+        latencyMs: op.latencyMs,
+        analysisMode: args.analysisMode,
+      })),
+    ).onConflictDoNothing({
+      target: [schema.agentOpinions.messageId, schema.agentOpinions.agentName],
+    });
+  } catch (err) {
+    const context = getDiagnosticContext();
+    await enqueuePersistenceFailure({
       userId: args.userId,
+      operation: 'agent.opinions',
+      dedupeKey: `agent.opinions:${args.messageId}`,
       threadId: args.threadId,
       messageId: args.messageId,
-      agentName: op.agentName,
-      bias: op.bias,
-      confidence: op.confidence,
-      reasoning: op.reasoning,
-      rawData: op.rawData,
-      model: op.model,
-      costUsd: op.costUsd,
-      latencyMs: op.latencyMs,
-      analysisMode: args.analysisMode,
-    })),
-  ).onConflictDoNothing({
-    target: [schema.agentOpinions.messageId, schema.agentOpinions.agentName],
-  });
+      traceId: context?.traceId,
+      runId: context?.runId,
+      jobId: context?.jobId,
+      payload: args as unknown as Record<string, unknown>,
+      error: err,
+    });
+    throw err;
+  }
 }
 
 /** S1 fix — scope agent opinion queries by userId to prevent cross-tenant data leaks. */

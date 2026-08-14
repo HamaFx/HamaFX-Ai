@@ -17,12 +17,15 @@
 // P1 — Telemetry persistence (SRP split from persistence.ts).
 // Turn-level and tool-level telemetry writers.
 
+import { randomUUID } from 'node:crypto';
+
 import { schema } from '@kestrel/db';
 import { getDb } from '../db';
 import { createCategorizedLogger } from '@kestrel/shared/logger';
 
 import { estimateCostUsd } from '../cost';
 import { getDiagnosticContext } from '../diagnostics/run-context';
+import { enqueuePersistenceFailure } from '../persistence-outbox';
 
 const perlog = createCategorizedLogger('ai', { component: 'persistence' });
 
@@ -38,6 +41,8 @@ export interface TelemetryInput {
   traceId?: string | null;
   runId?: string | null;
   jobId?: string | null;
+  /** Stable key used to deduplicate a replayed telemetry write. */
+  idempotencyKey?: string | null;
   model: string;
   inputTokens: number;
   outputTokens: number;
@@ -71,23 +76,42 @@ export interface TelemetryInput {
 export async function recordTelemetry(t: TelemetryInput): Promise<void> {
   const userId = t.userId ?? '__system__';
   const context = getDiagnosticContext();
-  await getDb()
-    .insert(schema.chatTelemetry)
-    .values({
+  const idempotencyKey = t.idempotencyKey ?? `telemetry.turn:${randomUUID()}`;
+  try {
+    await getDb()
+      .insert(schema.chatTelemetry)
+      .values({
+        userId,
+        threadId: t.threadId,
+        messageId: t.messageId,
+        traceId: t.traceId ?? context?.traceId ?? null,
+        runId: t.runId ?? context?.runId ?? null,
+        jobId: t.jobId ?? context?.jobId ?? null,
+        idempotencyKey,
+        model: t.model,
+        inputTokens: t.inputTokens,
+        outputTokens: t.outputTokens,
+        toolCalls: t.toolCalls,
+        ms: t.ms,
+        estCostUsd: estimateCostUsd(t.model, t.inputTokens, t.outputTokens),
+        kind: t.kind ?? null,
+      })
+      .onConflictDoNothing({ target: schema.chatTelemetry.idempotencyKey });
+  } catch (err) {
+    await enqueuePersistenceFailure({
       userId,
+      operation: 'telemetry.turn',
+      dedupeKey: `telemetry.turn:${idempotencyKey}`,
       threadId: t.threadId,
       messageId: t.messageId,
-      traceId: t.traceId ?? context?.traceId ?? null,
-      runId: t.runId ?? context?.runId ?? null,
-      jobId: t.jobId ?? context?.jobId ?? null,
-      model: t.model,
-      inputTokens: t.inputTokens,
-      outputTokens: t.outputTokens,
-      toolCalls: t.toolCalls,
-      ms: t.ms,
-      estCostUsd: estimateCostUsd(t.model, t.inputTokens, t.outputTokens),
-      kind: t.kind ?? null,
+      traceId: t.traceId ?? context?.traceId,
+      runId: t.runId ?? context?.runId,
+      jobId: t.jobId ?? context?.jobId,
+      payload: { ...t, userId, idempotencyKey },
+      error: err,
     });
+    throw err;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -102,6 +126,8 @@ export interface ToolTelemetryInput {
   traceId?: string | null;
   runId?: string | null;
   jobId?: string | null;
+  /** Stable key used to deduplicate a replayed tool telemetry write. */
+  idempotencyKey?: string | null;
   tool: string;
   ms: number;
   ok: boolean;
@@ -110,9 +136,10 @@ export interface ToolTelemetryInput {
 }
 
 export async function recordToolTelemetry(t: ToolTelemetryInput): Promise<boolean> {
+  const userId = t.userId ?? '__system__';
+  const context = getDiagnosticContext();
+  const idempotencyKey = t.idempotencyKey ?? `telemetry.tool:${randomUUID()}`;
   try {
-    const userId = t.userId ?? '__system__';
-    const context = getDiagnosticContext();
     await getDb()
       .insert(schema.chatToolTelemetry)
       .values({
@@ -122,15 +149,29 @@ export async function recordToolTelemetry(t: ToolTelemetryInput): Promise<boolea
         traceId: t.traceId ?? context?.traceId ?? null,
         runId: t.runId ?? context?.runId ?? null,
         jobId: t.jobId ?? context?.jobId ?? null,
+        idempotencyKey,
         tool: t.tool,
         ms: t.ms,
         ok: t.ok,
         errorCode: t.errorCode ?? null,
         outputChars: t.outputChars ?? null,
-      });
+      })
+      .onConflictDoNothing({ target: schema.chatToolTelemetry.idempotencyKey });
     return true;
   } catch (err) {
-    perlog.error('tool telemetry insert failed', {
+    await enqueuePersistenceFailure({
+      userId,
+      operation: 'telemetry.tool',
+      dedupeKey: `telemetry.tool:${idempotencyKey}`,
+      threadId: t.threadId,
+      messageId: t.messageId,
+      traceId: t.traceId ?? context?.traceId,
+      runId: t.runId ?? context?.runId,
+      jobId: t.jobId ?? context?.jobId,
+      payload: { ...t, userId, idempotencyKey },
+      error: err,
+    });
+    perlog.error('tool telemetry insert failed; queued for replay', {
       threadId: t.threadId,
       tool: t.tool,
       ok: t.ok,

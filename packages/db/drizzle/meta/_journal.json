@@ -533,6 +533,13 @@
       "when": 1786719600002,
       "tag": "0076_ai_budget_reservation_ledger",
       "breakpoints": true
+    },
+    {
+      "idx": 76,
+      "version": "7",
+      "when": 1786719600003,
+      "tag": "0077_persistence_outbox",
+      "breakpoints": true
     }
   ]
 }

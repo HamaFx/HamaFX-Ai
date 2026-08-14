@@ -24,6 +24,8 @@ import type { UIMessage } from 'ai';
 import { and, asc, eq } from 'drizzle-orm';
 
 import { getThread } from './thread-persistence';
+import { enqueuePersistenceFailure } from '../persistence-outbox';
+import { getDiagnosticContext } from '../diagnostics/run-context';
 
 // ---------------------------------------------------------------------------
 // Messages
@@ -65,34 +67,56 @@ export async function appendUserMessage(
   options?: { idempotencyKey?: string },
 ): Promise<void> {
   const text = extractText(message);
-  await getDb().transaction(async (tx) => {
-    const ownedThread = await tx
-      .select({ id: schema.chatThreads.id })
-      .from(schema.chatThreads)
-      .where(and(eq(schema.chatThreads.id, threadId), eq(schema.chatThreads.userId, userId)))
-      .limit(1);
-    if (ownedThread.length === 0) throw new Error(`thread not found: ${threadId}`);
+  const idempotencyKey = options?.idempotencyKey ?? `ui:${message.id}`;
+  try {
+    await getDb().transaction(async (tx) => {
+      const ownedThread = await tx
+        .select({ id: schema.chatThreads.id })
+        .from(schema.chatThreads)
+        .where(and(eq(schema.chatThreads.id, threadId), eq(schema.chatThreads.userId, userId)))
+        .limit(1);
+      if (ownedThread.length === 0) throw new Error(`thread not found: ${threadId}`);
 
-    const values = {
-      threadId,
-      role: 'user' as const,
-      content: text,
-      parts: stripPartsForStorage(message.parts ?? null),
-      ...(options?.idempotencyKey ? { idempotencyKey: options.idempotencyKey } : {}),
-    };
-    if (options?.idempotencyKey) {
       await tx
         .insert(schema.chatMessages)
-        .values(values)
+        .values({
+          threadId,
+          role: 'user',
+          content: text,
+          parts: stripPartsForStorage(message.parts ?? null),
+          idempotencyKey,
+        })
         .onConflictDoNothing({ target: schema.chatMessages.idempotencyKey });
-    } else {
-      await tx.insert(schema.chatMessages).values(values);
-    }
-    await tx
-      .update(schema.chatThreads)
-      .set({ updatedAt: new Date() })
-      .where(and(eq(schema.chatThreads.id, threadId), eq(schema.chatThreads.userId, userId)));
-  });
+      await tx
+        .update(schema.chatThreads)
+        .set({ updatedAt: new Date() })
+        .where(and(eq(schema.chatThreads.id, threadId), eq(schema.chatThreads.userId, userId)));
+    });
+  } catch (err) {
+    const context = getDiagnosticContext();
+    await enqueuePersistenceFailure({
+      userId,
+      operation: 'message.user',
+      dedupeKey: `message.user:${idempotencyKey}`,
+      threadId,
+      messageId: message.id,
+      traceId: context?.traceId,
+      runId: context?.runId,
+      jobId: context?.jobId,
+      payload: {
+        userId,
+        threadId,
+        message: {
+          id: message.id,
+          role: message.role,
+          parts: stripPartsForStorage(message.parts ?? null),
+        },
+        idempotencyKey,
+      },
+      error: err,
+    });
+    throw err;
+  }
 }
 
 export async function appendAssistantMessage(
@@ -102,61 +126,68 @@ export async function appendAssistantMessage(
   options?: { idempotencyKey?: string },
 ): Promise<{ messageId: string }> {
   const text = extractText(message);
-  return getDb().transaction(async (tx) => {
-    const ownedThread = await tx
-      .select({ id: schema.chatThreads.id })
-      .from(schema.chatThreads)
-      .where(and(eq(schema.chatThreads.id, threadId), eq(schema.chatThreads.userId, userId)))
-      .limit(1);
-    if (ownedThread.length === 0) throw new Error(`thread not found: ${threadId}`);
-
-    if (options?.idempotencyKey) {
-      const [existing] = await tx
-        .select({ id: schema.chatMessages.id })
-        .from(schema.chatMessages)
-        .where(and(
-          eq(schema.chatMessages.threadId, threadId),
-          eq(schema.chatMessages.idempotencyKey, options.idempotencyKey),
-        ))
+  const idempotencyKey = options?.idempotencyKey ?? `ui:${message.id}`;
+  try {
+    return await getDb().transaction(async (tx) => {
+      const ownedThread = await tx
+        .select({ id: schema.chatThreads.id })
+        .from(schema.chatThreads)
+        .where(and(eq(schema.chatThreads.id, threadId), eq(schema.chatThreads.userId, userId)))
         .limit(1);
-      if (existing) {
-        await tx
-          .update(schema.chatThreads)
-          .set({ updatedAt: new Date() })
-          .where(and(eq(schema.chatThreads.id, threadId), eq(schema.chatThreads.userId, userId)));
-        return { messageId: existing.id };
+      if (ownedThread.length === 0) throw new Error(`thread not found: ${threadId}`);
+
+      const inserted = await tx
+        .insert(schema.chatMessages)
+        .values({
+          threadId,
+          role: 'assistant',
+          content: text,
+          parts: stripPartsForStorage(message.parts ?? null),
+          idempotencyKey,
+        })
+        .onConflictDoNothing({ target: schema.chatMessages.idempotencyKey })
+        .returning({ id: schema.chatMessages.id });
+      const messageRow = inserted[0];
+      if (!messageRow) {
+        const [existing] = await tx
+          .select({ id: schema.chatMessages.id })
+          .from(schema.chatMessages)
+          .where(eq(schema.chatMessages.idempotencyKey, idempotencyKey))
+          .limit(1);
+        if (existing) return { messageId: existing.id };
+        throw new Error(`assistant message insert returned no row: ${idempotencyKey}`);
       }
-    }
-
-    const inserted = await tx
-      .insert(schema.chatMessages)
-      .values({
+      await tx
+        .update(schema.chatThreads)
+        .set({ updatedAt: new Date() })
+        .where(and(eq(schema.chatThreads.id, threadId), eq(schema.chatThreads.userId, userId)));
+      return { messageId: messageRow.id };
+    });
+  } catch (err) {
+    const context = getDiagnosticContext();
+    await enqueuePersistenceFailure({
+      userId,
+      operation: 'message.assistant',
+      dedupeKey: `message.assistant:${idempotencyKey}`,
+      threadId,
+      messageId: message.id,
+      traceId: context?.traceId,
+      runId: context?.runId,
+      jobId: context?.jobId,
+      payload: {
+        userId,
         threadId,
-        role: 'assistant',
-        content: text,
-        parts: stripPartsForStorage(message.parts ?? null),
-        ...(options?.idempotencyKey ? { idempotencyKey: options.idempotencyKey } : {}),
-      })
-      .onConflictDoNothing(options?.idempotencyKey ? { target: schema.chatMessages.idempotencyKey } : undefined)
-      .returning({ id: schema.chatMessages.id });
-    const messageRow = inserted[0];
-    if (!messageRow && options?.idempotencyKey) {
-      const [existing] = await tx
-        .select({ id: schema.chatMessages.id })
-        .from(schema.chatMessages)
-        .where(and(
-          eq(schema.chatMessages.threadId, threadId),
-          eq(schema.chatMessages.idempotencyKey, options.idempotencyKey),
-        ))
-        .limit(1);
-      if (existing) return { messageId: existing.id };
-    }
-    await tx
-      .update(schema.chatThreads)
-      .set({ updatedAt: new Date() })
-      .where(and(eq(schema.chatThreads.id, threadId), eq(schema.chatThreads.userId, userId)));
-    return { messageId: messageRow!.id };
-  });
+        message: {
+          id: message.id,
+          role: message.role,
+          parts: stripPartsForStorage(message.parts ?? null),
+        },
+        idempotencyKey,
+      },
+      error: err,
+    });
+    throw err;
+  }
 }
 
 // ---------------------------------------------------------------------------
