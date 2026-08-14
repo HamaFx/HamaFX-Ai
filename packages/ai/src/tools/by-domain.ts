@@ -8,6 +8,8 @@
  * Domains:
  *   - fundamental: news, calendar, CoT, fundamentals analysis, sentiment
  *   - technical: price, candles, indicators, structure, session levels
+ *   - summary: news/calendar/journal recap tools
+ *   - vision: chart-image analysis plus supporting technical data
  *   - generic: keep all tools (fallback for unclassified messages)
  *
  * Tools listed as 'always' are included in every domain (e.g. set_alert,
@@ -17,7 +19,7 @@
 import type { Tool } from 'ai';
 import { toolRegistry } from './index';
 
-export type RoutingDomain = 'fundamental' | 'technical' | 'generic';
+export type RoutingDomain = 'fundamental' | 'technical' | 'summary' | 'vision' | 'generic';
 
 /** Tools included in every domain (user-facing actions). */
 const ALWAYS_TOOLS: ReadonlySet<string> = new Set([
@@ -29,6 +31,23 @@ const ALWAYS_TOOLS: ReadonlySet<string> = new Set([
 ]);
 
 const DOMAIN_TOOLS: Record<Exclude<RoutingDomain, 'generic'>, ReadonlySet<string>> = {
+  summary: new Set([
+    ...ALWAYS_TOOLS,
+    'get_news',
+    'get_calendar',
+    'get_cot',
+    'get_journal_stats',
+    'get_social_sentiment',
+    'summarize_thread',
+  ]),
+  vision: new Set([
+    ...ALWAYS_TOOLS,
+    'analyze_chart_image',
+    'get_candles',
+    'get_indicators',
+    'get_market_structure',
+    'get_session_levels',
+  ]),
   fundamental: new Set([
     ...ALWAYS_TOOLS,
     'get_news',

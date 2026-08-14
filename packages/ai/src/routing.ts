@@ -90,6 +90,25 @@ export async function routeTurn(args: { userMessage: UIMessage; modelOverride?: 
 export async function routeTurn(args: RouteTurnOptions): Promise<RoutingDecision>;
 export async function routeTurn(args: RouteTurnOptions): Promise<RoutingDecision> {
   const { userMessage, modelOverride } = args;
+  const rawText = extractText(userMessage);
+  const text = rawText.toLowerCase();
+  const hasImage = hasImagePart(userMessage);
+
+  // An attached image is a hard routing signal. It must be handled before
+  // semantic routing because the classifier only receives text and cannot
+  // reliably infer that an image is present. Keep the vision domain even
+  // when a user has selected an explicit model override; the downstream
+  // resolver can then keep the vision-specific tool/model path active when
+  // no explicit override is supplied.
+  if (hasImage) {
+    return {
+      domain: 'vision',
+      planRequired: false,
+      rationale: modelOverride && modelOverride.length > 0
+        ? `image attached; explicit override noted: ${modelOverride}`
+        : 'image attached → vision model',
+    };
+  }
 
   if (modelOverride && modelOverride.length > 0) {
     return {
@@ -98,10 +117,6 @@ export async function routeTurn(args: RouteTurnOptions): Promise<RoutingDecision
       rationale: `explicit override: ${modelOverride}`,
     };
   }
-
-  const rawText = extractText(userMessage);
-  const text = rawText.toLowerCase();
-  const hasImage = hasImagePart(userMessage);
 
   // U3 — Semantic routing: try AI classification before keyword scoring.
   // Feature-gated: only runs when semanticRouting config is provided.
@@ -126,14 +141,6 @@ export async function routeTurn(args: RouteTurnOptions): Promise<RoutingDecision
     } catch {
       // Fall through to keyword scoring.
     }
-  }
-
-  if (hasImage) {
-    return {
-      domain: 'vision',
-      planRequired: false,
-      rationale: 'image attached → vision model',
-    };
   }
 
   // Empty / very short messages — no signal, use the default.

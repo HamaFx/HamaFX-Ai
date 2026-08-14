@@ -136,23 +136,46 @@ Be concise but thorough. Use markdown formatting for readability.`;
       else execCtx.signal.addEventListener('abort', onParentAbort, { once: true });
     }
     try {
-      // P1-4/U1 — Use streamText for token-by-token fusion streaming.
-      // On text deltas, invoke the callback so the route can emit SSE frames.
+      // P1-4/U1 — Use streamText for fusion generation. Buffer its output
+      // before invoking the callback so a late provider failure cannot leave
+      // the client with text that the orchestrator later replaces.
       // Falls back to generateText when no callback is provided (e.g. tests).
       if (onTextChunk) {
+        let streamError: unknown = null;
         const sResult = await withToolContext(toolContext, async () =>
-          streamText({ model, system, messages, abortSignal: controller.signal, maxOutputTokens: 4000, ...telemetryConfig() }),
+          streamText({
+            model,
+            system,
+            messages,
+            abortSignal: controller.signal,
+            maxOutputTokens: 4000,
+            onError: ({ error }) => { streamError = error; },
+            ...telemetryConfig(),
+          }),
         );
-        const latencyMs = Date.now() - startMs;
         let fullText = '';
         for await (const part of sResult.fullStream) {
-          if (part.type === 'text-delta') {
+          if (part.type === 'error') {
+            streamError = part.error;
+          } else if (part.type === 'text-delta') {
+            // Buffer fusion output until the stream has completed. A stream
+            // can fail after emitting text; forwarding deltas immediately
+            // would leave the client showing a partial answer while the
+            // orchestrator falls back to specialist opinions.
             fullText += part.text;
-            onTextChunk(part.text);
           }
         }
-        // Wait for usage before returning
+        // Wait for usage and late onError callbacks before deciding whether
+        // this result is safe to publish.
         const usage = await sResult.usage;
+        if (streamError) {
+          throw streamError instanceof Error ? streamError : new Error(String(streamError));
+        }
+        if (fullText.trim().length === 0) {
+          throw new Error('Decision agent returned an empty response');
+        }
+        onTextChunk(fullText);
+        const latencyMs = Date.now() - startMs;
         const inputTokens = usage?.inputTokens ?? 0;
         const outputTokens = usage?.outputTokens ?? 0;
         const costUsd = estimateCostUsd(modelId, inputTokens, outputTokens);

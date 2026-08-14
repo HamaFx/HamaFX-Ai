@@ -27,6 +27,22 @@ describe('domainToolFilter', () => {
     expect(tools.analyze_fundamental).toBeDefined();
   });
 
+  it('includes summary tools for summary routing', () => {
+    const tools = domainToolFilter('summary');
+    expect(tools.get_news).toBeDefined();
+    expect(tools.get_calendar).toBeDefined();
+    expect(tools.get_journal_stats).toBeDefined();
+    expect(tools.summarize_thread).toBeDefined();
+    expect(tools.get_candles).toBeUndefined();
+  });
+
+  it('includes vision tools for vision routing', () => {
+    const tools = domainToolFilter('vision');
+    expect(tools.analyze_chart_image).toBeDefined();
+    expect(tools.get_candles).toBeDefined();
+    expect(tools.get_news).toBeUndefined();
+  });
+
   it('excludes technical-only tools from fundamental domain', () => {
     const tools = domainToolFilter('fundamental');
     expect(tools.get_candles).toBeUndefined();

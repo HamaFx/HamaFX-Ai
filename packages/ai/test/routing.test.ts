@@ -51,6 +51,18 @@ describe('routeTurn — Phase 0.7 offline eval (tool-selection)', () => {
     expect(result.planRequired).toBe(false);
   });
 
+  it('keeps image messages on the vision path when semantic routing is enabled', async () => {
+    const result = await routeTurn({
+      userMessage: userMessage('Please inspect this screenshot', true),
+      semanticRouting: {
+        modelId: 'google/gemini-2.5-flash-lite',
+        env: {} as never,
+      },
+    });
+    expect(result.domain).toBe('vision');
+    expect(result.rationale).toContain('image attached');
+  });
+
   it('falls back to generic for ambiguous short messages', async () => {
     const result = await routeTurn({ userMessage: userMessage('hi') });
     expect(result.domain).toBe('generic');

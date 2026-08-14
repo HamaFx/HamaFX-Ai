@@ -231,6 +231,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
             };
 
             let textStarted = false;
+            let textStreamed = false;
             const startText = () => {
               if (textStarted) return;
               textStarted = true;
@@ -262,13 +263,24 @@ export const POST = withAuth<void>(async (req, { user }) => {
               tracker.update(publicEvent);
               send(tracker.buildPart());
                 },
-                // P1-4/U1 — stream fusion text token-by-token as AI SDK text-delta chunks.
+                // P1-4/U1 — publish the successfully completed fusion result
+                // as an AI SDK text-delta event.
                 onTextChunk: (chunk) => {
+                  if (!chunk) return;
+                  textStreamed = true;
                   startText();
                   send({ type: 'text-delta', id: messageId, delta: chunk });
                 },
               }));
 
+              // Fusion output is published transactionally. If the decision
+              // stream failed, the orchestrator returns a specialist fallback
+              // without invoking onTextChunk; emit that fallback rather than
+              // ending an empty assistant message.
+              if (!textStreamed && result.finalText) {
+                startText();
+                send({ type: 'text-delta', id: messageId, delta: result.finalText });
+              }
               startText();
               send({ type: 'text-end', id: messageId });
 

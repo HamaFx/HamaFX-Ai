@@ -28,6 +28,51 @@ export interface HcnsecToolCall {
   function: { name: string; arguments: string };
 }
 
+/** Default indicator bundle used when HCNSEC omits the required list. */
+const HCNSEC_DEFAULT_INDICATORS = [
+  { kind: 'rsi', params: {} },
+  { kind: 'macd', params: {} },
+  { kind: 'ema', params: { period: 20 } },
+  { kind: 'ema', params: { period: 50 } },
+] as const;
+
+/**
+ * Normalize HCNSEC's common aliases to Kestrel tool-input names.
+ *
+ * DeepSeek-compatible endpoints are often trained/documented with
+ * `timeframe`/`limit`, while Kestrel's schemas intentionally use the
+ * shorter `tf`/`count` names. HCNSEC has also emitted a bare
+ * `get_indicators` call without an indicator list. Repairing that payload
+ * at the provider boundary keeps the canonical tool schemas strict for
+ * every other provider while making this provider interoperable.
+ */
+export function normalizeHcnsecToolArguments(
+  toolName: string,
+  rawArguments: string,
+): string {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(rawArguments) as unknown;
+  } catch {
+    return rawArguments;
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return rawArguments;
+
+  const args = { ...(parsed as Record<string, unknown>) };
+  if (args.tf === undefined && typeof args.timeframe === 'string') {
+    args.tf = args.timeframe;
+    delete args.timeframe;
+  }
+  if (args.count === undefined && args.limit !== undefined) {
+    args.count = args.limit;
+    delete args.limit;
+  }
+  if (toolName === 'get_indicators' && !Array.isArray(args.indicators)) {
+    args.indicators = HCNSEC_DEFAULT_INDICATORS;
+  }
+  return JSON.stringify(args);
+}
+
 /**
  * Parse DeepSeek's DSML tool-call format when HCNSEC returns it as text.
  *
@@ -84,7 +129,10 @@ export function normalizeHcnsecDsmlToolCalls(input: string): {
     toolCalls.push({
       id: `hcnsec-dsml-${toolCalls.length}`,
       type: 'function',
-      function: { name, arguments: JSON.stringify(args) },
+      function: {
+        name,
+        arguments: normalizeHcnsecToolArguments(name, JSON.stringify(args)),
+      },
     });
   }
 
@@ -106,6 +154,28 @@ export function normalizeHcnsecJsonPayload(input: unknown): unknown {
     const message = choice.message;
     if (!message || typeof message !== 'object') return rawChoice;
     const messageRecord = message as Record<string, unknown>;
+    const existingToolCalls = Array.isArray(messageRecord.tool_calls)
+      ? messageRecord.tool_calls
+      : null;
+    if (existingToolCalls) {
+      const toolCalls = existingToolCalls.map((rawCall) => {
+        if (!rawCall || typeof rawCall !== 'object') return rawCall;
+        const call = rawCall as Record<string, unknown>;
+        const fn = call.function && typeof call.function === 'object'
+          ? call.function as Record<string, unknown>
+          : null;
+        if (!fn || typeof fn.name !== 'string' || typeof fn.arguments !== 'string') return rawCall;
+        return {
+          ...call,
+          function: {
+            ...fn,
+            arguments: normalizeHcnsecToolArguments(fn.name, fn.arguments),
+          },
+        };
+      });
+      changed = true;
+      return { ...choice, message: { ...messageRecord, tool_calls: toolCalls } };
+    }
     if (typeof messageRecord.content !== 'string') return rawChoice;
     const normalized = normalizeHcnsecDsmlToolCalls(messageRecord.content);
     if (!normalized) return rawChoice;
@@ -216,7 +286,10 @@ export function normalizeHcnsecSse(input: string): string {
       index,
       id: call.id,
       type: 'function',
-      function: { name: call.name, arguments: call.arguments },
+      function: {
+        name: call.name,
+        arguments: normalizeHcnsecToolArguments(call.name, call.arguments),
+      },
     }));
   }
 
