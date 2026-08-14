@@ -56,6 +56,22 @@ interface AnalysisAggregate {
   stuck: number;
 }
 
+interface OperationalAggregate {
+  fullTotal: number;
+  fullCompleted: number;
+  fullFailed: number;
+  sentimentTotal: number;
+  sentimentSucceeded: number;
+  outboxTerminal: number;
+  outboxCompleted: number;
+  outboxDead: number;
+  budgetTerminal: number;
+  budgetErrors: number;
+  traceTotal: number;
+  traceFailed: number;
+  providerFallbackTraces: number;
+}
+
 const ONE_SECOND = 1000;
 const ONE_MINUTE = 60 * ONE_SECOND;
 
@@ -102,12 +118,13 @@ export async function computeHealthSloService(
   }
 
   // ── Independent telemetry queries (concurrent) ────────────────────────────
-  const [ticksResult, cronResult, toolResult, chatResult, analysisResult] = await Promise.allSettled([
+  const [ticksResult, cronResult, toolResult, chatResult, analysisResult, operationalResult] = await Promise.allSettled([
     queryTickAggregate(db),
     queryCronAggregate(db, since),
     queryToolAggregate(db, since),
     queryChatAggregate(db, since),
     queryAnalysisAggregate(db, since),
+    queryOperationalAggregate(db, since),
   ]);
 
   const ticks = ticksResult.status === 'fulfilled' ? ticksResult.value : null;
@@ -115,6 +132,7 @@ export async function computeHealthSloService(
   const tools = toolResult.status === 'fulfilled' ? toolResult.value : null;
   const chat = chatResult.status === 'fulfilled' ? chatResult.value : null;
   const analysis = analysisResult.status === 'fulfilled' ? analysisResult.value : null;
+  const operational = operationalResult.status === 'fulfilled' ? operationalResult.value : null;
 
   const anomalies: string[] = [];
 
@@ -195,6 +213,27 @@ export async function computeHealthSloService(
     }
   }
 
+  // ── Recovery / Full-mode operational signals ───────────────────────────
+  if (!operational) {
+    anomalies.push('Recovery telemetry is unavailable — outbox, budget, trace, and Full-mode health cannot be verified');
+  } else {
+    if (operational.fullTotal > 0 && operational.fullCompleted / operational.fullTotal < 0.995) {
+      anomalies.push(`Full-mode completion is below SLO: ${operational.fullCompleted}/${operational.fullTotal} completed`);
+    }
+    if (operational.sentimentTotal > 0 && operational.sentimentSucceeded / operational.sentimentTotal < 0.95) {
+      anomalies.push(`Sentiment specialist success is below SLO: ${operational.sentimentSucceeded}/${operational.sentimentTotal} succeeded`);
+    }
+    if (operational.outboxDead > 0) {
+      anomalies.push(`${operational.outboxDead} persistence outbox record(s) are dead-lettered`);
+    }
+    if (operational.budgetErrors > 0) {
+      anomalies.push(`${operational.budgetErrors} budget reservation(s) have recovery errors`);
+    }
+    if (operational.traceFailed > 0) {
+      anomalies.push(`${operational.traceFailed} diagnostic trace(s) failed to complete`);
+    }
+  }
+
   // ── Langfuse ────────────────────────────────────────────────────────────
   const langfuseActive = Boolean(
     process.env.LANGFUSE_PUBLIC_KEY &&
@@ -205,6 +244,77 @@ export async function computeHealthSloService(
 
   // ── Build SLIs ───────────────────────────────────────────────────────────
   const HOUR_LABEL = hours <= 1 ? '1 hour' : hours <= 24 ? `${hours}h` : `${hours}h (${Math.round(hours / 24)}d)`;
+
+  const operationalSlis: SliSnapshot[] = operational
+    ? [
+        {
+          key: 'full_mode_completion',
+          label: 'Full-mode Completion',
+          current: operational.fullTotal > 0 ? operational.fullCompleted / operational.fullTotal : null,
+          sloTarget: 0.995,
+          window: HOUR_LABEL,
+          success: operational.fullCompleted,
+          total: operational.fullTotal,
+          errorBudget: computeErrorBudget(operational.fullTotal > 0 ? operational.fullCompleted / operational.fullTotal : null, 0.995),
+          details: `${operational.fullCompleted}/${operational.fullTotal} Full-mode jobs completed`,
+        },
+        {
+          key: 'sentiment_health',
+          label: 'Sentiment Specialist',
+          current: operational.sentimentTotal > 0 ? operational.sentimentSucceeded / operational.sentimentTotal : null,
+          sloTarget: 0.95,
+          window: HOUR_LABEL,
+          success: operational.sentimentSucceeded,
+          total: operational.sentimentTotal,
+          errorBudget: computeErrorBudget(operational.sentimentTotal > 0 ? operational.sentimentSucceeded / operational.sentimentTotal : null, 0.95),
+          details: `${operational.sentimentSucceeded}/${operational.sentimentTotal} sentiment calls succeeded`,
+        },
+        {
+          key: 'persistence_outbox',
+          label: 'Persistence Recovery',
+          current: operational.outboxTerminal > 0 ? operational.outboxCompleted / operational.outboxTerminal : null,
+          sloTarget: 0.999,
+          window: HOUR_LABEL,
+          success: operational.outboxCompleted,
+          total: operational.outboxTerminal,
+          errorBudget: computeErrorBudget(operational.outboxTerminal > 0 ? operational.outboxCompleted / operational.outboxTerminal : null, 0.999),
+          details: `${operational.outboxCompleted} completed, ${operational.outboxDead} dead-lettered`,
+        },
+        {
+          key: 'budget_recovery',
+          label: 'Budget Recovery',
+          current: operational.budgetTerminal > 0 ? 1 - operational.budgetErrors / operational.budgetTerminal : null,
+          sloTarget: 0.999,
+          window: HOUR_LABEL,
+          success: operational.budgetTerminal - operational.budgetErrors,
+          total: operational.budgetTerminal,
+          errorBudget: computeErrorBudget(operational.budgetTerminal > 0 ? 1 - operational.budgetErrors / operational.budgetTerminal : null, 0.999),
+          details: `${operational.budgetErrors} recovery errors across ${operational.budgetTerminal} terminal reservations`,
+        },
+        {
+          key: 'trace_sink',
+          label: 'Diagnostic Trace Sink',
+          current: operational.traceTotal > 0 ? (operational.traceTotal - operational.traceFailed) / operational.traceTotal : null,
+          sloTarget: 0.999,
+          window: HOUR_LABEL,
+          success: operational.traceTotal - operational.traceFailed,
+          total: operational.traceTotal,
+          errorBudget: computeErrorBudget(operational.traceTotal > 0 ? (operational.traceTotal - operational.traceFailed) / operational.traceTotal : null, 0.999),
+          details: `${operational.traceFailed} failed of ${operational.traceTotal} traces`,
+        },
+        {
+          key: 'provider_fallback_free',
+          label: 'Provider Fallback-free',
+          current: operational.traceTotal > 0 ? 1 - operational.providerFallbackTraces / operational.traceTotal : null,
+          sloTarget: 0.95,
+          window: HOUR_LABEL,
+          success: operational.traceTotal - operational.providerFallbackTraces,
+          total: operational.traceTotal,
+          errorBudget: computeErrorBudget(operational.traceTotal > 0 ? 1 - operational.providerFallbackTraces / operational.traceTotal : null, 0.95),
+          details: `${operational.providerFallbackTraces} trace(s) used provider fallback`,
+        },
+      ]
+    : [];
 
   const slis: SliSnapshot[] = [
     {
@@ -258,6 +368,7 @@ export async function computeHealthSloService(
           ? `${chatTurns} turns in window — error rate tracked via Sentry`
           : 'No chat turns in window',
     },
+    ...operationalSlis,
   ];
 
   // ── Overall status ──────────────────────────────────────────────────────
@@ -375,6 +486,50 @@ async function queryChatAggregate(
     const row = rows[0] as { turns: string } | undefined;
 
     return { turns: Number(row?.turns ?? 0) };
+  } catch {
+    return null;
+  }
+}
+
+async function queryOperationalAggregate(
+  db: HealthSloDb,
+  since: Date,
+): Promise<OperationalAggregate | null> {
+  try {
+    const result = await db.execute(sql`
+      SELECT
+        (SELECT COUNT(*) FROM analysis_jobs WHERE mode = 'full' AND created_at >= ${since})::text AS full_total,
+        (SELECT COUNT(*) FROM analysis_jobs WHERE mode = 'full' AND created_at >= ${since} AND status = 'complete')::text AS full_completed,
+        (SELECT COUNT(*) FROM analysis_jobs WHERE mode = 'full' AND created_at >= ${since} AND status = 'failed')::text AS full_failed,
+        (SELECT COUNT(*) FROM chat_telemetry WHERE kind IN ('multi_specialist_sentiment', 'multi_specialist_sentiment_failed') AND created_at >= ${since})::text AS sentiment_total,
+        (SELECT COUNT(*) FROM chat_telemetry WHERE kind = 'multi_specialist_sentiment' AND created_at >= ${since})::text AS sentiment_succeeded,
+        (SELECT COUNT(*) FROM persistence_outbox WHERE created_at >= ${since} AND status IN ('completed', 'dead'))::text AS outbox_terminal,
+        (SELECT COUNT(*) FROM persistence_outbox WHERE created_at >= ${since} AND status = 'completed')::text AS outbox_completed,
+        (SELECT COUNT(*) FROM persistence_outbox WHERE created_at >= ${since} AND status = 'dead')::text AS outbox_dead,
+        (SELECT COUNT(*) FROM ai_budget_reservations WHERE created_at >= ${since} AND status IN ('reconciled', 'released'))::text AS budget_terminal,
+        (SELECT COUNT(*) FROM ai_budget_reservations WHERE created_at >= ${since} AND status IN ('reconciled', 'released') AND last_error IS NOT NULL)::text AS budget_errors,
+        (SELECT COUNT(*) FROM diagnostic_traces WHERE created_at >= ${since})::text AS trace_total,
+        (SELECT COUNT(*) FROM diagnostic_traces WHERE created_at >= ${since} AND status = 'failed')::text AS trace_failed,
+        (SELECT COUNT(*) FROM diagnostic_traces WHERE created_at >= ${since} AND COALESCE(trace, '{}'::jsonb) @? '$.steps[*] ? (@.name == "provider_fallback")')::text AS provider_fallback_traces
+    `);
+    const rows = extractRows(result);
+    const row = rows[0] as Record<string, string> | undefined;
+    if (!row) return null;
+    return {
+      fullTotal: Number(row.full_total ?? 0),
+      fullCompleted: Number(row.full_completed ?? 0),
+      fullFailed: Number(row.full_failed ?? 0),
+      sentimentTotal: Number(row.sentiment_total ?? 0),
+      sentimentSucceeded: Number(row.sentiment_succeeded ?? 0),
+      outboxTerminal: Number(row.outbox_terminal ?? 0),
+      outboxCompleted: Number(row.outbox_completed ?? 0),
+      outboxDead: Number(row.outbox_dead ?? 0),
+      budgetTerminal: Number(row.budget_terminal ?? 0),
+      budgetErrors: Number(row.budget_errors ?? 0),
+      traceTotal: Number(row.trace_total ?? 0),
+      traceFailed: Number(row.trace_failed ?? 0),
+      providerFallbackTraces: Number(row.provider_fallback_traces ?? 0),
+    };
   } catch {
     return null;
   }

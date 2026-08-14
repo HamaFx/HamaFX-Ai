@@ -22,6 +22,11 @@ import {
   IconMinus,
   IconChartDots,
   IconInfoCircle,
+  IconShieldCheck,
+  IconHeartbeat,
+  IconDatabaseCog,
+  IconWallet,
+  IconRoute,
 } from '@tabler/icons-react';
 import { SkeletonCard } from '@/components/ui/skeleton';
 import { SettingsSection } from '@/app/(app)/settings/_components/settings-section';
@@ -40,6 +45,12 @@ const SLI_ICONS: Record<string, typeof IconDatabase> = {
   cron_jobs: IconClock,
   ai_gateway: IconTool,
   chat_api: IconMessage,
+  full_mode_completion: IconRoute,
+  sentiment_health: IconHeartbeat,
+  persistence_outbox: IconDatabaseCog,
+  budget_recovery: IconWallet,
+  trace_sink: IconShieldCheck,
+  provider_fallback_free: IconRoute,
 };
 
 const HEALTH_WINDOWS = [
@@ -357,7 +368,7 @@ export function AdminSystemHealth() {
   return (
     <SettingsSection
       title="System Health"
-      description={`Current worker freshness; activity SLIs over the last ${activityWindowLabel}. Refreshes every 30s.`}
+      description={`Current worker freshness and recovery health; activity SLIs over the last ${activityWindowLabel}. Refreshes every 30s.`}
     >
       <div className="flex flex-col gap-4">
         {fetchError && (

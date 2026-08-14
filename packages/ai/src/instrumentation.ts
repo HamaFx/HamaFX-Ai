@@ -57,7 +57,10 @@ export function initLangfuse(options: { service?: LangfuseService } = {}): void 
   }
 
   const service = options.service ?? 'worker';
-  const release = process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.DEPLOYED_SHA;
+  // Keep release/environment in operator configuration so Langfuse traces
+  // remain correctly grouped across Vercel and the worker deployment.
+  const release = process.env.LANGFUSE_RELEASE ?? process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.DEPLOYED_SHA;
+  const environment = process.env.LANGFUSE_TRACING_ENVIRONMENT ?? process.env.NODE_ENV ?? 'development';
   const nextProcessor = new LangfuseSpanProcessor({
     publicKey,
     secretKey,
@@ -65,7 +68,7 @@ export function initLangfuse(options: { service?: LangfuseService } = {}): void 
     // Langfuse expects seconds here. Do not pass the millisecond values used
     // by browser timers or the exporter may wait for more than an hour.
     flushInterval: 5,
-    environment: process.env.NODE_ENV ?? 'development',
+    environment,
     ...(release ? { release } : {}),
     // AI SDK telemetry can contain prompts, tool inputs, and model outputs.
     // Redact object keys and credential-shaped strings before export.

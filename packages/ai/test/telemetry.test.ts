@@ -56,10 +56,12 @@ describe('telemetryConfig', () => {
         expect(settings.metadata).toMatchObject({
           service: 'kestrel-ai',
           traceId: expect.any(String),
-          threadId: 'thread-1',
-          userId: 'user-1',
+          threadId: expect.stringMatching(/^[a-f0-9]{24}$/),
+          userId: expect.stringMatching(/^[a-f0-9]{24}$/),
           attempt: 2,
         });
+        expect(settings.metadata.threadId).not.toBe('thread-1');
+        expect(settings.metadata.userId).not.toBe('user-1');
       },
       { requestId: 'request-1', runId: 'run-1' },
     );

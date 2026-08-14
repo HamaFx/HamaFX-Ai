@@ -84,6 +84,25 @@ const WorkerEnvSchema = z.object({
    * stderr but does not phone home. Wired in PR-18.
    */
   SENTRY_DSN: optionalUrl,
+  LANGFUSE_PUBLIC_KEY: optionalNonEmpty,
+  LANGFUSE_SECRET_KEY: optionalNonEmpty,
+  LANGFUSE_BASE_URL: optionalUrl,
+  LANGFUSE_RELEASE: optionalNonEmpty,
+  LANGFUSE_TRACING_ENVIRONMENT: optionalNonEmpty,
+  LANGFUSE_RECORD_IO: z.preprocess(
+    (v) => (v === '' ? undefined : v),
+    z.enum(['0', '1', 'true', 'false']).default('0'),
+  ),
+
+  // Retention values are validated by @kestrel/db with bounded safe defaults.
+  TELEMETRY_RETENTION_DAYS: z.coerce.number().int().min(1).max(3650).default(90),
+  TRACE_RETENTION_DAYS: z.coerce.number().int().min(1).max(3650).default(30),
+  RATE_LIMIT_RETENTION_HOURS: z.coerce.number().int().min(1).max(720).default(2),
+  PROVIDER_DAILY_QUOTA_RETENTION_DAYS: z.coerce.number().int().min(1).max(3650).default(3),
+  CRON_RUN_RETENTION_DAYS: z.coerce.number().int().min(1).max(3650).default(30),
+  ANALYSIS_JOB_RETENTION_DAYS: z.coerce.number().int().min(1).max(3650).default(7),
+  PERSISTENCE_OUTBOX_RETENTION_DAYS: z.coerce.number().int().min(1).max(3650).default(30),
+  BUDGET_RESERVATION_RETENTION_DAYS: z.coerce.number().int().min(1).max(3650).default(90),
 
   /**
    * Deployed commit SHA, written by `update.sh` to /opt/kestrel/.deployed-sha.

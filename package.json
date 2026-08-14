@@ -27,6 +27,7 @@
     "clean": "turbo run clean && rm -rf node_modules",
     "test:empty-guard": "node scripts/check-test-files.mjs",
     "check-console-errors": "node scripts/check-console-errors.mjs",
+    "verify:production": "node scripts/verify-production.mjs",
     "build:packages": "pnpm --filter @kestrel/shared build && pnpm --filter @kestrel/indicators build && pnpm --filter @kestrel/db build && pnpm --filter @kestrel/data build && pnpm --filter @kestrel/ai build && pnpm --filter @kestrel/test-utils build",
     "publish-packages": "pnpm build:packages && changeset publish",
     "knip": "knip"

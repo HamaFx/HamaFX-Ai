@@ -7,7 +7,8 @@ import { computeHealthSloService } from '@/lib/services/admin-health';
 function createMockDb(scenario: 'healthy' | 'missing-live-ticks' | 'stale-tick' = 'healthy') {
   // The service always issues queries in the same order:
   // 1) DB probe, 2) live_ticks, 3) cron_runs, 4) chat_tool_telemetry,
-  // 5) chat_telemetry, 6) analysis_jobs. We use a counter because
+  // 5) chat_telemetry, 6) analysis_jobs, 7) operational recovery signals.
+  // We use a counter because
   // Drizzle `sql` objects do not stringify to their SQL text reliably.
   let callIndex = 0;
 
@@ -44,6 +45,18 @@ function createMockDb(scenario: 'healthy' | 'missing-live-ticks' | 'stale-tick' 
         return { rows: [{ stale: '0', stuck: '0' }] };
       }
 
+      if (callIndex === 7) {
+        return {
+          rows: [{
+            full_total: '10', full_completed: '10', full_failed: '0',
+            sentiment_total: '10', sentiment_succeeded: '9',
+            outbox_terminal: '10', outbox_completed: '10', outbox_dead: '0',
+            budget_terminal: '10', budget_errors: '0',
+            trace_total: '10', trace_failed: '0', provider_fallback_traces: '1',
+          }],
+        };
+      }
+
       return { rows: [] };
     }),
   };
@@ -61,6 +74,8 @@ describe('computeHealthSloService', () => {
     expect(tickSli).toBeDefined();
     expect(tickSli?.details).toBe('Oldest symbol tick 30s old across 2 symbols');
     expect(tickSli?.success).toBe(1);
+    expect(result.slis.find((s) => s.key === 'full_mode_completion')?.current).toBe(1);
+    expect(result.slis.find((s) => s.key === 'sentiment_health')?.current).toBe(0.9);
   });
 
   it('does not break other SLIs when live_ticks is missing', async () => {

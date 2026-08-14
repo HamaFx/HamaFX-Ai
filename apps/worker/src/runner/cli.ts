@@ -45,7 +45,8 @@ function isKnownJob(name: string): name is JobName {
 function resolveHcUuid(env: ReturnType<typeof loadEnv>, name: JobName): string | undefined {
   const job = JOBS[name];
   if (!job?.hcUuidEnvVar) return undefined;
-  return env[job.hcUuidEnvVar];
+  const value = env[job.hcUuidEnvVar];
+  return typeof value === 'string' ? value : undefined;
 }
 
 async function main(): Promise<number> {

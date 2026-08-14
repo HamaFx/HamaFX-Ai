@@ -224,11 +224,24 @@ const RuntimeEnv = z.object({
   LANGFUSE_PUBLIC_KEY: z.string().optional(),
   LANGFUSE_SECRET_KEY: z.string().optional(),
   LANGFUSE_BASE_URL: z.string().url().optional(),
+  /** Optional release/environment labels used by Langfuse dashboards. */
+  LANGFUSE_RELEASE: z.string().min(1).optional(),
+  LANGFUSE_TRACING_ENVIRONMENT: z.string().min(1).optional(),
   /** Explicit opt-in for exporting prompts and model outputs to Langfuse. */
   LANGFUSE_RECORD_IO: z
     .union([z.literal('0'), z.literal('1'), z.literal('true'), z.literal('false')])
     .default('0')
     .transform((v) => v === '1' || v === 'true'),
+
+  // Retention values are consumed by the shared web/worker cleanup path.
+  TELEMETRY_RETENTION_DAYS: z.coerce.number().int().min(1).max(3650).default(90),
+  TRACE_RETENTION_DAYS: z.coerce.number().int().min(1).max(3650).default(30),
+  RATE_LIMIT_RETENTION_HOURS: z.coerce.number().int().min(1).max(720).default(2),
+  PROVIDER_DAILY_QUOTA_RETENTION_DAYS: z.coerce.number().int().min(1).max(3650).default(3),
+  CRON_RUN_RETENTION_DAYS: z.coerce.number().int().min(1).max(3650).default(30),
+  ANALYSIS_JOB_RETENTION_DAYS: z.coerce.number().int().min(1).max(3650).default(7),
+  PERSISTENCE_OUTBOX_RETENTION_DAYS: z.coerce.number().int().min(1).max(3650).default(30),
+  BUDGET_RESERVATION_RETENTION_DAYS: z.coerce.number().int().min(1).max(3650).default(90),
 
   // Feature Flags
   /** Public account creation policy. owner-first allows only the initial owner. */

@@ -20,14 +20,16 @@ import { fileURLToPath } from 'node:url';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-function getExpectedMigrationCount(): number {
+function getExpectedMigrationCount(): number | null {
   try {
     const here = dirname(fileURLToPath(import.meta.url));
     const journalPath = join(here, '..', '..', '..', '..', '..', '..', 'packages', 'db', 'drizzle', 'meta', '_journal.json');
     const journal = JSON.parse(readFileSync(journalPath, 'utf-8')) as { entries: unknown[] };
     return journal.entries.length;
   } catch {
-    return 32; // 0000–0031
+    // Do not silently fall back to a stale migration count. A missing journal
+    // is a deployment-integrity failure and must remain visible to monitors.
+    return null;
   }
 }
 
@@ -35,6 +37,21 @@ interface DbHealthResult {
   ok: boolean;
   connectivity: { ok: boolean; latencyMs?: number; message?: string };
   migrations: { ok: boolean; expected: number; actual?: number; message?: string };
+}
+
+/** Production drizzle-kit uses the `drizzle` schema; PGlite uses public. */
+async function countAppliedMigrations(db: ReturnType<typeof getDb>): Promise<number> {
+  try {
+    const rows = await db.execute<{ count: string }>(sql`
+      SELECT count(*)::text AS count FROM drizzle."__drizzle_migrations"
+    `);
+    return Number((rows[0] as { count: string } | undefined)?.count ?? 0);
+  } catch {
+    const rows = await db.execute<{ count: string }>(sql`
+      SELECT count(*)::text AS count FROM public."__drizzle_migrations"
+    `);
+    return Number((rows[0] as { count: string } | undefined)?.count ?? 0);
+  }
 }
 
 export const GET = withAuth<void>(async () => {
@@ -54,23 +71,28 @@ export const GET = withAuth<void>(async () => {
     };
   }
 
-  let migrations: DbHealthResult['migrations'] = { ok: false, expected: expectedMigrations };
+  let migrations: DbHealthResult['migrations'] = {
+    ok: false,
+    expected: expectedMigrations ?? 0,
+    ...(expectedMigrations === null ? { message: 'migration journal unavailable in deployment' } : {}),
+  };
   try {
     const db = getDb();
-    const rows = await db.execute<{ count: string }>(sql`
-      SELECT count(*)::text AS count FROM "__drizzle_migrations"
-    `);
-    const actual = Number((rows[0] as { count: string })?.count ?? 0);
-    migrations = {
-      ok: actual >= expectedMigrations,
-      expected: expectedMigrations,
-      actual,
-      ...(actual < expectedMigrations ? { message: `missing ${expectedMigrations - actual} migrations` } : {}),
-    };
+    const actual = await countAppliedMigrations(db);
+    if (expectedMigrations !== null) {
+      migrations = {
+        ok: actual >= expectedMigrations,
+        expected: expectedMigrations,
+        actual,
+        ...(actual < expectedMigrations ? { message: `missing ${expectedMigrations - actual} migrations` } : {}),
+      };
+    } else {
+      migrations = { ok: false, expected: 0, actual, message: 'migration journal unavailable in deployment' };
+    }
   } catch (err) {
     migrations = {
       ok: false,
-      expected: expectedMigrations,
+      expected: expectedMigrations ?? 0,
       message: err instanceof Error ? err.message : 'migration count check failed',
     };
   }

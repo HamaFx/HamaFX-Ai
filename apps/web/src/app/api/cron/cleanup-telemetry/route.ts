@@ -27,8 +27,15 @@ export async function GET(req: Request): Promise<Response> {
       tracesDeleted: result.tracesDeleted,
       rateLimitsDeleted: result.rateLimitsDeleted,
       providerDailyQuotaDeleted: result.providerDailyQuotaDeleted,
+      cronRunsDeleted: result.cronRunsDeleted,
+      analysisJobsDeleted: result.analysisJobsDeleted,
+      outboxDeleted: result.outboxDeleted,
+      budgetReservationsDeleted: result.budgetReservationsDeleted,
     });
 
-    return { processed: result.telemetryDeleted + result.toolTelemetryDeleted + result.tracesDeleted + result.rateLimitsDeleted + result.providerDailyQuotaDeleted, note: result.note };
+    return {
+      processed: Object.values(result).filter((value): value is number => typeof value === 'number').reduce((sum, value) => sum + value, 0),
+      note: result.note,
+    };
   });
 }

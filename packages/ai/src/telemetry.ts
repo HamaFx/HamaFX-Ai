@@ -18,6 +18,7 @@
 // This helper keeps every call consistent and attaches Kestrel correlation
 // fields without recording prompts or outputs by default.
 
+import { createHash } from 'node:crypto';
 import type { AttributeValue } from '@opentelemetry/api';
 
 import { getDiagnosticContext } from './diagnostics/run-context';
@@ -51,6 +52,10 @@ function shouldRecordIo(): boolean {
   return process.env.LANGFUSE_RECORD_IO === '1' || process.env.LANGFUSE_RECORD_IO === 'true';
 }
 
+function privacyId(value: string): string {
+  return createHash('sha256').update(value).digest('hex').slice(0, 24);
+}
+
 function correlationMetadata(): Record<string, AttributeValue> {
   const context = getDiagnosticContext();
   if (!context) return {};
@@ -60,8 +65,10 @@ function correlationMetadata(): Record<string, AttributeValue> {
     ...(context.requestId ? { requestId: context.requestId } : {}),
     ...(context.runId ? { runId: context.runId } : {}),
     ...(context.jobId ? { jobId: context.jobId } : {}),
-    threadId: context.threadId,
-    userId: context.userId,
+    // Langfuse receives stable pseudonymous identifiers; raw user/thread IDs
+    // remain available in the tenant-scoped database trace explorer.
+    threadId: privacyId(context.threadId),
+    userId: privacyId(context.userId),
   };
 }
 

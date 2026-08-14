@@ -23,7 +23,13 @@ export { getDb, getDbRO, getAdminDb, closeAdminDb, closeDb, closeReplicaDb, with
 export { withUserScope } from './with-user-scope';
 export { traceQuery, withTracing } from './tracing';
 export { withRateLimit, type RateLimitResult } from './rate-limit';
-export { runRetentionCleanup, runVacuumAnalyze, type RetentionConfig, type RetentionResult } from './retention';
+export {
+  runRetentionCleanup,
+  runVacuumAnalyze,
+  getRetentionConfigFromEnv,
+  type RetentionConfig,
+  type RetentionResult,
+} from './retention';
 export { getActiveUserIds } from './active-users';
 export { checkAndIncrementDailyQuota, type DailyQuotaResult } from './provider-quota';
 // PF-01 — Query/repository layer barrel. Import via `queries` namespace

@@ -122,7 +122,13 @@ async function checkAnalysisJobs(): Promise<CheckResult & { pending?: number; st
 
 function checkEnv(): CheckResult {
   const required = REQUIRED_HEALTH_ENV_VARS as readonly string[];
-  const missing = required.filter((k) => !process.env[k]);
+  const missing = required.filter((key) => {
+    if (key === 'DATABASE_URL') return !process.env.DATABASE_URL && !process.env.POSTGRES_URL;
+    if (key === 'AUTH_COOKIE_SECRET') {
+      return !process.env.AUTH_COOKIE_SECRET && !process.env.AUTH_SECRET && !process.env.NEXTAUTH_SECRET;
+    }
+    return !process.env[key];
+  });
   if (missing.length > 0) {
     return { ok: false, message: `missing env vars: ${missing.join(', ')}` };
   }

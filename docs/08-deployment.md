@@ -169,7 +169,23 @@ VAPID_PRIVATE_KEY=
 VAPID_SUBJECT=
 
 # --- Observability ---
-SENTRY_DSN=                                  # server-side; same value used as NEXT_PUBLIC_SENTRY_DSN
+SENTRY_DSN=                                  # server-side Sentry DSN
+LANGFUSE_PUBLIC_KEY=
+LANGFUSE_SECRET_KEY=
+LANGFUSE_BASE_URL=https://cloud.langfuse.com
+LANGFUSE_RELEASE=                           # deployed commit/release label
+LANGFUSE_TRACING_ENVIRONMENT=production
+LANGFUSE_RECORD_IO=0                         # keep prompt/output capture disabled by default
+
+# --- Operational retention ---
+TELEMETRY_RETENTION_DAYS=90
+TRACE_RETENTION_DAYS=30
+RATE_LIMIT_RETENTION_HOURS=2
+PROVIDER_DAILY_QUOTA_RETENTION_DAYS=3
+CRON_RUN_RETENTION_DAYS=30
+ANALYSIS_JOB_RETENTION_DAYS=7
+PERSISTENCE_OUTBOX_RETENTION_DAYS=30
+BUDGET_RESERVATION_RETENTION_DAYS=90
 
 # --- VM-only ---
 BACKUP_PROVIDER=b2                         # B2 setup is deferred
@@ -262,8 +278,50 @@ installed but skipped safely; they do not report false success.
 - **Healthchecks.io**: every heartbeat / job emits a `start` + `success`/`fail` ping. A stale check pages immediately.
 - **Sentry**: server-side errors from both `apps/web` and `apps/worker` flow into the same project. The worker's heavy-job runner adds `{ job: <name> }` to every event.
 - **Cost telemetry**: `chat_telemetry` table → `/settings/usage` UI.
+- **Admin SLO dashboard**: `/admin` → System Health shows tick freshness, cron/tool health, Full-mode completion, sentiment failures, provider fallback usage, persistence dead letters, budget recovery errors, and trace-sink failures.
+- **Alert thresholds**: page on stale ticks, stuck analysis jobs, dead outbox rows, budget recovery errors, trace failures, Full-mode completion below 99.5%, sentiment success below 95%, or fallback-free traces below 95%.
+- **Privacy default**: Langfuse prompt/output capture is disabled (`LANGFUSE_RECORD_IO=0`), and user/thread IDs exported to Langfuse are pseudonymized. Raw correlation remains in the tenant-scoped database trace explorer.
 
 If something feels slow or expensive, look at Vercel function logs + `chat_telemetry` first, then `journalctl` on the VM, then healthchecks.io for "what stopped firing".
+
+## Production verification (Phase 10)
+
+Run the read-only verification after Vercel deploy and after the worker update:
+
+```bash
+PRODUCTION_URL=https://hamafx-ai.vercel.app \
+WORKER_HEALTH_URL=http://127.0.0.1:8081 \
+pnpm verify:production
+```
+
+For a direct migration status check, run it from a trusted operator shell with
+`DIRECT_URL` or `POSTGRES_URL_NON_POOLING` (never the Supabase transaction
+pooler):
+
+```bash
+PRODUCTION_URL=https://hamafx-ai.vercel.app \
+DIRECT_URL='postgresql://<redacted>' \
+VERIFY_MIGRATIONS=1 \
+pnpm verify:production
+```
+
+The command checks `/api/health/public`, optionally checks the worker health
+endpoint, validates that production has a direct migration connection, and
+fails on partial Langfuse configuration. It never applies migrations or prints
+secret values. Vercel production builds run
+`scripts/predeploy-migrate.mjs` automatically; that script performs the
+hash-safety check and applies pending migrations before `next build`.
+
+Deployment acceptance checklist:
+
+- [ ] Vercel deployment is healthy and `/api/health/public` returns `200`.
+- [ ] `DIRECT_URL` or `POSTGRES_URL_NON_POOLING` exists in Vercel Production.
+- [ ] Vercel logs show the predeploy migration safety check and no pending migrations.
+- [ ] Worker Docker health is `healthy` and `DEPLOYED_SHA` matches the deployed commit.
+- [ ] Langfuse has all three credentials configured, or all three are intentionally absent.
+- [ ] `LANGFUSE_RECORD_IO=0` unless prompt/output capture has explicit approval.
+- [ ] `/admin` → System Health shows no stale ticks, dead outbox rows, budget errors, or trace sink failures.
+- [ ] Retention logs report cleanup for telemetry, traces, jobs, outbox, and budget ledger rows.
 
 ## Rollback
 

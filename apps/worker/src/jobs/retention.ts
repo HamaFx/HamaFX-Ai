@@ -16,14 +16,17 @@
 
 // DB-1: Retention cleanup job — runs daily to purge stale rows from
 // operational tables (rate_limits, chat_telemetry, tool_telemetry,
-// diagnostic_traces, provider_daily_quota).
+// diagnostic_traces, provider_daily_quota, and recovery ledgers).
 
-import { runRetentionCleanup } from '@kestrel/db';
+import { runRetentionCleanup, runVacuumAnalyze } from '@kestrel/db';
 
 import type { JobContext, JobResult } from './types.js';
 
 export async function runRetention(ctx: JobContext): Promise<JobResult> {
   const result = await runRetentionCleanup();
+  // VACUUM is intentionally worker-only: it is not suitable for a Vercel
+  // request and needs the persistent worker's longer statement timeout.
+  await runVacuumAnalyze();
 
   ctx.log.info('retention cleanup completed', {
     telemetryDeleted: result.telemetryDeleted,
@@ -31,15 +34,14 @@ export async function runRetention(ctx: JobContext): Promise<JobResult> {
     tracesDeleted: result.tracesDeleted,
     rateLimitsDeleted: result.rateLimitsDeleted,
     providerDailyQuotaDeleted: result.providerDailyQuotaDeleted,
+    cronRunsDeleted: result.cronRunsDeleted,
+    analysisJobsDeleted: result.analysisJobsDeleted,
+    outboxDeleted: result.outboxDeleted,
+    budgetReservationsDeleted: result.budgetReservationsDeleted,
   });
 
   return {
-    processed:
-      result.telemetryDeleted +
-      result.toolTelemetryDeleted +
-      result.tracesDeleted +
-      result.rateLimitsDeleted +
-      result.providerDailyQuotaDeleted,
+    processed: Object.values(result).filter((value): value is number => typeof value === 'number').reduce((sum, value) => sum + value, 0),
     note: result.note,
   };
 }
