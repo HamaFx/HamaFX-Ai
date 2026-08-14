@@ -21,7 +21,16 @@ export interface ComputeHealthSloOptions {
 /** Minimal DB surface needed by the health service. */
 /** Helper: extract rows from db.execute() which returns {rows: [...]} across all drivers. */
 function extractRows(result: unknown): Record<string, unknown>[] {
-  if (result && typeof result === 'object' && 'rows' in result && Array.isArray((result as Record<string, unknown>).rows)) {
+  // postgres-js returns a Result array; PGlite/node-postgres adapters expose
+  // `{ rows }`. Supporting both prevents production health metrics from
+  // silently becoming unavailable when the driver changes.
+  if (Array.isArray(result)) return result as Record<string, unknown>[];
+  if (
+    result &&
+    typeof result === 'object' &&
+    'rows' in result &&
+    Array.isArray((result as Record<string, unknown>).rows)
+  ) {
     return (result as Record<string, unknown>).rows as Record<string, unknown>[];
   }
   return [];

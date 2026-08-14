@@ -107,6 +107,25 @@ describe('computeHealthSloService', () => {
     expect(toolSli?.current).toBe(0.99);
   });
 
+  it('supports postgres-js array results as well as { rows } results', async () => {
+    const rowsDb = createMockDb('healthy');
+    const db = {
+      execute: vi.fn(async () => {
+        const result = await rowsDb.execute();
+        return result && typeof result === 'object' && 'rows' in result
+          ? (result as { rows: unknown[] }).rows
+          : result;
+      }),
+    };
+    const result = await computeHealthSloService(db, { hours: 24 });
+
+    expect(result.slis.find((s) => s.key === 'full_mode_completion')?.current).toBe(1);
+    expect(result.slis.find((s) => s.key === 'sentiment_health')?.current).toBe(0.9);
+    expect(result.anomalies).not.toContain(
+      'Recovery telemetry is unavailable — outbox, budget, trace, and Full-mode health cannot be verified',
+    );
+  });
+
   it('flags a stale tick anomaly', async () => {
     const db = createMockDb('stale-tick');
     const result = await computeHealthSloService(db, { hours: 24 });
