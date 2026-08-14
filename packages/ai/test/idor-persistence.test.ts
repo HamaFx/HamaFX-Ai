@@ -67,6 +67,7 @@ vi.mock('@kestrel/db', async () => {
 });
 
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import type { UIMessage } from 'ai';
 
 import { getLocalDb, ensureMigrations } from '@kestrel/db/local-db';
 import * as dbModule from '@kestrel/db';
@@ -77,6 +78,8 @@ import {
   getThread,
   listMessages,
   updateThreadPinnedSymbol,
+  appendUserMessage,
+  appendAssistantMessage,
 } from '../src/persistence';
 
 // The mock in the hoisted block exposes `__setDb` so we can register
@@ -108,6 +111,50 @@ beforeEach(async () => {
 async function seedUser(id: string, email: string): Promise<void> {
   await db.insert(schema.users).values({ id, email, role: 'user' });
 }
+
+describe('Phase 8 durable message idempotency', () => {
+  it('deduplicates retried user and assistant messages and returns the persisted assistant ID', async () => {
+    await seedUser(USER_A, 'a@example.com');
+    const thread = await createThread(USER_A);
+    const userMessage = {
+      id: 'client-user-message',
+      role: 'user',
+      parts: [{ type: 'text', text: 'analyze gold' }],
+    } as UIMessage;
+    const assistantMessage = {
+      id: 'client-assistant-message',
+      role: 'assistant',
+      parts: [{ type: 'text', text: 'Gold is consolidating.' }],
+    } as UIMessage;
+
+    await appendUserMessage(USER_A, thread.id, userMessage, { idempotencyKey: 'analysis-job:test:user' });
+    await appendUserMessage(USER_A, thread.id, {
+      ...userMessage,
+      parts: [{ type: 'text', text: 'different retry payload' }],
+    } as UIMessage, { idempotencyKey: 'analysis-job:test:user' });
+
+    const first = await appendAssistantMessage(
+      USER_A,
+      thread.id,
+      assistantMessage,
+      { idempotencyKey: 'analysis-job:test:assistant' },
+    );
+    const second = await appendAssistantMessage(
+      USER_A,
+      thread.id,
+      { ...assistantMessage, parts: [{ type: 'text', text: 'different retry output' }] } as UIMessage,
+      { idempotencyKey: 'analysis-job:test:assistant' },
+    );
+
+    expect(second.messageId).toBe(first.messageId);
+    const messages = await listMessages(USER_A, thread.id);
+    expect(messages).toHaveLength(2);
+    expect(messages.map((message) => message.content)).toEqual([
+      'analyze gold',
+      'Gold is consolidating.',
+    ]);
+  });
+});
 
 describe('Phase B IDOR fix — getThread / listMessages / deleteThread', () => {
   it('blocks User B from reading User A\'s thread (returns null, not 403)', async () => {

@@ -58,7 +58,12 @@ export async function listMessages(userId: string, threadId: string, limit = 200
   }));
 }
 
-export async function appendUserMessage(userId: string, threadId: string, message: UIMessage): Promise<void> {
+export async function appendUserMessage(
+  userId: string,
+  threadId: string,
+  message: UIMessage,
+  options?: { idempotencyKey?: string },
+): Promise<void> {
   const text = extractText(message);
   await getDb().transaction(async (tx) => {
     const ownedThread = await tx
@@ -68,12 +73,21 @@ export async function appendUserMessage(userId: string, threadId: string, messag
       .limit(1);
     if (ownedThread.length === 0) throw new Error(`thread not found: ${threadId}`);
 
-    await tx.insert(schema.chatMessages).values({
+    const values = {
       threadId,
-      role: 'user',
+      role: 'user' as const,
       content: text,
       parts: stripPartsForStorage(message.parts ?? null),
-    });
+      ...(options?.idempotencyKey ? { idempotencyKey: options.idempotencyKey } : {}),
+    };
+    if (options?.idempotencyKey) {
+      await tx
+        .insert(schema.chatMessages)
+        .values(values)
+        .onConflictDoNothing({ target: schema.chatMessages.idempotencyKey });
+    } else {
+      await tx.insert(schema.chatMessages).values(values);
+    }
     await tx
       .update(schema.chatThreads)
       .set({ updatedAt: new Date() })
@@ -85,6 +99,7 @@ export async function appendAssistantMessage(
   userId: string,
   threadId: string,
   message: UIMessage,
+  options?: { idempotencyKey?: string },
 ): Promise<{ messageId: string }> {
   const text = extractText(message);
   return getDb().transaction(async (tx) => {
@@ -95,6 +110,24 @@ export async function appendAssistantMessage(
       .limit(1);
     if (ownedThread.length === 0) throw new Error(`thread not found: ${threadId}`);
 
+    if (options?.idempotencyKey) {
+      const [existing] = await tx
+        .select({ id: schema.chatMessages.id })
+        .from(schema.chatMessages)
+        .where(and(
+          eq(schema.chatMessages.threadId, threadId),
+          eq(schema.chatMessages.idempotencyKey, options.idempotencyKey),
+        ))
+        .limit(1);
+      if (existing) {
+        await tx
+          .update(schema.chatThreads)
+          .set({ updatedAt: new Date() })
+          .where(and(eq(schema.chatThreads.id, threadId), eq(schema.chatThreads.userId, userId)));
+        return { messageId: existing.id };
+      }
+    }
+
     const inserted = await tx
       .insert(schema.chatMessages)
       .values({
@@ -102,13 +135,27 @@ export async function appendAssistantMessage(
         role: 'assistant',
         content: text,
         parts: stripPartsForStorage(message.parts ?? null),
+        ...(options?.idempotencyKey ? { idempotencyKey: options.idempotencyKey } : {}),
       })
+      .onConflictDoNothing(options?.idempotencyKey ? { target: schema.chatMessages.idempotencyKey } : undefined)
       .returning({ id: schema.chatMessages.id });
+    const messageRow = inserted[0];
+    if (!messageRow && options?.idempotencyKey) {
+      const [existing] = await tx
+        .select({ id: schema.chatMessages.id })
+        .from(schema.chatMessages)
+        .where(and(
+          eq(schema.chatMessages.threadId, threadId),
+          eq(schema.chatMessages.idempotencyKey, options.idempotencyKey),
+        ))
+        .limit(1);
+      if (existing) return { messageId: existing.id };
+    }
     await tx
       .update(schema.chatThreads)
       .set({ updatedAt: new Date() })
       .where(and(eq(schema.chatThreads.id, threadId), eq(schema.chatThreads.userId, userId)));
-    return { messageId: inserted[0]!.id };
+    return { messageId: messageRow!.id };
   });
 }
 

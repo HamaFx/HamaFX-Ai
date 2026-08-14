@@ -498,6 +498,20 @@
       "when": 1786673000000,
       "tag": "0071_analysis_job_attempts",
       "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1786673000001,
+      "tag": "0072_analysis_message_idempotency",
+      "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1786673000002,
+      "tag": "0073_fix_message_idempotency_index",
+      "breakpoints": true
     }
   ]
 }

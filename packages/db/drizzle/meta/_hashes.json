@@ -283,6 +283,14 @@
     {
       "tag": "0071_analysis_job_attempts",
       "hash": "babcc2fafa954cdd2760e44d361ce7eba7ba735d4363e724357598a7d19df684"
+    },
+    {
+      "tag": "0072_analysis_message_idempotency",
+      "hash": "7a92af4eb1410fdde9e8e2f6c1f690f8197e65325cadc17747fc76a7b4dc0aa2"
+    },
+    {
+      "tag": "0073_fix_message_idempotency_index",
+      "hash": "5e1b1bf15c2d745204400276881226fb48804dd27000ef7dbcf75c0f3e8e2514"
     }
   ]
 }

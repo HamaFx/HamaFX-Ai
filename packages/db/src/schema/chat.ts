@@ -90,10 +90,15 @@ export const chatMessages = pgTable(
     role: text('role').notNull(),
     content: text('content').notNull().default(''),
     parts: jsonb('parts'),
+    /** Optional durable idempotency key for retried worker/agent turns. */
+    idempotencyKey: text('idempotency_key'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [
     index('chat_messages_thread_idx').on(t.threadId, t.createdAt),
     index('chat_messages_tenant_id_idx').on(t.tenantId),
+    // A regular unique index already permits multiple NULLs in Postgres,
+    // while remaining usable by ON CONFLICT (idempotency_key).
+    uniqueIndex('chat_messages_idempotency_key_uk').on(t.idempotencyKey),
   ],
 );

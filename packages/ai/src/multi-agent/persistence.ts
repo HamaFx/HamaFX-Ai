@@ -57,7 +57,9 @@ export async function saveAgentOpinions(args: SaveOpinionsArgs): Promise<void> {
       latencyMs: op.latencyMs,
       analysisMode: args.analysisMode,
     })),
-  );
+  ).onConflictDoNothing({
+    target: [schema.agentOpinions.messageId, schema.agentOpinions.agentName],
+  });
 }
 
 /** S1 fix — scope agent opinion queries by userId to prevent cross-tenant data leaks. */

@@ -65,6 +65,8 @@ export interface RunMultiAgentArgs {
   onProgress?: (event: ProgressEvent) => void;
   /** P1-4/U1 — token-by-token fusion streaming callback. */
   onTextChunk?: (chunk: string) => void;
+  /** Durable key used to make worker retries message-idempotent. */
+  idempotencyKey?: string;
 }
 
 export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiAgentResult> {
@@ -122,7 +124,12 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
     // ── Persist the user message first ──
     // This ensures the conversation survives even if all agents fail.
     // Do this AFTER budget reservation succeeds but BEFORE any agent work.
-    await appendUserMessage(userId, threadId, userMessage);
+    await appendUserMessage(
+      userId,
+      threadId,
+      userMessage,
+      args.idempotencyKey ? { idempotencyKey: `${args.idempotencyKey}:user` } : undefined,
+    );
 
     setupComplete = true;
 
@@ -308,36 +315,38 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
     });
   } catch { /* citation enforcer should never crash the pipeline */ }
 
-  // M2: Pre-generate messageId so we can parallelize message and opinion
-  // persistence — saves ~100ms in the happy path.
-  const persistedMessageId = crypto.randomUUID();
-
   // ── Persist the assistant message ──
   let parts: UIMessage['parts'] = [{ type: 'text', text: finalText }];
   if (citationWarning) {
     parts = [...parts, citationWarning as unknown as UIMessage['parts'][number]];
   }
   const assistantUi: UIMessage = {
-    id: persistedMessageId,
+    id: crypto.randomUUID(),
     role: 'assistant',
     parts,
   };
 
-  // M2: Persist message and opinions in parallel — they share the known
-  // messageId, so no ordering dependency exists.
-  const persistPromise = appendAssistantMessage(userId, threadId, assistantUi);
-  const opinionsPromise = validOpinions.length > 0
-    ? saveAgentOpinions({
-        userId, threadId, messageId: persistedMessageId, analysisMode: effectiveMode,
-        opinions: validOpinions.map((o) => ({
-          agentName: o.agentName, bias: o.bias, confidence: o.confidence,
-          reasoning: o.reasoning, rawData: o.rawData, model: o.model,
-          costUsd: o.costUsd, latencyMs: o.latencyMs,
-        })),
-      }).catch((err) => logErrorContext(err, 'multi-agent/save_opinions_failed', {}, 'ai'))
-    : Promise.resolve();
+  // Persist the assistant first and use the database-returned ID for every
+  // dependent row. The UI message ID is not necessarily the database ID,
+  // and retry idempotency may return an already-existing assistant row.
+  const persistedAssistant = await appendAssistantMessage(
+    userId,
+    threadId,
+    assistantUi,
+    args.idempotencyKey ? { idempotencyKey: `${args.idempotencyKey}:assistant` } : undefined,
+  );
+  const persistedMessageId = persistedAssistant.messageId;
 
-  await Promise.all([persistPromise, opinionsPromise]);
+  if (validOpinions.length > 0) {
+    await saveAgentOpinions({
+      userId, threadId, messageId: persistedMessageId, analysisMode: effectiveMode,
+      opinions: validOpinions.map((o) => ({
+        agentName: o.agentName, bias: o.bias, confidence: o.confidence,
+        reasoning: o.reasoning, rawData: o.rawData, model: o.model,
+        costUsd: o.costUsd, latencyMs: o.latencyMs,
+      })),
+    }).catch((err) => logErrorContext(err, 'multi-agent/save_opinions_failed', {}, 'ai'));
+  }
 
   // ── Record telemetry for the multi-agent turn ──
   void recordTelemetry({

@@ -270,6 +270,7 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
         env,
         signal: ctx.signal ?? null,
         analysisMode: resolvedMode,
+        idempotencyKey: `analysis-job:${job.id}`,
         onProgress,
       }), job.traceId ? { traceId: job.traceId } : {});
 

@@ -15,7 +15,7 @@
  */
 
 import { sql } from 'drizzle-orm';
-import { index, integer, jsonb, pgTable, real, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { index, integer, jsonb, pgTable, real, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
 
 import { organization, users } from './auth';
 import { chatMessages, chatThreads } from './chat';
@@ -51,6 +51,7 @@ export const agentOpinions = pgTable(
   (t) => [
     index('agent_opinions_thread_idx').on(t.threadId),
     index('agent_opinions_user_created_idx').on(t.userId, t.createdAt),
+    unique('agent_opinions_message_agent_uk').on(t.messageId, t.agentName),
   ],
 );
 
