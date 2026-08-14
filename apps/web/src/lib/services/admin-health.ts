@@ -104,7 +104,10 @@ export async function computeHealthSloService(
   db: HealthSloDb,
   { hours }: ComputeHealthSloOptions,
 ): Promise<HealthSloResponse> {
-  const since = new Date(Date.now() - hours * 60 * ONE_MINUTE);
+  // Drizzle's postgres-js execute path serializes raw SQL parameters more
+  // reliably as ISO strings than as Date instances (especially through the
+  // Supabase transaction pooler).
+  const since = new Date(Date.now() - hours * 60 * ONE_MINUTE).toISOString();
 
   // ── DB probe (kept separate; it drives overall status) ───────────────────
   let dbOk = false;
@@ -425,7 +428,7 @@ async function queryTickAggregate(
 
 async function queryCronAggregate(
   db: HealthSloDb,
-  since: Date,
+  since: string,
 ): Promise<CronAggregate | null> {
   try {
     const result = await db.execute(sql`
@@ -454,7 +457,7 @@ async function queryCronAggregate(
 
 async function queryToolAggregate(
   db: HealthSloDb,
-  since: Date,
+  since: string,
 ): Promise<ToolAggregate | null> {
   try {
     const result = await db.execute(sql`
@@ -478,7 +481,7 @@ async function queryToolAggregate(
 
 async function queryChatAggregate(
   db: HealthSloDb,
-  since: Date,
+  since: string,
 ): Promise<ChatAggregate | null> {
   try {
     const result = await db.execute(sql`
@@ -497,7 +500,7 @@ async function queryChatAggregate(
 
 async function queryOperationalAggregate(
   db: HealthSloDb,
-  since: Date,
+  since: string,
 ): Promise<OperationalAggregate | null> {
   try {
     const result = await db.execute(sql`
@@ -563,7 +566,7 @@ async function queryOperationalAggregate(
 
 async function queryAnalysisAggregate(
   db: HealthSloDb,
-  since: Date,
+  since: string,
 ): Promise<AnalysisAggregate | null> {
   try {
     const result = await db.execute(sql`
