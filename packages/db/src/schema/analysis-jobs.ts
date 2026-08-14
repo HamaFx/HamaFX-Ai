@@ -21,7 +21,7 @@
 // the analysis when it finds pending work. The client polls the API
 // endpoint until status='complete' or 'failed'.
 
-import { pgTable, text, timestamp, jsonb, varchar, uuid } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, jsonb, varchar, uuid, integer } from 'drizzle-orm/pg-core';
 import { users } from './auth';
 import { chatThreads } from './chat';
 
@@ -48,6 +48,9 @@ export const analysisJobs = pgTable('analysis_jobs', {
 
   /** Status: pending → running → complete | failed. */
   status: varchar('status', { length: 20 }).notNull().default('pending'),
+
+  /** Number of worker attempts, incremented atomically when claimed. */
+  attemptCount: integer('attempt_count').notNull().default(0),
 
   /** Serialized progress events (agent_start, agent_done, etc.). */
   progress: jsonb('progress').$type<Array<Record<string, unknown>>>(),

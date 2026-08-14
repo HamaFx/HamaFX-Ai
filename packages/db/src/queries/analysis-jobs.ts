@@ -17,7 +17,7 @@
 // Analysis jobs query helpers.
 
 import { randomUUID } from 'node:crypto';
-import { and, asc, eq, lt } from 'drizzle-orm';
+import { and, asc, eq, lt, sql } from 'drizzle-orm';
 import { getDb, schema } from '../client';
 
 export type AnalysisJobRow = typeof schema.analysisJobs.$inferSelect;
@@ -50,10 +50,18 @@ export async function claimNextPendingJob(): Promise<AnalysisJobRow | null> {
         startedAt: now,
         updatedAt: now,
         workerRunId,
+        attemptCount: sql`${schema.analysisJobs.attemptCount} + 1`,
       })
       .where(and(eq(schema.analysisJobs.id, job.id), eq(schema.analysisJobs.status, 'pending')));
 
-    return { ...job, status: 'running', startedAt: now, updatedAt: now, workerRunId };
+    return {
+      ...job,
+      status: 'running',
+      startedAt: now,
+      updatedAt: now,
+      workerRunId,
+      attemptCount: job.attemptCount + 1,
+    };
   });
 }
 

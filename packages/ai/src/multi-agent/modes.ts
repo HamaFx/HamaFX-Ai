@@ -47,9 +47,16 @@ export function autoDetectMode(message: string): ResolvedMode {
   if (/(is it (a )?good time (to|for)|is now (a )?good time)/.test(lower)) return 'full';
   if (/(buy or sell|long or short|bullish or bearish)/.test(lower)) return 'full';
 
+  // Explicitly comprehensive requests — full committee. Keep this ahead
+  // of the general analysis rule so "full analysis" and "deep dive" do not
+  // silently degrade to the two-agent standard mode.
+  if (/(full|complete|comprehensive|deep dive|all four|committee)/.test(lower) &&
+      /(analysis|analy[sz]e|review|read|outlook|assessment|committee)/.test(lower)) return 'full';
+  if (/(deep dive|full analysis|comprehensive analysis)/.test(lower)) return 'full';
+
   // Analysis / opinion questions — standard.
   if (/(analyze|analysis|outlook|view on|what do you think|forecast|predict)/.test(lower)) return 'standard';
-  if (/(technical (and|&) fundamental|full analysis|deep dive)/.test(lower)) return 'standard';
+  if (/(technical (and|&) fundamental)/.test(lower)) return 'standard';
 
   // Ambiguous short prompts — default to single for efficiency.
   if (lower.length < 10) return 'single';

@@ -36,7 +36,12 @@ describe('modes — autoDetectMode', () => {
     expect(autoDetectMode('current price for EURUSD')).toBe('single');
     expect(autoDetectMode('how much is gold right now?')).toBe('single');
   });
-  it('detects standard mode for analysis questions', () => {
+  it('detects full mode for explicitly comprehensive analysis requests', () => {
+    expect(autoDetectMode('Give me a full analysis of XAUUSD')).toBe('full');
+    expect(autoDetectMode('Do a deep dive on gold')).toBe('full');
+    expect(autoDetectMode('Run a comprehensive assessment')).toBe('full');
+  });
+  it('detects standard mode for ordinary analysis questions', () => {
     expect(autoDetectMode('analyze XAUUSD')).toBe('standard');
     expect(autoDetectMode('what is your outlook on EURUSD?')).toBe('standard');
     expect(autoDetectMode('what do you think about gold?')).toBe('standard');

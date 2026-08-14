@@ -27,7 +27,7 @@
 import { schema } from '@kestrel/db';
 import { getDb, ProgressTracker, selectAgents } from '@kestrel/ai';
 import type { ProgressEvent } from '@kestrel/ai';
-import { eq, asc, lt, and } from 'drizzle-orm';
+import { eq, asc, lt, and, sql } from 'drizzle-orm';
 import { pickAiEnv } from '@kestrel/shared';
 import { traceIdStorage } from '@kestrel/shared/logger';
 import type { UIMessage } from 'ai';
@@ -39,6 +39,12 @@ const MAX_JOBS_PER_RUN = 3;
 
 /** Maximum time a job can stay in 'running' before being considered stale. */
 const STALE_JOB_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+const MAX_ANALYSIS_ATTEMPTS = 3;
+
+function isRetryableAnalysisError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return /(?:timeout|timed?\\s*out|aborted|network|fetch\\s*failed|rate\\s*limit|too\\s*many\\s*requests|temporar(?:y|ily)|connection|ECONNRESET|5\\d\\d)/i.test(message);
+}
 
 function reconstructHistory(raw: unknown): UIMessage[] {
   if (!Array.isArray(raw)) return [];
@@ -96,6 +102,7 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
           startedAt: now,
           updatedAt: now,
           workerRunId,
+          attemptCount: sql`${schema.analysisJobs.attemptCount} + 1`,
         })
         .where(
           and(
@@ -104,7 +111,7 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
           ),
         );
 
-      return { ...job, workerRunId };
+      return { ...job, workerRunId, attemptCount: job.attemptCount + 1 };
     });
 
     if (!claimResult) {
@@ -299,15 +306,27 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
       processed++;
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
-        ctx.log.error('Analysis job failed', { jobId: job.id, err: msg });
+        const retryable = isRetryableAnalysisError(err) && job.attemptCount < MAX_ANALYSIS_ATTEMPTS;
+        const nextStatus = retryable ? 'pending' : 'failed';
+        const nextError = retryable
+          ? `Attempt ${job.attemptCount}/${MAX_ANALYSIS_ATTEMPTS} failed; retrying automatically.`
+          : msg;
+        ctx.log.error('Analysis job failed', {
+          jobId: job.id,
+          err: msg,
+          retryable,
+          attempt: job.attemptCount,
+        });
 
       await progressWrite;
       await db
         .update(schema.analysisJobs)
         .set({
-          status: 'failed',
-          error: msg,
-          completedAt: new Date(),
+          status: nextStatus,
+          error: nextError,
+          completedAt: retryable ? null : new Date(),
+          startedAt: retryable ? null : job.startedAt,
+          workerRunId: retryable ? null : job.workerRunId,
           updatedAt: new Date(),
         })
         .where(
@@ -333,16 +352,33 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
     }
   }
 
-  // Clean up jobs whose lease has not been refreshed for >5 minutes.
-  // Terminal writes are lease-token-conditional, so an old worker cannot
-  // resurrect a job after this cleanup marks it failed.
-  // Only mark jobs that have been running longer than STALE_JOB_TIMEOUT_MS.
+  // Requeue stale leases while attempts remain. Terminal writes are
+  // lease-token-conditional, so an old worker cannot resurrect a job after
+  // this cleanup changes it back to pending. Jobs that exhausted their
+  // bounded attempts become failed and remain visible to the client.
   const staleCutoff = new Date(Date.now() - STALE_JOB_TIMEOUT_MS);
   await db
     .update(schema.analysisJobs)
     .set({
+      status: 'pending',
+      error: 'Worker lease expired; retrying automatically.',
+      startedAt: null,
+      workerRunId: null,
+      updatedAt: new Date(),
+    })
+    .where(
+      and(
+        eq(schema.analysisJobs.status, 'running'),
+        lt(schema.analysisJobs.updatedAt, staleCutoff),
+        sql`${schema.analysisJobs.attemptCount} < ${MAX_ANALYSIS_ATTEMPTS}`,
+      ),
+    );
+
+  await db
+    .update(schema.analysisJobs)
+    .set({
       status: 'failed',
-      error: 'Job timed out — worker may have restarted.',
+      error: 'Job timed out — maximum worker attempts reached.',
       completedAt: new Date(),
       updatedAt: new Date(),
     })
@@ -350,6 +386,7 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
       and(
         eq(schema.analysisJobs.status, 'running'),
         lt(schema.analysisJobs.updatedAt, staleCutoff),
+        sql`${schema.analysisJobs.attemptCount} >= ${MAX_ANALYSIS_ATTEMPTS}`,
       ),
     );
 

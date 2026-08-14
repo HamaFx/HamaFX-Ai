@@ -255,11 +255,34 @@
     {
       "tag": "0064_phase2_symbol_catalog_activation",
       "hash": "8462cc98e5b1a94391834afbbace023a647e5961da8de424faebbb29f32ff690"
-    },{"tag": "0065_repair_tool_output_chars", "hash": "06e7241016a938f32e0e18bcbbe0e80ba85e3232a04331b72b64cdaa4cbb419c"},
-    {"tag": "0066_phase2_concurrency_guards", "hash": "9864cb5431a9d6cdd459718cdb5eeeb529a31794e9053886b150f9b7a626500a"},
-    {"tag": "0067_telegram_update_idempotency", "hash": "00d60cf12a9c51305c5110a79756d095e37b6db0fe2b75f0b1389c1ad7937ee4"},
-    {"tag": "0068_remove_stale_twelve_data_symbol", "hash": "f6235274cbe64c82b7899870588154291e3d4fce4b0777bd94d50b471a5d9cd8"},
-    {"tag": "0069_restore_public_grants", "hash": "40c802c553ac8084587929ab35664df6cac03d05867c5ba3ac53a9aab80edb5c"},
-    {"tag": "0070_restrict_public_api_grants", "hash": "ca4fdc205dc93ccae86bac52b7be1e1ce0be54eb81ace753500512a9be8530e8"}
+    },
+    {
+      "tag": "0065_repair_tool_output_chars",
+      "hash": "06e7241016a938f32e0e18bcbbe0e80ba85e3232a04331b72b64cdaa4cbb419c"
+    },
+    {
+      "tag": "0066_phase2_concurrency_guards",
+      "hash": "9864cb5431a9d6cdd459718cdb5eeeb529a31794e9053886b150f9b7a626500a"
+    },
+    {
+      "tag": "0067_telegram_update_idempotency",
+      "hash": "00d60cf12a9c51305c5110a79756d095e37b6db0fe2b75f0b1389c1ad7937ee4"
+    },
+    {
+      "tag": "0068_remove_stale_twelve_data_symbol",
+      "hash": "f6235274cbe64c82b7899870588154291e3d4fce4b0777bd94d50b471a5d9cd8"
+    },
+    {
+      "tag": "0069_restore_public_grants",
+      "hash": "40c802c553ac8084587929ab35664df6cac03d05867c5ba3ac53a9aab80edb5c"
+    },
+    {
+      "tag": "0070_restrict_public_api_grants",
+      "hash": "ca4fdc205dc93ccae86bac52b7be1e1ce0be54eb81ace753500512a9be8530e8"
+    },
+    {
+      "tag": "0071_analysis_job_attempts",
+      "hash": "babcc2fafa954cdd2760e44d361ce7eba7ba735d4363e724357598a7d19df684"
+    }
   ]
 }
