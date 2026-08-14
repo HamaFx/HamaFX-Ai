@@ -19,8 +19,9 @@
 import { convertToModelMessages, generateText, stepCountIs, type LanguageModel, type Tool } from 'ai';
 import { z } from 'zod';
 import { supportsPromptCaching } from '../../model';
-import { checkBudgetAlertsAndThresholds, estimateCostUsd } from '../../cost';
+import { estimateCostUsd } from '../../cost';
 import { withToolContext, type ToolContext } from '../../tool-context';
+import { flushBatchedTelemetry } from '../../chat/helpers';
 import { telemetryConfig } from '../../telemetry';
 import { container } from '@kestrel/shared';
 import { DB } from '../../tokens';
@@ -28,7 +29,7 @@ import type { SharedContext, AgentOpinion, AgentName, AgentBias, ModelTier } fro
 import { AGENT_TIMEOUTS } from '../types';
 import { extractUserMessageText } from '../context';
 import { responseLanguageInstruction } from '../../prompt/system';
-import { resolveAgentModel, safeParseJson } from './agent-model';
+import { resolveAgentModel, safeParseJson, withAgentModelFallback } from './agent-model';
 
 export const baseOpinionSchema = z.object({
   bias: z.enum(['bullish', 'bearish', 'neutral']),
@@ -85,11 +86,6 @@ export abstract class BaseAgent {
 
   async run(ctx: SharedContext): Promise<AgentOpinion> {
     const startMs = Date.now();
-    const { model, modelId, providerId } = this.resolveModel(ctx);
-    const providerBudget = await checkBudgetAlertsAndThresholds(ctx.userId, providerId);
-    if (providerBudget.blocked) {
-      throw new Error(providerBudget.blockedReason ?? `Provider ${providerId} spending limit exceeded`);
-    }
     const sharedPrompt = ctx.snapshot ? `# LIVE MARKET CONTEXT\n${JSON.stringify(ctx.snapshot, null, 2)}\n` : '';
     const prefetchedPrompt = ctx.prefetchedData
       ? `\n\n${ctx.prefetchedData}\n\nPrefer the above pre-fetched data. Only call tools for data gaps or updates.\n`
@@ -103,10 +99,6 @@ export abstract class BaseAgent {
       ...historyMessages,
       { role: 'user' as const, content: userText },
     ];
-    const tools = limitToolsForProvider(modelId, this.tools());
-    for (const disabledTool of ctx.userSettings.disabledTools ?? []) {
-      delete tools[disabledTool];
-    }
     const toolContext: ToolContext = {
       threadId: ctx.threadId,
       userId: ctx.userId,
@@ -119,55 +111,72 @@ export abstract class BaseAgent {
       db: container.resolve(DB),  // P0-2 — inject DB client
       toolTelemetryBuffer: [],  // M4: batch telemetry inserts
     };
-    const timeoutMs = AGENT_TIMEOUTS[this.name] ?? 15_000;
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), timeoutMs);
-    const onParentAbort = () => controller.abort(ctx.signal?.reason);
-    if (ctx.signal) {
-      if (ctx.signal.aborted) onParentAbort();
-      else ctx.signal.addEventListener('abort', onParentAbort, { once: true });
-    }
-    try {
-      const result = await withToolContext(toolContext, async () => generateText({
-        model, system: fullSystem,
-        ...telemetryConfig(),
-        ...(supportsPromptCaching(modelId)
-          ? { providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' as const } } } }
-          : {}),
-        messages,
-        tools,
-        stopWhen: stepCountIs(ctx.env.MAX_TOOL_ITERATIONS ?? 6),
-        abortSignal: controller.signal,
-        maxOutputTokens: 3000,
-      }));
-      const latencyMs = Date.now() - startMs;
-      const inputTokens = result.usage?.inputTokens ?? 0;
-      const outputTokens = result.usage?.outputTokens ?? 0;
-      const costUsd = estimateCostUsd(modelId, inputTokens, outputTokens);
-      const parsed = this.parseOutput(result.text);
-      const toolNames = extractToolNamesFromMessages(result.response?.messages);
-      const rawData = {
-        ...parsed.rawData,
-        _tools: toolNames,
-      };
-      return {
-        agentName: this.name,
-        bias: parsed.bias,
-        confidence: parsed.confidence,
-        reasoning: parsed.reasoning,
-        rawData,
-        costUsd,
-        latencyMs,
-        model: modelId,
-        inputTokens,
-        outputTokens,
-        providerId,
-        modelId,
-      };
-    } finally {
-      clearTimeout(timeout);
-      ctx.signal?.removeEventListener('abort', onParentAbort);
-    }
+
+    const execution = await withAgentModelFallback(
+      ctx,
+      this.name,
+      this.modelTier,
+      async ({ model, modelId }) => {
+        const tools = limitToolsForProvider(modelId, this.tools());
+        for (const disabledTool of ctx.userSettings.disabledTools ?? []) {
+          delete tools[disabledTool];
+        }
+        const timeoutMs = AGENT_TIMEOUTS[this.name] ?? 15_000;
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), timeoutMs);
+        const onParentAbort = () => controller.abort(ctx.signal?.reason);
+        if (ctx.signal) {
+          if (ctx.signal.aborted) onParentAbort();
+          else ctx.signal.addEventListener('abort', onParentAbort, { once: true });
+        }
+        try {
+          return await withToolContext(toolContext, async () => generateText({
+            model, system: fullSystem,
+            ...telemetryConfig(),
+            ...(supportsPromptCaching(modelId)
+              ? { providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' as const } } } }
+              : {}),
+            messages,
+            tools,
+            stopWhen: stepCountIs(ctx.env.MAX_TOOL_ITERATIONS ?? 6),
+            abortSignal: controller.signal,
+            maxOutputTokens: 3000,
+          }));
+        } finally {
+          await flushBatchedTelemetry(toolContext.toolTelemetryBuffer ?? []);
+          if (toolContext.toolTelemetryBuffer) toolContext.toolTelemetryBuffer.length = 0;
+          clearTimeout(timeout);
+          ctx.signal?.removeEventListener('abort', onParentAbort);
+        }
+      },
+    );
+
+    const { result, resolution } = execution;
+    const { modelId, providerId } = resolution;
+    const latencyMs = Date.now() - startMs;
+    const inputTokens = result.usage?.inputTokens ?? 0;
+    const outputTokens = result.usage?.outputTokens ?? 0;
+    const costUsd = estimateCostUsd(modelId, inputTokens, outputTokens);
+    const parsed = this.parseOutput(result.text);
+    const toolNames = extractToolNamesFromMessages(result.response?.messages);
+    const rawData = {
+      ...parsed.rawData,
+      _tools: toolNames,
+    };
+    return {
+      agentName: this.name,
+      bias: parsed.bias,
+      confidence: parsed.confidence,
+      reasoning: parsed.reasoning,
+      rawData,
+      costUsd,
+      latencyMs,
+      model: modelId,
+      inputTokens,
+      outputTokens,
+      providerId,
+      modelId,
+    };
   }
 
   protected safeParseJson(text: string): Record<string, unknown> | null {

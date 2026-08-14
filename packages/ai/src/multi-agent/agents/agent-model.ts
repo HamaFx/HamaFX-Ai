@@ -21,8 +21,11 @@
 
 import type { LanguageModel } from 'ai';
 import { resolveChatModel, resolveModelForProvider, TIER_TO_DOMAIN, type ModelDomain } from '../../model';
-import type { ProviderId } from '@kestrel/shared';
+import { decryptByok, type ProviderId } from '@kestrel/shared/encryption';
 import { PROVIDER_IDS } from '@kestrel/shared/byok';
+import { classifyStreamError } from '../../fallback';
+import { pickNextFallbackProvider } from '../../model-resolution';
+import { checkBudgetAlertsAndThresholds } from '../../cost';
 import type { SharedContext, ModelTier, AgentName } from '../types';
 
 /**
@@ -45,6 +48,8 @@ export function tierToDomain(tier: ModelTier): ModelDomain {
  * Honours per-agent model overrides from userSettings, falling back to the
  * tier-based domain resolution.
  */
+export type AgentModelResolution = ReturnType<typeof resolveAgentModel>;
+
 export function resolveAgentModel(
   ctx: SharedContext,
   agentName: AgentName,
@@ -95,6 +100,75 @@ export function resolveAgentModel(
 
   const res = resolveChatModel(ctx.userSettings, ctx.env, domain);
   return { model: res.model, modelId: res.modelId, providerId: res.providerId };
+}
+
+/**
+ * Resolve and execute an agent model with bounded provider fallback.
+ * Each configured provider is attempted at most once, and only errors
+ * classified as recoverable can advance the user's fallback chain.
+ */
+export async function withAgentModelFallback<T>(
+  ctx: SharedContext,
+  agentName: AgentName,
+  modelTier: ModelTier,
+  execute: (resolution: AgentModelResolution) => Promise<T>,
+): Promise<{ result: T; resolution: AgentModelResolution }> {
+  const domain = tierToDomain(modelTier);
+  const first = resolveAgentModel(ctx, agentName, modelTier);
+  const candidates: AgentModelResolution[] = [first];
+  const seen = new Set<ProviderId>([first.providerId]);
+  const chain = Array.isArray(ctx.userSettings.aiFallbackChain)
+    ? ctx.userSettings.aiFallbackChain.filter((provider): provider is string => typeof provider === 'string')
+    : [];
+  const decryptedKeys = decryptByok(ctx.userSettings.aiApiKeys);
+  let currentProvider: ProviderId | string | undefined = first.providerId;
+
+  // Bound fallback fan-out even if a malformed settings row contains a long chain.
+  while (candidates.length < 5) {
+    const routingDomain = domain === 'embedding' ? 'technical' : domain;
+    const next = pickNextFallbackProvider(
+      chain,
+      currentProvider,
+      decryptedKeys,
+      ctx.env.GOOGLE_GENERATIVE_AI_API_KEY,
+      routingDomain,
+    );
+    if (!next || seen.has(next.providerId)) break;
+    seen.add(next.providerId);
+    currentProvider = next.providerId;
+    try {
+      candidates.push(resolveModelForProvider(
+        next.providerId,
+        ctx.userSettings,
+        ctx.env,
+        next.modelId ?? undefined,
+        domain,
+      ));
+    } catch {
+      // A configured fallback can still be unavailable (circuit open,
+      // unsupported model, or malformed key); continue to the next one.
+    }
+  }
+
+  let lastError: unknown;
+  for (const resolution of candidates) {
+    if (ctx.signal?.aborted) {
+      throw ctx.signal.reason ?? new DOMException('Aborted', 'AbortError');
+    }
+    try {
+      const budget = await checkBudgetAlertsAndThresholds(ctx.userId, resolution.providerId);
+      if (budget.blocked) {
+        throw new Error(`PROVIDER_THRESHOLD_EXCEEDED: ${budget.blockedReason ?? 'provider threshold exceeded'}`);
+      }
+      return { result: await execute(resolution), resolution };
+    } catch (err) {
+      lastError = err;
+      const providerThreshold = err instanceof Error && err.message.startsWith('PROVIDER_THRESHOLD_EXCEEDED');
+      if (ctx.signal?.aborted || (!providerThreshold && !classifyStreamError(err).fallback)) throw err;
+    }
+  }
+
+  throw lastError ?? new Error(`No usable model available for ${agentName} agent`);
 }
 
 /**
