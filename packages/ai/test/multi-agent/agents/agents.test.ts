@@ -16,6 +16,7 @@
 
 import { describe, it, expect } from 'vitest';
 import type { AgentBias } from '@ai/multi-agent/types';
+import { AGENT_TIMEOUTS } from '@ai/multi-agent/types';
 import { TechnicalAgent } from '@ai/multi-agent/agents/technical-agent';
 import { FundamentalAgent } from '@ai/multi-agent/agents/fundamental-agent';
 import { RiskAgent } from '@ai/multi-agent/agents/risk-agent';
@@ -48,7 +49,16 @@ describe('RiskAgent', () => {
 describe('SentimentAgent', () => {
   const agent = new SentimentAgent();
   it('has correct name and tier', () => { expect(agent.name).toBe('sentiment'); expect(agent.modelTier).toBe('fast'); });
-  it('has sentiment tools', () => { const t = agent.tools(); expect(t.get_news).toBeDefined(); expect(t.get_candles).toBeUndefined(); });
+  it('has sentiment tools without embedding/RAG dependencies', () => {
+    const t = agent.tools();
+    expect(t.get_news).toBeDefined();
+    expect(t.get_social_sentiment).toBeDefined();
+    expect(t.search_knowledge).toBeUndefined();
+    expect(t.get_candles).toBeUndefined();
+  });
+  it('has enough timeout headroom for external sentiment retries', () => {
+    expect(AGENT_TIMEOUTS.sentiment).toBe(20_000);
+  });
 });
 
 describe('DecisionAgent', () => {

@@ -68,7 +68,7 @@ export class SocialSentimentService {
    * Fetch sentiment for a single symbol from the external API.
    * Returns null if the service is unavailable or the fetch fails.
    */
-  async getSentiment(symbol: string): Promise<SocialSentiment | null> {
+  async getSentiment(symbol: string, signal?: AbortSignal | null): Promise<SocialSentiment | null> {
     if (!this.isAvailable) {
       return this.unavailable(symbol, 'retail_positioning');
     }
@@ -82,7 +82,7 @@ export class SocialSentimentService {
               Authorization: `Bearer ${this.apiKey!}`,
               'Content-Type': 'application/json',
             },
-            signal: null,
+            signal: signal ?? null,
           });
 
           if (!res.ok) {
@@ -111,10 +111,14 @@ export class SocialSentimentService {
           maxAttempts: 3,
           baseDelayMs: 1000,
           maxDelayMs: 5000,
+          signal: signal ?? null,
         },
       );
-    } catch {
-      // All retries exhausted — return unavailable
+    } catch (error) {
+      // Cancellation must reach the agent so the caller can stop cleanly;
+      // only ordinary upstream failures degrade to unavailable sentiment.
+      if (signal?.aborted) throw error;
+      // All retries exhausted — return unavailable.
       return this.unavailable(symbol, 'retail_positioning');
     }
   }
@@ -124,11 +128,11 @@ export class SocialSentimentService {
    * Currently only fetches retail positioning, but the architecture
    * supports adding Reddit, Twitter, etc. as additional sources.
    */
-  async getAggregatedSentiment(symbol: string): Promise<AggregatedSentiment> {
+  async getAggregatedSentiment(symbol: string, signal?: AbortSignal | null): Promise<AggregatedSentiment> {
     const sources: SocialSentiment[] = [];
 
     // Retail positioning (primary source)
-    const retail = await this.getSentiment(symbol);
+    const retail = await this.getSentiment(symbol, signal);
     if (retail) sources.push(retail);
 
     // News sentiment — uses the existing news infrastructure

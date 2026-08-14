@@ -36,7 +36,7 @@ describe('budget — AGENT_TIMEOUTS', () => {
     expect(AGENT_TIMEOUTS.technical).toBe(15_000);
     expect(AGENT_TIMEOUTS.fundamental).toBe(15_000);
     expect(AGENT_TIMEOUTS.risk).toBe(15_000);
-    expect(AGENT_TIMEOUTS.sentiment).toBe(10_000);
+    expect(AGENT_TIMEOUTS.sentiment).toBe(20_000);
     expect(AGENT_TIMEOUTS.decision).toBe(30_000);
   });
 

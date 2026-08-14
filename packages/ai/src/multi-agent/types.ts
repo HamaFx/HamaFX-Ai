@@ -174,6 +174,9 @@ export const AGENT_TIMEOUTS: Record<AgentName, number> = {
   technical: 15_000,
   fundamental: 15_000,
   risk: 15_000,
-  sentiment: 10_000,
+  // Sentiment may call an external positioning API with bounded retries.
+  // Give it the same practical headroom as the other specialists so a
+  // transient social-data delay does not make only this agent fail.
+  sentiment: 20_000,
   decision: 30_000,
 };

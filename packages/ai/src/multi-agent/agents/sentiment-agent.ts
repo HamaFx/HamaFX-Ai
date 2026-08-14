@@ -55,12 +55,16 @@ DO NOT discuss technical levels or fundamentals. Output your sentiment read only
   "reasoning": "2-3 sentence sentiment summary"
 }
 
-Use the available tools to fetch real news and search for relevant information
-before forming your sentiment assessment.`;
+Use get_news and get_social_sentiment to fetch live sentiment inputs
+before forming your assessment. If a source is unavailable, state that clearly
+and continue with the data that is available.`;
   }
 
   tools(): Record<string, Tool> {
-    const reg = toolRegistry.resolve(['get_news', 'search_knowledge', 'get_social_sentiment']);
+    // Keep this specialist independent of embedding/RAG availability. News
+    // and the dedicated sentiment service provide the required inputs, while
+    // search_knowledge can otherwise add a slow, unrelated embedding call.
+    const reg = toolRegistry.resolve(['get_news', 'get_social_sentiment']);
     return reg as Record<string, Tool>;
   }
 
