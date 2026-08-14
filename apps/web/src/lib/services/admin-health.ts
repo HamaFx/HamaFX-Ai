@@ -543,8 +543,18 @@ async function queryOperationalAggregate(
       providerFallbackTraces: Number(row.provider_fallback_traces ?? 0),
     };
   } catch (error) {
+    const underlying =
+      error instanceof Error && error.cause instanceof Error ? error.cause.message : undefined;
+    const sqlState =
+      error && typeof error === 'object' && 'code' in error && typeof error.code === 'string'
+        ? error.code
+        : undefined;
     createScopedLoggerWithContext({ component: 'admin-health', query: 'operational-aggregate' }).error(
-      { err: error instanceof Error ? error.message : String(error) },
+      {
+        err: error instanceof Error ? error.message : String(error),
+        ...(underlying ? { cause: underlying } : {}),
+        ...(sqlState ? { sqlState } : {}),
+      },
       'health SLI operational aggregate query failed',
     );
     return null;
