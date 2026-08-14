@@ -175,7 +175,7 @@ describe('withTelemetry — diagnostics integration', () => {
     expect(result).toEqual({ data: [1, 2, 3] });
   });
 
-  it('propagates abortSignal from tool context', async () => {
+  it('propagates parent cancellation through a per-invocation signal', async () => {
     const ac = new AbortController();
     let capturedOpts: { abortSignal?: AbortSignal } = {};
 
@@ -183,7 +183,9 @@ describe('withTelemetry — diagnostics integration', () => {
       'signal_aware',
       makeTool(async (_input, opts) => {
         capturedOpts = opts as { abortSignal?: AbortSignal };
-        return 'ok';
+        return new Promise((_resolve, reject) => {
+          capturedOpts.abortSignal?.addEventListener('abort', () => reject(new Error('aborted')));
+        });
       }),
     );
 
@@ -196,8 +198,59 @@ describe('withTelemetry — diagnostics integration', () => {
       userSettings: {} as never,
     });
 
-    await tool.execute!({}, { toolCallId: 'test', messages: [] });
-    expect(capturedOpts.abortSignal).toBe(ac.signal);
+    const pending = tool.execute!({}, { toolCallId: 'test', messages: [] });
+    await Promise.resolve();
+    expect(capturedOpts.abortSignal).toBeDefined();
+    expect(capturedOpts.abortSignal).not.toBe(ac.signal);
+    ac.abort();
+    await expect(pending).rejects.toThrow('aborted');
+    expect(capturedOpts.abortSignal?.aborted).toBe(true);
+  });
+
+  it('aborts the underlying tool when its deadline expires', async () => {
+    vi.useFakeTimers();
+    try {
+      let signal: AbortSignal | undefined;
+      const tool = withTelemetry(
+        'slow_tool',
+        makeTool(async (_input, opts) => {
+          signal = (opts as { abortSignal?: AbortSignal }).abortSignal;
+          return new Promise((_resolve, reject) => {
+            signal?.addEventListener('abort', () => reject(new Error('underlying aborted')));
+          });
+        }),
+      );
+
+      const pending = tool.execute!({}, { toolCallId: 'test', messages: [] });
+      const observed = expect(pending).rejects.toMatchObject({ code: 'TIMEOUT' });
+      await Promise.resolve();
+      await vi.advanceTimersByTimeAsync(25_001);
+      await observed;
+      expect(signal?.aborted).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('rejects promptly when the parent aborts even if the tool ignores its signal', async () => {
+    const ac = new AbortController();
+    const tool = withTelemetry(
+      'ignores_abort',
+      makeTool(async () => new Promise(() => undefined)),
+    );
+
+    mockMaybeGetToolContext.mockReturnValue({
+      threadId: 'tid-4',
+      userId: 'uid-4',
+      env: {} as never,
+      signal: ac.signal,
+      budget: { spent: 0, max: 100 },
+      userSettings: {} as never,
+    });
+
+    const pending = tool.execute!({}, { toolCallId: 'test', messages: [] });
+    ac.abort(new Error('request cancelled'));
+    await expect(pending).rejects.toThrow('request cancelled');
   });
 
   it('returns tool as-is when execute is missing', () => {

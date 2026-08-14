@@ -174,6 +174,10 @@ export async function runChatWithFallback<T>(args: RetryLoopArgs<T>): Promise<T>
     );
 
     if (!nextFallback) {
+      // No provider remains in the fallback chain. Release the reservation
+      // before propagating the terminal error; otherwise repeated provider
+      // outages permanently consume the user's daily budget.
+      await args.budget.release();
       throw lastError;
     }
 

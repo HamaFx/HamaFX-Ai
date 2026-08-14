@@ -21,6 +21,7 @@
 
 export {
   withDiagnostics,
+  persistDiagnosticContext,
   getDiagnosticContext,
   recordStep,
   completeStep,
@@ -29,6 +30,7 @@ export {
   type RunDiagnosticContext,
   type DiagnosticStep,
   type DiagnosticError,
+  type DiagnosticOptions,
 } from './run-context';
 
 export { redactSecrets, redactString } from './redact';

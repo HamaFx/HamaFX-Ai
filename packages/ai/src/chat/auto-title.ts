@@ -62,7 +62,7 @@ export async function runAutoTitleBackground(args: {
     };
     if (signal) titleArgs.signal = signal;
     const titleResult = await generateTitle(titleArgs);
-    await updateThreadTitle(threadId, titleResult.title, titleResult.source);
+    await updateThreadTitle(userId, threadId, titleResult.title, titleResult.source);
     const kind: 'title_generated' | 'title_skipped_budget' | 'title_failed' =
       titleResult.source === 'llm'
         ? 'title_generated'

@@ -21,9 +21,9 @@
 // scan is well under 100 ms even cold.
 
 import { schema } from '@kestrel/db';
-import { getDb } from './db';
-import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
 import { KNOWN_BYOK_PROVIDERS } from '@kestrel/shared';
+import { and, desc, eq, gte, lte } from 'drizzle-orm';
+import { getDb } from './db';
 
 export interface TelemetryRow {
   id: string;
@@ -62,9 +62,9 @@ export interface ProviderBreakdown {
    * Provider id derived from the model id prefix (everything before
    * the first `/`). Examples:
    *   'google-vertex/gemini-2.5-flash' -> 'google-vertex'
-   *   'anthropic/claude-sonnet-4-...`  -> 'anthropic'
-   *   'openai/gpt-4o'                   -> 'openai'
-   *   'gemini-2.5-flash'               -> '' (no prefix, BYOK google)
+   *   'anthropic/claude-sonnet-4-...' -> 'anthropic'
+   *   'openai/gpt-4o' -> 'openai'
+   *   'gemini-2.5-flash' -> '' (no prefix, BYOK google)
    */
   provider: string;
   /** Whether this provider maps to one of our registered BYOK providers. */
@@ -83,9 +83,9 @@ export interface DayBucket {
 }
 
 export interface UsageStats {
-  /** Sum of estCostUsd for today (UTC). */
+  /** Sum of daily spend for today (UTC). */
   todayUsd: number;
-  /** Sum for last 7 calendar days incl. today. */
+  /** Sum for last 7 calendar days including today. */
   sevenDayUsd: number;
   /** Sum for the full 30-day window. */
   thirtyDayUsd: number;
@@ -98,36 +98,21 @@ export interface UsageStats {
   byModel: ModelBreakdown[];
   /** Per-provider totals across the 30-day window, sorted by cost desc. */
   byProvider: ProviderBreakdown[];
-  /** Daily totals for the last 7 days (UTC), oldest-first. Includes empty days. */
+  /** Daily totals for the last 7 days (UTC), oldest-first. */
   daily7: DayBucket[];
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
- * Phase D — api-keys page overhaul.
- *
- * Convert an AI SDK model id like `google-vertex/gemini-2.5-flash`
- * into a provider id (the segment before the first `/`) and then
- * map it back to one of our known BYOK providers.
- *
- * Why the mapping matters: the agent persists the literal model id
- * it streams with (including the gateway/vertex prefix), but the
- * api-keys page groups usage by BYOK provider id. Without this map
- * we'd get "google-vertex" / "openai" / "anthropic" / "" all
- * appearing as separate providers in the breakdown even though
- * the user only configured 2 BYOK keys.
+ * Convert an AI SDK model id into the provider prefix before the first `/`.
  */
 export function providerIdFromModel(modelId: string): string {
   const slash = modelId.indexOf('/');
-  if (slash === -1) return '';
-  return modelId.slice(0, slash);
+  return slash === -1 ? '' : modelId.slice(0, slash);
 }
-/**
- * Map a raw provider prefix (from a model id) to a canonical BYOK
- * id. `google-vertex` -> `vertex` (Vertex AI). Empty string (no
- * prefix) -> `google` (BYOK google uses bare model ids).
- */
+
+/** Map a model prefix to a canonical BYOK provider id. */
 function canonicalizeProviderId(prefix: string): string | null {
   if (prefix === '') return 'google';
   if (prefix === 'google-vertex') return 'vertex';
@@ -135,17 +120,11 @@ function canonicalizeProviderId(prefix: string): string | null {
   return null;
 }
 
-function startOfUtcDay(d: Date): Date {
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+function startOfUtcDay(date: Date): Date {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
 }
 
-/**
- * Aggregate the last 30 days of telemetry into `UsageStats`.
- *
- * L5: Removed React's `cache()` wrapper — this function is also used in
- * the worker (non-React context) where `cache()` is a no-op. Callers
- * that need deduplication per request should wrap at the call site.
- */
+/** Aggregate the last 30 days of telemetry and authoritative daily spend. */
 export async function computeUsage(
   userId: string,
   now = new Date(),
@@ -153,11 +132,8 @@ export async function computeUsage(
   const todayStart = startOfUtcDay(now);
   const sevenStart = new Date(todayStart.getTime() - 6 * DAY_MS);
   const thirtyStart = new Date(todayStart.getTime() - 29 * DAY_MS);
-
-  // H1: Use parallel queries — daily_ai_spend for fast cost totals,
-  // chat_telemetry only for breakdowns. Cuts cold-start latency by ~50%
-  // for heavy users by avoiding a full 30-day row scan for simple totals.
   const thirtyStartDay = thirtyStart.toISOString().slice(0, 10);
+
   const [rows, spendRows] = await Promise.all([
     getDb()
       .select()
@@ -182,101 +158,95 @@ export async function computeUsage(
       .limit(30),
   ]);
 
-  // Use daily_ai_spend for fast cost summaries (SQL-level aggregation).
+  // daily_ai_spend is authoritative for spend totals because it includes
+  // reservations and auxiliary provider calls consistently.
   let todayUsd = 0;
   let sevenDayUsd = 0;
   let thirtyDayUsd = 0;
   const todayDay = todayStart.toISOString().slice(0, 10);
   const sevenDayBoundary = sevenStart.toISOString().slice(0, 10);
-  for (const sr of spendRows) {
-    const cost = Number(sr.totalUsdCents ?? 0) / 100;
-    thirtyDayUsd += cost;
-    if (sr.day >= todayDay) todayUsd += cost;
-    if (sr.day >= sevenDayBoundary) sevenDayUsd += cost;
+
+  for (const spendRow of spendRows) {
+    const costUsd = Number(spendRow.totalUsdCents ?? 0) / 100;
+    thirtyDayUsd += costUsd;
+    if (spendRow.day >= todayDay) todayUsd += costUsd;
+    if (spendRow.day >= sevenDayBoundary) sevenDayUsd += costUsd;
   }
 
-  // Routing breadcrumbs (Phase 7a) carry zero tokens / zero cost — they're
-  // useful for breakdowns but must not inflate "turns" counts. We exclude
-  // them from the rollup.
+  // Turn markers and auxiliary model rows have different meanings. Keep
+  // user-turn counts separate from model/provider token breakdowns.
   const turnRows = rows.filter(
-    (r) => r.kind === null || (!r.kind.startsWith('routing_') && !r.kind.startsWith('plan_')),
+    (row) => row.kind === null || row.kind === 'multi_agent_turn',
+  );
+  const usageRows = rows.filter(
+    (row) => row.kind === null ||
+      row.kind.startsWith('title_') ||
+      row.kind.startsWith('plan_') ||
+      row.kind.startsWith('multi_specialist_'),
   );
 
   let inputTokens = 0;
   let outputTokens = 0;
-  const turns = turnRows.length;
   const byModelMap = new Map<string, ModelBreakdown>();
-  // Phase D — per-provider aggregation. Keyed by the canonical
-  // BYOK id (e.g. 'vertex' for the 'google-vertex/' model prefix).
   const byProviderMap = new Map<string, ProviderBreakdown>();
 
-  // Initialise 7 daily buckets so the chart renders zeros for empty days.
   const dailyMap = new Map<string, DayBucket>();
   for (let i = 0; i < 7; i += 1) {
-    const d = new Date(sevenStart.getTime() + i * DAY_MS);
-    const key = d.toISOString().slice(0, 10);
+    const date = new Date(sevenStart.getTime() + i * DAY_MS);
+    const key = date.toISOString().slice(0, 10);
     dailyMap.set(key, { date: key, turns: 0, costUsd: 0 });
   }
 
-  for (const r of turnRows) {
-    const cost = Number(r.estCostUsd ?? 0);
-    const inT = r.inputTokens ?? 0;
-    const outT = r.outputTokens ?? 0;
-    thirtyDayUsd += cost;
-    inputTokens += inT;
-    outputTokens += outT;
+  for (const spendRow of spendRows) {
+    if (spendRow.day < sevenDayBoundary) continue;
+    const bucket = dailyMap.get(spendRow.day);
+    if (bucket) bucket.costUsd += Number(spendRow.totalUsdCents ?? 0) / 100;
+  }
 
-    const t = r.createdAt.getTime();
-    if (t >= todayStart.getTime()) todayUsd += cost;
-    if (t >= sevenStart.getTime()) sevenDayUsd += cost;
+  for (const row of usageRows) {
+    const costUsd = Number(row.estCostUsd ?? 0);
+    const input = row.inputTokens ?? 0;
+    const output = row.outputTokens ?? 0;
+    inputTokens += input;
+    outputTokens += output;
 
-    // Per-model
-    const m = byModelMap.get(r.model) ?? {
-      model: r.model,
+    const model = byModelMap.get(row.model) ?? {
+      model: row.model,
       turns: 0,
       inputTokens: 0,
       outputTokens: 0,
       costUsd: 0,
     };
-    m.turns += 1;
-    m.inputTokens += inT;
-    m.outputTokens += outT;
-    m.costUsd += cost;
-    byModelMap.set(r.model, m);
+    model.turns += 1;
+    model.inputTokens += input;
+    model.outputTokens += output;
+    model.costUsd += costUsd;
+    byModelMap.set(row.model, model);
 
-    // Per-provider (canonicalised).
-    const rawPrefix = providerIdFromModel(r.model);
-    const byokId = canonicalizeProviderId(rawPrefix);
-    if (byokId) {
-      const p = byProviderMap.get(byokId) ?? {
-        provider: rawPrefix || 'google',
-        byokProviderId: byokId,
+    const providerPrefix = providerIdFromModel(row.model);
+    const byokProviderId = canonicalizeProviderId(providerPrefix);
+    if (byokProviderId) {
+      const provider = byProviderMap.get(byokProviderId) ?? {
+        provider: providerPrefix || 'google',
+        byokProviderId,
         turns: 0,
         inputTokens: 0,
         outputTokens: 0,
         costUsd: 0,
       };
-      p.turns += 1;
-      p.inputTokens += inT;
-      p.outputTokens += outT;
-      p.costUsd += cost;
-      byProviderMap.set(byokId, p);
-    }
-
-    // Daily bucket
-    if (t >= sevenStart.getTime()) {
-      const key = r.createdAt.toISOString().slice(0, 10);
-      const b = dailyMap.get(key);
-      if (b) {
-        b.turns += 1;
-        b.costUsd += cost;
-      }
+      provider.turns += 1;
+      provider.inputTokens += input;
+      provider.outputTokens += output;
+      provider.costUsd += costUsd;
+      byProviderMap.set(byokProviderId, provider);
     }
   }
 
-  const byModel = [...byModelMap.values()].sort((a, b) => b.costUsd - a.costUsd);
-  const byProvider = [...byProviderMap.values()].sort((a, b) => b.costUsd - a.costUsd);
-  const daily7 = [...dailyMap.values()].sort((a, b) => a.date.localeCompare(b.date));
+  for (const row of turnRows) {
+    if (row.createdAt.getTime() < sevenStart.getTime()) continue;
+    const bucket = dailyMap.get(row.createdAt.toISOString().slice(0, 10));
+    if (bucket) bucket.turns += 1;
+  }
 
   return {
     todayUsd,
@@ -284,10 +254,10 @@ export async function computeUsage(
     thirtyDayUsd,
     thirtyDayInputTokens: inputTokens,
     thirtyDayOutputTokens: outputTokens,
-    thirtyDayTurns: turns,
-    byModel,
-    byProvider,
-    daily7,
+    thirtyDayTurns: turnRows.length,
+    byModel: [...byModelMap.values()].sort((a, b) => b.costUsd - a.costUsd),
+    byProvider: [...byProviderMap.values()].sort((a, b) => b.costUsd - a.costUsd),
+    daily7: [...dailyMap.values()].sort((a, b) => a.date.localeCompare(b.date)),
   };
 }
 
@@ -305,6 +275,3 @@ function rowToTelemetry(row: typeof schema.chatTelemetry.$inferSelect): Telemetr
     createdAt: row.createdAt.getTime(),
   };
 }
-
-// silence unused-import lint when this file is bundled in isolation
-void sql;

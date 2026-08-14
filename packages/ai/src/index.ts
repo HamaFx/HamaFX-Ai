@@ -348,6 +348,7 @@ export {
 // F5 — Run Diagnostics with Secret Redaction
 export {
   withDiagnostics,
+  persistDiagnosticContext,
   getDiagnosticContext,
   recordStep,
   completeStep,
@@ -358,6 +359,7 @@ export {
   type RunDiagnosticContext,
   type DiagnosticStep,
   type DiagnosticError,
+  type DiagnosticOptions,
 } from './diagnostics';
 
 // F2 — Portfolio Management

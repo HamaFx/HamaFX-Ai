@@ -130,15 +130,18 @@ export async function createThread(
  * Update a thread's title and title source.
  */
 export async function updateThreadTitle(
+  userId: string,
   threadId: string,
   title: string,
   titleSource: string,
-): Promise<void> {
+): Promise<boolean> {
   const db = getDb();
-  await db
+  const rows = await db
     .update(schema.chatThreads)
     .set({ title, titleSource, updatedAt: sql`now()` })
-    .where(eq(schema.chatThreads.id, threadId));
+    .where(and(eq(schema.chatThreads.id, threadId), eq(schema.chatThreads.userId, userId)))
+    .returning({ id: schema.chatThreads.id });
+  return rows.length > 0;
 }
 
 /**

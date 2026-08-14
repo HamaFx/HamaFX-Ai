@@ -141,6 +141,7 @@ async function emitEventBriefing(
   };
 
   const { messageId } = await appendAssistantMessage(
+    userId,
     thread.id,
     ui as UIMessage,
   );
@@ -285,6 +286,7 @@ export async function emitWeeklyReview(userId: string): Promise<{ emitted: boole
       ],
     };
     const { messageId } = await appendAssistantMessage(
+      userId,
       thread.id,
       ui as UIMessage,
     );
@@ -314,6 +316,7 @@ export async function emitWeeklyReview(userId: string): Promise<{ emitted: boole
     ],
   };
   const { messageId } = await appendAssistantMessage(
+    userId,
     thread.id,
     ui as UIMessage,
   );

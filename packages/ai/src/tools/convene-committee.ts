@@ -64,7 +64,9 @@ export const conveneCommitteeTool = tool({
     // We intentionally pass an empty messages array (never[] — assignable to any T[])
     // and a minimal toolCallId because these are internal calls, not user-facing tool
     // invocations. An empty array is the correct shape: no user messages to report.
-    const internalExecOpts = { toolCallId: 'internal', messages: [] };
+    const internalExecOpts = ctx.signal
+      ? { toolCallId: 'internal', messages: [], abortSignal: ctx.signal }
+      : { toolCallId: 'internal', messages: [] };
     const [fundamentalData, technicalData, journalData, riskData] = await Promise.all([
       afExec({ symbol, horizonHours: 48 }, internalExecOpts),
       atExec({ symbol, timeframes: ['1d', '4h', '1h', '15m'] }, internalExecOpts),
@@ -139,6 +141,7 @@ No markdown fences, no preamble.`;
       system: "You are an expert forex macroeconomic analyst. Always output raw JSON.",
       prompt,
       ...telemetryConfig(),
+      ...(ctx.signal ? { abortSignal: ctx.signal } : {}),
       ...(tools ? { tools, stopWhen: stepCountIs(3) } : {}),
     });
 
@@ -199,6 +202,7 @@ No markdown fences, no preamble.`;
       system: "You are an expert forex technical analyst. Always output raw JSON.",
       prompt,
       ...telemetryConfig(),
+      ...(ctx.signal ? { abortSignal: ctx.signal } : {}),
     });
     const parsed = parseJsonOrThrow<Omit<CommitteeVerdict, 'persona'>>(text, 'technician');
     return { persona: 'technician', ...parsed } as CommitteeVerdict;
@@ -208,7 +212,8 @@ No markdown fences, no preamble.`;
   }
 }
 
-async function runRiskManager(input: ConveneCommitteeInput, journalData: unknown, riskData: unknown, ctx: ToolContext): Promise<CommitteeVerdict> {    const prompt = `You are The Risk Manager on a trading committee. Evaluate this trade:
+async function runRiskManager(input: ConveneCommitteeInput, journalData: unknown, riskData: unknown, ctx: ToolContext): Promise<CommitteeVerdict> {
+  const prompt = `You are The Risk Manager on a trading committee. Evaluate this trade:
 Symbol: ${input.symbol}
 Side: ${input.side}
 Entry: ${input.entry}
@@ -238,6 +243,7 @@ No markdown fences, no preamble.`;
       system: "You are an expert risk manager. Always output raw JSON.",
       prompt,
       ...telemetryConfig(),
+      ...(ctx.signal ? { abortSignal: ctx.signal } : {}),
     });
     const parsed = parseJsonOrThrow<Omit<CommitteeVerdict, 'persona'>>(text, 'risk_manager');
     return { persona: 'risk_manager', ...parsed } as CommitteeVerdict;
@@ -269,6 +275,7 @@ No markdown fences, no preamble.`;
       system: "You are the head trader. Always output raw JSON.",
       prompt,
       ...telemetryConfig(),
+      ...(ctx.signal ? { abortSignal: ctx.signal } : {}),
     });
     const parsed = parseJsonOrThrow<ModeratorResult>(text, 'moderator');
     return {

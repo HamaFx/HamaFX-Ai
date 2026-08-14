@@ -148,14 +148,17 @@ export async function createThread(
 }
 
 export async function updateThreadTitle(
+  userId: string,
   id: string,
   title: string,
   source: 'llm' | 'fallback',
-): Promise<void> {
-  await getDb()
+): Promise<boolean> {
+  const updated = await getDb()
     .update(schema.chatThreads)
-    .set({ title, titleSource: source })
-    .where(eq(schema.chatThreads.id, id));
+    .set({ title, titleSource: source, updatedAt: new Date() })
+    .where(and(eq(schema.chatThreads.id, id), eq(schema.chatThreads.userId, userId)))
+    .returning({ id: schema.chatThreads.id });
+  return updated.length > 0;
 }
 
 export async function updateThreadPinnedSymbol(
@@ -287,12 +290,15 @@ export async function forkThread(input: ForkThreadInput): Promise<ForkThreadResu
       .insert(schema.chatMessages)
       .values(rows)
       .returning({ id: schema.chatMessages.id, role: schema.chatMessages.role, content: schema.chatMessages.content });
-    const insertedIds = inserted.map((r) => r!.id);
+    const targetInserted = inserted[editIdx];
+    if (!targetInserted || targetInserted.role !== 'user') {
+      throw new Error('fork did not return the replacement user message');
+    }
     await tx
       .update(schema.chatThreads)
       .set({ updatedAt: new Date() })
-      .where(eq(schema.chatThreads.id, newThreadId));
+      .where(and(eq(schema.chatThreads.id, newThreadId), eq(schema.chatThreads.userId, userId)));
 
-    return { newThreadId, firstMessage: { id: insertedIds[0]!, role: 'user' as const, content: newText } };
+    return { newThreadId, firstMessage: { id: targetInserted.id, role: 'user' as const, content: newText } };
   });
 }

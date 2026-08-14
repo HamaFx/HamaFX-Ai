@@ -174,16 +174,14 @@ describe('BudgetHandle.release', () => {
     await expect(handle.release()).resolves.toBeUndefined();
   });
 
-  it('reconcile after release is still safe (marks released)', async () => {
+  it('does not reconcile after release', async () => {
     const handle = await makeHandle(0.05);
 
     await handle.release();
-    // reconcile doesn't have its own idempotency guard currently,
-    // but release already fired the delta. reconcile just marks released
-    // and fires its delta. This test documents the current behavior.
     await handle.reconcile(0.08);
 
-    // applyBudgetDelta called twice: once for release (-0.05), once for reconcile (+0.03)
-    expect(mockApplyBudgetDelta).toHaveBeenCalledTimes(2);
+    // A released reservation is terminal; a later finish callback must not
+    // apply a second delta.
+    expect(mockApplyBudgetDelta).toHaveBeenCalledTimes(1);
   });
 });

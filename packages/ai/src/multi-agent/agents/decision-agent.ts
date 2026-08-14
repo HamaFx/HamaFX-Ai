@@ -21,7 +21,7 @@
 // resolution and JSON-parsing helpers are imported from agent-model.ts.
 
 import { generateText, streamText, convertToModelMessages, type Tool, type ModelMessage } from 'ai';
-import { estimateCostUsd } from '../../cost';
+import { checkBudgetAlertsAndThresholds, estimateCostUsd } from '../../cost';
 import { withToolContext, type ToolContext } from '../../tool-context';
 import { getDb } from '../../db';
 import { telemetryConfig } from '../../telemetry';
@@ -86,9 +86,21 @@ Be concise but thorough. Use markdown formatting for readability.`;
     ctx: SharedContext,
     execCtx: { threadId: string; userId: string; env: MultiAgentEnv; signal: AbortSignal | null; userSettings: UserSettingsRow },
     onTextChunk?: (chunk: string) => void,
-  ): Promise<{ text: string; costUsd: number; latencyMs: number; modelId: string }> {
+  ): Promise<{
+    text: string;
+    costUsd: number;
+    latencyMs: number;
+    modelId: string;
+    inputTokens: number;
+    outputTokens: number;
+    providerId: string;
+  }> {
     const startMs = Date.now();
-    const { model, modelId } = resolveAgentModel(ctx, this.name, this.modelTier);
+    const { model, modelId, providerId } = resolveAgentModel(ctx, this.name, this.modelTier);
+    const providerBudget = await checkBudgetAlertsAndThresholds(execCtx.userId, providerId);
+    if (providerBudget.blocked) {
+      throw new Error(providerBudget.blockedReason ?? `Provider ${providerId} spending limit exceeded`);
+    }
     const opinionsBlock = this.buildOpinionsBlock(opinions);
     const userText = extractUserMessageText(ctx.userMessage);
     const sharedPrompt = buildSharedSystemPrompt(ctx);
@@ -118,7 +130,11 @@ Be concise but thorough. Use markdown formatting for readability.`;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
     // P2 fix: add { once: true } to prevent listener leak on long-lived signals.
-    if (execCtx.signal) execCtx.signal.addEventListener('abort', () => controller.abort(), { once: true });
+    const onParentAbort = () => controller.abort(execCtx.signal?.reason);
+    if (execCtx.signal) {
+      if (execCtx.signal.aborted) onParentAbort();
+      else execCtx.signal.addEventListener('abort', onParentAbort, { once: true });
+    }
     try {
       // P1-4/U1 — Use streamText for token-by-token fusion streaming.
       // On text deltas, invoke the callback so the route can emit SSE frames.
@@ -137,15 +153,22 @@ Be concise but thorough. Use markdown formatting for readability.`;
         }
         // Wait for usage before returning
         const usage = await sResult.usage;
-        const costUsd = estimateCostUsd(modelId, usage?.inputTokens ?? 0, usage?.outputTokens ?? 0);
-        return { text: fullText, costUsd, latencyMs, modelId };
+        const inputTokens = usage?.inputTokens ?? 0;
+        const outputTokens = usage?.outputTokens ?? 0;
+        const costUsd = estimateCostUsd(modelId, inputTokens, outputTokens);
+        return { text: fullText, costUsd, latencyMs, modelId, inputTokens, outputTokens, providerId };
       }
       // Legacy: generateText for callers without streaming callback
       const result = await withToolContext(toolContext, async () => generateText({ model, system, messages, abortSignal: controller.signal, maxOutputTokens: 4000, ...telemetryConfig() }));
       const latencyMs = Date.now() - startMs;
-      const costUsd = estimateCostUsd(modelId, result.usage?.inputTokens ?? 0, result.usage?.outputTokens ?? 0);
-      return { text: result.text, costUsd, latencyMs, modelId };
-    } finally { clearTimeout(timeout); }
+      const inputTokens = result.usage?.inputTokens ?? 0;
+      const outputTokens = result.usage?.outputTokens ?? 0;
+      const costUsd = estimateCostUsd(modelId, inputTokens, outputTokens);
+      return { text: result.text, costUsd, latencyMs, modelId, inputTokens, outputTokens, providerId };
+    } finally {
+      clearTimeout(timeout);
+      execCtx.signal?.removeEventListener('abort', onParentAbort);
+    }
   }
 
   private buildOpinionsBlock(opinions: AgentOpinion[]): string {

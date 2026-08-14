@@ -95,6 +95,10 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
   let validOpinions: AgentOpinion[] = [];
   let finalText = '';
   let decisionCostUsd = 0;
+  let decisionInputTokens = 0;
+  let decisionOutputTokens = 0;
+  let decisionModelId = '';
+  let decisionProviderId = '';
   let totalCostUsd = 0;
   let totalLatencyMs = 0;
 
@@ -112,7 +116,7 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
     // ── Persist the user message first ──
     // This ensures the conversation survives even if all agents fail.
     // Do this AFTER budget reservation succeeds but BEFORE any agent work.
-    await appendUserMessage(threadId, userMessage);
+    await appendUserMessage(userId, threadId, userMessage);
 
     setupComplete = true;
 
@@ -165,8 +169,8 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
         threadId,
         messageId: null,
         model: op.model,
-        inputTokens: 0,
-        outputTokens: 0,
+        inputTokens: op.inputTokens ?? 0,
+        outputTokens: op.outputTokens ?? 0,
         toolCalls: 0,
         ms: op.latencyMs,
         kind: `multi_specialist_${op.agentName}` as const,
@@ -181,6 +185,10 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
       const decisionResult = await decisionAgent.fuse(validOpinions, ctx, { threadId, userId, env, signal, userSettings }, onTextChunk);
       finalText = decisionResult.text;
       decisionCostUsd = decisionResult.costUsd;
+      decisionInputTokens = decisionResult.inputTokens ?? 0;
+      decisionOutputTokens = decisionResult.outputTokens ?? 0;
+      decisionModelId = decisionResult.modelId;
+      decisionProviderId = decisionResult.providerId;
       onProgress?.({ type: 'fusion_done' });
     } catch (err) {
       logErrorContext(err, 'multi-agent/decision_agent_failed', {}, 'ai');
@@ -197,6 +205,20 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
 
     totalCostUsd = validOpinions.reduce((sum, o) => sum + o.costUsd, 0) + decisionCostUsd;
     totalLatencyMs = Date.now() - startMs;
+
+    if (decisionModelId) {
+      void recordTelemetry({
+        userId,
+        threadId,
+        messageId: null,
+        model: decisionModelId,
+        inputTokens: decisionInputTokens,
+        outputTokens: decisionOutputTokens,
+        toolCalls: 0,
+        ms: totalLatencyMs,
+        kind: 'multi_specialist_decision',
+      }).catch((err) => mlog.warn('decision telemetry failed', { err: String(err) }));
+    }
 
     // ── Budget reconciliation ── adjust reserved estimate to actual cost ──
     // Always reconcile, even when totalCostUsd is 0 (all specialists failed).
@@ -267,7 +289,7 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
 
   // M2: Persist message and opinions in parallel — they share the known
   // messageId, so no ordering dependency exists.
-  const persistPromise = appendAssistantMessage(threadId, assistantUi);
+  const persistPromise = appendAssistantMessage(userId, threadId, assistantUi);
   const opinionsPromise = validOpinions.length > 0
     ? saveAgentOpinions({
         userId, threadId, messageId: persistedMessageId, analysisMode: effectiveMode,
@@ -291,7 +313,19 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
     outputTokens: 0,
     toolCalls: 0,
     ms: totalLatencyMs,
+    kind: 'multi_agent_turn',
   }).catch((err) => mlog.warn('recordTelemetry failed', { err: String(err) }));
 
-  return { finalText, agentOpinions: validOpinions, totalCostUsd, totalLatencyMs, mode: effectiveMode, messageId: persistedMessageId };
+  return {
+    finalText,
+    agentOpinions: validOpinions,
+    totalCostUsd,
+    totalLatencyMs,
+    mode: effectiveMode,
+    messageId: persistedMessageId,
+    inputTokens: decisionInputTokens,
+    outputTokens: decisionOutputTokens,
+    ...(decisionProviderId ? { providerId: decisionProviderId } : {}),
+    ...(decisionModelId ? { modelId: decisionModelId } : {}),
+  };
 }

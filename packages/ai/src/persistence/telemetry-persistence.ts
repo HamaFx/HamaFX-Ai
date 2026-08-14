@@ -54,7 +54,8 @@ export interface TelemetryInput {
     | 'multi_specialist_fundamental'
     | 'multi_specialist_risk'
     | 'multi_specialist_sentiment'
-    | 'multi_specialist_decision';
+    | 'multi_specialist_decision'
+    | 'multi_agent_turn';
 }
 
 export async function recordTelemetry(t: TelemetryInput): Promise<void> {

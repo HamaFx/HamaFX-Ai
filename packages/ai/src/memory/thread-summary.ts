@@ -47,7 +47,7 @@ import { dailySpendUsd } from '../cost';
 import { resolveModel } from '../model';
 import { maybeGetToolContext } from '../tool-context';
 import { telemetryConfig } from '../telemetry';
-import type { DbMessage } from '../persistence';
+import { getThread, type DbMessage } from '../persistence';
 
 const KEEP_VERBATIM = 12;
 const SUMMARISE_AFTER = 30;
@@ -88,6 +88,7 @@ export interface CompactResult {
  */
 export async function compactThread(args: {
   threadId: string;
+  userId: string;
   history: DbMessage[];
   env: SummaryEnv;
   /**
@@ -98,19 +99,30 @@ export async function compactThread(args: {
   compactionModelId: string;
   signal?: AbortSignal;
 }): Promise<CompactResult> {
-  const { threadId, history, env } = args;
-  if (history.length < SUMMARISE_AFTER) {
-    return { extraSystem: null, kept: history, compacted: 0 };
+  const { threadId, userId, history, env } = args;
+  const withoutPersistedSummaries = history.filter((message) => !isSummaryMessage(message.parts));
+  const hasPersistedSummary = withoutPersistedSummaries.length !== history.length;
+  const persisted = hasPersistedSummary
+    ? await loadLatestSummary(userId, threadId)
+    : null;
+
+  if (withoutPersistedSummaries.length < SUMMARISE_AFTER) {
+    return {
+      extraSystem: persisted
+        ? `# Conversation so far (auto-summary)\n${persisted.body.slice(0, MAX_SUMMARY_CHARS)}`
+        : null,
+      kept: withoutPersistedSummaries,
+      compacted: 0,
+    };
   }
 
-  const splitIndex = history.length - KEEP_VERBATIM;
-  const older = history.slice(0, splitIndex);
-  const tail = history.slice(splitIndex);
+  const splitIndex = withoutPersistedSummaries.length - KEEP_VERBATIM;
+  const older = withoutPersistedSummaries.slice(0, splitIndex);
+  const tail = withoutPersistedSummaries.slice(splitIndex);
 
   // H2: Check if we have a recent-enough summary that still covers the
   // older portion. If fewer than MIN_NEW_MESSAGES_FOR_RECOMPACT messages
   // were added since last compaction, reuse the existing summary.
-  const persisted = await loadLatestSummary(threadId);
   const digest = digestOf(older);
 
   let summaryBody: string | null = null;
@@ -120,19 +132,19 @@ export async function compactThread(args: {
   } else if (persisted && persisted.messageCount != null) {
     // Check if this is a "close enough" match — fewer than threshold
     // new messages since last compaction.
-    const newSinceLastCompact = history.length - persisted.messageCount;
+    const newSinceLastCompact = withoutPersistedSummaries.length - persisted.messageCount;
     if (newSinceLastCompact < MIN_NEW_MESSAGES_FOR_RECOMPACT && newSinceLastCompact > 0) {
       summaryBody = persisted.body;
     } else {
       summaryBody = await generateSummary(older, env, args.compactionModelId, args.signal);
       if (summaryBody) {
-        await saveSummary(threadId, summaryBody, digest, history.length);
+        await saveSummary(userId, threadId, summaryBody, digest, withoutPersistedSummaries.length);
       }
     }
   } else {
     summaryBody = await generateSummary(older, env, args.compactionModelId, args.signal);
     if (summaryBody) {
-      await saveSummary(threadId, summaryBody, digest, history.length);
+      await saveSummary(userId, threadId, summaryBody, digest, withoutPersistedSummaries.length);
     }
   }
 
@@ -161,7 +173,8 @@ interface PersistedSummary {
   messageCount: number | undefined;
 }
 
-async function loadLatestSummary(threadId: string): Promise<PersistedSummary | null> {
+async function loadLatestSummary(userId: string, threadId: string): Promise<PersistedSummary | null> {
+  if (!await getThread(userId, threadId)) return null;
   const rows = await getDb()
     .select()
     .from(schema.chatMessages)
@@ -175,7 +188,8 @@ async function loadLatestSummary(threadId: string): Promise<PersistedSummary | n
   return null;
 }
 
-async function saveSummary(threadId: string, body: string, digest: string, messageCount?: number): Promise<void> {
+async function saveSummary(userId: string, threadId: string, body: string, digest: string, messageCount?: number): Promise<void> {
+  if (!await getThread(userId, threadId)) throw new Error(`thread not found: ${threadId}`);
   await getDb()
     .insert(schema.chatMessages)
     .values({
@@ -191,6 +205,10 @@ async function saveSummary(threadId: string, body: string, digest: string, messa
         },
       ],
     });
+}
+
+function isSummaryMessage(parts: unknown): boolean {
+  return readSummaryMeta(parts) !== null;
 }
 
 function readSummaryMeta(parts: unknown): { digest: string; messageCount: number | undefined } | null {
@@ -270,6 +288,8 @@ function digestOf(messages: DbMessage[]): string {
   // M6: use MD5 instead of SHA-256 — ~2x faster for cache invalidation.
   // Collision resistance is not needed here; we're checking whether a
   // known message set changed, not authenticating content.
-  const parts = messages.map((m) => `${m.role}:${m.content.slice(0, 500)}`).join('|');
+  const parts = messages
+    .map((m) => `${m.id}:${m.role}:${m.content.length}:${m.content.slice(0, 500)}`)
+    .join('|');
   return createHash('md5').update(parts).digest('hex');
 }

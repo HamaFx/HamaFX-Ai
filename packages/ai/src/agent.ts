@@ -78,7 +78,7 @@ import type { RunChatArgs } from './types';
 // UserSettingsRow — moved to chat/auto-title.ts (P0-1)
 import { extractRateLimits } from './rate-limits';
 import { noteLlmRateLimit, awaitLlmHeadroom } from './llm-throttle';
-import { withDiagnostics, recordStep, completeStep, recordError, exportDiagnosticContext } from './diagnostics';
+import { withDiagnostics, persistDiagnosticContext, getDiagnosticContext, recordStep, completeStep, recordError, exportDiagnosticContext } from './diagnostics';
 
 // P0-1 — Extracted pipeline stages from this file.
 import { resolveModelForTurn, type ResolveModelContext } from './chat/resolve-model';
@@ -108,16 +108,18 @@ export async function runChat(args: RunChatArgs) {
   // every tool call, agent run, and persistence step can be traced.
   // If an error propagates out, we record it in the diagnostic context
   // and attach the (redacted) trace to the error for Sentry.
-  return withDiagnostics(userId, threadId, () => runChatInner(args)).catch((err) => {
-    recordError(err);
-    // Attach the diagnostic context to the error so upstream Sentry
-    // reporting can include the full (redacted) trace.
-    const diagCtx = exportDiagnosticContext();
-    if (diagCtx && err instanceof Error) {
-      try {
-        (err as Error & { diagnosticContext?: unknown }).diagnosticContext = diagCtx;
-      } catch {
-        // Read-only error object — skip attachment.
+  return withDiagnostics(userId, threadId, () => runChatInner(args), { deferCompletion: true }).catch((err) => {
+    // withDiagnostics attaches the completed failure trace before it leaves
+    // its AsyncLocalStorage scope. Keep this catch as a compatibility
+    // fallback for callers that throw outside that wrapper.
+    if (err instanceof Error && !(err as Error & { diagnosticContext?: unknown }).diagnosticContext) {
+      const diagCtx = exportDiagnosticContext();
+      if (diagCtx) {
+        try {
+          (err as Error & { diagnosticContext?: unknown }).diagnosticContext = diagCtx;
+        } catch {
+          // Read-only error object — skip attachment.
+        }
       }
     }
     throw err;
@@ -128,6 +130,7 @@ export async function runChat(args: RunChatArgs) {
 async function runChatInner(args: RunChatArgs): Promise<any> {
   const { threadId, userId, userMessage, env, modelOverride, customInstructions, signal } = args;
   const startedAt = Date.now();
+  const diagnosticContext = getDiagnosticContext();
 
   // F5 — Record the start of the chat turn.
   recordStep('chat_turn_start', { threadId, model: modelOverride ?? 'default' });
@@ -153,9 +156,10 @@ async function runChatInner(args: RunChatArgs): Promise<any> {
   // 1) Hard ceiling — atomic reservation against today's running counter.
   const budget = await reserveTurnBudget({ userId, maxDailyUsd });
 
-  // 2) Persist the user message before we start streaming. If the model fails
-  //    we still want the prompt in history so retries can resume.
-  await appendUserMessage(threadId, userMessage);
+  try {
+    // 2) Persist the user message before we start streaming. If the model fails
+    //    we still want the prompt in history so retries can resume.
+    await appendUserMessage(userId, threadId, userMessage);
   recordStep('persist_user_message', { threadId });
 
   // 3) Load history + ambient snapshot in parallel; THEN apply rolling-summary
@@ -174,6 +178,7 @@ async function runChatInner(args: RunChatArgs): Promise<any> {
     derivePlannerModel(userSettings, env) ?? env.AI_DEFAULT_MODEL;
   const compactArgs: Parameters<typeof compactThread>[0] = {
     threadId,
+    userId,
     history,
     env,
     compactionModelId,
@@ -295,6 +300,7 @@ async function runChatInner(args: RunChatArgs): Promise<any> {
 
       // ── Planner ─────────────────────────────────────────────────────
       let plannerResult: Awaited<ReturnType<typeof runPlanner>> | null = null;
+      let plannerCostUsd = 0;
       const parts = resolvedModelId.split('/');
       const bareModelId = parts.length > 1 ? parts[1] : resolvedModelId;
 
@@ -316,6 +322,11 @@ async function runChatInner(args: RunChatArgs): Promise<any> {
             env: pickAiEnv(env),
             ...(signal ? { signal } : {}),
           });
+          plannerCostUsd = estimateCostUsd(
+            plannerModelId,
+            plannerResult.inputTokens,
+            plannerResult.outputTokens,
+          );
           if (plannerResult.source === 'llm' && env.LOG_PROMPTS) {
             console.info(
               '[ai] planner ok (steps=%d, tools=%o)',
@@ -444,7 +455,20 @@ async function runChatInner(args: RunChatArgs): Promise<any> {
           : activeTools,
         stopWhen: stepCountIs(env.MAX_TOOL_ITERATIONS),
 
+        onError: async ({ error }) => {
+          // A stream can fail after streamText() has returned, bypassing
+          // the retry-loop catch and onFinish. Release the reservation so
+          // a disconnected/provider-failed turn cannot strand daily spend.
+          recordError(error);
+          await budget.release();
+        },
+
         onFinish: async ({ usage, finishReason, response }) => {
+          const actualCost = estimateCostUsd(
+            resolvedModelId,
+            usage?.inputTokens ?? 0,
+            usage?.outputTokens ?? 0,
+          ) + plannerCostUsd;
           try {
             const assistantUiMsg = response.messages.at(-1);
             let messageId: string | null = null;
@@ -485,7 +509,7 @@ async function runChatInner(args: RunChatArgs): Promise<any> {
                 role: 'assistant',
                 parts,
               };
-              ({ messageId } = await appendAssistantMessage(threadId, ui));
+              ({ messageId } = await appendAssistantMessage(userId, threadId, ui));
             }
             const rateLimit = extractRateLimits(response.headers);
             if (rateLimit) {
@@ -531,18 +555,18 @@ async function runChatInner(args: RunChatArgs): Promise<any> {
               toolCalls: countToolCalls(response.messages),
               ms: Date.now() - startedAt,
             });
-            // Reconcile budget reservation with actual cost
-            const actualCost = estimateCostUsd(
-              resolvedModelId,
-              usage?.inputTokens ?? 0,
-              usage?.outputTokens ?? 0,
-            );
-            await budget.reconcile(actualCost);
             if (env.LOG_PROMPTS) {
               console.info('[ai] finish reason=%s tokens=%o', finishReason, usage);
             }
           } catch (err) {
             logErrorContext(err, 'persistence/telemetry_failed', { threadId }, 'ai');
+          } finally {
+            // Reconcile independently of message/telemetry persistence. A
+            // telemetry outage must not strand the turn reservation.
+            await budget.reconcile(actualCost);
+            // A stream result is returned before onFinish runs, so the
+            // diagnostic wrapper defers completion until this callback.
+            await persistDiagnosticContext(diagnosticContext, 'completed');
           }
 
           waitUntil(
@@ -579,6 +603,7 @@ async function runChatInner(args: RunChatArgs): Promise<any> {
           if (signal) streamTextOpts.abortSignal = signal;
           if (streamArgs.providerOptions) streamTextOpts.providerOptions = streamArgs.providerOptions;
           if (streamArgs.onFinish) streamTextOpts.onFinish = streamArgs.onFinish;
+          if (streamArgs.onError) streamTextOpts.onError = streamArgs.onError;
 
           return client.streamText(streamTextOpts as unknown as Parameters<typeof client.streamText>[0]);
         });
@@ -601,6 +626,14 @@ async function runChatInner(args: RunChatArgs): Promise<any> {
   });
 
   return streamResult;
+  } catch (err) {
+    // The stream's onFinish owns reconciliation after a successful model
+    // call. Every failure before a stream is returned must release the
+    // reservation, including persistence, snapshot, compaction, routing,
+    // and model-resolution failures.
+    await budget.release();
+    throw err;
+  }
 }
 
 // P0-1 — runAutoTitleBackground, countToolCalls, and flushBatchedTelemetry

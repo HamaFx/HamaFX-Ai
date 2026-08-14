@@ -65,6 +65,7 @@ export interface StreamTextOpts {
     finishReason: string;
     response: { messages: readonly unknown[]; headers?: Record<string, string> };
   }) => Promise<void> | void;
+  onError?: (event: { error: unknown }) => Promise<void> | void;
 }
 
 /** Result of a streamText call. */
@@ -122,6 +123,7 @@ export class VercelLlmClient implements LlmClient {
     if (opts.telemetry) Object.assign(callArgs, opts.telemetry);
     if (opts.providerOptions) callArgs.providerOptions = opts.providerOptions;
     if (opts.onFinish) callArgs.onFinish = opts.onFinish;
+    if (opts.onError) callArgs.onError = opts.onError;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = (aiStreamText as any)(callArgs);

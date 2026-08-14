@@ -86,13 +86,21 @@ const diagnosticStore = new AsyncLocalStorage<RunDiagnosticContext>();
  *
  * The context is automatically cleaned up when `fn` resolves or rejects.
  */
+export interface DiagnosticOptions {
+  /** Streamed callers persist completion from their onFinish callback. */
+  deferCompletion?: boolean;
+  /** Preserve a trace id supplied by a distributed worker/job boundary. */
+  traceId?: string;
+}
+
 export function withDiagnostics<T>(
   userId: string,
   threadId: string,
   fn: () => Promise<T>,
+  options: DiagnosticOptions = {},
 ): Promise<T> {
   const ctx: RunDiagnosticContext = {
-    traceId: randomUUID(),
+    traceId: options.traceId ?? randomUUID(),
     userId,
     threadId,
     startedAt: Date.now(),
@@ -106,15 +114,31 @@ export function withDiagnostics<T>(
     diagnosticStore.run(ctx, async () => {
       try {
         const result = await fn();
-        await maybePersistTrace(ctx);
+        if (!options.deferCompletion) await maybePersistTrace(ctx);
         return result;
       } catch (err) {
         recordError(err);
         await maybePersistTrace(ctx, 'failed');
+        if (err instanceof Error) {
+          try {
+            (err as Error & { diagnosticContext?: unknown }).diagnosticContext =
+              exportDiagnosticContextInternal(ctx, 'failed');
+          } catch {
+            // Read-only error object — preserve the original failure.
+          }
+        }
         throw err;
       }
     }),
   );
+}
+
+export async function persistDiagnosticContext(
+  ctx: RunDiagnosticContext | null,
+  status: 'completed' | 'failed' = 'completed',
+): Promise<void> {
+  if (!ctx) return;
+  await maybePersistTrace(ctx, status);
 }
 
 async function maybePersistTrace(

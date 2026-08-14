@@ -48,7 +48,7 @@ import {
   runRagQuery,
 } from '../rag';
 import { countMemory, type MemoryKind } from '../memory/memory-index';
-import { getToolContext, maybeGetToolContext } from '../tool-context';
+import { maybeGetToolContext } from '../tool-context';
 
 // We extend the published input schema with the optional `kinds` filter
 // without breaking existing callers — the original input parses fine
@@ -99,10 +99,16 @@ export const searchKnowledgeTool = tool({
       return { items: [], model: FALLBACK_MODEL, pipelinePending: true };
     }
 
+    const ctx = maybeGetToolContext();
+    const memoryUserId = memoryKinds.length > 0 ? ctx?.userId : undefined;
+    if (memoryKinds.length > 0 && !memoryUserId) {
+      return { items: [], model: FALLBACK_MODEL, pipelinePending: true };
+    }
+
     // Probe corpora before paying for an embed call when both are empty.
     const [newsCount, memoryCount] = await Promise.all([
       wantsNews ? countEmbeddings() : Promise.resolve(0),
-      memoryKinds.length > 0 ? countMemory() : Promise.resolve(0),
+      memoryUserId ? countMemory(memoryUserId, memoryKinds) : Promise.resolve(0),
     ]);
     if (
       (wantsNews && newsCount === 0 && memoryKinds.length === 0) ||
@@ -111,7 +117,6 @@ export const searchKnowledgeTool = tool({
       return { items: [], model: FALLBACK_MODEL, pipelinePending: true };
     }
 
-    const ctx = maybeGetToolContext();
     const { embedding, model } = await embedQuery(query, {
       ...(ctx?.userSettings
         ? {
@@ -142,7 +147,7 @@ export const searchKnowledgeTool = tool({
             embedding,
             limit,
             kinds: memoryKinds,
-            userId: getToolContext().userId,
+            userId: memoryUserId!,
             ...(since !== undefined ? { since } : {}),
             ...(symbol !== undefined ? { symbol } : {}),
             ...(halflifeDays !== undefined ? { halflifeDays: halflifeDays * 4 } : {}),

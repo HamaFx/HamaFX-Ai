@@ -115,7 +115,7 @@ export async function createEntry(input: CreateJournalInput): Promise<JournalEnt
 
   // Best-effort memory write so `search_knowledge` can recall this trade.
   // Errors here must never block the journal-CRUD response.
-  void rememberJournalEntry({ entryId: entry.id }).catch((err) => {
+  void rememberJournalEntry({ entryId: entry.id, userId: input.userId }).catch((err) => {
     jlog.warn('memory upsert failed', { err: String(err) });
   });
 
@@ -193,7 +193,7 @@ export async function updateEntry(
 
     // Re-embed: outcomes and notes change the natural-language summary
     // we feed the memory index, so a stale row would mislead recall.
-    void rememberJournalEntry({ entryId: entry.id }).catch((err) => {
+    void rememberJournalEntry({ entryId: entry.id, userId }).catch((err) => {
       jlog.warn('memory upsert failed', { err: String(err) });
     });
 

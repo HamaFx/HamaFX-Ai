@@ -35,7 +35,7 @@ import { schema, withTenantDb } from '@kestrel/db';
 import { getDb } from '../db';
 import type { UserSettingsRow } from '@kestrel/db/schema';
 import type { ServerEnv, Symbol, ThreadInsight } from '@kestrel/shared';
-import { desc, eq, gte, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, sql } from 'drizzle-orm';
 
 import { dailySpendUsd } from '../cost';
 import { embedTexts, vectorLiteral } from '../embeddings';
@@ -73,8 +73,10 @@ async function upsertMemory(args: {
   text: string;
   meta: unknown;
   occurredAt: Date;
-  /** Phase A — the owning user. Optional; falls back to tool context or system. */
-  userId?: string;
+  /** The owning user. Required for every user-generated memory. */
+  userId: string;
+  /** Tenant boundary; personal deployments use the user id. */
+  tenantId?: string;
   env?: Partial<EmbedEnv>;
   /**
    * Phase D2 — user's embedding model pick. When supplied, takes
@@ -128,12 +130,14 @@ async function upsertMemory(args: {
   // users.id, and __system__ exists as a seeded row). Callers should always
   // pass userId; this fallback ensures we don't break existing paths that
   // haven't been updated yet.
-  const effectiveUserId = args.userId ?? '__system__';
+  const effectiveUserId = args.userId;
+  const effectiveTenantId = args.tenantId ?? effectiveUserId;
 
   await db
     .insert(schema.memoryEmbeddings)
     .values({
       userId: effectiveUserId,
+      tenantId: effectiveTenantId,
       kind: args.kind,
       sourceId: args.sourceId,
       symbol: args.symbol,
@@ -157,6 +161,7 @@ async function upsertMemory(args: {
         meta: args.meta as never,
         occurredAt: args.occurredAt,
         userId: effectiveUserId,
+        tenantId: effectiveTenantId,
         // createdAt stays at the original insert time — pgvector cosine
         // results don't depend on it, and consumers prefer the original
         // ingestion timestamp for audit trails.
@@ -172,6 +177,7 @@ async function upsertMemory(args: {
 
 export interface RememberJournalArgs {
   entryId: string;
+  userId: string;
   env?: Partial<EmbedEnv>;
   /** Phase D2 — user's embedding pick. */
   userSettings?: EmbedUserSettings;
@@ -187,7 +193,7 @@ export async function rememberJournalEntry(
   const rows = await getDb()
     .select()
     .from(schema.journalEntries)
-    .where(eq(schema.journalEntries.id, args.entryId))
+    .where(and(eq(schema.journalEntries.id, args.entryId), eq(schema.journalEntries.userId, args.userId)))
     .limit(1);
   const row = rows[0];
   if (!row) return { stored: false, reason: 'not_found' };
@@ -205,7 +211,7 @@ export async function rememberJournalEntry(
       tags: row.tags,
     },
     occurredAt: row.openedAt,
-    ...(row.userId ? { userId: row.userId } : {}),
+    userId: args.userId,
     ...(args.env ? { env: args.env } : {}),
     ...(args.userSettings ? { userSettings: args.userSettings } : {}),
   });
@@ -235,8 +241,8 @@ export interface RememberBriefingArgs {
   briefingKind: string;
   occurredAtMs?: number;
   env?: Partial<EmbedEnv>;
-  /** Phase 3 §3.11 — the owning user. Required for proper tenant isolation. */
-  userId?: string;
+  /** The owning user. Required for proper tenant isolation. */
+  userId: string;
 }
 
 export async function rememberBriefing(
@@ -250,7 +256,7 @@ export async function rememberBriefing(
     meta: { briefingKind: args.briefingKind },
     occurredAt: new Date(args.occurredAtMs ?? Date.now()),
     ...(args.env ? { env: args.env } : {}),
-    ...(args.userId ? { userId: args.userId } : {}),
+    userId: args.userId,
   });
 }
 
@@ -371,11 +377,14 @@ export async function searchMemory(args: SearchMemoryArgs): Promise<MemoryRow[]>
   });
 }
 
-/** Cheap probe — has the index ever had any data? */
-export async function countMemory(): Promise<number> {
+/** Cheap tenant-scoped probe — has this user's requested corpus had any data? */
+export async function countMemory(userId: string, kinds?: MemoryKind[]): Promise<number> {
+  const filters = [eq(schema.memoryEmbeddings.userId, userId)];
+  if (kinds && kinds.length > 0) filters.push(inArray(schema.memoryEmbeddings.kind, kinds));
   const rows = await getDb()
     .select({ id: schema.memoryEmbeddings.id })
     .from(schema.memoryEmbeddings)
+    .where(and(...filters))
     .limit(1);
   return rows.length;
 }

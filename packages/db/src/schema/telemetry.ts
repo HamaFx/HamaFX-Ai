@@ -62,7 +62,8 @@ export type ChatTelemetryKind =
   | 'multi_specialist_fundamental'
   | 'multi_specialist_risk'
   | 'multi_specialist_sentiment'
-  | 'multi_specialist_decision';
+  | 'multi_specialist_decision'
+  | 'multi_agent_turn';
 
 /**
  * Per-turn AI telemetry — drives /settings/usage and the daily $ ceiling.

@@ -117,18 +117,15 @@ function utcDayKey(now = new Date()): string {
 }
 
 /**
- * Sum of `est_cost_usd` from `chat_telemetry` for the current UTC day,
- * scoped to a specific user. Returns 0 if no rows exist.
+ * Read today's authoritative reserved/actual spend counter.
+ *
+ * Telemetry is intentionally not used here: it can contain auxiliary
+ * planner/title/specialist rows, while the daily counter is the atomic
+ * budget source of truth and includes reservations that have not emitted
+ * telemetry yet.
  */
 export async function dailySpendUsd(userId: string, now = new Date()): Promise<number> {
-  const startUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-  const rows = await getDb()
-    .select({ total: sql<number>`coalesce(sum(${schema.chatTelemetry.estCostUsd}), 0)` })
-    .from(schema.chatTelemetry)
-    .where(
-      sql`${schema.chatTelemetry.userId} = ${userId} AND ${schema.chatTelemetry.createdAt} >= ${startUtc}`,
-    );
-  return Number(rows[0]?.total ?? 0);
+  return reservedSpendUsd(userId, now);
 }
 
 /**

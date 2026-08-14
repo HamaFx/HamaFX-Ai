@@ -16,6 +16,7 @@
 
 // Analysis jobs query helpers.
 
+import { randomUUID } from 'node:crypto';
 import { and, asc, eq, lt } from 'drizzle-orm';
 import { getDb, schema } from '../client';
 
@@ -40,16 +41,19 @@ export async function claimNextPendingJob(): Promise<AnalysisJobRow | null> {
     if (pending.length === 0) return null;
     const job = pending[0]!;
 
+    const now = new Date();
+    const workerRunId = `${process.env.HOSTNAME ?? 'worker'}-${randomUUID()}`;
     await tx
       .update(schema.analysisJobs)
       .set({
         status: 'running',
-        startedAt: new Date(),
-        workerRunId: `${process.env.HOSTNAME ?? 'worker'}-${Date.now()}`,
+        startedAt: now,
+        updatedAt: now,
+        workerRunId,
       })
-      .where(eq(schema.analysisJobs.id, job.id));
+      .where(and(eq(schema.analysisJobs.id, job.id), eq(schema.analysisJobs.status, 'pending')));
 
-    return job;
+    return { ...job, status: 'running', startedAt: now, updatedAt: now, workerRunId };
   });
 }
 
@@ -70,7 +74,7 @@ export async function failStaleJobs(staleCutoff: Date): Promise<void> {
     .where(
       and(
         eq(schema.analysisJobs.status, 'running'),
-        lt(schema.analysisJobs.startedAt, staleCutoff),
+        lt(schema.analysisJobs.updatedAt, staleCutoff),
       ),
     );
 }

@@ -83,18 +83,28 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
 
       if (pending.length === 0) return null;
       const job = pending[0]!;
+      const workerRunId = `${process.env.HOSTNAME ?? 'worker'}-${crypto.randomUUID()}`;
+      const now = new Date();
 
-      // Mark as running so no other worker picks it up.
+      // Mark as running and issue a unique lease token. All later writes
+      // must include this token so a stale worker can never overwrite a
+      // newer worker's terminal state.
       await tx
         .update(schema.analysisJobs)
         .set({
           status: 'running',
-          startedAt: new Date(),
-          workerRunId: `${process.env.HOSTNAME ?? 'worker'}-${Date.now()}`,
+          startedAt: now,
+          updatedAt: now,
+          workerRunId,
         })
-        .where(eq(schema.analysisJobs.id, job.id));
+        .where(
+          and(
+            eq(schema.analysisJobs.id, job.id),
+            eq(schema.analysisJobs.status, 'pending'),
+          ),
+        );
 
-      return job;
+      return { ...job, workerRunId };
     });
 
     if (!claimResult) {
@@ -105,17 +115,41 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
     const job = claimResult;
     ctx.log.info('Claimed analysis job', { jobId: job.id, userId: job.userId, traceId: job.traceId });
 
+    // Refresh the lease while a long analysis is running. `updatedAt` is
+    // the existing lease timestamp, so no migration is required.
+    const leaseHeartbeat = setInterval(() => {
+      void db
+        .update(schema.analysisJobs)
+        .set({ updatedAt: new Date() })
+        .where(
+          and(
+            eq(schema.analysisJobs.id, job.id),
+            eq(schema.analysisJobs.status, 'running'),
+            eq(schema.analysisJobs.workerRunId, job.workerRunId),
+          ),
+        )
+        .catch((err) => ctx.log.warn('Analysis job lease heartbeat failed', { err: String(err) }));
+    }, 30_000);
+    leaseHeartbeat.unref();
+
     // OBS-1: If the web request attached a diagnostic traceId, wrap the
     // entire job processing in the traceId context so all log lines from
     // this worker run carry the same traceId as the originating chat turn.
     const processJob = async () => {
-    const progressEvents: Array<Record<string, unknown>> = [];
-    let progressWrite = Promise.resolve();
-    try {
-      // Dynamically import the multi-agent orchestrator — the worker
-      // bundle includes @kestrel/ai (used by initLangfuse).
-      const { runMultiAgentChat, extractUserMessageText, resolveMode } = await import('@kestrel/ai');
-      const { userSettings: userSettingsTable } = schema;
+      const progressEvents: Array<Record<string, unknown>> = [];
+      let progressWrite = Promise.resolve();
+      try {
+        // Dynamically import the multi-agent orchestrator — the worker
+        // bundle includes @kestrel/ai (used by initLangfuse).
+        const {
+          runMultiAgentChat,
+          extractUserMessageText,
+          resolveMode,
+          getThread,
+          listMessages,
+          withDiagnostics,
+        } = await import('@kestrel/ai');
+        const { userSettings: userSettingsTable } = schema;
 
       // Load user settings and identity for the same prompt context used by
       // the synchronous web path.
@@ -150,7 +184,14 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
         parts: userMessageParts as UIMessage['parts'],
       } as UIMessage;
 
-      const history = reconstructHistory(job.historyParts);
+      const thread = await getThread(job.userId, job.threadId);
+      if (!thread) {
+        throw new Error(`Analysis job thread not found or not owned by user: ${job.threadId}`);
+      }
+      // Use authoritative persisted history rather than trusting the
+      // client-supplied snapshot stored on the queued job.
+      const persistedHistory = await listMessages(job.userId, job.threadId, 200);
+      const history = reconstructHistory(persistedHistory);
 
       // Extract user text and resolve mode from the queued mode value.
       // The route handler already resolved this to a non-'single' mode
@@ -186,7 +227,13 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
             await db
               .update(schema.analysisJobs)
               .set({ progress: progressEvents, updatedAt: new Date() })
-              .where(eq(schema.analysisJobs.id, job.id));
+              .where(
+                and(
+                  eq(schema.analysisJobs.id, job.id),
+                  eq(schema.analysisJobs.status, 'running'),
+                  eq(schema.analysisJobs.workerRunId, job.workerRunId),
+                ),
+              );
           } catch (err) {
             ctx.log.warn('Failed to update progress', { err: String(err) });
           }
@@ -197,7 +244,7 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
       // so the worker always passes the same env shape as the web route.
       const env = pickAiEnv(process.env as unknown as Parameters<typeof pickAiEnv>[0]);
 
-      const result = await runMultiAgentChat({
+      const result = await withDiagnostics(job.userId, job.threadId, () => runMultiAgentChat({
         threadId: job.threadId,
         userId: job.userId,
         userMessage,
@@ -209,7 +256,7 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
         signal: ctx.signal ?? null,
         analysisMode: resolvedMode,
         onProgress,
-      });
+      }), job.traceId ? { traceId: job.traceId } : {});
 
       // Ensure all progress snapshots have reached the database before the
       // terminal status is written.
@@ -232,13 +279,19 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
           completedAt: new Date(),
           updatedAt: new Date(),
         })
-        .where(eq(schema.analysisJobs.id, job.id));
+        .where(
+          and(
+            eq(schema.analysisJobs.id, job.id),
+            eq(schema.analysisJobs.status, 'running'),
+            eq(schema.analysisJobs.workerRunId, job.workerRunId),
+          ),
+        );
 
       ctx.log.info('Analysis job completed', { jobId: job.id, costUsd: result.totalCostUsd, latencyMs: result.totalLatencyMs });
       processed++;
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      ctx.log.error('Analysis job failed', { jobId: job.id, err: msg });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        ctx.log.error('Analysis job failed', { jobId: job.id, err: msg });
 
       await progressWrite;
       await db
@@ -249,20 +302,32 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
           completedAt: new Date(),
           updatedAt: new Date(),
         })
-        .where(eq(schema.analysisJobs.id, job.id));
-      processed++;
-    }
+        .where(
+          and(
+            eq(schema.analysisJobs.id, job.id),
+            eq(schema.analysisJobs.status, 'running'),
+            eq(schema.analysisJobs.workerRunId, job.workerRunId),
+          ),
+        );
+        processed++;
+      }
     };
 
     // OBS-1: Run job processing inside the traceId context when available.
-    if (job.traceId) {
-      await traceIdStorage.run(job.traceId, processJob);
-    } else {
-      await processJob();
+    try {
+      if (job.traceId) {
+        await traceIdStorage.run(job.traceId, processJob);
+      } else {
+        await processJob();
+      }
+    } finally {
+      clearInterval(leaseHeartbeat);
     }
   }
 
-  // Clean up stale jobs (running for >5 minutes — worker probably crashed).
+  // Clean up jobs whose lease has not been refreshed for >5 minutes.
+  // Terminal writes are lease-token-conditional, so an old worker cannot
+  // resurrect a job after this cleanup marks it failed.
   // Only mark jobs that have been running longer than STALE_JOB_TIMEOUT_MS.
   const staleCutoff = new Date(Date.now() - STALE_JOB_TIMEOUT_MS);
   await db
@@ -276,7 +341,7 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
     .where(
       and(
         eq(schema.analysisJobs.status, 'running'),
-        lt(schema.analysisJobs.startedAt, staleCutoff),
+        lt(schema.analysisJobs.updatedAt, staleCutoff),
       ),
     );
 

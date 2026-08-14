@@ -89,6 +89,21 @@ describe('persistTrace', () => {
     await expect(persistTrace(baseTrace)).resolves.toBeUndefined();
   });
 
+  it('writes the file sink even when the database sink fails', async () => {
+    vi.stubEnv('DEBUG_TRACE_PATH', '/tmp/traces');
+    mockInsert.mockImplementation(() => {
+      throw new Error('DB connection lost');
+    });
+    const writeFileSpy = vi.spyOn(fs, 'writeFile').mockResolvedValue(undefined);
+
+    await persistTrace(baseTrace);
+
+    expect(writeFileSpy).toHaveBeenCalledWith(
+      '/tmp/traces/trace-123.json',
+      JSON.stringify(baseTrace.trace, null, 2),
+    );
+  });
+
   it('writes trace to file when DEBUG_TRACE_PATH is set', async () => {
     vi.stubEnv('DEBUG_TRACE_PATH', '/tmp/traces');
     const writeFileSpy = vi.spyOn(fs, 'writeFile').mockResolvedValue(undefined);

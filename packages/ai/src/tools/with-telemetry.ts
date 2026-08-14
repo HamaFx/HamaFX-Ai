@@ -96,32 +96,61 @@ export function withTelemetry<T extends Tool<any, any>>(name: string, t: T): T {
     const startedAt = Date.now();
     // F5 — Record diagnostic step for this tool call.
     recordStep(`tool:${name}`, { input });
-    // Propagate the per-turn AbortSignal so the tool's `opts.abortSignal`
-    // (the AI SDK's own field) is set when the user has closed the tab.
-    // Tools may read `opts.abortSignal?.aborted` between phases.
-    const opts2 = ctx?.signal
-      ? { ...(opts ?? {}), abortSignal: ctx.signal }
-      : opts;
-    // F7 — per-tool timeout: race the tool execution against a deadline.
-    // M10: Use AbortSignal.timeout() (Node 20+) instead of manual
-    // setTimeout + Promise.race — avoids promise allocation per call.
+    // Give every invocation its own cancellation controller. The parent
+    // signal handles request/turn cancellation; the local controller also
+    // aborts the underlying operation when the tool deadline expires.
+    const parentSignal = (opts as { abortSignal?: AbortSignal } | undefined)?.abortSignal ?? ctx?.signal ?? undefined;
+    const toolController = new AbortController();
+    const onParentAbort = () => {
+      toolController.abort(parentSignal?.reason);
+    };
+    if (parentSignal) {
+      if (parentSignal.aborted) onParentAbort();
+      else parentSignal.addEventListener('abort', onParentAbort, { once: true });
+    }
+    const opts2 = { ...(opts ?? {}), abortSignal: toolController.signal };
     const timeoutMs = TOOL_TIMEOUT_OVERRIDES[name] ?? DEFAULT_TOOL_TIMEOUT_MS;
     let timeout: ReturnType<typeof setTimeout> | undefined;
-    // If ctx.signal aborts (tab close), cancel the timeout to avoid spurious errors.
-    if (ctx?.signal && !ctx.signal.aborted) {
-      ctx.signal.addEventListener('abort', () => { if (timeout) clearTimeout(timeout); }, { once: true });
-    }
+    let parentAbortListener: (() => void) | undefined;
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const executePromise = (inner as (i: any, o: any) => Promise<any>)(input, opts2);
+      // The tool receives the signal above, but not every implementation
+      // observes it. Race the wrapper against parent cancellation as well so
+      // a disconnected request cannot remain pending until the tool timeout.
+      let rejectParentAbort: ((reason?: unknown) => void) | undefined;
+      const parentAbortPromise = parentSignal
+        ? new Promise<never>((_, reject) => {
+            rejectParentAbort = reject;
+          })
+        : null;
+      parentAbortListener = () => {
+        rejectParentAbort?.(parentSignal?.reason ?? new Error(`Tool ${name} aborted`));
+      };
+      if (parentSignal) {
+        parentSignal.addEventListener('abort', parentAbortListener, { once: true });
+        if (parentSignal.aborted) parentAbortListener();
+      }
       const timeoutPromise = new Promise<never>((_, reject) => {
-        timeout = setTimeout(() => reject(new ToolTimeoutError(name, timeoutMs)), timeoutMs);
+        timeout = setTimeout(() => {
+          const timeoutError = new ToolTimeoutError(name, timeoutMs);
+          // Reject the wrapper first so a synchronously abort-aware tool
+          // cannot replace the stable timeout error with its own error.
+          reject(timeoutError);
+          toolController.abort(timeoutError);
+        }, timeoutMs);
       });
-      const result = await Promise.race([executePromise, timeoutPromise]);
+      const races: Array<Promise<unknown>> = [executePromise, timeoutPromise];
+      if (parentAbortPromise) races.push(parentAbortPromise);
+      const result = await Promise.race(races);
       const ms = Date.now() - startedAt;
       // F7-obs — estimate output size in characters for cost/observability tracking.
       const outputChars = estimateResultChars(result);
       if (timeout) clearTimeout(timeout);
+      if (parentSignal) {
+        parentSignal.removeEventListener('abort', onParentAbort);
+        if (parentAbortListener) parentSignal.removeEventListener('abort', parentAbortListener);
+      }
       // M4: Buffer telemetry for batch insert at onFinish instead of
       // individual DB inserts per tool call.
       const entry: BatchedToolTelemetry = {
@@ -144,6 +173,10 @@ export function withTelemetry<T extends Tool<any, any>>(name: string, t: T): T {
     } catch (err) {
       const ms = Date.now() - startedAt;
       if (timeout) clearTimeout(timeout);
+      if (parentSignal) {
+        parentSignal.removeEventListener('abort', onParentAbort);
+        if (parentAbortListener) parentSignal.removeEventListener('abort', parentAbortListener);
+      }
       const isTimeout = err instanceof ToolTimeoutError;
       // M4: Buffer telemetry for batch insert.
       const entry: BatchedToolTelemetry = {

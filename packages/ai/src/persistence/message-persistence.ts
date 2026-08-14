@@ -21,7 +21,7 @@ import { schema } from '@kestrel/db';
 import { getDb } from '../db';
 import { getMessageText } from '@kestrel/shared';
 import type { UIMessage } from 'ai';
-import { asc, eq } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
 
 import { getThread } from './thread-persistence';
 
@@ -58,9 +58,16 @@ export async function listMessages(userId: string, threadId: string, limit = 200
   }));
 }
 
-export async function appendUserMessage(threadId: string, message: UIMessage): Promise<void> {
+export async function appendUserMessage(userId: string, threadId: string, message: UIMessage): Promise<void> {
   const text = extractText(message);
   await getDb().transaction(async (tx) => {
+    const ownedThread = await tx
+      .select({ id: schema.chatThreads.id })
+      .from(schema.chatThreads)
+      .where(and(eq(schema.chatThreads.id, threadId), eq(schema.chatThreads.userId, userId)))
+      .limit(1);
+    if (ownedThread.length === 0) throw new Error(`thread not found: ${threadId}`);
+
     await tx.insert(schema.chatMessages).values({
       threadId,
       role: 'user',
@@ -70,16 +77,24 @@ export async function appendUserMessage(threadId: string, message: UIMessage): P
     await tx
       .update(schema.chatThreads)
       .set({ updatedAt: new Date() })
-      .where(eq(schema.chatThreads.id, threadId));
+      .where(and(eq(schema.chatThreads.id, threadId), eq(schema.chatThreads.userId, userId)));
   });
 }
 
 export async function appendAssistantMessage(
+  userId: string,
   threadId: string,
   message: UIMessage,
 ): Promise<{ messageId: string }> {
   const text = extractText(message);
   return getDb().transaction(async (tx) => {
+    const ownedThread = await tx
+      .select({ id: schema.chatThreads.id })
+      .from(schema.chatThreads)
+      .where(and(eq(schema.chatThreads.id, threadId), eq(schema.chatThreads.userId, userId)))
+      .limit(1);
+    if (ownedThread.length === 0) throw new Error(`thread not found: ${threadId}`);
+
     const inserted = await tx
       .insert(schema.chatMessages)
       .values({
@@ -92,7 +107,7 @@ export async function appendAssistantMessage(
     await tx
       .update(schema.chatThreads)
       .set({ updatedAt: new Date() })
-      .where(eq(schema.chatThreads.id, threadId));
+      .where(and(eq(schema.chatThreads.id, threadId), eq(schema.chatThreads.userId, userId)));
     return { messageId: inserted[0]!.id };
   });
 }

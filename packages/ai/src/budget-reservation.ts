@@ -80,6 +80,7 @@ export async function reserveTurnBudget(args: {
       return state.released;
     },
     async reconcile(observedUsd: number) {
+      if (state.released) return;
       state.released = true;
       const delta = observedUsd - estimateUsd;
       await applyBudgetDelta(args.userId, delta).catch((err) =>

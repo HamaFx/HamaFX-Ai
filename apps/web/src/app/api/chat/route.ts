@@ -18,6 +18,7 @@ import {
   extractUserMessageText,
   getDb,
   getThread,
+  listMessages,
   getUserWithSettings,
   pickAiEnv,
   ProgressTracker,
@@ -28,6 +29,7 @@ import {
   schema,
   traceIdStorage,
   withRateLimit,
+  withDiagnostics,
 } from '@/lib/services/api-boundary';
 
 export const runtime = 'nodejs';
@@ -47,6 +49,16 @@ function getDiagnosticTraceId(): string | null {
   return traceIdStorage.getStore() ?? null;
 }
 
+function persistedMessagesToUi(rows: Awaited<ReturnType<typeof listMessages>>): UIMessage[] {
+  return rows.map((row) => ({
+    id: row.id,
+    role: row.role === 'assistant' || row.role === 'system' ? row.role : 'user',
+    parts: Array.isArray(row.parts) && row.parts.length > 0
+      ? row.parts as UIMessage['parts']
+      : [{ type: 'text' as const, text: row.content }],
+  } as UIMessage));
+}
+
 const BodySchema = z.object({
   threadId: z.string().uuid(),
   modelOverride: z.string().min(1).max(120).nullable().optional(),
@@ -54,15 +66,16 @@ const BodySchema = z.object({
   messages: z
     .array(
       z.object({
-        id: z.string(),
+        id: z.string().max(200),
         role: z.enum(['user', 'assistant', 'system']),
         // M-10: Cap individual message content at 50k chars to prevent
         // memory exhaustion from extremely long messages.
         content: z.string().max(50_000, 'Message too long').default(''),
-        parts: z.array(z.unknown()).default([]),
+        parts: z.array(z.unknown()).max(50, 'Too many message parts').default([]),
       }),
     )
-    .min(1),
+    .min(1)
+    .max(100, 'Too many messages'),
 });
 
 export const POST = withAuth<void>(async (req, { user }) => {
@@ -160,12 +173,15 @@ export const POST = withAuth<void>(async (req, { user }) => {
               threadId: body.threadId,
               userMessageText: userText,
               userMessageParts: (last as UIMessage).parts,
-              historyParts: body.messages.slice(0, -1),
+              // The worker reloads authoritative history from chat_messages.
+              // Keep this column populated only for backward compatibility;
+              // never use the client snapshot as model context.
+              historyParts: [],
               mode: 'full',
               status: 'pending',
               // OBS-1: propagate the diagnostic traceId so worker
               // logs can be correlated with this chat turn.
-              traceId: getDiagnosticTraceId(),
+              traceId: getDiagnosticTraceId() ?? crypto.randomUUID(),
             })
             .returning({ id: schema.analysisJobs.id });
 
@@ -222,14 +238,17 @@ export const POST = withAuth<void>(async (req, { user }) => {
             };
 
             try {
-              const result = await runMultiAgentChat({
+              const persistedHistory = persistedMessagesToUi(
+                await listMessages(user.userId, body.threadId, 200),
+              );
+              const result = await withDiagnostics(user.userId, body.threadId, () => runMultiAgentChat({
                 threadId: body.threadId,
                 userId: user.userId,
                 userMessage: last as UIMessage,
-                // The latest user message is passed separately; history must
-                // contain only prior turns so the fusion prompt does not see
-                // the current question twice.
-                history: body.messages.slice(0, -1) as UIMessage[],
+                // The latest user message is passed separately. Rebuild prior
+                // history from the authenticated thread rather than trusting
+                // the client-provided transcript.
+                history: persistedHistory,
                 userSettings,
                 displayName: displayName ?? null,
                 ...(customInstructions ? { customInstructions } : {}),
@@ -248,7 +267,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
                   startText();
                   send({ type: 'text-delta', id: messageId, delta: chunk });
                 },
-              });
+              }));
 
               startText();
               send({ type: 'text-end', id: messageId });

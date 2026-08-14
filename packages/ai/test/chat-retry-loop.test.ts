@@ -227,6 +227,7 @@ describe('runChatWithFallback', () => {
     const args = baseArgs({ attempt, budget });
 
     await expect(runChatWithFallback(args)).rejects.toThrow('stream error');
+    expect(budget.release).toHaveBeenCalledTimes(1);
   });
 
   // ── PROVIDER_THRESHOLD_EXCEEDED special case ──

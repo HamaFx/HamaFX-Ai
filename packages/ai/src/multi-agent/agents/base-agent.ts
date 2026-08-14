@@ -19,7 +19,7 @@
 import { convertToModelMessages, generateText, stepCountIs, type LanguageModel, type Tool } from 'ai';
 import { z } from 'zod';
 import { supportsPromptCaching } from '../../model';
-import { estimateCostUsd } from '../../cost';
+import { checkBudgetAlertsAndThresholds, estimateCostUsd } from '../../cost';
 import { withToolContext, type ToolContext } from '../../tool-context';
 import { getDb } from '../../db';
 import { telemetryConfig } from '../../telemetry';
@@ -66,7 +66,11 @@ export abstract class BaseAgent {
 
   async run(ctx: SharedContext): Promise<AgentOpinion> {
     const startMs = Date.now();
-    const { model, modelId } = this.resolveModel(ctx);
+    const { model, modelId, providerId } = this.resolveModel(ctx);
+    const providerBudget = await checkBudgetAlertsAndThresholds(ctx.userId, providerId);
+    if (providerBudget.blocked) {
+      throw new Error(providerBudget.blockedReason ?? `Provider ${providerId} spending limit exceeded`);
+    }
     const sharedPrompt = ctx.snapshot ? `# LIVE MARKET CONTEXT\n${JSON.stringify(ctx.snapshot, null, 2)}\n` : '';
     const prefetchedPrompt = ctx.prefetchedData
       ? `\n\n${ctx.prefetchedData}\n\nPrefer the above pre-fetched data. Only call tools for data gaps or updates.\n`
@@ -99,7 +103,11 @@ export abstract class BaseAgent {
     const timeoutMs = AGENT_TIMEOUTS[this.name] ?? 15_000;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
-    if (ctx.signal) ctx.signal.addEventListener('abort', () => controller.abort(), { once: true });
+    const onParentAbort = () => controller.abort(ctx.signal?.reason);
+    if (ctx.signal) {
+      if (ctx.signal.aborted) onParentAbort();
+      else ctx.signal.addEventListener('abort', onParentAbort, { once: true });
+    }
     try {
       const result = await withToolContext(toolContext, async () => generateText({
         model, system: fullSystem,
@@ -114,10 +122,28 @@ export abstract class BaseAgent {
         maxOutputTokens: 3000,
       }));
       const latencyMs = Date.now() - startMs;
-      const costUsd = estimateCostUsd(modelId, result.usage?.inputTokens ?? 0, result.usage?.outputTokens ?? 0);
+      const inputTokens = result.usage?.inputTokens ?? 0;
+      const outputTokens = result.usage?.outputTokens ?? 0;
+      const costUsd = estimateCostUsd(modelId, inputTokens, outputTokens);
       const parsed = this.parseOutput(result.text);
-      return { agentName: this.name, bias: parsed.bias, confidence: parsed.confidence, reasoning: parsed.reasoning, rawData: parsed.rawData, costUsd, latencyMs, model: modelId };
-    } finally { clearTimeout(timeout); }
+      return {
+        agentName: this.name,
+        bias: parsed.bias,
+        confidence: parsed.confidence,
+        reasoning: parsed.reasoning,
+        rawData: parsed.rawData,
+        costUsd,
+        latencyMs,
+        model: modelId,
+        inputTokens,
+        outputTokens,
+        providerId,
+        modelId,
+      };
+    } finally {
+      clearTimeout(timeout);
+      ctx.signal?.removeEventListener('abort', onParentAbort);
+    }
   }
 
   protected safeParseJson(text: string): Record<string, unknown> | null {

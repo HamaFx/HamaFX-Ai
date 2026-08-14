@@ -53,6 +53,11 @@ export interface AgentOpinion {
   costUsd: number;
   latencyMs: number;
   model: string;
+  /** Provider/model usage captured for budget and usage attribution. */
+  inputTokens?: number;
+  outputTokens?: number;
+  providerId?: string;
+  modelId?: string;
 }
 
 // ── Shared Context ──────────────────────────────────────────────────────
@@ -129,6 +134,11 @@ export interface MultiAgentResult {
   mode: ResolvedMode;
   /** ID of the persisted assistant message (for opinion linking + telemetry). */
   messageId: string;
+  /** Usage for the final fusion call. */
+  inputTokens?: number;
+  outputTokens?: number;
+  providerId?: string;
+  modelId?: string;
 }
 
 // ── Model Tier ──────────────────────────────────────────────────────────
