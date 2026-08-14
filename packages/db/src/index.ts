@@ -150,7 +150,10 @@ export {
 export {
   listDiagnosticTraces,
   getDiagnosticTrace,
+  listTraceExplorerEvents,
   type DiagnosticTraceRow,
+  type TraceExplorerEvent,
+  type TraceExplorerFilters,
 } from './queries/diagnostic-traces';
 export {
   listFeatureFlags,

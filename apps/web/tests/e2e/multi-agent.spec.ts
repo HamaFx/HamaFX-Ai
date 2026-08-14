@@ -66,13 +66,128 @@ test.describe('Multi-Agent Chat', () => {
 
     // Verify the request was sent with analysisMode=full, not merely any
     // multi-agent mode such as standard.
-    expect(requestSeen).toBe(true);
+    await expect.poll(() => requestSeen, { timeout: 15_000 }).toBe(true);
 
     // Verify the agent deliberation UI appears
     await expect(page.getByText('Multi-Agent')).toBeVisible({ timeout: 15_000 });
 
     // Verify the final response text appears
     await expect(page.getByText('Bottom Line')).toBeVisible({ timeout: 15_000 });
+  });
+
+  test('full mode queued worker path polls until all four specialists and Decision complete', async ({ authedPage }) => {
+    const page = authedPage;
+    let modeSeen: string | undefined;
+    let pollCount = 0;
+
+    await page.route('**/api/chat/analysis-jobs/full-e2e-job', (route) => {
+      pollCount += 1;
+      const agents = [
+        { agentName: 'technical', status: 'done', opinion: { agentName: 'technical', bias: 'bullish', confidence: 0.8, reasoning: 'Trend aligned' } },
+        { agentName: 'fundamental', status: 'done', opinion: { agentName: 'fundamental', bias: 'bullish', confidence: 0.7, reasoning: 'Macro supportive' } },
+        { agentName: 'risk', status: 'done', opinion: { agentName: 'risk', bias: 'neutral', confidence: 0.5, reasoning: 'Risk contained' } },
+        { agentName: 'sentiment', status: 'done', opinion: { agentName: 'sentiment', bias: 'bullish', confidence: 0.6, reasoning: 'Positioning positive' } },
+        { agentName: 'decision', status: 'done' },
+      ];
+      if (pollCount === 1) {
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            status: 'running',
+            progress: [{ type: 'data-agent-progress', data: { agents, mode: 'full' } }],
+          }),
+        });
+      }
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          status: 'complete',
+          result: {
+            finalText: '**Bottom Line:** queued Full mode completed with all committee stages.',
+            agentOpinions: agents.slice(0, 4).map((agent) => agent.opinion),
+            mode: 'full',
+            totalCostUsd: 0.04,
+            totalLatencyMs: 1200,
+            messageId: 'queued-assistant-message',
+          },
+        }),
+      });
+    });
+
+    await page.route('**/api/chat', (route) => {
+      const body = route.request().postDataJSON();
+      modeSeen = body?.analysisMode;
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ type: 'analysis-queued', jobId: 'full-e2e-job', status: 'queued' }),
+      });
+    });
+
+    await page.getByRole('button', { name: /analysis mode/i }).click();
+    await page.getByRole('menuitem', { name: /full/i }).click();
+    await page.getByRole('textbox').fill('Run a complete top-down XAUUSD analysis.');
+    await page.getByRole('textbox').press('Enter');
+
+    await expect.poll(() => modeSeen, { timeout: 15_000 }).toBe('full');
+    await expect(page.getByLabel('Technical agent: done')).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByLabel('Fundamental agent: done')).toBeVisible();
+    await expect(page.getByLabel('Risk agent: done')).toBeVisible();
+    await expect(page.getByLabel('Sentiment agent: done')).toBeVisible();
+    await expect(page.getByLabel('Decision agent: done')).toBeVisible();
+    await expect(page.getByText(/queued Full mode completed/i)).toBeVisible();
+    expect(pollCount).toBeGreaterThanOrEqual(2);
+  });
+
+  test('full mode keeps a specialist failure visible in the completed degraded result', async ({ authedPage }) => {
+    const page = authedPage;
+    let pollCount = 0;
+
+    await page.route('**/api/chat/analysis-jobs/full-degraded-job', (route) => {
+      pollCount += 1;
+      const agents = [
+        { agentName: 'technical', status: 'done', opinion: { agentName: 'technical', bias: 'bullish', confidence: 0.8, reasoning: 'Trend aligned' } },
+        { agentName: 'fundamental', status: 'done', opinion: { agentName: 'fundamental', bias: 'neutral', confidence: 0.5, reasoning: 'Mixed macro' } },
+        { agentName: 'risk', status: 'done', opinion: { agentName: 'risk', bias: 'neutral', confidence: 0.5, reasoning: 'Risk contained' } },
+        { agentName: 'sentiment', status: 'error', error: 'Agent unavailable. Please try again.' },
+        { agentName: 'decision', status: 'done' },
+      ];
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(pollCount === 1
+          ? { status: 'running', progress: [{ type: 'data-agent-progress', data: { agents, mode: 'full' } }] }
+          : {
+              status: 'complete',
+              result: {
+                finalText: '**Bottom Line:** degraded committee result using three available specialists.',
+                agentOpinions: agents.filter((agent) => agent.opinion).map((agent) => agent.opinion),
+                mode: 'full',
+                totalCostUsd: 0.03,
+                totalLatencyMs: 900,
+                messageId: 'degraded-assistant-message',
+              },
+            }),
+      });
+    });
+
+    await page.route('**/api/chat', (route) => route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ type: 'analysis-queued', jobId: 'full-degraded-job', status: 'queued' }),
+    }));
+
+    await page.getByRole('button', { name: /analysis mode/i }).click();
+    await page.getByRole('menuitem', { name: /full/i }).click();
+    await page.getByRole('textbox').fill('Analyze XAUUSD despite missing sentiment data.');
+    await page.getByRole('textbox').press('Enter');
+
+    await expect(page.getByLabel('Sentiment agent: error')).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText(/Sentiment agent failed/i)).toBeVisible();
+    await expect(page.getByText(/degraded committee result/i)).toBeVisible();
+    await expect.poll(() => pollCount, { timeout: 15_000 }).toBeGreaterThanOrEqual(2);
   });
 
   test('quick mode only shows Technical agent', async ({ authedPage }) => {
@@ -101,7 +216,7 @@ test.describe('Multi-Agent Chat', () => {
     await textarea.press('Enter');
 
     // Verify the mode was sent
-    expect(modeSeen).toBe('quick');
+    await expect.poll(() => modeSeen, { timeout: 15_000 }).toBe('quick');
 
     // Verify response appears
     await expect(page.getByText('Quick technical read')).toBeVisible({ timeout: 15_000 });
@@ -133,7 +248,7 @@ test.describe('Multi-Agent Chat', () => {
     await textarea.press('Enter');
 
     // Verify single mode was sent
-    expect(analysisModeSeen).toBe('single');
+    await expect.poll(() => analysisModeSeen, { timeout: 15_000 }).toBe('single');
 
     // Verify standard response appears (no multi-agent UI)
     await expect(page.getByText('Single agent response')).toBeVisible({ timeout: 15_000 });

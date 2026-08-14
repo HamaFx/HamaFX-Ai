@@ -126,6 +126,41 @@ export interface DiagnosticTraceDetail extends DiagnosticTraceSummary {
   metadata?: Record<string, unknown> | null;
 }
 
+export type TraceExplorerSource =
+  | 'trace'
+  | 'turn'
+  | 'tool'
+  | 'agent'
+  | 'analysis-job'
+  | 'budget'
+  | 'outbox';
+
+export interface TraceExplorerEvent {
+  id: string;
+  source: TraceExplorerSource;
+  timestamp: string;
+  name: string;
+  status: string;
+  traceId: string | null;
+  runId: string | null;
+  jobId: string | null;
+  threadId: string | null;
+  messageId: string | null;
+  userId: string | null;
+  durationMs: number | null;
+  error: string | null;
+  metadata: Record<string, unknown> | null;
+}
+
+export interface TraceExplorerResponse {
+  events: TraceExplorerEvent[];
+  stats: {
+    total: number;
+    bySource: Record<string, number>;
+    failures: number;
+  };
+}
+
 // ── Onboarding ───────────────────────────────────────────────────────────────
 
 export interface OnboardingInspectDTO {

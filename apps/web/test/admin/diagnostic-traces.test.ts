@@ -13,17 +13,20 @@ vi.mock('@/lib/admin-auth', () => ({
 
 const mockListDiagnosticTraces = vi.hoisted(() => vi.fn());
 const mockGetDiagnosticTrace = vi.hoisted(() => vi.fn());
+const mockListTraceExplorerEvents = vi.hoisted(() => vi.fn());
 const mockRecordAdminAudit = vi.hoisted(() => vi.fn());
 
 vi.mock('@kestrel/db', () => ({
   listDiagnosticTraces: mockListDiagnosticTraces,
   getDiagnosticTrace: mockGetDiagnosticTrace,
+  listTraceExplorerEvents: mockListTraceExplorerEvents,
   recordAdminAudit: mockRecordAdminAudit,
   schema: { diagnosticTraces: {} },
 }));
 
 import { GET as listGet } from '@/app/api/admin/diagnostics/traces/route';
 import { GET as detailGet } from '@/app/api/admin/diagnostics/trace/[id]/route';
+import { GET as explorerGet } from '@/app/api/admin/diagnostics/explorer/route';
 
 describe('GET /api/admin/diagnostics/traces', () => {
   beforeEach(() => {
@@ -59,6 +62,65 @@ describe('GET /api/admin/diagnostics/traces', () => {
       errorCount: 0,
     });
     expect(body.traces[0]).not.toHaveProperty('trace');
+  });
+});
+
+describe('GET /api/admin/diagnostics/explorer', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockListTraceExplorerEvents.mockResolvedValue([
+      {
+        id: 'tool:1',
+        source: 'tool',
+        timestamp: new Date('2026-07-24T10:00:00.000Z'),
+        name: 'tool:get_candles',
+        status: 'completed',
+        traceId: 'trace-1',
+        runId: 'run-1',
+        jobId: 'job-1',
+        threadId: 'thread-1',
+        messageId: 'message-1',
+        userId: 'user-1',
+        durationMs: 42,
+        error: null,
+        metadata: { outputChars: 12 },
+      },
+      {
+        id: 'outbox:1',
+        source: 'outbox',
+        timestamp: new Date('2026-07-24T10:01:00.000Z'),
+        name: 'telemetry.tool',
+        status: 'dead',
+        traceId: 'trace-1',
+        runId: 'run-1',
+        jobId: 'job-1',
+        threadId: 'thread-1',
+        messageId: 'message-1',
+        userId: 'user-1',
+        durationMs: null,
+        error: 'database unavailable',
+        metadata: { attemptCount: 8 },
+      },
+    ]);
+  });
+
+  it('passes correlation filters and returns a normalized timeline with failure stats', async () => {
+    const req = new Request('http://localhost/api/admin/diagnostics/explorer?traceId=trace-1&jobId=job-1&limit=50');
+    const res = await explorerGet(req);
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(mockListTraceExplorerEvents).toHaveBeenCalledWith({
+      traceId: 'trace-1',
+      jobId: 'job-1',
+      limit: 50,
+    });
+    expect(body.events[0].timestamp).toBe('2026-07-24T10:00:00.000Z');
+    expect(body.stats).toEqual({
+      total: 2,
+      bySource: { tool: 1, outbox: 1 },
+      failures: 1,
+    });
   });
 });
 

@@ -114,6 +114,7 @@ export {
   releaseBillingWebhookReplay,
   getDiagnosticTrace,
   listDiagnosticTraces,
+  listTraceExplorerEvents,
   listToolTelemetry,
   listAdminAuditLogs,
   listCronRuns,
