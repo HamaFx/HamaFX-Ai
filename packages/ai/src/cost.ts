@@ -307,6 +307,10 @@ export async function reconcileBudgetReservation(
 ): Promise<boolean> {
   if (!Number.isFinite(actualUsd)) throw new Error('actual budget cost must be finite');
   const actualCents = Math.max(0, Math.round(actualUsd * 100));
+  // postgres-js rejects Date instances in this raw Drizzle SQL path in the
+  // production adapter. ISO strings are PostgreSQL-compatible and keep the
+  // timestamp timezone explicit.
+  const resolvedAt = now.toISOString();
   return getDb().transaction(async (tx) => {
     const reservationRows = resultRows<StoredReservation>(await tx.execute(
       sql`
@@ -337,7 +341,7 @@ export async function reconcileBudgetReservation(
         UPDATE ai_budget_reservations
         SET actual_usd_cents = ${actualCents},
             status = 'reconciled',
-            resolved_at = ${now},
+            resolved_at = ${resolvedAt},
             last_error = NULL
         WHERE id = ${reservationId} AND status = 'reserved'
       `,
@@ -351,6 +355,7 @@ export async function releaseBudgetReservation(
   reservationId: string,
   now = new Date(),
 ): Promise<boolean> {
+  const resolvedAt = now.toISOString();
   return getDb().transaction(async (tx) => {
     const reservationRows = resultRows<StoredReservation>(await tx.execute(
       sql`
@@ -378,7 +383,7 @@ export async function releaseBudgetReservation(
         UPDATE ai_budget_reservations
         SET actual_usd_cents = 0,
             status = 'released',
-            resolved_at = ${now},
+            resolved_at = ${resolvedAt},
             last_error = NULL
         WHERE id = ${reservationId} AND status = 'reserved'
       `,
@@ -404,7 +409,7 @@ export async function recoverStaleBudgetReservations(
     sql`
       SELECT id
       FROM ai_budget_reservations
-      WHERE status = 'reserved' AND created_at < ${cutoff}
+      WHERE status = 'reserved' AND created_at < ${cutoff.toISOString()}
       ORDER BY created_at ASC
       LIMIT ${boundedLimit}
     `,

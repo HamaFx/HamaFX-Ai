@@ -5,6 +5,23 @@ vi.mock('server-only', () => ({}));
 let mockSelectResult: unknown = [];
 let mockExecuteResult: unknown = { rows: [] };
 let mockTransactionResults: unknown[] = [];
+let rejectDateParams = false;
+
+function containsDate(value: unknown, seen = new WeakSet<object>()): boolean {
+  if (value instanceof Date) return true;
+  if (typeof value !== 'object' || value === null) return false;
+  if (seen.has(value)) return false;
+  seen.add(value);
+  if (Array.isArray(value)) return value.some((item) => containsDate(item, seen));
+  return Object.values(value).some((item) => containsDate(item, seen));
+}
+
+const mockTransactionExecute = vi.fn((query: unknown) => {
+  if (rejectDateParams && containsDate(query)) {
+    throw new Error('raw SQL received a Date parameter');
+  }
+  return Promise.resolve(mockTransactionResults.shift() ?? mockExecuteResult);
+});
 
 function thenableResolver(v: unknown) {
   return Object.assign(Promise.resolve(v), {
@@ -22,10 +39,8 @@ vi.mock('@kestrel/db', () => ({
       }),
     }),
     execute: () => Promise.resolve(mockExecuteResult),
-    transaction: async (callback: (tx: { execute: () => Promise<unknown> }) => Promise<unknown>) =>
-      callback({
-        execute: () => Promise.resolve(mockTransactionResults.shift() ?? mockExecuteResult),
-      }),
+    transaction: async (callback: (tx: { execute: (query: unknown) => Promise<unknown> }) => Promise<unknown>) =>
+      callback({ execute: (query: unknown) => mockTransactionExecute(query) }),
   }),
   schema: {
     chatTelemetry: {},
@@ -143,6 +158,8 @@ describe('tryReserveBudget', () => {
   beforeEach(() => {
     mockExecuteResult = { rows: [] };
     mockTransactionResults = [];
+    rejectDateParams = false;
+    mockTransactionExecute.mockClear();
   });
 
   it('reserves budget when under cap', async () => {
@@ -196,9 +213,12 @@ describe('tryReserveBudget', () => {
 describe('durable budget reservation terminal transitions', () => {
   beforeEach(() => {
     mockTransactionResults = [];
+    rejectDateParams = false;
+    mockTransactionExecute.mockClear();
   });
 
-  it('reconciles a reservation exactly once', async () => {
+  it('reconciles a reservation exactly once without passing Date objects to raw SQL', async () => {
+    rejectDateParams = true;
     mockTransactionResults = [
       {
         rows: [{ user_id: 'user-1', day: '2026-08-14', reserved_usd_cents: 5, status: 'reserved' }],
