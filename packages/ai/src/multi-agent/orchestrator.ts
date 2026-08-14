@@ -110,8 +110,14 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
     if (budgetCheck.blocked) {
       throw new Error(budgetCheck.blockedReason ?? 'Monthly budget limit reached');
     }
-    // B2: honor nonEssentialDisabled by downgrading full → standard when near budget cap.
-    effectiveMode = budgetCheck.nonEssentialDisabled && mode === 'full' ? 'standard' : mode;
+    // A user-selected analysis mode is never silently downgraded. The
+    // non-essential flag controls optional tools in single-agent turns;
+    // explicit full mode remains a four-specialist request. The hard
+    // monthly limit still blocks the turn at 100%.
+    if (budgetCheck.nonEssentialDisabled && mode === 'full') {
+      mlog.warn('monthly budget threshold reached; preserving explicit full mode', { userId });
+    }
+    effectiveMode = mode;
 
     // ── Persist the user message first ──
     // This ensures the conversation survives even if all agents fail.

@@ -22,7 +22,11 @@ import {
   getProvider,
 } from '../src/byok-providers';
 import { PROVIDER_IDS } from '@kestrel/shared/byok';
-import { normalizeHcnsecSse } from '../src/_providers/helpers';
+import {
+  normalizeHcnsecDsmlToolCalls,
+  normalizeHcnsecJsonPayload,
+  normalizeHcnsecSse,
+} from '../src/_providers/helpers';
 
 describe('BYOK_PROVIDERS', () => {
   it('contains every id from PROVIDER_IDS', () => {
@@ -96,6 +100,48 @@ describe('HCNSEC provider', () => {
       embedding: null,
     });
     expect(spec.supports).toEqual({ vision: false, embedding: false });
+  });
+});
+
+describe('HCNSEC DSML normalization', () => {
+  it('converts DeepSeek DSML text into executable tool calls', () => {
+    const raw = 'I will pull the 15m data. <｜｜DSML｜｜tool_calls> <｜｜DSML｜｜invoke name="get_candles"> <｜｜DSML｜｜parameter name="symbol" string="true">XAUUSD</｜｜DSML｜｜parameter> <｜｜DSML｜｜parameter name="timeframe" string="true">15m</｜｜DSML｜｜parameter> <｜｜DSML｜｜parameter name="limit" string="false">100</｜｜DSML｜｜parameter> </｜｜DSML｜｜invoke> <｜｜DSML｜｜invoke name="get_indicators"> <｜｜DSML｜｜parameter name="symbol" string="true">XAUUSD</｜｜DSML｜｜parameter> <｜｜DSML｜｜parameter name="timeframe" string="true">15m</｜｜DSML｜｜parameter> </｜｜DSML｜｜invoke> </｜｜DSML｜｜tool_calls>';
+    const normalized = normalizeHcnsecDsmlToolCalls(raw);
+
+    expect(normalized?.content).toBe('I will pull the 15m data.');
+    expect(normalized?.toolCalls).toHaveLength(2);
+    expect(normalized?.toolCalls[0]).toMatchObject({
+      function: {
+        name: 'get_candles',
+        arguments: JSON.stringify({ symbol: 'XAUUSD', timeframe: '15m', limit: 100 }),
+      },
+    });
+    expect(normalized?.toolCalls[1]).toMatchObject({
+      function: {
+        name: 'get_indicators',
+        arguments: JSON.stringify({ symbol: 'XAUUSD', timeframe: '15m' }),
+      },
+    });
+  });
+
+  it('normalizes DSML in non-streaming chat responses', () => {
+    const payload = {
+      choices: [{
+        message: {
+          role: 'assistant',
+          content: '<｜｜DSML｜｜tool_calls><｜｜DSML｜｜invoke name="get_price"><｜｜DSML｜｜parameter name="symbol" string="true">XAUUSD</｜｜DSML｜｜parameter></｜｜DSML｜｜invoke></｜｜DSML｜｜tool_calls>',
+        },
+        finish_reason: 'stop',
+      }],
+    };
+    const normalized = normalizeHcnsecJsonPayload(payload) as {
+      choices: Array<{ finish_reason: string; message: { content: string | null; tool_calls: Array<{ function: { name: string; arguments: string } }> } }>;
+    };
+    expect(normalized.choices[0]?.finish_reason).toBe('tool_calls');
+    expect(normalized.choices[0]?.message.content).toBeNull();
+    expect(normalized.choices[0]?.message.tool_calls[0]).toMatchObject({
+      function: { name: 'get_price', arguments: JSON.stringify({ symbol: 'XAUUSD' }) },
+    });
   });
 });
 

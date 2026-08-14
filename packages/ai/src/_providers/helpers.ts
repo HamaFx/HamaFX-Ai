@@ -21,6 +21,108 @@ import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import type { FetchFunction } from '@ai-sdk/provider-utils';
 import type { ByokProviderSpec, ModelDomain } from './types';
 
+/** A normalized OpenAI-compatible tool call extracted from HCNSEC output. */
+export interface HcnsecToolCall {
+  id: string;
+  type: 'function';
+  function: { name: string; arguments: string };
+}
+
+/**
+ * Parse DeepSeek's DSML tool-call format when HCNSEC returns it as text.
+ *
+ * Some HCNSEC/DeepSeek responses use:
+ * `<｜｜DSML｜｜tool_calls><｜｜DSML｜｜invoke name="get_price">...`
+ * instead of OpenAI-compatible `message.tool_calls`. Converting it at
+ * the provider boundary lets the AI SDK execute the registered tools and
+ * keeps the rest of the agent pipeline provider-agnostic.
+ */
+export function normalizeHcnsecDsmlToolCalls(input: string): {
+  content: string;
+  toolCalls: HcnsecToolCall[];
+} | null {
+  const dsml = '｜｜DSML｜｜';
+  const startTag = `<${dsml}tool_calls>`;
+  const endTag = `</${dsml}tool_calls>`;
+  const start = input.indexOf(startTag);
+  if (start < 0) return null;
+  const end = input.indexOf(endTag, start + startTag.length);
+  if (end < 0) return null;
+
+  const body = input.slice(start + startTag.length, end);
+  const invokePattern = new RegExp(
+    `<${dsml}invoke\\s+name="([^"]+)"\\s*>([\\s\\S]*?)</${dsml}invoke>`,
+    'g',
+  );
+  const parameterPattern = new RegExp(
+    `<${dsml}parameter\\s+name="([^"]+)"(?:\\s+string="([^"]+)")?\\s*>([\\s\\S]*?)</${dsml}parameter>`,
+    'g',
+  );
+  const toolCalls: HcnsecToolCall[] = [];
+  let invoke: RegExpExecArray | null;
+  while ((invoke = invokePattern.exec(body)) !== null) {
+    const name = invoke[1]?.trim();
+    if (!name) continue;
+    const args: Record<string, unknown> = {};
+    const parameters = invoke[2] ?? '';
+    let parameter: RegExpExecArray | null;
+    while ((parameter = parameterPattern.exec(parameters)) !== null) {
+      const key = parameter[1]?.trim();
+      if (!key) continue;
+      const rawValue = (parameter[3] ?? '').trim();
+      const isString = parameter[2] === 'true';
+      if (isString) {
+        args[key] = rawValue;
+      } else {
+        try {
+          args[key] = JSON.parse(rawValue) as unknown;
+        } catch {
+          args[key] = rawValue;
+        }
+      }
+    }
+    toolCalls.push({
+      id: `hcnsec-dsml-${toolCalls.length}`,
+      type: 'function',
+      function: { name, arguments: JSON.stringify(args) },
+    });
+  }
+
+  if (toolCalls.length === 0) return null;
+  const content = `${input.slice(0, start)}${input.slice(end + endTag.length)}`.trim();
+  return { content, toolCalls };
+}
+
+/** Normalize a non-streaming HCNSEC chat-completion payload. */
+export function normalizeHcnsecJsonPayload(input: unknown): unknown {
+  if (!input || typeof input !== 'object') return input;
+  const payload = input as Record<string, unknown>;
+  if (!Array.isArray(payload.choices)) return input;
+  const choices = payload.choices as unknown[];
+  let changed = false;
+  const normalizedChoices = choices.map((rawChoice) => {
+    if (!rawChoice || typeof rawChoice !== 'object') return rawChoice;
+    const choice = rawChoice as Record<string, unknown>;
+    const message = choice.message;
+    if (!message || typeof message !== 'object') return rawChoice;
+    const messageRecord = message as Record<string, unknown>;
+    if (typeof messageRecord.content !== 'string') return rawChoice;
+    const normalized = normalizeHcnsecDsmlToolCalls(messageRecord.content);
+    if (!normalized) return rawChoice;
+    changed = true;
+    return {
+      ...choice,
+      finish_reason: 'tool_calls',
+      message: {
+        ...messageRecord,
+        content: normalized.content || null,
+        tool_calls: normalized.toolCalls,
+      },
+    };
+  });
+  return changed ? { ...payload, choices: normalizedChoices } : input;
+}
+
 /**
  * HCNSEC occasionally emits tool-call metadata in separate SSE chunks
  * (the name/ID may arrive after the first arguments chunk). The AI SDK's
@@ -103,7 +205,13 @@ export function normalizeHcnsecSse(input: string): string {
   normalizedDelta.role = role;
   if (content.length > 0) normalizedDelta.content = content;
   if (reasoning.length > 0) normalizedDelta.reasoning_content = reasoning;
-  if (toolCalls.size > 0) {
+  const dsmlToolCalls = normalizeHcnsecDsmlToolCalls(content);
+  if (dsmlToolCalls) {
+    if (dsmlToolCalls.content.length > 0) normalizedDelta.content = dsmlToolCalls.content;
+    else delete normalizedDelta.content;
+    normalizedDelta.tool_calls = dsmlToolCalls.toolCalls;
+    finishReason = 'tool_calls';
+  } else if (toolCalls.size > 0) {
     normalizedDelta.tool_calls = [...toolCalls.entries()].map(([index, call]) => ({
       index,
       id: call.id,
@@ -140,19 +248,42 @@ export const hcnsecFetch: FetchFunction = async (input, init) => {
   const hasTools = Array.isArray(body?.tools) && body.tools.length > 0;
   const response = await fetch(input, init);
   const contentType = response.headers.get('content-type')?.toLowerCase() ?? '';
-  if (!response.ok || !hasTools || !contentType.includes('text/event-stream') || !response.body) {
-    return response;
+  if (!response.ok || !hasTools || !response.body) return response;
+
+  if (contentType.includes('text/event-stream')) {
+    const raw = await response.text();
+    const headers = new Headers(response.headers);
+    headers.delete('content-length');
+    headers.delete('content-encoding');
+    return new Response(normalizeHcnsecSse(raw), {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
   }
 
-  const raw = await response.text();
-  const headers = new Headers(response.headers);
-  headers.delete('content-length');
-  headers.delete('content-encoding');
-  return new Response(normalizeHcnsecSse(raw), {
-    status: response.status,
-    statusText: response.statusText,
-    headers,
-  });
+  if (contentType.includes('application/json')) {
+    const raw = await response.text();
+    try {
+      const normalized = normalizeHcnsecJsonPayload(JSON.parse(raw) as unknown);
+      const headers = new Headers(response.headers);
+      headers.delete('content-length');
+      headers.delete('content-encoding');
+      return new Response(JSON.stringify(normalized), {
+        status: response.status,
+        statusText: response.statusText,
+        headers,
+      });
+    } catch {
+      return new Response(raw, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+      });
+    }
+  }
+
+  return response;
 };
 
 /** Full capability set — vision + tools + jsonMode + streaming. */
