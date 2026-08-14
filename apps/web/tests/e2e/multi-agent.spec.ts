@@ -37,7 +37,7 @@ test.describe('Multi-Agent Chat', () => {
     await page.unroute('**/api/chat');
     await page.route('**/api/chat', (route) => {
       const body = route.request().postDataJSON();
-      if (body?.analysisMode && body.analysisMode !== 'single') {
+      if (body?.analysisMode === 'full') {
         requestSeen = true;
         route.fulfill({
           status: 200,
@@ -64,7 +64,8 @@ test.describe('Multi-Agent Chat', () => {
     await textarea.fill('Should I buy XAUUSD now?');
     await textarea.press('Enter');
 
-    // Verify the request was sent with analysisMode=full
+    // Verify the request was sent with analysisMode=full, not merely any
+    // multi-agent mode such as standard.
     expect(requestSeen).toBe(true);
 
     // Verify the agent deliberation UI appears

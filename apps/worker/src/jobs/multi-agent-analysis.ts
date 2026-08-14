@@ -197,14 +197,22 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
       // The route handler already resolved this to a non-'single' mode
       // before queueing, so we use the stored mode to avoid re-detecting.
       const userText = extractUserMessageText(userMessage);
-      // P6 fix: use the resolved mode instead of hardcoding 'full'.
-      const resolvedMode = resolveMode((job.mode as AnalysisMode) ?? 'full', userText);
+      // A queued job already carries the user's explicit mode. Never run
+      // auto-detection over an explicit full request: doing so can silently
+      // turn a queued full analysis into standard and start only two agents.
+      const queuedMode = (job.mode as AnalysisMode) ?? 'full';
+      const resolvedMode = queuedMode === 'full'
+        ? 'full'
+        : resolveMode(queuedMode, userText);
 
       // Build progress snapshots in the same data-stream shape consumed by
       // the browser transport. The orchestrator emits raw lifecycle events,
       // while the polling client expects `data-agent-progress` snapshots.
       let progressTracker: ProgressTracker | null = null;
       const onProgress = (event: ProgressEvent) => {
+        if (event.type === 'specialists_start' && resolvedMode === 'full' && event.agents.length !== 4) {
+          throw new Error(`Full mode invariant violated: expected 4 specialists, received ${event.agents.length}`);
+        }
         if (event.type === 'specialists_start') {
           // Create the tracker from the actual effective specialist list so
           // a budget-driven full → standard downgrade does not leave phantom

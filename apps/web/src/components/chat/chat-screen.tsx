@@ -103,6 +103,10 @@ export function ChatScreen({
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null);
   const router = useRouter();
   const [analysisMode, setAnalysisMode] = useState<AnalysisMode>(initialAnalysisMode);
+  // Keep the latest selector value available synchronously to the transport.
+  // React state updates are asynchronous, so a user can select Full and press
+  // Enter before a re-render updates the callback closure.
+  const analysisModeRef = useRef<AnalysisMode>(initialAnalysisMode);
   const [showAgentOpinions] = useState(initialShowAgentOpinions);
 
   // One-shot model override.
@@ -135,12 +139,14 @@ export function ChatScreen({
           const prefsJson = customInstructions ? JSON.stringify(prefs) : null;
 
           const reqBody = {
+            ...body,
             modelOverride: override ?? undefined,
-            analysisMode: singleTurnOverrideRef.current ?? analysisMode,
+            // Request-critical fields must be written after `body`; callers
+            // may pass a stale body snapshot through the AI SDK transport.
+            analysisMode: singleTurnOverrideRef.current ?? analysisModeRef.current,
             threadId,
             id,
             messages,
-            ...body,
           };
 
           const headers: Record<string, string> = {};
@@ -153,7 +159,7 @@ export function ChatScreen({
         },
         onAgentProgress: (p) => onAgentProgressRef.current(p),
       }),
-    [threadId, analysisMode, customInstructions],
+    [threadId, customInstructions],
   );
 
   useEffect(() => {
@@ -259,19 +265,23 @@ export function ChatScreen({
   }, [regenerate]);
 
   const handleAnalysisModeChange = useCallback((nextMode: AnalysisMode) => {
-    const previousMode = analysisMode;
+    const previousMode = analysisModeRef.current;
+    // Update the ref before state so an immediately-submitted turn uses the
+    // mode the user just selected, even before React re-renders.
+    analysisModeRef.current = nextMode;
     setAnalysisMode(nextMode);
     void apiMutate(`/api/chat/threads/${threadId}`, {
       method: 'PATCH',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ analysisMode: nextMode }),
     }).catch((err) => {
+      analysisModeRef.current = previousMode;
       setAnalysisMode(previousMode);
       toast.error('Could not save analysis mode', {
         description: err instanceof Error ? err.message : 'Please try again.',
       });
     });
-  }, [analysisMode, threadId]);
+  }, [threadId]);
 
   const handleEdit = useCallback(async (messageId: string, newText: string) => {
     // Read messages from the ref so this callback is stable across stream tokens
