@@ -224,6 +224,11 @@ const RuntimeEnv = z.object({
   LANGFUSE_PUBLIC_KEY: z.string().optional(),
   LANGFUSE_SECRET_KEY: z.string().optional(),
   LANGFUSE_BASE_URL: z.string().url().optional(),
+  /** Explicit opt-in for exporting prompts and model outputs to Langfuse. */
+  LANGFUSE_RECORD_IO: z
+    .union([z.literal('0'), z.literal('1'), z.literal('true'), z.literal('false')])
+    .default('0')
+    .transform((v) => v === '1' || v === 'true'),
 
   // Feature Flags
   /** Public account creation policy. owner-first allows only the initial owner. */

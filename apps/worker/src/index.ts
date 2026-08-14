@@ -429,7 +429,7 @@ export async function main(): Promise<void> {
 
   // ── Langfuse LLM Observability ──────────────────────────────────────
   // Silently skipped when LANGFUSE_* env vars are not set.
-  initLangfuse();
+  initLangfuse({ service: 'worker' });
 
   console.log(
     [

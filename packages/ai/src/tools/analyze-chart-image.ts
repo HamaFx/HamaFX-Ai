@@ -158,7 +158,7 @@ export const analyzeChartImageTool = tool({
         model: vision.model,
         system: SYSTEM_PROMPT,
         messages,
-        ...telemetryConfig(),
+        ...telemetryConfig({ functionId: 'tool.analyze_chart_image' }),
       });
 
       // Try strict parse first; if the model returned plain text, build a

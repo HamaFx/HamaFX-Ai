@@ -129,7 +129,7 @@ export async function reviewTrade(args: ReviewTradeArgs): Promise<TradeReviewRes
       system: SYSTEM_PROMPT,
       prompt: userPrompt,
       maxOutputTokens: 800,
-      ...telemetryConfig(),
+      ...telemetryConfig({ functionId: 'journal.review' }),
     };
     if (signal) callArgs.abortSignal = signal;
 

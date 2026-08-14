@@ -111,7 +111,7 @@ export const summarizeThreadTool = tool({
           model: resolveModel(modelId, env),
           system: SYSTEM_PROMPT,
           prompt: transcript,
-          ...telemetryConfig(),
+          ...telemetryConfig({ functionId: 'tool.summarize_thread' }),
         });
         const parsed = parseModelJson(text);
         if (parsed) {

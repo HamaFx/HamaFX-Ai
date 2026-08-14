@@ -140,7 +140,7 @@ No markdown fences, no preamble.`;
       model: resolveChatModel(ctx.userSettings, ctx.env).model,
       system: "You are an expert forex macroeconomic analyst. Always output raw JSON.",
       prompt,
-      ...telemetryConfig(),
+      ...telemetryConfig({ functionId: 'tool.convene_committee' }),
       ...(ctx.signal ? { abortSignal: ctx.signal } : {}),
       ...(tools ? { tools, stopWhen: stepCountIs(3) } : {}),
     });
@@ -201,7 +201,7 @@ No markdown fences, no preamble.`;
       model: resolveChatModel(ctx.userSettings, ctx.env).model,
       system: "You are an expert forex technical analyst. Always output raw JSON.",
       prompt,
-      ...telemetryConfig(),
+      ...telemetryConfig({ functionId: 'tool.convene_committee' }),
       ...(ctx.signal ? { abortSignal: ctx.signal } : {}),
     });
     const parsed = parseJsonOrThrow<Omit<CommitteeVerdict, 'persona'>>(text, 'technician');
@@ -242,7 +242,7 @@ No markdown fences, no preamble.`;
       model: resolveChatModel(ctx.userSettings, ctx.env).model,
       system: "You are an expert risk manager. Always output raw JSON.",
       prompt,
-      ...telemetryConfig(),
+      ...telemetryConfig({ functionId: 'tool.convene_committee' }),
       ...(ctx.signal ? { abortSignal: ctx.signal } : {}),
     });
     const parsed = parseJsonOrThrow<Omit<CommitteeVerdict, 'persona'>>(text, 'risk_manager');
@@ -274,7 +274,7 @@ No markdown fences, no preamble.`;
       model: resolveChatModel(ctx.userSettings, ctx.env).model,
       system: "You are the head trader. Always output raw JSON.",
       prompt,
-      ...telemetryConfig(),
+      ...telemetryConfig({ functionId: 'tool.convene_committee' }),
       ...(ctx.signal ? { abortSignal: ctx.signal } : {}),
     });
     const parsed = parseJsonOrThrow<ModeratorResult>(text, 'moderator');

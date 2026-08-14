@@ -165,7 +165,7 @@ export async function generateTitle(args: GenerateTitleArgs): Promise<GenerateTi
       model: resolveModel(args.titleModelId, env, ctx?.userId),
       system: SYSTEM_PROMPT,
       prompt: userPrompt,
-      ...telemetryConfig(),
+      ...telemetryConfig({ functionId: 'chat.title' }),
     };
     if (signal) generateArgs.abortSignal = signal;
 

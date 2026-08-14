@@ -159,7 +159,7 @@ Be concise but thorough. Use markdown formatting for readability.`;
                 abortSignal: controller.signal,
                 maxOutputTokens: 4000,
                 onError: ({ error }) => { streamError = error; },
-                ...telemetryConfig(),
+                ...telemetryConfig({ functionId: 'agent.decision' }),
               }),
             );
             let fullText = '';

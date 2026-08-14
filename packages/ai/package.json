@@ -33,7 +33,8 @@
     "./embeddings": {"types": "./dist/embeddings.d.ts", "import": "./dist/embeddings.js"},
     "./title": {"types": "./dist/title.d.ts", "import": "./dist/title.js"},
     "./rag": {"types": "./dist/rag.d.ts", "import": "./dist/rag.js"},
-    "./usage": {"types": "./dist/usage.d.ts", "import": "./dist/usage.js"}
+    "./usage": {"types": "./dist/usage.d.ts", "import": "./dist/usage.js"},
+    "./instrumentation": {"types": "./dist/instrumentation.d.ts", "import": "./dist/instrumentation.js"}
   },
   "scripts": {
     "lint": "eslint .",

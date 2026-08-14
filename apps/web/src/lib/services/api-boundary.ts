@@ -57,6 +57,7 @@ export {
   unlinkBot,
   listAgentOpinions,
   withDiagnostics,
+  flushLangfuse,
 } from '@kestrel/ai';
 
 // These persistence functions use the supported AI persistence subpath so the

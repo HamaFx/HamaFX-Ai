@@ -14,37 +14,81 @@
  * limitations under the License.
  */
 
-// PR-10: Telemetry config helper for AI SDK v5 OpenTelemetry integration.
-//
-// The AI SDK v5 does NOT auto-emit OpenTelemetry spans — each
-// streamText() / generateText() call must explicitly pass
-//   experimental_telemetry: { isEnabled: true }
-// otherwise zero traces flow to Langfuse even when the OTel SDK
-// is initialized.
-//
-// Usage:
-//   import { telemetryConfig } from '../telemetry';
-//   const result = await generateText({ model, prompt, ...telemetryConfig() });
-//
-// When Langfuse env vars are unset, returns {} (no overhead).
+// Vercel AI SDK v5 telemetry is opt-in per generateText/streamText call.
+// This helper keeps every call consistent and attaches Kestrel correlation
+// fields without recording prompts or outputs by default.
 
-let _cached: { experimental_telemetry: { isEnabled: true } } | Record<string, never> | undefined;
+import type { AttributeValue } from '@opentelemetry/api';
+
+import { getDiagnosticContext } from './diagnostics/run-context';
+
+export interface TelemetryConfigOptions {
+  /** Stable operation name shown in AI SDK/Langfuse traces. */
+  functionId?: string;
+  /** Additional non-sensitive metadata for this operation. */
+  metadata?: Record<string, AttributeValue>;
+}
+
+type TelemetrySettings = {
+  isEnabled: true;
+  recordInputs: boolean;
+  recordOutputs: boolean;
+  functionId: string;
+  metadata: Record<string, AttributeValue>;
+};
+
+type TelemetryConfig = { experimental_telemetry: TelemetrySettings };
+
+function isLangfuseConfigured(): boolean {
+  return Boolean(
+    process.env.LANGFUSE_PUBLIC_KEY &&
+      process.env.LANGFUSE_SECRET_KEY &&
+      process.env.LANGFUSE_BASE_URL,
+  );
+}
+
+function shouldRecordIo(): boolean {
+  return process.env.LANGFUSE_RECORD_IO === '1' || process.env.LANGFUSE_RECORD_IO === 'true';
+}
+
+function correlationMetadata(): Record<string, AttributeValue> {
+  const context = getDiagnosticContext();
+  if (!context) return {};
+
+  return {
+    traceId: context.traceId,
+    ...(context.requestId ? { requestId: context.requestId } : {}),
+    ...(context.runId ? { runId: context.runId } : {}),
+    threadId: context.threadId,
+    userId: context.userId,
+  };
+}
 
 /**
- * Returns the telemetry config to spread into AI SDK calls.
- * Cached after first call — the Langfuse env vars don't change at runtime.
+ * Return the telemetry config for an AI SDK call.
+ *
+ * The function intentionally reads environment configuration at call time:
+ * Next.js may load vault-backed secrets after module evaluation, and tests
+ * often change environment values between cases.
  */
-export function telemetryConfig(): Readonly<{ experimental_telemetry?: { isEnabled: true } }> {
-  if (_cached !== undefined) return _cached;
+export function telemetryConfig(options: TelemetryConfigOptions = {}): Readonly<TelemetryConfig> | Record<string, never> {
+  if (!isLangfuseConfigured()) return {};
 
-  const configured =
-    Boolean(process.env.LANGFUSE_PUBLIC_KEY) &&
-    Boolean(process.env.LANGFUSE_SECRET_KEY) &&
-    Boolean(process.env.LANGFUSE_BASE_URL);
+  const metadata: Record<string, AttributeValue> = {
+    service: 'kestrel-ai',
+    ...correlationMetadata(),
+    ...(options.metadata ?? {}),
+  };
 
-  _cached = configured
-    ? { experimental_telemetry: { isEnabled: true } }
-    : {};
-
-  return _cached;
+  return {
+    experimental_telemetry: {
+      isEnabled: true,
+      // Prompts, tool inputs, and outputs may contain user/private market
+      // context. Capture them only when the operator explicitly opts in.
+      recordInputs: shouldRecordIo(),
+      recordOutputs: shouldRecordIo(),
+      functionId: options.functionId ?? 'kestrel.ai',
+      metadata,
+    },
+  };
 }

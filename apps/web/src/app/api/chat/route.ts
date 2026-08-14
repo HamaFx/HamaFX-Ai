@@ -26,6 +26,7 @@ import {
   resolveMode,
   runChat,
   runMultiAgentChat,
+  flushLangfuse,
   schema,
   traceIdStorage,
   withRateLimit,
@@ -280,6 +281,11 @@ export const POST = withAuth<void>(async (req, { user }) => {
                 },
               }), requestId ? { requestId } : {});
 
+              // The quick/standard route can finish before the exporter batch
+              // interval. Flush after the durable run result is available so
+              // the Langfuse trace is visible even when the function freezes.
+              await flushLangfuse();
+
               // Fusion output is published transactionally. If the decision
               // stream failed, the orchestrator returns a specialist fallback
               // without invoking onTextChunk; emit that fallback rather than
@@ -314,6 +320,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
                 { err: String(err), threadId: body.threadId, mode: resolvedMode },
                 'multi-agent chat failed',
               );
+              await flushLangfuse();
               const errorMessage =
                 err instanceof BudgetExceededError
                   ? 'Daily AI budget exceeded. Please try again tomorrow.'

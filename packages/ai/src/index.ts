@@ -280,8 +280,8 @@ export { buildToolCatalogue, type CatalogueEntry } from './catalogue';
 export { getDb } from './db';
 
 // Langfuse / OpenTelemetry instrumentation
-export { initLangfuse, shutdownLangfuse } from './instrumentation';
-export { telemetryConfig } from './telemetry';
+export { initLangfuse, flushLangfuse, shutdownLangfuse } from './instrumentation';
+export { telemetryConfig, type TelemetryConfigOptions } from './telemetry';
 
 // PF-07 — LlmClient abstraction
 //

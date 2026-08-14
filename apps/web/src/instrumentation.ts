@@ -11,6 +11,10 @@ export async function register() {
     // provide AUTH_SECRET for managed deployments.
     const { assertProductionSecurity } = await import('./auth.config');
     assertProductionSecurity();
+    // Start Langfuse only in the Node runtime. Never import the exporter in
+    // Edge middleware or client bundles because it depends on Node APIs.
+    const { initLangfuse } = await import('@kestrel/ai/instrumentation');
+    initLangfuse({ service: 'web' });
     await import('./sentry.server.config');
   }
   if (process.env.NEXT_RUNTIME === 'edge') {

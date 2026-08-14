@@ -188,7 +188,7 @@ async function composeEventSummary(
       system:
         'You are Kestrel writing a briefing for the single user. Be concise (max 6 short bullets). No greetings, no signoffs. Plain text, no markdown headings, no emoji.',
       prompt,
-      ...telemetryConfig(),
+      ...telemetryConfig({ functionId: 'briefing.generate' }),
     });
     const cleaned = text.trim();
     return cleaned.length > 0 ? cleaned : deterministicEventSummary(event, kind);
@@ -356,7 +356,7 @@ async function composeWeeklyReviewSummary(
       system:
         'You are Kestrel writing the user\'s weekly trading review. Be concise (max 5 short bullets). No greetings or signoffs. Plain text.',
       prompt: `Stats:\n${det}\n\nWrite the review.`,
-      ...telemetryConfig(),
+      ...telemetryConfig({ functionId: 'briefing.generate' }),
     });
     const cleaned = text.trim();
     return cleaned.length > 0 ? cleaned : det;

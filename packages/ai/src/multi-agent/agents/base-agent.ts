@@ -132,7 +132,7 @@ export abstract class BaseAgent {
         try {
           return await withToolContext(toolContext, async () => generateText({
             model, system: fullSystem,
-            ...telemetryConfig(),
+            ...telemetryConfig({ functionId: `agent.${this.name}` }),
             ...(supportsPromptCaching(modelId)
               ? { providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' as const } } } }
               : {}),

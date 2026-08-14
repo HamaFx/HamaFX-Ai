@@ -266,7 +266,7 @@ async function generateSummary(
       system:
         "You compress chat history into a 4-bullet system note for a trading copilot. Capture: (1) the symbol(s) under discussion, (2) the user's active question/setup, (3) any prior facts or numbers cited, (4) any open follow-up. No greetings, no filler.",
       prompt: transcript,
-      ...telemetryConfig(),
+      ...telemetryConfig({ functionId: 'chat.compaction' }),
     };
     if (signal) callArgs.abortSignal = signal;
     const { text } = await generateText(callArgs);

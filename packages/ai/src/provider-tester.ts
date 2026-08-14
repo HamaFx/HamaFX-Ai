@@ -100,7 +100,7 @@ export async function testProviderKey(
       model,
       prompt: 'ping',
       maxOutputTokens: 1,
-      ...telemetryConfig(),
+      ...telemetryConfig({ functionId: 'provider.test' }),
       abortSignal: AbortSignal.timeout(5_000),
     });
     const rateLimit = extractRateLimits(result.response?.headers);

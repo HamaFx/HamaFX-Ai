@@ -36,6 +36,7 @@ import {
 } from 'ai';
 import type { streamText } from 'ai';
 
+import { flushLangfuse } from './instrumentation';
 import { telemetryConfig } from './telemetry';
 
 import { buildLiveSnapshot } from './context';
@@ -454,7 +455,7 @@ async function runChatInner(args: RunChatArgs): Promise<any> {
       const streamArgs: Parameters<typeof streamText>[0] = {
         model: resolvedModel,
         system: systemPrompt,
-        ...telemetryConfig(),
+        ...telemetryConfig({ functionId: 'chat.stream' }),
         ...(supportsPromptCaching(resolvedModelId)
           ? { providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' as const } } } }
           : {}),
@@ -503,6 +504,7 @@ async function runChatInner(args: RunChatArgs): Promise<any> {
           );
           await budget.release();
           await persistDiagnosticContext(diagnosticContext, 'failed');
+          await flushLangfuse();
         },
 
         onFinish: async ({ usage, finishReason, response }) => {
@@ -623,6 +625,10 @@ async function runChatInner(args: RunChatArgs): Promise<any> {
             // A stream result is returned before onFinish runs, so the
             // diagnostic wrapper defers completion until this callback.
             await persistDiagnosticContext(diagnosticContext, 'completed');
+            // Vercel/serverless runtimes may freeze as soon as the stream
+            // callback completes; flush after terminal persistence so the
+            // Langfuse trace is not lost in the exporter queue.
+            await flushLangfuse();
           }
 
           waitUntil(
@@ -652,7 +658,7 @@ async function runChatInner(args: RunChatArgs): Promise<any> {
             model: resolvedModel,
             system: systemPrompt,
             messages: effectiveMessages,
-            telemetry: telemetryConfig(),
+            telemetry: telemetryConfig({ functionId: 'chat.stream' }),
           };
           if (streamArgs.tools) streamTextOpts.tools = streamArgs.tools;
           if (streamArgs.stopWhen) streamTextOpts.stopWhen = streamArgs.stopWhen;

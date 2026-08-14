@@ -14,79 +14,105 @@
  * limitations under the License.
  */
 
-// Langfuse + OpenTelemetry instrumentation for the Vercel AI SDK.
+// Langfuse + OpenTelemetry instrumentation for the Vercel AI SDK v5.
 //
-// The AI SDK (v5) emits OpenTelemetry spans under the instrumentation
-// scope 'ai'. streamText, generateText, and tool calls are all
-// auto-traced. We configure the OTel NodeSDK with a Langfuse span
-// processor that exports traces to our self-hosted Langfuse instance.
-//
-// Import ONCE at process start (apps/web/instrumentation.ts for
-// the web app, apps/worker/src/index.ts for the worker).
-// Silently disabled when LANGFUSE_* env vars are unset.
-//
-// Coexists with Sentry: Sentry uses its own SDK (not OTel), so there's
-// no span-processor conflict. Both can run in the same process.
+// Import once at process start (Next.js instrumentation and the worker entry
+// point). AI SDK telemetry is opt-in per call; `telemetryConfig()` provides
+// that call-level setting. This module only owns exporter lifecycle.
 
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { LangfuseSpanProcessor } from '@langfuse/otel';
 import { createCategorizedLogger } from '@kestrel/shared/logger';
 
+import { redactSecrets } from './diagnostics/redact';
+
 const llog = createCategorizedLogger('system', { component: 'langfuse' });
 
-let _sdk: NodeSDK | null = null;
-let _started = false;
+type LangfuseService = 'web' | 'worker';
+
+let sdk: NodeSDK | null = null;
+let processor: LangfuseSpanProcessor | null = null;
+let started = false;
+let missingConfigLogged = false;
 
 /**
- * Initialise OpenTelemetry with Langfuse export. Idempotent — safe to
- * call from both web instrumentation.ts and worker index.ts (the SDK
- * guards against double-start internally, but we track our own flag
- * to skip the env-check work).
+ * Initialise OpenTelemetry with Langfuse export.
+ *
+ * The Langfuse processor's `flushInterval` is measured in seconds, not
+ * milliseconds. Keep the web and worker defaults short enough for useful
+ * debugging while `flushLangfuse()` handles short-lived/request boundaries.
  */
-export function initLangfuse(): void {
-  if (_started) return;
-  _started = true;
+export function initLangfuse(options: { service?: LangfuseService } = {}): void {
+  if (started) return;
 
   const publicKey = process.env.LANGFUSE_PUBLIC_KEY;
   const secretKey = process.env.LANGFUSE_SECRET_KEY;
   const baseUrl = process.env.LANGFUSE_BASE_URL;
-
-  // Silently skip when not configured — no crash, no env validation.
   if (!publicKey || !secretKey || !baseUrl) {
-    if (process.env.NODE_ENV === 'development') {
-      llog.info('skipping — LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, or LANGFUSE_BASE_URL not set');
+    if (!missingConfigLogged) {
+      missingConfigLogged = true;
+      llog.info('Langfuse tracing disabled — required LANGFUSE_* variables are not configured');
     }
     return;
   }
 
-  _sdk = new NodeSDK({
-    spanProcessors: [
-      new LangfuseSpanProcessor({
-        publicKey,
-        secretKey,
-        baseUrl,
-        // Flush spans every 5s in production, immediately in dev.
-        flushInterval: process.env.NODE_ENV === 'production' ? 5000 : 1000,
-      }),
-    ],
+  const service = options.service ?? 'worker';
+  const release = process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.DEPLOYED_SHA;
+  const nextProcessor = new LangfuseSpanProcessor({
+    publicKey,
+    secretKey,
+    baseUrl,
+    // Langfuse expects seconds here. Do not pass the millisecond values used
+    // by browser timers or the exporter may wait for more than an hour.
+    flushInterval: 5,
+    environment: process.env.NODE_ENV ?? 'development',
+    ...(release ? { release } : {}),
+    // AI SDK telemetry can contain prompts, tool inputs, and model outputs.
+    // Redact object keys and credential-shaped strings before export.
+    mask: ({ data }) => redactSecrets(data),
+    // Web functions can freeze shortly after a stream completes; forceFlush
+    // is called by the request lifecycle. The worker benefits from batching.
+    exportMode: 'batched',
   });
 
-  _sdk.start();
-  llog.info(`OpenTelemetry tracing enabled → ${baseUrl}`);
+  try {
+    const nextSdk = new NodeSDK({ spanProcessors: [nextProcessor] });
+    nextSdk.start();
+    processor = nextProcessor;
+    sdk = nextSdk;
+    started = true;
+    llog.info('OpenTelemetry tracing enabled', {
+      baseUrl,
+      service,
+      flushIntervalSeconds: 5,
+    });
+  } catch (err) {
+    // Tracing must never prevent the application or worker from starting.
+    llog.error('OpenTelemetry tracing failed to start', { err: String(err), service });
+  }
 }
 
-/**
- * Graceful shutdown — flush pending spans before the process exits.
- * Call from the web app's onRequestError hook or the worker's
- * shutdown handler. Best-effort; swallows errors so a Langfuse
- * outage never takes down the main process.
- */
-export async function shutdownLangfuse(): Promise<void> {
-  if (!_sdk) return;
+/** Flush pending Langfuse spans without shutting down the process. */
+export async function flushLangfuse(): Promise<void> {
+  if (!processor) return;
   try {
-    await _sdk.shutdown();
+    await processor.forceFlush();
+  } catch (err) {
+    llog.warn('Langfuse span flush failed (non-fatal)', { err: String(err) });
+  }
+}
+
+/** Gracefully flush and stop the exporter during process shutdown. */
+export async function shutdownLangfuse(): Promise<void> {
+  if (!sdk) return;
+  try {
+    await sdk.shutdown();
     llog.info('tracing shut down cleanly');
   } catch (err) {
     llog.warn('shutdown failed (non-fatal)', { err: String(err) });
+  } finally {
+    sdk = null;
+    processor = null;
+    started = false;
   }
 }
