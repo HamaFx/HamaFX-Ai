@@ -166,38 +166,41 @@ export const POST = withAuth<void>(async (req, { user }) => {
         // U2 — Full mode: queue to worker via analysis_jobs DB table.
         // Quick and standard modes stay synchronous (they're fast enough).
         if (resolvedMode === 'full') {
-          const [job] = await db
-            .insert(schema.analysisJobs)
-            .values({
-              userId: user.userId,
-              threadId: body.threadId,
-              userMessageText: userText,
-              userMessageParts: (last as UIMessage).parts,
-              // The worker reloads authoritative history from chat_messages.
-              // Keep this column populated only for backward compatibility;
-              // never use the client snapshot as model context.
-              historyParts: [],
-              mode: 'full',
-              status: 'pending',
-              // OBS-1: propagate the diagnostic traceId so worker
-              // logs can be correlated with this chat turn.
-              traceId: getDiagnosticTraceId() ?? crypto.randomUUID(),
-            })
+          const requestId = req.headers.get('x-request-id') ?? undefined;
+          return withDiagnostics(user.userId, body.threadId, async () => {
+            const [job] = await db
+              .insert(schema.analysisJobs)
+              .values({
+                userId: user.userId,
+                threadId: body.threadId,
+                userMessageText: userText,
+                userMessageParts: (last as UIMessage).parts,
+                // The worker reloads authoritative history from chat_messages.
+                // Keep this column populated only for backward compatibility;
+                // never use the client snapshot as model context.
+                historyParts: [],
+                mode: 'full',
+                status: 'pending',
+                // OBS-1: propagate the diagnostic traceId so worker
+                // logs can be correlated with this chat turn.
+                traceId: getDiagnosticTraceId() ?? crypto.randomUUID(),
+              })
             .returning({ id: schema.analysisJobs.id });
 
-          if (!job) {
-            return Response.json(
-              { error: { code: 'INTERNAL', message: 'Failed to queue analysis job' } },
-              { status: 500 },
-            );
-          }
+            if (!job) {
+              return Response.json(
+                { error: { code: 'INTERNAL', message: 'Failed to queue analysis job' } },
+                { status: 500 },
+              );
+            }
 
-          const queued = AnalysisQueuedEventSchema.parse({
-            type: 'analysis-queued',
-            jobId: job.id,
-            status: 'queued',
-          });
-          return Response.json(queued);
+            const queued = AnalysisQueuedEventSchema.parse({
+              type: 'analysis-queued',
+              jobId: job.id,
+              status: 'queued',
+            });
+            return Response.json(queued);
+          }, requestId ? { requestId } : {});
         }
 
         // Quick and Standard modes — SSE event stream with a documented
@@ -259,11 +262,13 @@ export const POST = withAuth<void>(async (req, { user }) => {
                 analysisMode,
                 ...(requestId ? { requestId } : {}),
                 onProgress: (event) => {
-              const publicEvent = event.type === 'agent_error'
-                ? { ...event, error: 'Agent unavailable. Please try again.' }
-                : event;
-              tracker.update(publicEvent);
-              send(tracker.buildPart());
+                  const publicEvent = event.type === 'agent_error'
+                    ? { ...event, error: 'Agent unavailable. Please try again.' }
+                    : event.type === 'fusion_error'
+                      ? { ...event, error: 'Decision agent unavailable. Specialist fallback is being prepared.' }
+                      : event;
+                  tracker.update(publicEvent);
+                  send(tracker.buildPart());
                 },
                 // P1-4/U1 — publish the successfully completed fusion result
                 // as an AI SDK text-delta event.

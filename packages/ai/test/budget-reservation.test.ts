@@ -121,11 +121,18 @@ describe('BudgetHandle.reconcile', () => {
     expect(handle.released).toBe(true);
   });
 
-  it('does not throw when applyBudgetDelta fails', async () => {
-    mockApplyBudgetDelta.mockRejectedValue(new Error('DB down'));
+  it('keeps the reservation open so reconciliation can be retried after a sink failure', async () => {
+    mockApplyBudgetDelta
+      .mockRejectedValueOnce(new Error('DB down'))
+      .mockResolvedValueOnce(undefined);
     const handle = await makeHandle();
 
     await expect(handle.reconcile(0.01)).resolves.toBeUndefined();
+    expect(handle.released).toBe(false);
+
+    await handle.reconcile(0.01);
+    expect(handle.released).toBe(true);
+    expect(mockApplyBudgetDelta).toHaveBeenCalledTimes(2);
   });
 });
 
@@ -167,11 +174,18 @@ describe('BudgetHandle.release', () => {
     expect(mockApplyBudgetDelta).toHaveBeenCalledTimes(1);
   });
 
-  it('does not throw when applyBudgetDelta fails', async () => {
-    mockApplyBudgetDelta.mockRejectedValue(new Error('DB down'));
+  it('keeps the reservation open so release can be retried after a sink failure', async () => {
+    mockApplyBudgetDelta
+      .mockRejectedValueOnce(new Error('DB down'))
+      .mockResolvedValueOnce(undefined);
     const handle = await makeHandle();
 
     await expect(handle.release()).resolves.toBeUndefined();
+    expect(handle.released).toBe(false);
+
+    await handle.release();
+    expect(handle.released).toBe(true);
+    expect(mockApplyBudgetDelta).toHaveBeenCalledTimes(2);
   });
 
   it('does not reconcile after release', async () => {

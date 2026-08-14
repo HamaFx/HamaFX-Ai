@@ -117,7 +117,8 @@ export type ProgressEvent =
   | { type: 'agent_done'; agent: AgentName; opinion: AgentOpinion }
   | { type: 'agent_error'; agent: AgentName; error: string }
   | { type: 'fusion_start' }
-  | { type: 'fusion_done' };
+  | { type: 'fusion_done' }
+  | { type: 'fusion_error'; error: string };
 
 // ── Multi-Agent Result ──────────────────────────────────────────────────
 

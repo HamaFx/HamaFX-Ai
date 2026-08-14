@@ -81,18 +81,36 @@ export async function reserveTurnBudget(args: {
     },
     async reconcile(observedUsd: number) {
       if (state.released) return;
-      state.released = true;
       const delta = observedUsd - estimateUsd;
-      await applyBudgetDelta(args.userId, delta).catch((err) =>
-        alog.warn('applyBudgetDelta failed in reconcile', { err: String(err) }),
-      );
+      try {
+        await applyBudgetDelta(args.userId, delta);
+        state.released = true;
+      } catch (err) {
+        // Keep the handle open when the sink fails so a later terminal
+        // callback or outer error path can retry the correction. Marking it
+        // released before the write made a failed reconciliation permanent.
+        alog.error('applyBudgetDelta failed in reconcile; reservation remains open', {
+          userId: args.userId,
+          delta,
+          err: String(err),
+        });
+      }
     },
     async release() {
       if (state.released) return;
-      state.released = true;
-      await applyBudgetDelta(args.userId, -estimateUsd).catch((err) =>
-        alog.warn('applyBudgetDelta failed in release', { err: String(err) }),
-      );
+      try {
+        await applyBudgetDelta(args.userId, -estimateUsd);
+        state.released = true;
+      } catch (err) {
+        // Do not claim success when the reservation release did not reach the
+        // database. The caller may invoke release again after the transient
+        // database failure clears.
+        alog.error('applyBudgetDelta failed in release; reservation remains open', {
+          userId: args.userId,
+          reservedUsd: estimateUsd,
+          err: String(err),
+        });
+      }
     },
   };
 }

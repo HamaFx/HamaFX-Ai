@@ -56,4 +56,15 @@ describe('ProgressTracker', () => {
     tracker.update({ type: 'fusion_done' });
     expect(tracker.buildPart().data.agents.find((a) => a.agentName === 'decision')!.status).toBe('done');
   });
+
+  it('marks decision as failed on fusion_error instead of reporting success', () => {
+    const tracker = new ProgressTracker('standard' as ResolvedMode, ['technical', 'fundamental']);
+    tracker.update({ type: 'fusion_start' });
+    tracker.update({ type: 'fusion_error', error: 'provider unavailable' });
+    expect(tracker.buildPart().data.agents.find((a) => a.agentName === 'decision')).toEqual({
+      agentName: 'decision',
+      status: 'error',
+      error: 'provider unavailable',
+    });
+  });
 });

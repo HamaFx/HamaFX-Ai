@@ -229,7 +229,9 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
         progressTracker ??= new ProgressTracker(resolvedMode, selectAgents(resolvedMode));
         const publicEvent = event.type === 'agent_error'
           ? { ...event, error: 'Agent unavailable. Please try again.' }
-          : event;
+          : event.type === 'fusion_error'
+            ? { ...event, error: 'Decision agent unavailable. Specialist fallback is being prepared.' }
+            : event;
         progressTracker.update(publicEvent);
         const snapshot = progressTracker.buildPart() as unknown as Record<string, unknown>;
         progressEvents.push(snapshot);

@@ -319,7 +319,10 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
         availableAgents: validOpinions.map((opinion) => opinion.agentName),
         unavailableAgents: failedAgents,
       }, 'ai');
-      onProgress?.({ type: 'fusion_done' });
+      onProgress?.({
+        type: 'fusion_error',
+        error: err instanceof Error ? err.message : String(err),
+      });
       if (validOpinions.length > 0) {
         finalText = validOpinions
           .map((o) => `**${o.agentName.charAt(0).toUpperCase() + o.agentName.slice(1)} Agent** (${o.bias}, ${Math.round(o.confidence * 100)}% confidence)\n${o.reasoning}`)

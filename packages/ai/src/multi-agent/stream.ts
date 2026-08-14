@@ -60,6 +60,9 @@ export class ProgressTracker {
       case 'fusion_done':
         this.agents.set('decision', { status: 'done' });
         break;
+      case 'fusion_error':
+        this.agents.set('decision', { status: 'error', error: event.error });
+        break;
     }
   }
 
