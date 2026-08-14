@@ -77,6 +77,7 @@ export type JobName =
   | 'resonance-sync'
   | 'alerts'
   | 'multi-agent-analysis'
+  | 'budget-recovery'
   | 'retention';
 
 /**

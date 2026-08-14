@@ -154,7 +154,7 @@ describe('releaseBudget', () => {
     };
 
     await expect(releaseBudget(reservation, 'user-1')).resolves.toBeUndefined();
-    // released should still be set despite the error
-    expect(reservation.released).toBe(true);
+    // A failed sink must remain retryable instead of being reported as done.
+    expect(reservation.released).toBe(false);
   });
 });

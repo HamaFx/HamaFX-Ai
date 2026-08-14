@@ -26,6 +26,7 @@ import {
   applyBudgetDelta,
   BudgetExceededError,
   DEFAULT_MAX_DAILY_USD,
+  releaseBudgetReservation,
   DEFAULT_TURN_ESTIMATE_USD,
   tryReserveBudget,
 } from './cost';
@@ -44,6 +45,8 @@ export interface BudgetReservation {
   max: number;
   /** The estimated USD reserved for this turn. */
   reservedUsd: number;
+  /** Durable reservation ledger ID when the database supports recovery. */
+  reservationId?: string;
   /** Whether the budget has been released (for idempotent release). */
   released: boolean;
 }
@@ -69,6 +72,7 @@ export async function reserveBudget(
     spent: reservation.spent,
     max: reservation.max,
     reservedUsd: DEFAULT_TURN_ESTIMATE_USD,
+    ...(reservation.reservationId ? { reservationId: reservation.reservationId } : {}),
     released: false,
   };
 }
@@ -104,12 +108,20 @@ export async function releaseBudget(
   userId: string,
 ): Promise<void> {
   if (reservation.released) return;
-  await applyBudgetDelta(userId, -(reservation.reservedUsd)).catch((err) => {
-    blog.error('budget release failed', {
+  try {
+    if (reservation.reservationId) {
+      await releaseBudgetReservation(reservation.reservationId);
+    } else {
+      await applyBudgetDelta(userId, -(reservation.reservedUsd));
+    }
+    (reservation as { released: boolean }).released = true;
+  } catch (err) {
+    // Keep the reservation open when the sink fails so a later terminal
+    // recovery path can retry without losing the correction.
+    blog.error('budget release failed; reservation remains open', {
       userId,
       reservedUsd: reservation.reservedUsd,
       err: String(err),
     });
-  });
-  (reservation as { released: boolean }).released = true;
+  }
 }

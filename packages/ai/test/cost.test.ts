@@ -4,6 +4,7 @@ vi.mock('server-only', () => ({}));
 
 let mockSelectResult: unknown = [];
 let mockExecuteResult: unknown = { rows: [] };
+let mockTransactionResults: unknown[] = [];
 
 function thenableResolver(v: unknown) {
   return Object.assign(Promise.resolve(v), {
@@ -21,6 +22,10 @@ vi.mock('@kestrel/db', () => ({
       }),
     }),
     execute: () => Promise.resolve(mockExecuteResult),
+    transaction: async (callback: (tx: { execute: () => Promise<unknown> }) => Promise<unknown>) =>
+      callback({
+        execute: () => Promise.resolve(mockTransactionResults.shift() ?? mockExecuteResult),
+      }),
   }),
   schema: {
     chatTelemetry: {},
@@ -42,6 +47,9 @@ import {
   estimateCostUsd,
   getMonthlySpend,
   getProviderMonthlySpend,
+  reconcileBudgetReservation,
+  recoverStaleBudgetReservations,
+  releaseBudgetReservation,
   reservedSpendUsd,
   tryReserveBudget,
 } from '../src/cost';
@@ -134,6 +142,7 @@ describe('BudgetExceededError', () => {
 describe('tryReserveBudget', () => {
   beforeEach(() => {
     mockExecuteResult = { rows: [] };
+    mockTransactionResults = [];
   });
 
   it('reserves budget when under cap', async () => {
@@ -144,6 +153,7 @@ describe('tryReserveBudget', () => {
     expect(result.ok).toBe(true);
     expect(result.spent).toBe(0.05);
     expect(result.max).toBe(1.0);
+    expect(result.reservationId).toEqual(expect.any(String));
   });
 
   it('rejects when reservation exceeds cap', async () => {
@@ -180,6 +190,64 @@ describe('tryReserveBudget', () => {
     const result = await tryReserveBudget('user-1', NaN, 5.0);
     expect(result.ok).toBe(false);
     expect(result.max).toBe(5);
+  });
+});
+
+describe('durable budget reservation terminal transitions', () => {
+  beforeEach(() => {
+    mockTransactionResults = [];
+  });
+
+  it('reconciles a reservation exactly once', async () => {
+    mockTransactionResults = [
+      {
+        rows: [{ user_id: 'user-1', day: '2026-08-14', reserved_usd_cents: 5, status: 'reserved' }],
+      },
+      { rows: [{ user_id: 'user-1' }] },
+      { rows: [] },
+    ];
+
+    await expect(
+      reconcileBudgetReservation('reservation-1', 0.08, new Date('2026-08-14T12:00:00Z')),
+    ).resolves.toBe(true);
+
+    mockTransactionResults = [
+      {
+        rows: [{ user_id: 'user-1', day: '2026-08-14', reserved_usd_cents: 5, status: 'reconciled' }],
+      },
+    ];
+    await expect(
+      reconcileBudgetReservation('reservation-1', 0.08, new Date('2026-08-14T12:00:00Z')),
+    ).resolves.toBe(false);
+  });
+
+  it('releases a reservation exactly once and records zero actual cost', async () => {
+    mockTransactionResults = [
+      {
+        rows: [{ user_id: 'user-1', day: '2026-08-14', reserved_usd_cents: 5, status: 'reserved' }],
+      },
+      { rows: [{ user_id: 'user-1' }] },
+      { rows: [] },
+    ];
+
+    await expect(
+      releaseBudgetReservation('reservation-2', new Date('2026-08-14T12:00:00Z')),
+    ).resolves.toBe(true);
+  });
+
+  it('recovers bounded stale reservations through the same terminal release path', async () => {
+    mockExecuteResult = { rows: [{ id: 'reservation-stale' }] };
+    mockTransactionResults = [
+      {
+        rows: [{ user_id: 'user-1', day: '2026-08-14', reserved_usd_cents: 5, status: 'reserved' }],
+      },
+      { rows: [{ user_id: 'user-1' }] },
+      { rows: [] },
+    ];
+
+    await expect(
+      recoverStaleBudgetReservations(new Date('2026-08-14T11:00:00Z'), 100),
+    ).resolves.toEqual({ scanned: 1, released: 1, failed: 0 });
   });
 });
 

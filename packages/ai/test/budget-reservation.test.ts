@@ -24,6 +24,8 @@ vi.mock('server-only', () => ({}));
 
 let mockTryReserveBudget: ReturnType<typeof vi.fn>;
 let mockApplyBudgetDelta: ReturnType<typeof vi.fn>;
+let mockReconcileBudgetReservation: ReturnType<typeof vi.fn>;
+let mockReleaseBudgetReservation: ReturnType<typeof vi.fn>;
 
 vi.mock('../src/cost', () => ({
   get tryReserveBudget() {
@@ -31,6 +33,12 @@ vi.mock('../src/cost', () => ({
   },
   get applyBudgetDelta() {
     return mockApplyBudgetDelta;
+  },
+  get reconcileBudgetReservation() {
+    return mockReconcileBudgetReservation;
+  },
+  get releaseBudgetReservation() {
+    return mockReleaseBudgetReservation;
   },
   get BudgetExceededError() {
     return BudgetExceededErrorActual;
@@ -52,6 +60,8 @@ describe('reserveTurnBudget', () => {
   beforeEach(() => {
     mockTryReserveBudget = vi.fn();
     mockApplyBudgetDelta = vi.fn(() => Promise.resolve());
+    mockReconcileBudgetReservation = vi.fn(() => Promise.resolve(true));
+    mockReleaseBudgetReservation = vi.fn(() => Promise.resolve(true));
   });
 
   it('returns a BudgetHandle when reservation succeeds', async () => {
@@ -121,6 +131,22 @@ describe('BudgetHandle.reconcile', () => {
     expect(handle.released).toBe(true);
   });
 
+  it('uses the durable ledger for reconciliation when an id is returned', async () => {
+    mockTryReserveBudget.mockResolvedValue({
+      ok: true,
+      spent: 0.05,
+      max: 5.0,
+      reservationId: 'reservation-1',
+    });
+    const handle = await makeHandle(0.05);
+
+    await handle.reconcile(0.08);
+
+    expect(mockReconcileBudgetReservation).toHaveBeenCalledWith('reservation-1', 0.08);
+    expect(mockApplyBudgetDelta).not.toHaveBeenCalled();
+    expect(handle.released).toBe(true);
+  });
+
   it('keeps the reservation open so reconciliation can be retried after a sink failure', async () => {
     mockApplyBudgetDelta
       .mockRejectedValueOnce(new Error('DB down'))
@@ -186,6 +212,22 @@ describe('BudgetHandle.release', () => {
     await handle.release();
     expect(handle.released).toBe(true);
     expect(mockApplyBudgetDelta).toHaveBeenCalledTimes(2);
+  });
+
+  it('uses the durable ledger for release when an id is returned', async () => {
+    mockTryReserveBudget.mockResolvedValue({
+      ok: true,
+      spent: 0.05,
+      max: 5.0,
+      reservationId: 'reservation-2',
+    });
+    const handle = await makeHandle(0.05);
+
+    await handle.release();
+
+    expect(mockReleaseBudgetReservation).toHaveBeenCalledWith('reservation-2');
+    expect(mockApplyBudgetDelta).not.toHaveBeenCalled();
+    expect(handle.released).toBe(true);
   });
 
   it('does not reconcile after release', async () => {

@@ -48,8 +48,8 @@ function chunkValues(stmt: unknown): unknown[] {
 
 vi.mock('@kestrel/db', () => {
   return {
-    getDb: () => ({
-      execute: vi.fn(async (statement: unknown) => {
+    getDb: () => {
+      const execute = vi.fn(async (statement: unknown) => {
         const chunks = ((statement as { queryChunks?: unknown[] })?.queryChunks ?? []) as unknown[];
         const text = chunks
           .map((c) => {
@@ -97,15 +97,21 @@ vi.mock('@kestrel/db', () => {
           return [];
         }
         return [];
-      }),
-      select: () => ({
-        from: () => ({
-          where: () => ({
-            limit: () => Promise.resolve([]),
+      });
+      return {
+        execute,
+        transaction: async (
+          callback: (tx: { execute: typeof execute }) => Promise<unknown>,
+        ) => callback({ execute }),
+        select: () => ({
+          from: () => ({
+            where: () => ({
+              limit: () => Promise.resolve([]),
+            }),
           }),
         }),
-      }),
-    }),
+      };
+    },
     schema: {
       dailyAiSpend: { userId: 'user_id', day: 'day', totalUsdCents: 'total_usd_cents' },
       chatTelemetry: { userId: 'user_id', estCostUsd: 'est_cost_usd', createdAt: 'created_at' },

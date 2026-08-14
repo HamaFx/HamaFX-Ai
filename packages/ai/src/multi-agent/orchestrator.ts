@@ -16,7 +16,15 @@
 
 // Multi-Agent Orchestration — pipeline coordinator.
 
-import { tryReserveBudget, applyBudgetDelta, BudgetExceededError, checkBudgetAlertsAndThresholds, DEFAULT_MAX_DAILY_USD } from '../cost';
+import {
+  tryReserveBudget,
+  applyBudgetDelta,
+  reconcileBudgetReservation,
+  releaseBudgetReservation,
+  BudgetExceededError,
+  checkBudgetAlertsAndThresholds,
+  DEFAULT_MAX_DAILY_USD,
+} from '../cost';
 import { resolveChatModel } from '../model';
 import { buildSharedContext, extractUserMessageText } from './context';
 import { limitConcurrency } from '../util/concurrency';
@@ -354,7 +362,11 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
     // Always reconcile, even when totalCostUsd is 0 (all specialists failed).
     const costDelta = totalCostUsd - estimatedCost;
     try {
-      await applyBudgetDelta(userId, costDelta);
+      if (reservation.reservationId) {
+        await reconcileBudgetReservation(reservation.reservationId, totalCostUsd);
+      } else {
+        await applyBudgetDelta(userId, costDelta);
+      }
       reconciled = true;
     } catch (err) {
       mlog.error('multi-agent budget reconciliation failed; releasing reservation', {
@@ -369,7 +381,10 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
       if (!reconciled) {
         // Release the full reservation — any path that throws before
         // reconciliation must not leave the reservation stuck.
-        await applyBudgetDelta(userId, -estimatedCost).catch((err) =>
+        const release = reservation.reservationId
+          ? releaseBudgetReservation(reservation.reservationId)
+          : applyBudgetDelta(userId, -estimatedCost);
+        await release.catch((err) =>
           mlog.warn('failed to release budget reservation after error', { err: String(err) }),
         );
       }
@@ -380,7 +395,10 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
     // Errors from the main execution path already release in its inner
     // finally block.
     if (!setupComplete) {
-      await applyBudgetDelta(userId, -estimatedCost).catch((releaseErr) =>
+      const release = reservation.reservationId
+        ? releaseBudgetReservation(reservation.reservationId)
+        : applyBudgetDelta(userId, -estimatedCost);
+      await release.catch((releaseErr) =>
         mlog.warn('failed to release budget reservation during setup failure', { err: String(releaseErr) }),
       );
     }

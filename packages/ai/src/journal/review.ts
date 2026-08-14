@@ -27,7 +27,14 @@ import { createCategorizedLogger } from '@kestrel/shared/logger';
 import { computeStats } from './persistence';
 import { resolveChatModel } from '../model';
 import { telemetryConfig } from '../telemetry';
-import { tryReserveBudget, applyBudgetDelta, estimateCostUsd, DEFAULT_MAX_DAILY_USD } from '../cost';
+import {
+  tryReserveBudget,
+  applyBudgetDelta,
+  reconcileBudgetReservation,
+  releaseBudgetReservation,
+  estimateCostUsd,
+  DEFAULT_MAX_DAILY_USD,
+} from '../cost';
 
 export interface ReviewTradeArgs {
   userId: string;
@@ -120,10 +127,9 @@ export async function reviewTrade(args: ReviewTradeArgs): Promise<TradeReviewRes
     );
   }
 
-  const stats = await computeStats(userId);
-  const userPrompt = formatEntryForPrompt(entry, stats);
-
   try {
+    const stats = await computeStats(userId);
+    const userPrompt = formatEntryForPrompt(entry, stats);
     const callArgs: Parameters<typeof generateText>[0] = {
       model,
       system: SYSTEM_PROMPT,
@@ -139,12 +145,14 @@ export async function reviewTrade(args: ReviewTradeArgs): Promise<TradeReviewRes
     const outputTokens = result.usage?.outputTokens ?? 0;
     const costUsd = estimateCostUsd(modelId, inputTokens, outputTokens);
 
-    // Reconcile the budget reservation with actual cost.
-    const delta = costUsd - estimatedUsd;
-    if (Math.abs(delta) > 0.0001) {
-      void applyBudgetDelta(userId, delta).catch((err) => {
-        rlog.warn('applyBudgetDelta failed', { err: String(err) });
-      });
+    // Reconcile the budget reservation with actual cost. The ledger path is
+    // atomic and retry-safe; the fallback is retained for legacy test/setup
+    // implementations that do not return a reservation ID.
+    if (reservation.reservationId) {
+      await reconcileBudgetReservation(reservation.reservationId, costUsd);
+    } else {
+      const delta = costUsd - estimatedUsd;
+      if (Math.abs(delta) > 0.0001) await applyBudgetDelta(userId, delta);
     }
 
     return {
@@ -156,8 +164,19 @@ export async function reviewTrade(args: ReviewTradeArgs): Promise<TradeReviewRes
       latencyMs,
     };
   } catch (err) {
-    // Release the reservation on failure so the user isn't charged.
-    void applyBudgetDelta(userId, -estimatedUsd).catch(() => undefined);
+    // Release the reservation on failure so the user isn't charged. A failed
+    // ledger release is logged and remains recoverable for a later retry.
+    try {
+      if (reservation.reservationId) {
+        await releaseBudgetReservation(reservation.reservationId);
+      } else {
+        await applyBudgetDelta(userId, -estimatedUsd);
+      }
+    } catch (releaseErr) {
+      rlog.error('journal budget release failed; reservation remains open', {
+        err: String(releaseErr),
+      });
+    }
     if (env.LOG_PROMPTS) {
       rlog.warn('LLM failed', { err: String(err) });
     }

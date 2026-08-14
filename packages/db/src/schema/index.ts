@@ -38,6 +38,7 @@ export * from './share';
 export * from './push';
 export * from './memory';
 export * from './daily-ai-spend';
+export * from './budget-reservations';
 export * from './rate-limits';
 // Phase 8 — worker-driven persistence
 export * from './live-ticks';

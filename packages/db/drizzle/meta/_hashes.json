@@ -299,6 +299,10 @@
     {
       "tag": "0075_analysis_job_idempotency",
       "hash": "dbd5d1f150b25e67ad09bbc1ce83da0cf49bebfa5963fbee72380a3f3e35cc4c"
+    },
+    {
+      "tag": "0076_ai_budget_reservation_ledger",
+      "hash": "f6698576bd16240b47155ab919172e18a8d82400a135ea99deef26b04c871d92"
     }
   ]
 }

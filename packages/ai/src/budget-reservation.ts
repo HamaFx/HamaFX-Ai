@@ -27,6 +27,8 @@ import {
   applyBudgetDelta,
   BudgetExceededError,
   DEFAULT_TURN_ESTIMATE_USD,
+  reconcileBudgetReservation,
+  releaseBudgetReservation,
   tryReserveBudget,
 } from './cost';
 
@@ -83,7 +85,13 @@ export async function reserveTurnBudget(args: {
       if (state.released) return;
       const delta = observedUsd - estimateUsd;
       try {
-        await applyBudgetDelta(args.userId, delta);
+        if (reservation.reservationId) {
+          await reconcileBudgetReservation(reservation.reservationId, observedUsd);
+        } else {
+          // Compatibility fallback for callers/tests using a legacy cost
+          // implementation that does not return a ledger reservation ID.
+          await applyBudgetDelta(args.userId, delta);
+        }
         state.released = true;
       } catch (err) {
         // Keep the handle open when the sink fails so a later terminal
@@ -99,7 +107,13 @@ export async function reserveTurnBudget(args: {
     async release() {
       if (state.released) return;
       try {
-        await applyBudgetDelta(args.userId, -estimateUsd);
+        if (reservation.reservationId) {
+          await releaseBudgetReservation(reservation.reservationId);
+        } else {
+          // Compatibility fallback for callers/tests using a legacy cost
+          // implementation that does not return a ledger reservation ID.
+          await applyBudgetDelta(args.userId, -estimateUsd);
+        }
         state.released = true;
       } catch (err) {
         // Do not claim success when the reservation release did not reach the

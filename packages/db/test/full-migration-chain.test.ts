@@ -117,6 +117,7 @@ const EXPECTED_TABLES = [
   'news_articles', 'news_embeddings', 'economic_events', 'snapshots',
   'briefings_emitted', 'cot_reports', 'shared_snapshots',
   'push_subscriptions', 'memory_embeddings', 'daily_ai_spend',
+  'ai_budget_reservations',
   'rate_limits', 'live_ticks', 'candles_1m', 'provider_throttle',
   'intermarket_resonance', 'audit_logs', 'provider_tests',
   'symbol_catalog', 'cron_runs',
@@ -249,6 +250,58 @@ describe('Phase 6 — Task 27: Full migration chain (all migrations on fresh PGl
          AND indexname = 'analysis_jobs_user_idempotency_uk'`,
     );
     expect(analysisJobIdempotencyIdx).toHaveLength(1);
+
+    const { rows: budgetIndexes } = await db.execute(
+      `SELECT indexname FROM pg_indexes
+       WHERE tablename = 'ai_budget_reservations'
+         AND indexname IN (
+           'ai_budget_reservations_user_day_idx',
+           'ai_budget_reservations_status_idx',
+           'ai_budget_reservations_trace_idx'
+         )`,
+    );
+    expect(budgetIndexes).toHaveLength(3);
+  }, 30_000);
+
+  it('creates tenant-safe budget reservations and supports terminal state changes', async () => {
+    const db = await getPGliteDb(dir);
+    await applyAll(db);
+
+    await db.execute(`
+      INSERT INTO "organization" ("id", "name")
+      VALUES ('org-budget-test', 'Budget Test Org')
+    `);
+    await db.execute(`
+      INSERT INTO "user" ("id", "email")
+      VALUES ('user-budget-test', 'budget-test@example.com')
+    `);
+    await db.execute(`
+      INSERT INTO "ai_budget_reservations" (
+        "id", "user_id", "day", "reserved_usd_cents", "status"
+      ) VALUES (
+        '00000000-0000-0000-0000-000000000021', 'user-budget-test',
+        CURRENT_DATE, 5, 'reserved'
+      )
+    `);
+
+    const { rows } = await db.execute(
+      `SELECT tenant_id, status FROM "ai_budget_reservations"
+       WHERE id = '00000000-0000-0000-0000-000000000021'`,
+    );
+    expect(rows[0]?.tenant_id).toBe('user-budget-test');
+    expect(rows[0]?.status).toBe('reserved');
+
+    await db.execute(`
+      UPDATE "ai_budget_reservations"
+      SET status = 'released', actual_usd_cents = 0, resolved_at = now()
+      WHERE id = '00000000-0000-0000-0000-000000000021'
+    `);
+    const { rows: terminalRows } = await db.execute(
+      `SELECT status, actual_usd_cents FROM "ai_budget_reservations"
+       WHERE id = '00000000-0000-0000-0000-000000000021'`,
+    );
+    expect(terminalRows[0]?.status).toBe('released');
+    expect(Number(terminalRows[0]?.actual_usd_cents)).toBe(0);
   }, 30_000);
 
   it('deduplicates analysis jobs by user and idempotency key', async () => {

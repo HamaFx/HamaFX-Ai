@@ -28,6 +28,7 @@ import { runWeeklyReview } from './weekly-review.js';
 import { runResonanceSync } from './resonance-sync.js';
 import { runAlerts } from './alerts.js';
 import { runMultiAgentAnalysis } from './multi-agent-analysis.js';
+import { runBudgetRecovery } from './budget-recovery.js';
 import { runRetention } from './retention.js';
 import type { JobRegistration, JobName } from './types.js';
 
@@ -113,6 +114,12 @@ export const JOBS: Record<JobName, JobRegistration> = {
     description: 'U2 — Polls analysis_jobs table every 3s, runs multi-agent full-mode analysis for queued jobs.',
     // Uses setTimeout-based scheduling, not cron.
     schedule: null,
+  },
+  'budget-recovery': {
+    name: 'budget-recovery',
+    run: runBudgetRecovery,
+    description: 'Releases stale AI budget reservations left open by interrupted runs.',
+    schedule: '*/10 * * * *',
   },
   retention: {
     name: 'retention',
