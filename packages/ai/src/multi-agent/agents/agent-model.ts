@@ -22,6 +22,7 @@
 import type { LanguageModel } from 'ai';
 import { resolveChatModel, resolveModelForProvider, TIER_TO_DOMAIN, type ModelDomain } from '../../model';
 import type { ProviderId } from '@kestrel/shared';
+import { PROVIDER_IDS } from '@kestrel/shared/byok';
 import type { SharedContext, ModelTier, AgentName } from '../types';
 
 /**
@@ -62,9 +63,36 @@ export function resolveAgentModel(
       } catch { /* fall through */ }
     }
   }
-  // Q1 fix: pass the agent's model tier as a domain to resolveChatModel so
-  // specialists can use different tiers (fast→summary, mid→technical, strong→fundamental).
+  // Q1 fix: pass the agent's model tier as a domain to model resolution so
+  // specialists can use different tiers (fast→summary, mid→technical,
+  // strong→fundamental). A user's chatModel selects the provider, but it
+  // must not collapse every specialist to that one exact model; otherwise
+  // the recommended tier is ineffective in the normal configured path.
   const domain = tierToDomain(modelTier);
+  const selectedChatModel = ctx.userSettings.chatModel;
+  const separator = typeof selectedChatModel === 'string'
+    ? selectedChatModel.indexOf(':')
+    : -1;
+  const selectedProvider = separator > 0
+    ? selectedChatModel?.slice(0, separator)
+    : undefined;
+
+  if (selectedProvider && PROVIDER_IDS.includes(selectedProvider as ProviderId)) {
+    try {
+      const res = resolveModelForProvider(
+        selectedProvider as ProviderId,
+        ctx.userSettings,
+        ctx.env,
+        undefined,
+        domain,
+      );
+      return { model: res.model, modelId: res.modelId, providerId: res.providerId };
+    } catch {
+      // Invalid or unavailable explicit provider — retain the normal
+      // priority-based tier fallback below.
+    }
+  }
+
   const res = resolveChatModel(ctx.userSettings, ctx.env, domain);
   return { model: res.model, modelId: res.modelId, providerId: res.providerId };
 }

@@ -147,9 +147,11 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
     // on low-tier BYOK keys. Default 3, minimum 1, overridable via env.
     const concurrency = Math.max(1, env.MULTI_AGENT_CONCURRENCY ?? 3);
     const limit = limitConcurrency(concurrency);
+    const failedAgents: string[] = [];
     const opinions = await Promise.all(
       specialists.map(async (agent) => {
         return limit(async () => {
+          const agentStartMs = Date.now();
           onProgress?.({ type: 'agent_start', agent: agent.name });
           try {
             const agentCtx: SharedContext = { ...ctx };
@@ -158,7 +160,23 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
             return opinion;
           } catch (err) {
             const msg = err instanceof Error ? err.message : String(err);
+            failedAgents.push(agent.name);
             logErrorContext(err, 'multi-agent/agent_failed', { agentName: agent.name }, 'ai');
+            void recordTelemetry({
+              userId,
+              threadId,
+              messageId: null,
+              model: `multi-agent/${agent.name}`,
+              inputTokens: 0,
+              outputTokens: 0,
+              toolCalls: 0,
+              ms: Date.now() - agentStartMs,
+              kind: `multi_specialist_${agent.name}_failed` as
+                'multi_specialist_technical_failed' |
+                'multi_specialist_fundamental_failed' |
+                'multi_specialist_risk_failed' |
+                'multi_specialist_sentiment_failed',
+            }).catch((telemetryErr) => mlog.warn('specialist failure telemetry failed', { err: String(telemetryErr) }));
             onProgress?.({ type: 'agent_error', agent: agent.name, error: msg });
             return null;
           }
@@ -188,7 +206,19 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
     const decisionAgent = new DecisionAgent();
 
     try {
-      const decisionResult = await decisionAgent.fuse(validOpinions, ctx, { threadId, userId, env, signal, userSettings }, onTextChunk);
+      const decisionResult = await decisionAgent.fuse(
+        validOpinions,
+        ctx,
+        {
+          threadId,
+          userId,
+          env,
+          signal,
+          userSettings,
+          unavailableAgents: failedAgents,
+        },
+        onTextChunk,
+      );
       finalText = decisionResult.text;
       decisionCostUsd = decisionResult.costUsd;
       decisionInputTokens = decisionResult.inputTokens ?? 0;

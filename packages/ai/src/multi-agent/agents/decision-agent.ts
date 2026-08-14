@@ -84,7 +84,14 @@ Be concise but thorough. Use markdown formatting for readability.`;
   async fuse(
     opinions: AgentOpinion[],
     ctx: SharedContext,
-    execCtx: { threadId: string; userId: string; env: MultiAgentEnv; signal: AbortSignal | null; userSettings: UserSettingsRow },
+    execCtx: {
+      threadId: string;
+      userId: string;
+      env: MultiAgentEnv;
+      signal: AbortSignal | null;
+      userSettings: UserSettingsRow;
+      unavailableAgents?: string[];
+    },
     onTextChunk?: (chunk: string) => void,
   ): Promise<{
     text: string;
@@ -105,7 +112,10 @@ Be concise but thorough. Use markdown formatting for readability.`;
     const userText = extractUserMessageText(ctx.userMessage);
     const sharedPrompt = buildSharedSystemPrompt(ctx);
     const system = `${this.systemPrompt()}\n\n${sharedPrompt}`;
-    const userMessage = `## User Question\n${userText}\n\n## Specialist Agent Opinions\n${opinionsBlock}\n\n## Your Task\nSynthesize the above opinions into a final response for the user. Follow the response format from your instructions.`;
+    const unavailableBlock = execCtx.unavailableAgents && execCtx.unavailableAgents.length > 0
+      ? `## Unavailable Specialist Agents\nThe following specialists failed before producing an opinion: ${execCtx.unavailableAgents.join(', ')}. State this limitation explicitly in the response.\n\n`
+      : '';
+    const userMessage = `## User Question\n${userText}\n\n${unavailableBlock}## Specialist Agent Opinions\n${opinionsBlock}\n\n## Your Task\nSynthesize the above opinions into a final response for the user. Follow the response format from your instructions.`;
     // Q3: include conversation history so follow-up turns have context.
     const historyMessages: ModelMessage[] = ctx.history && ctx.history.length > 0
       ? convertToModelMessages(ctx.history.filter((m) => m.role !== 'system'))

@@ -38,11 +38,13 @@ vi.mock('@kestrel/shared/encryption', () => ({
 
 import { beforeEach, describe, expect, it } from 'vitest';
 
+import { resolveAgentModel } from '../src/multi-agent/agents/agent-model';
 import {
   BYOK_PROVIDERS,
   derivePlannerModel,
   deriveTitleModel,
   resolveChatModel,
+  resolveModelForProvider,
 } from '../src/model';
 
 const ENV = {
@@ -70,6 +72,36 @@ describe('Phase F — resolveChatModel', () => {
     expect(() =>
       resolveChatModel({ aiApiKeys: null, chatModel: null }, ENV),
     ).toThrow(/No AI API keys configured/);
+  });
+
+  it("resolves a configured provider's tier model for specialists", () => {
+    __setByok({ anthropic: 'sk-ant-test' });
+    const r = resolveModelForProvider(
+      'anthropic',
+      { aiApiKeys: null },
+      ENV,
+      undefined,
+      'summary',
+    );
+    expect(r.providerId).toBe('anthropic');
+    expect(r.bareModelId).toBe(BYOK_PROVIDERS.anthropic.defaultModels.summary);
+  });
+
+  it('keeps specialist tiers when the user selected an explicit chat model', () => {
+    __setByok({ anthropic: 'sk-ant-test' });
+    const context = {
+      userSettings: {
+        aiApiKeys: null,
+        chatModel: 'anthropic:claude-sonnet-4-5',
+        agentModelOverrides: {},
+      },
+      env: ENV,
+    } as never;
+    const technical = resolveAgentModel(context, 'technical', 'fast');
+    const decision = resolveAgentModel(context, 'decision', 'strong');
+
+    expect(technical.modelId).toBe(`anthropic/${BYOK_PROVIDERS.anthropic.defaultModels.summary}`);
+    expect(decision.modelId).toBe(`anthropic/${BYOK_PROVIDERS.anthropic.defaultModels.fundamental}`);
   });
 
   it('honors userSettings.chatModel when set and valid', () => {

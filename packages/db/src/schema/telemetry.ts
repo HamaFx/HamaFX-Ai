@@ -62,6 +62,10 @@ export type ChatTelemetryKind =
   | 'multi_specialist_fundamental'
   | 'multi_specialist_risk'
   | 'multi_specialist_sentiment'
+  | 'multi_specialist_technical_failed'
+  | 'multi_specialist_fundamental_failed'
+  | 'multi_specialist_risk_failed'
+  | 'multi_specialist_sentiment_failed'
   | 'multi_specialist_decision'
   | 'multi_agent_turn';
 
