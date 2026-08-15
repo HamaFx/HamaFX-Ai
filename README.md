@@ -235,7 +235,7 @@ Kestrel does not bundle AI access. You bring the provider account and pay the pr
 “Set an alert if XAUUSD closes above yesterday’s high.”
 ```
 
-### Use 32 focused AI tools
+### Use 33 focused AI tools
 
 The agent routes work to typed tools instead of relying on free-form model guesses.
 
@@ -246,7 +246,7 @@ The agent routes work to typed tools instead of relying on free-form model guess
 | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Live market data**              | `get_price`, `get_candles`, `get_indicators`, `get_market_structure`, `get_session_levels`                                                          |
 | **Technical analysis**            | `analyze_technical`, `annotate_chart`, `forecast_volatility`, `replay_setup`                                                                        |
-| **Macro and cross-market**        | `get_news`, `get_calendar`, `get_cot`, `get_correlation`, `get_intermarket`, `get_intermarket_resonance`, `get_seasonality`, `get_social_sentiment` |
+| **Macro and cross-market**        | `get_news`, `get_calendar`, `get_cot`, `get_correlation`, `get_intermarket`, `get_intermarket_resonance`, `get_seasonality`, `get_social_sentiment`, `web_search` |
 | **Risk and verification**         | `compute_risk`, `compute_position_health`, `verify_call`, `get_portfolio_snapshot`                                                                  |
 | **Journal and memory**            | `log_journal`, `get_journal_stats`, `search_knowledge`, `summarize_thread`                                                                          |
 | **Actions and sharing**           | `set_alert`, `share_snapshot`                                                                                                                       |

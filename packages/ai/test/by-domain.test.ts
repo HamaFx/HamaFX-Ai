@@ -25,6 +25,7 @@ describe('domainToolFilter', () => {
     expect(tools.get_calendar).toBeDefined();
     expect(tools.get_cot).toBeDefined();
     expect(tools.analyze_fundamental).toBeDefined();
+    expect(tools.web_search).toBeDefined();
   });
 
   it('includes summary tools for summary routing', () => {
@@ -72,6 +73,7 @@ describe('domainToolFilter', () => {
     expect(tools.get_calendar).toBeUndefined();
     expect(tools.get_cot).toBeUndefined();
     expect(tools.analyze_fundamental).toBeUndefined();
+    expect(tools.web_search).toBeUndefined();
   });
 
   it('filters by plan when provided', () => {

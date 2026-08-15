@@ -98,9 +98,11 @@ describe('tools registry', () => {
       'verify_call',
       'convene_committee',
       'replay_setup',
+      // Web (1)
+      'web_search',
     ];
     expect(toolRegistry.listNames()).toEqual(expectedKeys);
-    expect(toolRegistry.listNames().length).toBe(32);
+    expect(toolRegistry.listNames().length).toBe(33);
   });
 
   it('every tool has description, inputSchema, and execute', () => {

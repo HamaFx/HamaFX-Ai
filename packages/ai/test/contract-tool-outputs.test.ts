@@ -56,6 +56,7 @@ import {
   ShareSnapshotOutputSchema,
   SummarizeThreadOutputSchema,
   VerifyCallOutputSchema,
+  WebSearchOutputSchema,
 } from '@kestrel/shared';
 
 describe('GetPriceOutputSchema', () => {
@@ -504,6 +505,14 @@ describe('remaining output schemas', () => {
           { persona: 'risk_manager', verdict: 'neutral', confidence: 6, keyPoints: ['Manage size'], risk: 'Gap risk', recommendation: 'Half position' },
         ],
         grade: 'B', goNoGo: 'caution', consensus: 'Favorable but manage risk.',
+      },
+    },
+    {
+      name: 'WebSearchOutputSchema',
+      schema: WebSearchOutputSchema,
+      sample: {
+        status: 'success', provider: 'exa', query: 'latest Federal Reserve gold policy', cacheHit: false,
+        sources: [{ id: 'exa:abc123', title: 'Federal Reserve', url: 'https://example.com/fed', domain: 'example.com', snippet: 'Policy update.', publishedAt: '2026-08-15T00:00:00Z' }],
       },
     },
     {

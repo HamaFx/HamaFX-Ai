@@ -104,7 +104,19 @@ export type MultiAgentEnv = Pick<
   | 'MAX_DAILY_USD'
   | 'MAX_TOOL_ITERATIONS'
   | 'LOG_PROMPTS'
-> & {
+> & Partial<Pick<
+  ServerEnv,
+  | 'EXA_API_KEY'
+  | 'TAVILY_API_KEY'
+  | 'BRAVE_SEARCH_API_KEY'
+  | 'WEB_SEARCH_ENABLED'
+  | 'WEB_SEARCH_PROVIDER'
+  | 'WEB_SEARCH_FALLBACK_PROVIDERS'
+  | 'WEB_SEARCH_MAX_RESULTS'
+  | 'WEB_SEARCH_MAX_CALLS_PER_TURN'
+  | 'WEB_SEARCH_CACHE_TTL_SECONDS'
+  | 'WEB_SEARCH_TIMEOUT_MS'
+>> & {
   /** PERF-5: max concurrent specialist agents (default 3). */
   MULTI_AGENT_CONCURRENCY?: number;
 };

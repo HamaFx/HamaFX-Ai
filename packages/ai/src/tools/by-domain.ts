@@ -62,6 +62,7 @@ const DOMAIN_TOOLS: Record<Exclude<RoutingDomain, 'generic'>, ReadonlySet<string
     'compute_risk',
     'forecast_volatility',
     'verify_call',
+    'web_search',
   ]),
   technical: new Set([
     ...ALWAYS_TOOLS,

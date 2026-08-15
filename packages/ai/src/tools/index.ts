@@ -36,6 +36,7 @@ import './market';
 import './analysis';
 import './journal';
 import './system';
+import './web';
 
 // Re-export the registry singleton so consumers (agent.ts, catalogue.ts)
 // can resolve tools by name without importing individual tool files.

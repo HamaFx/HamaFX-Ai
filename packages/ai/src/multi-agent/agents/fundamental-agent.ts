@@ -48,11 +48,18 @@ DO NOT give a final buy/sell recommendation. Output your fundamental read only.
 ## Output Format
 { "bias": "bullish|bearish|neutral", "confidence": 0.0-1.0, "keyEvents": [{ "event": "...", "impact": "high|medium|low", "date": "..." }], "cotPositioning": "long|short|neutral|n/a", "dxyContext": "strengthening|weakening|stable", "yieldContext": "rising|falling|stable", "reasoning": "2-3 sentence fundamental summary", "upcomingCatalysts": ["events that could move price in next 24-48h"] }
 
-Use the available tools to fetch real calendar events, COT data, and news before forming your opinion.`;
+Use the available tools to fetch real calendar events, COT data, and news before forming your opinion. Use web_search only when current external research is needed; cite its returned URLs and explicitly disclose when live web research is unavailable.`;
   }
 
   tools(): Record<string, Tool> {
-    const reg = toolRegistry.resolve(['get_calendar', 'get_cot', 'get_news', 'get_intermarket_resonance', 'search_knowledge']);
+    const reg = toolRegistry.resolve([
+      'get_calendar',
+      'get_cot',
+      'get_news',
+      'get_intermarket_resonance',
+      'search_knowledge',
+      'web_search',
+    ]);
     return reg as Record<string, Tool>;
   }
 

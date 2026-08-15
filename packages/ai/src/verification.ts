@@ -75,6 +75,7 @@ const NEWS_OR_EVENT_TOOLS = new Set([
   'get_calendar',
   'analyze_fundamental',
   'search_knowledge',
+  'web_search',
 ]);
 
 const SUMMARY_MESSAGE = (

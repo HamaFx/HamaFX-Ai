@@ -59,6 +59,8 @@ export const TOOL_NAMES = [
   'get_portfolio_snapshot',
   // F3 — Social Sentiment
   'get_social_sentiment',
+  // Web research — exposed only to the Fundamental agent/domain.
+  'web_search',
 ] as const;
 
 export type ToolName = (typeof TOOL_NAMES)[number];

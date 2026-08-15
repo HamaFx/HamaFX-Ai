@@ -16,6 +16,7 @@
     "./tools/analysis": {"types": "./dist/tools/analysis.d.ts", "import": "./dist/tools/analysis.js"},
     "./tools/journal": {"types": "./dist/tools/journal.d.ts", "import": "./dist/tools/journal.js"},
     "./tools/system": {"types": "./dist/tools/system.d.ts", "import": "./dist/tools/system.js"},
+    "./tools/web": {"types": "./dist/tools/web.d.ts", "import": "./dist/tools/web.js"},
     "./tools/registry": {"types": "./dist/tools/registry.d.ts", "import": "./dist/tools/registry.js"},
     "./prompt": {"types": "./dist/prompt/system.d.ts", "import": "./dist/prompt/system.js"},
     "./diagnostics": {"types": "./dist/diagnostics/index.d.ts", "import": "./dist/diagnostics/index.js"},

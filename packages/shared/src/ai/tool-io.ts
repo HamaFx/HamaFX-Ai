@@ -105,6 +105,7 @@ import type { GetSystemDiagnosticsOutputSchema } from '../schemas/tool-outputs/g
 import type { RunSystemActionOutputSchema } from '../schemas/tool-outputs/run-system-action';
 import type { GetPortfolioSnapshotOutputSchema } from '../schemas/tool-outputs/get-portfolio-snapshot';
 import type { GetSocialSentimentOutputSchema } from '../schemas/tool-outputs/get-social-sentiment';
+import type { WebSearchOutputSchema } from '../schemas/tool-outputs/web-search';
 import type { ToolName } from './tool-names';
 
 /**
@@ -163,6 +164,7 @@ export interface ToolOutputMap {
   get_portfolio_snapshot: z.infer<typeof GetPortfolioSnapshotOutputSchema>;
   // F3 — Social Sentiment
   get_social_sentiment: z.infer<typeof GetSocialSentimentOutputSchema>;
+  web_search: z.infer<typeof WebSearchOutputSchema>;
 }
 
 export type ToolInput<T extends ToolName> = T extends keyof ToolIOMap

@@ -145,6 +145,10 @@ const ProvidersEnv = z.object({
    * local mock during tests). Default: https://biquote.io.
    */
   BIQUOTE_BASE_URL: z.string().url().optional(),
+  /** Server-only web research providers. Never expose these to the browser. */
+  EXA_API_KEY: z.string().min(1).optional(),
+  TAVILY_API_KEY: z.string().min(1).optional(),
+  BRAVE_SEARCH_API_KEY: z.string().min(1).optional(),
 });
 
 const NotifyEnv = z.object({
@@ -227,6 +231,21 @@ const RuntimeEnv = z.object({
   /** Optional release/environment labels used by Langfuse dashboards. */
   LANGFUSE_RELEASE: z.string().min(1).optional(),
   LANGFUSE_TRACING_ENVIRONMENT: z.string().min(1).optional(),
+  /**
+   * Fundamental-agent web search. Disabled by default until a provider key
+   * and an explicit feature flag are configured.
+   */
+  WEB_SEARCH_ENABLED: z
+    .union([z.literal('0'), z.literal('1'), z.literal('true'), z.literal('false')])
+    .default('0')
+    .transform((v) => v === '1' || v === 'true'),
+  WEB_SEARCH_PROVIDER: z.enum(['exa', 'tavily', 'brave']).default('exa'),
+  WEB_SEARCH_FALLBACK_PROVIDERS: z.string().default('tavily,brave'),
+  WEB_SEARCH_MAX_RESULTS: z.coerce.number().int().min(1).max(10).default(6),
+  WEB_SEARCH_MAX_CALLS_PER_TURN: z.coerce.number().int().min(1).max(4).default(2),
+  WEB_SEARCH_CACHE_TTL_SECONDS: z.coerce.number().int().min(30).max(3600).default(600),
+  WEB_SEARCH_TIMEOUT_MS: z.coerce.number().int().min(2000).max(20000).default(8000),
+
   /** Explicit opt-in for exporting prompts and model outputs to Langfuse. */
   LANGFUSE_RECORD_IO: z
     .union([z.literal('0'), z.literal('1'), z.literal('true'), z.literal('false')])
@@ -368,7 +387,17 @@ export type AiEnvKeys =
   | 'MAX_DAILY_USD'
   | 'MAX_TOOL_ITERATIONS'
   | 'LOG_PROMPTS'
-  | 'AI_SEMANTIC_ROUTING_ENABLED';
+  | 'AI_SEMANTIC_ROUTING_ENABLED'
+  | 'EXA_API_KEY'
+  | 'TAVILY_API_KEY'
+  | 'BRAVE_SEARCH_API_KEY'
+  | 'WEB_SEARCH_ENABLED'
+  | 'WEB_SEARCH_PROVIDER'
+  | 'WEB_SEARCH_FALLBACK_PROVIDERS'
+  | 'WEB_SEARCH_MAX_RESULTS'
+  | 'WEB_SEARCH_MAX_CALLS_PER_TURN'
+  | 'WEB_SEARCH_CACHE_TTL_SECONDS'
+  | 'WEB_SEARCH_TIMEOUT_MS';
 
 export function pickAiEnv(env: Pick<ServerEnv, AiEnvKeys>) {
   return {
@@ -385,6 +414,16 @@ export function pickAiEnv(env: Pick<ServerEnv, AiEnvKeys>) {
     MAX_TOOL_ITERATIONS: env.MAX_TOOL_ITERATIONS,
     LOG_PROMPTS: env.LOG_PROMPTS,
     AI_SEMANTIC_ROUTING_ENABLED: env.AI_SEMANTIC_ROUTING_ENABLED,
+    EXA_API_KEY: env.EXA_API_KEY,
+    TAVILY_API_KEY: env.TAVILY_API_KEY,
+    BRAVE_SEARCH_API_KEY: env.BRAVE_SEARCH_API_KEY,
+    WEB_SEARCH_ENABLED: env.WEB_SEARCH_ENABLED,
+    WEB_SEARCH_PROVIDER: env.WEB_SEARCH_PROVIDER,
+    WEB_SEARCH_FALLBACK_PROVIDERS: env.WEB_SEARCH_FALLBACK_PROVIDERS,
+    WEB_SEARCH_MAX_RESULTS: env.WEB_SEARCH_MAX_RESULTS,
+    WEB_SEARCH_MAX_CALLS_PER_TURN: env.WEB_SEARCH_MAX_CALLS_PER_TURN,
+    WEB_SEARCH_CACHE_TTL_SECONDS: env.WEB_SEARCH_CACHE_TTL_SECONDS,
+    WEB_SEARCH_TIMEOUT_MS: env.WEB_SEARCH_TIMEOUT_MS,
   };
 }
 

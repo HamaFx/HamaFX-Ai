@@ -38,7 +38,19 @@ export type ToolEnv = Pick<
   | 'AI_EMBEDDING_MODEL'
   | 'MAX_DAILY_USD'
   | 'LOG_PROMPTS'
->;
+> & Partial<Pick<
+  ServerEnv,
+  | 'EXA_API_KEY'
+  | 'TAVILY_API_KEY'
+  | 'BRAVE_SEARCH_API_KEY'
+  | 'WEB_SEARCH_ENABLED'
+  | 'WEB_SEARCH_PROVIDER'
+  | 'WEB_SEARCH_FALLBACK_PROVIDERS'
+  | 'WEB_SEARCH_MAX_RESULTS'
+  | 'WEB_SEARCH_MAX_CALLS_PER_TURN'
+  | 'WEB_SEARCH_CACHE_TTL_SECONDS'
+  | 'WEB_SEARCH_TIMEOUT_MS'
+>>;
 
 import type { DbClient } from '@kestrel/db';
 import type { UserSettingsRow } from '@kestrel/db/schema';
@@ -86,6 +98,8 @@ export interface ToolContext {
   /** M4: Buffer for batching tool telemetry inserts. Optional — callers
    *  that don't pass it get direct inserts (backward-compatible). */
   toolTelemetryBuffer?: BatchedToolTelemetry[];
+  /** Number of live web searches made during this turn. */
+  webSearchCalls?: number;
 }
 
 const store = new AsyncLocalStorage<ToolContext>();

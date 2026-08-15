@@ -51,6 +51,7 @@ import {
   VerifyCallOutputSchema,
   GetPortfolioSnapshotOutputSchema,
   GetSocialSentimentOutputSchema,
+  WebSearchOutputSchema,
   type ToolName,
   type ToolOutput,
 } from '@kestrel/shared';
@@ -90,6 +91,7 @@ import { GetSystemDiagnosticsPart } from './get-system-diagnostics';
 import { RunSystemActionPart } from './run-system-action';
 import { GetPortfolioSnapshotPart } from './get-portfolio-snapshot';
 import { GetSocialSentimentPart } from './get-social-sentiment';
+import { WebSearchPart } from './web-search';
 
 /** State a part is in for the duration of a streamed tool call. */
 export type ToolPartState = 'loading' | 'done' | 'error';
@@ -149,6 +151,7 @@ export const partRegistry: { [K in ToolName]: ComponentType<ToolPartProps<K>> } 
   run_system_action: RunSystemActionPart,
   get_portfolio_snapshot: GetPortfolioSnapshotPart,
   get_social_sentiment: GetSocialSentimentPart,
+  web_search: WebSearchPart,
 };
 
 /**
@@ -196,6 +199,7 @@ const partSchemas: { [K in ToolName]: z.ZodType<ToolOutput<K>> } = {
   run_system_action: RunSystemActionOutputSchema,
   get_portfolio_snapshot: GetPortfolioSnapshotOutputSchema,
   get_social_sentiment: GetSocialSentimentOutputSchema,
+  web_search: WebSearchOutputSchema,
 };
 
 /** Type guard: is `s` a known `ToolName`? */

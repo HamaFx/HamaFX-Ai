@@ -58,6 +58,24 @@ The web app's BYOK registry supports 10 providers. The registry lives in `packag
 
 You can also pass an `OPENAI_API_KEY`-style env var directly without going through the registry — `resolveUserModel()` will surface operator-provided keys as a fallback when no BYOK is configured yet.
 
+## Optional live web research
+
+The Fundamental agent can optionally search the live public web for current macroeconomic and geopolitical context. This is disabled by default and does not use Google Vertex grounding.
+
+Set these server-only variables in Vercel, Docker, or your worker environment:
+
+```env
+WEB_SEARCH_ENABLED=true
+WEB_SEARCH_PROVIDER=exa
+EXA_API_KEY=your-exa-key
+# Optional provider-level alternatives:
+TAVILY_API_KEY=your-tavily-key
+BRAVE_SEARCH_API_KEY=your-brave-key
+WEB_SEARCH_FALLBACK_PROVIDERS=tavily,brave
+```
+
+Exa is the default semantic search provider. Tavily and Brave are optional provider-level alternatives; this does not change the selected chat or analysis mode. Search results are normalized, cached briefly, traced, limited per turn, sanitized as untrusted data, and rendered as clickable citations. If all providers fail, the Fundamental agent receives an explicit unavailable status instead of silently claiming that it searched the web.
+
 ## The /onboarding Wizard
 
 First-time users land on `/onboarding` after `/register`. The wizard has four steps:
