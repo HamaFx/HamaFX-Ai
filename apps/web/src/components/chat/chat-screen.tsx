@@ -75,6 +75,8 @@ interface ChatScreenProps {
   pinnedSymbol: Symbol | null;
   /** Default analysis mode loaded from the user's server-side settings. */
   initialAnalysisMode?: AnalysisMode;
+  /** Saved chat model in `provider:model` format, or null for resolver default. */
+  initialChatModel?: string | null;
   /** Whether the completed committee opinions should remain visible. */
   initialShowAgentOpinions?: boolean;
   /** Server-side AI custom instructions. Using the DB value as the
@@ -93,6 +95,7 @@ export function ChatScreen({
   initialThreads,
   pinnedSymbol,
   initialAnalysisMode = 'auto',
+  initialChatModel = null,
   initialShowAgentOpinions = true,
   initialCustomInstructions,
   autoSubmitPrompt,
@@ -108,6 +111,9 @@ export function ChatScreen({
   // Enter before a re-render updates the callback closure.
   const analysisModeRef = useRef<AnalysisMode>(initialAnalysisMode);
   const [showAgentOpinions] = useState(initialShowAgentOpinions);
+  const [chatModel, setChatModel] = useState<string | null>(initialChatModel);
+  const chatModelRef = useRef<string | null>(initialChatModel);
+  const [modelSelectionPending, setModelSelectionPending] = useState(false);
 
   // One-shot model override.
   const modelOverrideRef = useRef<string | null>(null);
@@ -264,6 +270,44 @@ export function ChatScreen({
     void regenerate();
   }, [regenerate]);
 
+  const handleChatModelChange = useCallback((nextModel: string) => {
+    const separator = nextModel.indexOf(':');
+    if (separator <= 0 || separator === nextModel.length - 1) {
+      toast.error('Invalid model selection', {
+        description: 'Please choose a model from the catalog.',
+      });
+      return;
+    }
+
+    const previousModel = chatModelRef.current;
+    chatModelRef.current = nextModel;
+    setChatModel(nextModel);
+    setModelSelectionPending(true);
+
+    void apiMutate<{ ok: true; chatModel: string }>('/api/settings/chat-model', {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        providerId: nextModel.slice(0, separator),
+        modelId: nextModel.slice(separator + 1),
+      }),
+    })
+      .then((data) => {
+        const savedModel = data.chatModel || nextModel;
+        chatModelRef.current = savedModel;
+        setChatModel(savedModel);
+        toast.success('Chat model updated');
+      })
+      .catch((err) => {
+        chatModelRef.current = previousModel;
+        setChatModel(previousModel);
+        toast.error('Could not save chat model', {
+          description: err instanceof Error ? err.message : 'Please try again.',
+        });
+      })
+      .finally(() => setModelSelectionPending(false));
+  }, []);
+
   const handleAnalysisModeChange = useCallback((nextMode: AnalysisMode) => {
     const previousMode = analysisModeRef.current;
     // Update the ref before state so an immediately-submitted turn uses the
@@ -345,6 +389,9 @@ export function ChatScreen({
         isStreaming={isStreaming}
         analysisMode={analysisMode}
         onAnalysisModeChange={handleAnalysisModeChange}
+        chatModel={chatModel}
+        onChatModelChange={handleChatModelChange}
+        modelSelectionPending={modelSelectionPending}
       />
 
       <div ref={setScrollContainer} className="scrollbar-hide no-overscroll relative flex-1 overflow-y-auto">
@@ -478,7 +525,7 @@ export function ChatScreen({
             stop();
           }}
           isStreaming={isStreaming}
-          disabled={isStreaming}
+          disabled={isStreaming || modelSelectionPending}
           placeholder={pinnedSymbol ? `Ask about ${pinnedSymbol}…` : 'Ask about XAU, EUR, GBP…'}
         />
       </div>

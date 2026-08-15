@@ -40,6 +40,7 @@ import { cn } from '@/lib/cn';
 import { apiMutate } from '@/lib/api-client';
 import { SymbolChip } from '@/components/ui/symbol-chip';
 import { ThreadSwitcher } from './_components/thread-switcher';
+import { ChatModelSelector } from './_components/chat-model-selector';
 import { usePopupMenu } from '@/hooks/use-popup-menu';
 
 export type AnalysisMode = 'single' | 'quick' | 'standard' | 'full' | 'auto';
@@ -75,9 +76,23 @@ interface ChatTopBarProps {
   isStreaming: boolean;
   analysisMode?: AnalysisMode;
   onAnalysisModeChange?: (mode: AnalysisMode) => void;
+  chatModel?: string | null;
+  onChatModelChange?: (modelId: string) => void;
+  modelSelectionPending?: boolean;
 }
 
-export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming, analysisMode = 'auto', onAnalysisModeChange }: ChatTopBarProps) {
+export function ChatTopBar({
+  threadId,
+  title,
+  pinnedSymbol,
+  threads,
+  isStreaming,
+  analysisMode = 'auto',
+  onAnalysisModeChange,
+  chatModel = null,
+  onChatModelChange,
+  modelSelectionPending = false,
+}: ChatTopBarProps) {
   const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -211,6 +226,16 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
           </span>
         ) : null}
       </div>
+
+        {/* Chat model selector. The picker uses the authenticated catalog and
+            saves the selected model for future turns. */}
+        {onChatModelChange && (
+          <ChatModelSelector
+            activeModelId={chatModel}
+            disabled={isStreaming || modelSelectionPending}
+            onPick={onChatModelChange}
+          />
+        )}
 
         {/* Analysis Mode Selector */}
         {onAnalysisModeChange && (

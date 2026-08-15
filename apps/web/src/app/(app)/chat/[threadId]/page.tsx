@@ -102,6 +102,7 @@ export default async function ChatThreadPage({ params, searchParams }: PageProps
       }))}
       pinnedSymbol={thread.pinnedSymbol}
       initialAnalysisMode={initialAnalysisMode as 'single' | 'quick' | 'standard' | 'full' | 'auto'}
+      initialChatModel={settings?.chatModel ?? null}
       initialShowAgentOpinions={settings?.showAgentOpinions ?? true}
       initialCustomInstructions={customInstructions ?? null}
       autoSubmitPrompt={prompt ?? null}

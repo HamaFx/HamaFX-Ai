@@ -15,7 +15,7 @@
 // Auth: NextAuth session gate. Per-user data only.
 
 import { BYOK_PROVIDERS } from '@/lib/services/api-boundary';
-import { getUserWithSettings, updateUserSettingsField } from '@/lib/services/api-boundary';
+import { decryptByok, getUserWithSettings, updateUserSettingsField } from '@/lib/services/api-boundary';
 import { PROVIDER_IDS, type ProviderId } from '@/lib/services/api-boundary';
 import { z } from 'zod';
 
@@ -57,12 +57,33 @@ export const PUT = withAuth<void>(async (req, { user }) => {
       { status: 400 },
     );
   }
-  // Models with provider prefix (OpenRouter, Vertex) come in as
-  // "<provider>/<bare>" — strip the prefix before lookup so the spec
-  // catalog (which stores bare ids) matches.
-  const bareModelId = body.modelId.includes('/')
-    ? body.modelId.split('/').slice(1).join('/')
-    : body.modelId;
+
+  // The catalog only exposes providers with a user key. Enforce that same
+  // boundary here so a forged request cannot save an unavailable provider
+  // and later silently fall back to another model.
+  let userSettings;
+  try {
+    ({ settings: userSettings } = await getUserWithSettings(user.userId));
+  } catch (err) {
+    return errorResponse(err);
+  }
+  const keys = decryptByok(userSettings?.aiApiKeys);
+  const apiKey = keys?.[body.providerId];
+  if (typeof apiKey !== 'string' || apiKey.length === 0) {
+    return Response.json(
+      { error: { message: `No API key configured for provider: ${body.providerId}` } },
+      { status: 403 },
+    );
+  }
+
+  // Preserve the exact catalog model id. Some providers (notably
+  // OpenRouter) intentionally use slash-containing ids such as
+  // "anthropic/claude-sonnet".
+  const bareModelId = body.modelId.startsWith(`${body.providerId}/`)
+    ? body.modelId.slice(body.providerId.length + 1)
+    : body.providerId === 'vertex' && body.modelId.startsWith('google-vertex/')
+      ? body.modelId.slice('google-vertex/'.length)
+      : body.modelId;
   // Phase D2 — defense in depth. The picker UI filters out tier:
   // 'embedding' models, but a direct API call could still store one.
   // Chat turns can't consume an embedding model (different capability,

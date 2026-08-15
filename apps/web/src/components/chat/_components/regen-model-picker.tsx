@@ -21,6 +21,11 @@ import {IconCircleCheck, IconLoader2} from '@tabler/icons-react';
 
 import type { CatalogResponse } from '@kestrel/shared';
 import { apiFetch } from '@/lib/api-client';
+import {
+  modelSelectionMatches,
+  toChatModelValue,
+  toQualifiedModelId,
+} from './model-picker-utils';
 
 interface CacheData {
   catalog: CatalogResponse | null;
@@ -207,15 +212,12 @@ export function RegenModelPicker({ popoverId, activeModelId, onPick }: RegenMode
     ? configured.find((p) => p.id === chatModelParts[0])
     : undefined;
   const chatBare = chatModelParts?.[1];
-  const chatCatalogModel = chatProvider?.models.find((m) => {
-    const bare = m.modelId.includes('/')
-      ? m.modelId.split('/').slice(1).join('/')
-      : m.modelId;
-    return bare === chatBare;
-  });
+  const chatCatalogModel = chatProvider?.models.find((m) =>
+    chatBare ? modelSelectionMatches(chatModel, chatProvider.id, m.modelId) : false,
+  );
   const chatFullyQualified =
-    chatProvider && chatBare
-      ? `${chatProvider.id}/${bareModelId(chatBare)}`
+    chatProvider && chatCatalogModel
+      ? toQualifiedModelId(chatProvider.id, chatCatalogModel.modelId)
       : null;
 
   return (
@@ -233,10 +235,10 @@ export function RegenModelPicker({ popoverId, activeModelId, onPick }: RegenMode
         </div>
         {chatProvider && chatCatalogModel && chatFullyQualified ? (
           <RegenRow
-            label={`${chatProvider.displayName} · ${chatCatalogModel.label ?? chatBare}`}
+            label={`${chatProvider.displayName} · ${chatCatalogModel.label ?? chatCatalogModel.modelId}`}
             fullyQualified={chatFullyQualified}
-            isActive={activeModelId === chatFullyQualified}
-            onClick={() => pick(chatFullyQualified)}
+            isActive={modelSelectionMatches(activeModelId, chatProvider.id, chatCatalogModel.modelId)}
+            onClick={() => pick(toChatModelValue(chatProvider.id, chatCatalogModel.modelId))}
           />
         ) : (
           <div className="px-2 py-1 text-caption text-fg-subtle italic">
@@ -263,14 +265,14 @@ export function RegenModelPicker({ popoverId, activeModelId, onPick }: RegenMode
               {p.displayName}
             </div>
             {p.models.map((m) => {
-              const fullyQualified = `${p.id}/${bareModelId(m.modelId)}`;
+              const fullyQualified = toQualifiedModelId(p.id, m.modelId);
               return (
                 <RegenRow
                   key={`${p.id}/${m.modelId}`}
-                  label={m.label ?? bareModelId(m.modelId)}
+                  label={m.label ?? m.modelId}
                   fullyQualified={fullyQualified}
-                  isActive={activeModelId === fullyQualified}
-                  onClick={() => pick(fullyQualified)}
+                  isActive={modelSelectionMatches(activeModelId, p.id, m.modelId)}
+                  onClick={() => pick(toChatModelValue(p.id, m.modelId))}
                 />
               );
             })}
@@ -279,10 +281,6 @@ export function RegenModelPicker({ popoverId, activeModelId, onPick }: RegenMode
       </section>
     </div>
   );
-}
-
-function bareModelId(modelId: string): string {
-  return modelId.includes('/') ? modelId.split('/').slice(1).join('/') : modelId;
 }
 
 function RegenRow({
