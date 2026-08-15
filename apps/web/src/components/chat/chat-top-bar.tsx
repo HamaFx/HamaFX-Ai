@@ -27,7 +27,7 @@
 // doesn't open" intermittent bug caused by stacked drawer instances.
 
 import type { Symbol } from '@kestrel/shared';
-import {IconLoader2, IconMessages, IconDotsCircleHorizontal, IconPlus, IconBolt, IconTrash, IconCheck, IconFileDownload, IconCpu, IconChevronDown} from '@tabler/icons-react';
+import {IconLoader2, IconMessages, IconDotsCircleHorizontal, IconPlus, IconBolt, IconTrash, IconCheck, IconFileDownload, IconAdjustmentsHorizontal, IconChevronDown} from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
@@ -247,7 +247,7 @@ export function ChatTopBar({
               {...modeMenu.triggerProps}
               className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 active:bg-bg-elev-3 inline-flex items-center gap-1 rounded-sm px-2.5 py-1.5 text-caption font-medium transition-colors shrink-0"
             >
-              <IconCpu className="size-3.5" />
+              <IconAdjustmentsHorizontal className="size-3.5" aria-hidden="true" />
               <span className="hidden sm:inline">{MODE_LABELS[analysisMode]}</span>
               <IconChevronDown className="size-3" />
             </button>
