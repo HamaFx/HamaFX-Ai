@@ -15,7 +15,7 @@ ProtectHome=true
 ReadWritePaths=/opt/kestrel
 # PR-15: Warm both the market cache (/api/cron/warm-cache) and the chat endpoint
 # (/api/health/public) to reduce cold starts for infrequent users.
-# The chat endpoint imports 32 AI tools + multi-agent orchestration;
+# The chat endpoint imports 33 AI tools + multi-agent orchestration;
 # keeping it warm avoids 2-5s cold start penalty on first turn.
 ExecStart=/usr/bin/curl -fsS -m 30 \
   -H "Authorization: Bearer ${CRON_SECRET}" \

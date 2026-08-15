@@ -15,7 +15,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { extractUserMessageText } from '../../src/multi-agent/context';
+import { buildSharedSystemPrompt, extractUserMessageText } from '../../src/multi-agent/context';
 import type { UIMessage } from 'ai';
 
 describe('context — extractUserMessageText', () => {
@@ -64,5 +64,32 @@ describe('context — extractUserMessageText', () => {
       ],
     } as unknown as UIMessage;
     expect(extractUserMessageText(msg)).toBe('Real text');
+  });
+
+  it('includes the rolling summary in the shared prompt', () => {
+    const prompt = buildSharedSystemPrompt({
+      symbol: 'XAUUSD',
+      threadId: 'thread-1',
+      userId: 'user-1',
+      snapshot: {
+        asOf: '2026-08-15T00:00:00.000Z',
+        session: 'off',
+        prices: {},
+      } as never,
+      userSettings: {
+        defaultSymbol: 'XAUUSD',
+        timezone: 'UTC',
+        language: 'en',
+      } as never,
+      userMessage: { id: 'current', role: 'user', parts: [] } as UIMessage,
+      history: [],
+      signal: null,
+      env: {} as never,
+      displayName: null,
+      compactionExtraSystem: '# Conversation so far (auto-summary)\n- Existing setup',
+    });
+
+    expect(prompt).toContain('Existing setup');
+    expect(prompt).toContain('LIVE_SNAPSHOT');
   });
 });

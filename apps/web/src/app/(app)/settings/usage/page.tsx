@@ -98,6 +98,7 @@ export default async function UsagePage() {
       <div className="flex flex-col gap-1">
         <h2 className="text-fg text-lg font-semibold tracking-tight">Usage</h2>
         <p className="text-fg-subtle text-sm">Token spend, daily-budget gauge, model breakdown, and recent turns.</p>
+        <p className="text-fg-subtle text-xs">Displayed costs are conservative provider-rate estimates, not invoices.</p>
       </div>
       <BudgetCard
         stats={stats}
@@ -209,7 +210,7 @@ function BudgetCard({
         </div>
         {isProjectedExceeded && (
           <div className="bg-warn/5 border border-warn/25 rounded-sm p-2.5 text-caption text-warn mt-1">
-            ⚠️ Based on the last 7 days of usage, you are projected to exceed your monthly budget limit of ${monthlyLimit?.toFixed(2)}. Consider reviewing your active tools or adjusting your budget.
+            ⚠️ Based on the last 7 days of usage, you are projected to exceed your monthly budget limit of ${monthlyLimit?.toFixed(2)}. This is an estimate, not an invoice. Consider reviewing your active tools or adjusting your budget.
           </div>
         )}
       </div>

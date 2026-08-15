@@ -73,7 +73,7 @@ config → shared → db + indicators → data → ai → web + worker
 | `@kestrel/db` | `packages/db/` | Drizzle ORM schema (46 tables), Postgres/PGlite client, migrations |
 | `@kestrel/indicators` | `packages/indicators/` | Technical indicators (RSI, MACD, ATR, Bollinger, SMC) |
 | `@kestrel/data` | `packages/data/` | Market data providers (BiQuote, Finnhub, Marketaux, FRED, etc.) with failover |
-| `@kestrel/ai` | `packages/ai/` | AI agent core — 32 registered tools, model routing, multi-agent committee, memory, persistence |
+| `@kestrel/ai` | `packages/ai/` | AI agent core — 33 registered tools, model routing, multi-agent committee, memory, persistence |
 | `@kestrel/test-utils` | `packages/test-utils/` | Shared test factories, mocks, vitest helpers |
 | `@kestrel/web` | `apps/web/` | Next.js 16 PWA — 29 pages, 78 API routes, auth, chat, charts |
 | `@kestrel/worker` | `apps/worker/` | Node.js daemon — SignalR consumer, tick processing, scheduled jobs |

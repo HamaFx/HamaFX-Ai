@@ -5,7 +5,7 @@
 
 ## Project Identity
 
-**Kestrel** is an open-source, multi-tenant, chat-driven AI trading copilot for **gold, forex, and crypto**: **XAUUSD** (primary), a canonical forex catalog, and supported Binance crypto pairs. It runs as a Next.js 16 PWA with a persistent Node.js worker daemon. The AI agent uses Vercel AI SDK v5 with 32 registered tools, domain-based model routing, and multi-agent committee deliberation.
+**Kestrel** is an open-source, multi-tenant, chat-driven AI trading copilot for **gold, forex, and crypto**: **XAUUSD** (primary), a canonical forex catalog, and supported Binance crypto pairs. It runs as a Next.js 16 PWA with a persistent Node.js worker daemon. The AI agent uses Vercel AI SDK v5 with 33 registered tools, domain-based model routing, and multi-agent committee deliberation.
 
 - **License**: Apache-2.0
 - **Status**: In production on Vercel + GCE VM. Phases 0–9 shipped (incl. multi-tenant v2.0). UX Upgrade Plan Phases A/B/C/D/E shipped.
@@ -34,7 +34,7 @@
 | Tests | Vitest (228 test files). Playwright E2E (16 spec files). |
 | Lint | ESLint flat config in `packages/config/eslint` |
 | TypeScript | Strict mode with `noUncheckedIndexedAccess`; the web app currently opts out of `exactOptionalPropertyTypes` for compatibility |
-| AI Tools | 32 registered tool definitions in `packages/ai/src/tools/` |
+| AI Tools | 33 registered tool definitions in `packages/ai/src/tools/` |
 | Architecture snapshot | `docs/architecture-explorer.html` + `docs/architecture-explorer.json` — static reference artifacts |
 | Request proxy | 190 lines. Handles auth, CSRF, CSP, request-id |
 
@@ -136,7 +136,7 @@ Kestrel/
 │   ├── web/              # Next.js 16 PWA (frontend + API routes)
 │   └── worker/           # Node.js daemon (SignalR consumer, tick processing, job runner)
 ├── packages/
-│   ├── ai/               # AI agent core — chat, 32 registered tools, routing, memory, persistence
+│   ├── ai/               # AI agent core — chat, 33 registered tools, routing, memory, persistence
 │   ├── data/             # Market data adapters — price, candles, news, failover, caching
 │   ├── db/               # Drizzle schema (50 tables across 35 files) + Postgres/PGlite client
 │   ├── indicators/       # Technical indicators — SMA, EMA, RSI, MACD, SMC structure
@@ -157,7 +157,7 @@ Kestrel/
 ```
 Browser (PWA)
     │
-    ├── /api/chat ──▶ runChat() ──▶ streamText + 32 registered tools
+    ├── /api/chat ──▶ runChat() ──▶ streamText + 33 registered tools
     │                    │
     │                    ├── routeTurn() ──▶ pick model (fundamental/technical/summary/vision)
     │                    ├── runPlanner() ──▶ plan-then-act pre-step

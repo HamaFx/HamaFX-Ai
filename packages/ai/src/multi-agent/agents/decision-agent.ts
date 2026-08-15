@@ -132,6 +132,10 @@ Be concise but thorough. Use markdown formatting for readability.`;
       db: container.resolve(DB),  // P0-2 — inject DB client
       toolTelemetryBuffer: [],  // M4: batch telemetry inserts
     };
+    // Once a delta is on the wire it cannot be retracted. If that provider
+    // later fails, suppress model fallback for this attempt so a second
+    // provider cannot append a duplicate answer to the client stream.
+    let textEmitted = false;
     const execution = await withAgentModelFallback(
       ctx,
       this.name,
@@ -147,8 +151,11 @@ Be concise but thorough. Use markdown formatting for readability.`;
           else execCtx.signal.addEventListener('abort', onParentAbort, { once: true });
         }
         try {
-          // P1-4/U1 — Buffer fusion output before invoking the callback so a
-          // late provider failure cannot leave partial text on the client.
+          // P1-4/U1 — forward text deltas as they arrive so the client gets
+          // useful TTFB. The orchestrator still waits for usage and checks
+          // stream errors before persisting or marking fusion complete; a
+          // failed stream therefore terminates with an error instead of a
+          // successful partial answer.
           if (onTextChunk) {
             let streamError: unknown = null;
             const sResult = await withToolContext(toolContext, async () =>
@@ -163,22 +170,35 @@ Be concise but thorough. Use markdown formatting for readability.`;
               }),
             );
             let fullText = '';
-            for await (const part of sResult.fullStream) {
-              if (part.type === 'error') streamError = part.error;
-              else if (part.type === 'text-delta') fullText += part.text;
+            try {
+              for await (const part of sResult.fullStream) {
+                if (part.type === 'error') {
+                  streamError = part.error;
+                } else if (part.type === 'text-delta') {
+                  fullText += part.text;
+                  if (part.text) {
+                    textEmitted = true;
+                    onTextChunk(part.text);
+                  }
+                }
+              }
+              const usage = await sResult.usage;
+              if (streamError) {
+                throw streamError instanceof Error ? streamError : new Error(String(streamError));
+              }
+              if (fullText.trim().length === 0) {
+                throw new Error('Decision agent returned an empty response');
+              }
+              const inputTokens = usage?.inputTokens ?? 0;
+              const outputTokens = usage?.outputTokens ?? 0;
+              const costUsd = estimateCostUsd(modelId, inputTokens, outputTokens);
+              return { text: fullText, costUsd, inputTokens, outputTokens, modelId, providerId };
+            } catch (error) {
+              if (textEmitted || fullText.length > 0) {
+                throw new Error('Decision agent stream failed after partial output', { cause: error });
+              }
+              throw error;
             }
-            const usage = await sResult.usage;
-            if (streamError) {
-              throw streamError instanceof Error ? streamError : new Error(String(streamError));
-            }
-            if (fullText.trim().length === 0) {
-              throw new Error('Decision agent returned an empty response');
-            }
-            onTextChunk(fullText);
-            const inputTokens = usage?.inputTokens ?? 0;
-            const outputTokens = usage?.outputTokens ?? 0;
-            const costUsd = estimateCostUsd(modelId, inputTokens, outputTokens);
-            return { text: fullText, costUsd, inputTokens, outputTokens, modelId, providerId };
           }
 
           const result = await withToolContext(toolContext, async () =>

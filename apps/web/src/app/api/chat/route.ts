@@ -208,10 +208,16 @@ export const POST = withAuth<void>(async (req, { user }) => {
         // can be consumed by either an EventSource or the AI SDK transport.
         const encoder = new TextEncoder();
         const messageId = crypto.randomUUID();
-        const multiAgentTimeoutSignal = AbortSignal.timeout(ROUTE_TIMEOUT_MS);
+        // Quick mode has one specialist and should fail fast; Standard keeps
+        // the full route budget for its two specialists plus fusion. Full mode
+        // is queued and does not use this synchronous timeout.
+        const multiAgentTimeoutMs = resolvedMode === 'quick' ? 45_000 : ROUTE_TIMEOUT_MS;
+        const multiAgentTimeoutSignal = AbortSignal.timeout(multiAgentTimeoutMs);
         const multiAgentSignal = req.signal
           ? AbortSignal.any([req.signal, multiAgentTimeoutSignal])
           : multiAgentTimeoutSignal;
+        let firstTextAt: number | null = null;
+        const multiAgentStartedAt = Date.now();
         const stream = new ReadableStream({
           async start(controller) {
             const tracker = new ProgressTracker(
@@ -276,6 +282,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
                 // as an AI SDK text-delta event.
                 onTextChunk: (chunk) => {
                   if (!chunk) return;
+                  firstTextAt ??= Date.now();
                   textStreamed = true;
                   startText();
                   send({ type: 'text-delta', id: messageId, delta: chunk });
@@ -291,11 +298,20 @@ export const POST = withAuth<void>(async (req, { user }) => {
               // throws before this point if any required agent or the Decision
               // agent fails, so no partial assistant message can be emitted.
               if (!textStreamed && result.finalText) {
+                firstTextAt ??= Date.now();
                 startText();
                 send({ type: 'text-delta', id: messageId, delta: result.finalText });
               }
               startText();
               send({ type: 'text-end', id: messageId });
+
+              const ttfbMs = firstTextAt === null ? null : firstTextAt - multiAgentStartedAt;
+              streamLog.info({
+                mode: resolvedMode,
+                timeoutMs: multiAgentTimeoutMs,
+                ttfbMs,
+                totalLatencyMs: result.totalLatencyMs,
+              }, 'multi-agent latency');
 
               // Surface cost/latency/opinions as a transient data part. The client can
               // choose to ignore it; it will not be persisted because it is transient.
@@ -307,6 +323,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
                   mode: result.mode,
                   totalCostUsd: result.totalCostUsd,
                   totalLatencyMs: result.totalLatencyMs,
+                  ttfbMs,
                   messageId: result.messageId,
                 },
                 transient: true,

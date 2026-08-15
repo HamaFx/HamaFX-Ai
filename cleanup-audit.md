@@ -32,7 +32,7 @@ The project is a **pnpm monorepo** with Turborepo orchestration:
 │   └─ SignalR consumer, tick buffer, 1m candles│
 │      systemd timers → 7 heavy cron jobs       │
 ├──────────────────────────────────────────────┤
-│ packages/ai      — Agent core, 32 tools,      │
+│ packages/ai      — Agent core, 33 tools,      │
 │                    routing, memory, multi-agent│
 │ packages/data    — Market data adapters,       │
 │                    failover, caching           │

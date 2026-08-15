@@ -29,6 +29,8 @@ const ALERT_INTENT_PATTERNS = [
   /\bremind me\b/i,
   /\btell me when\b/i,
   /\blet me know when\b/i,
+  // Common explicit Chinese alert requests.
+  /提醒|通知|警报|设置提醒/i,
 ];
 
 const JOURNAL_INTENT_PATTERNS = [
@@ -37,6 +39,8 @@ const JOURNAL_INTENT_PATTERNS = [
   /\brecord\b.*\b(trade|entry|setup|position)\b/i,
   /\bsave\b.*\b(trade|entry|setup|position)\b/i,
   /\badd\b.*\bjournal\b/i,
+  // Common explicit Chinese trade-journal requests.
+  /交易日志|记录.*(交易|仓位|设置)|保存.*(交易|仓位)/i,
 ];
 
 const SHARE_INTENT_PATTERNS = [
@@ -49,10 +53,14 @@ const SHARE_INTENT_PATTERNS = [
   /\bsend\b.*\blink\b/i,
   /\bgive me\b.*\blink\b/i,
   /\blink to (?:this|that)\b/i,
+  // Common explicit Chinese share-link requests.
+  /分享.*(链接|快照)|公开链接|分享分析/i,
 ];
 
 const RUN_INTENT_PATTERNS = [
   /\b(run|execute|trigger|start|perform|do|sync|refresh)\b/i,
+  // Common explicit Chinese execution requests.
+  /运行|执行|同步|刷新/i,
 ];
 
 const RESONANCE_TARGET_PATTERNS = [
@@ -61,6 +69,7 @@ const RESONANCE_TARGET_PATTERNS = [
   /\bmacro\b/i,
   /\bhistorical\b/i,
   /\bdata sync\b/i,
+  /共振|宏观|历史|数据同步/i,
 ];
 
 function normalizeUserText(text: string | undefined): string {

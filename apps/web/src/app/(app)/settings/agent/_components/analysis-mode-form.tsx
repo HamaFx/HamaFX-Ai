@@ -66,6 +66,9 @@ export function AnalysisModeForm({ initialMode, showOpinions: initialShowOpinion
         Choose how the AI analyzes your questions. Multi-agent modes use specialized agents that run
         in parallel for deeper analysis.
       </p>
+      <p className="text-fg-subtle text-caption">
+        Time and cost multipliers are upper-bound estimates for planning; actual usage is reconciled from model tokens.
+      </p>
 
       <div className="flex flex-col gap-2">
         {MODE_OPTIONS.map((opt) => (

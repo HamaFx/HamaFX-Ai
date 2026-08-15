@@ -91,7 +91,10 @@ export abstract class BaseAgent {
       ? `\n\n${ctx.prefetchedData}\n\nPrefer the above pre-fetched data. Only call tools for data gaps or updates.\n`
       : '';
     const userText = extractUserMessageText(ctx.userMessage);
-    const fullSystem = `${this.systemPrompt()}\n\n## RESPONSE LANGUAGE\n${responseLanguageInstruction(ctx.userSettings.language)}\n\n${sharedPrompt}${prefetchedPrompt}`;
+    const compactionPrompt = ctx.compactionExtraSystem
+      ? `\n\n${ctx.compactionExtraSystem}\n`
+      : '';
+    const fullSystem = `${this.systemPrompt()}\n\n## RESPONSE LANGUAGE\n${responseLanguageInstruction(ctx.userSettings.language)}\n\n${compactionPrompt}${sharedPrompt}${prefetchedPrompt}`;
     const historyMessages = ctx.history && ctx.history.length > 0
       ? convertToModelMessages(ctx.history.filter((message) => message.role !== 'system'))
       : [];

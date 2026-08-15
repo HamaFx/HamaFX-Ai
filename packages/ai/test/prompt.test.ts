@@ -38,6 +38,8 @@ describe('buildSystemPrompt', () => {
     // The base prompt mentions LIVE_SNAPSHOT as a reference; only the
     // injected header block uses "(auto-injected" — that's what should be absent.
     expect(out).not.toContain('(auto-injected');
+    expect(out).toContain('not advertised in domain-routed analytical turns');
+    expect(out).not.toContain('may also call');
   });
 
   it('includes prices and session in the snapshot block', () => {

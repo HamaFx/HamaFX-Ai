@@ -128,6 +128,37 @@ describe('mutation tool intent guards', () => {
     expect(mocks.createAlertMock).not.toHaveBeenCalled();
   });
 
+  it('accepts an explicit non-English alert request without accepting a bare confirmation', async () => {
+    const result = (await withToolContext(makeContext('请设置提醒：黄金突破 2400。'), () =>
+      Promise.resolve(
+        setAlertTool.execute!(
+          {
+            rule: { type: 'priceCross', symbol: 'XAUUSD', level: 2400, direction: 'above' },
+            channels: ['email'],
+            note: null,
+          },
+          {} as any,
+        ),
+      ))) as SetAlertOutput;
+
+    expect(result.alertId).toBe('alert_123');
+    expect(mocks.createAlertMock).toHaveBeenCalledOnce();
+
+    await expect(
+      withToolContext(makeContext('好的，继续。'), () =>
+        Promise.resolve(
+          setAlertTool.execute!(
+            {
+              rule: { type: 'priceCross', symbol: 'XAUUSD', level: 2400, direction: 'above' },
+              channels: ['email'],
+              note: null,
+            },
+            {} as any,
+          ),
+        )),
+    ).rejects.toMatchObject({ code: 'VALIDATION' });
+  });
+
   it('allows log_journal only when the user explicitly asks to journal or log a trade', async () => {
     const result = (await withToolContext(
       makeContext('Journal: I shorted XAUUSD at 2392, stop 2398, target 2378.'),

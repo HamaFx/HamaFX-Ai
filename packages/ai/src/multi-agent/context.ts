@@ -18,7 +18,11 @@
 
 import { buildLiveSnapshot } from '../context';
 export { extractUserMessageText } from '../message-text';
+import { getMessageText } from '@kestrel/shared';
 import { buildSystemPrompt } from '../prompt/system';
+import { compactThread } from '../memory/thread-summary';
+import { derivePlannerModel } from '../model';
+import type { DbMessage } from '../persistence';
 import type { UserSettingsRow } from '@kestrel/db/schema';
 import type { UIMessage } from 'ai';
 import type { SharedContext, MultiAgentEnv } from './types';
@@ -112,11 +116,43 @@ async function prefetchCalendarBlock(): Promise<string> {
   }
 }
 
+function toCompactionMessage(message: UIMessage, threadId: string, createdAt: number): DbMessage {
+  return {
+    id: message.id,
+    threadId,
+    role: message.role,
+    content: getMessageText(message),
+    parts: message.parts,
+    createdAt,
+  };
+}
+
 export async function buildSharedContext(args: BuildContextArgs): Promise<SharedContext> {
   const { symbol, userId, threadId, userMessage, history, userSettings, displayName, customInstructions, env, signal } = args;
-  const snapshot = await buildLiveSnapshot({ signal: signal ?? undefined, userId });
+  const compactionModelId = derivePlannerModel(userSettings, env) ?? env.AI_DEFAULT_MODEL;
+  const compactionArgs: Parameters<typeof compactThread>[0] = {
+    threadId,
+    userId,
+    history: history.map((message, index) => toCompactionMessage(message, threadId, index)),
+    env,
+    compactionModelId,
+  };
+  if (signal) compactionArgs.signal = signal;
 
-  // Q4: Pre-fetch common datasets once so all 4 specialists don't each
+  const [snapshot, compaction] = await Promise.all([
+    buildLiveSnapshot({ signal: signal ?? undefined, userId }),
+    compactThread(compactionArgs),
+  ]);
+
+  // Keep the original UI message parts after compaction so tool calls and
+  // attachments retain the exact AI SDK shape expected by convertToModelMessages.
+  const historyById = new Map(history.map((message) => [message.id, message]));
+  const compactedHistory = compaction.kept.flatMap((message) => {
+    const original = historyById.get(message.id);
+    return original ? [original] : [];
+  });
+
+  // Q4: Pre-fetch common datasets once so all specialists don't each
   // re-fetch the same candle data / calendar events independently.
   const [candlesBlock, calendarBlock] = await Promise.all([
     prefetchCandlesBlock(symbol, signal),
@@ -127,8 +163,17 @@ export async function buildSharedContext(args: BuildContextArgs): Promise<Shared
     .join('\n\n');
 
   const ctx: SharedContext = {
-    symbol, threadId, userId, snapshot, userSettings, userMessage, history, signal, env,
+    symbol,
+    threadId,
+    userId,
+    snapshot,
+    userSettings,
+    userMessage,
+    history: compactedHistory,
+    signal,
+    env,
     displayName,
+    ...(compaction.extraSystem ? { compactionExtraSystem: compaction.extraSystem } : {}),
   };
   if (customInstructions !== undefined) ctx.customInstructions = customInstructions;
   if (prefetchedData) ctx.prefetchedData = prefetchedData;
@@ -138,7 +183,9 @@ export async function buildSharedContext(args: BuildContextArgs): Promise<Shared
 export function buildSharedSystemPrompt(ctx: SharedContext, displayName: string | null = ctx.displayName ?? null): string {
   const userCtx = userContextFromSettings(displayName, ctx.userSettings);
   const basePrompt = buildSystemPrompt(ctx.snapshot, userCtx);
-  let prompt = basePrompt;
+  let prompt = ctx.compactionExtraSystem
+    ? `${ctx.compactionExtraSystem}\n\n${basePrompt}`
+    : basePrompt;
   // Q4: inject pre-fetched data before custom instructions so agents
   // can prefer it over making their own tool calls for the same data.
   if (ctx.prefetchedData && ctx.prefetchedData.length > 0) {

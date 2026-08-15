@@ -74,6 +74,8 @@ export interface SharedContext {
   // data
   snapshot: LiveSnapshot;
   prefetchedData?: string;
+  /** Rolling summary generated when the thread history exceeds the context budget. */
+  compactionExtraSystem?: string;
   // config
   userSettings: UserSettingsRow;
   displayName?: string | null;
@@ -151,7 +153,7 @@ export interface MultiAgentResult {
   finalText: string;
   /** All specialist opinions (for UI + persistence). */
   agentOpinions: AgentOpinion[];
-  /** Total cost across all agents in USD. */
+  /** Conservative estimate of total provider cost across all agents in USD. */
   totalCostUsd: number;
   /** Total latency in milliseconds. */
   totalLatencyMs: number;

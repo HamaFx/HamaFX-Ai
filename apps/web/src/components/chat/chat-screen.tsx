@@ -140,6 +140,11 @@ export function ChatScreen({
         api: '/api/chat',
         prepareSendMessagesRequest: ({ messages, id, body }) => {
           const override = modelOverrideRef.current;
+          const singleTurnOverride = singleTurnOverrideRef.current;
+          // Consume the image-mode override inside the transport callback,
+          // not immediately after sendMessage(). AI SDK transport preparation
+          // may be deferred, so clearing it in the composer can race this read.
+          singleTurnOverrideRef.current = null;
           const csrf = getCsrfToken();
           const prefs = { customInstructions };
           const prefsJson = customInstructions ? JSON.stringify(prefs) : null;
@@ -149,7 +154,7 @@ export function ChatScreen({
             modelOverride: override ?? undefined,
             // Request-critical fields must be written after `body`; callers
             // may pass a stale body snapshot through the AI SDK transport.
-            analysisMode: singleTurnOverrideRef.current ?? analysisModeRef.current,
+            analysisMode: singleTurnOverride ?? analysisModeRef.current,
             threadId,
             id,
             messages,
@@ -246,10 +251,14 @@ export function ChatScreen({
     void sendMessage({ text: autoSubmitPrompt });
   }, [autoSubmitPrompt, threadId, messages.length, isStreaming, sendMessage]);
 
-  // Clear model override after stream settles.
+  // Clear one-shot controls after a failed/settled turn as a safety net.
+  // The transport normally consumes the image override before the request
+  // starts; this also prevents a failed preparation from leaking it into the
+  // next turn.
   useEffect(() => {
     if (status === 'ready' || (error && status === 'error')) {
       modelOverrideRef.current = null;
+      singleTurnOverrideRef.current = null;
     }
   }, [status, error]);
 
@@ -519,7 +528,6 @@ export function ChatScreen({
                   })),
                 });
               }
-              singleTurnOverrideRef.current = null;
             }}
           onStop={() => {
             stop();

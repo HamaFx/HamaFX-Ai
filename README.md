@@ -364,7 +364,7 @@ apps/
 └── worker/               Persistent worker for ticks, candles, and scheduled jobs
 
 packages/
-├── ai/                   Agent runtime, 32 registered tools, routing, memory, multi-agent flow
+├── ai/                   Agent runtime, 33 registered tools, routing, memory, multi-agent flow
 ├── data/                 Market data adapters, providers, failover, caching
 ├── db/                   Drizzle schema, PostgreSQL/PGlite clients, migrations
 ├── indicators/           Technical indicators and market-structure calculations
