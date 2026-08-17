@@ -22,6 +22,8 @@
  * same run without inventing incompatible event names.
  */
 
+import { z } from 'zod';
+
 /** Correlation fields that may be propagated across web, worker, and AI code. */
 export interface ObservabilityCorrelation {
   traceId?: string;
@@ -99,4 +101,75 @@ export function isObservabilityEventName(value: string): value is ObservabilityE
 
 export function isObservabilityTerminalStatus(value: string): value is ObservabilityTerminalStatus {
   return (OBSERVABILITY_TERMINAL_STATUSES as readonly string[]).includes(value);
+}
+
+/**
+ * Phase D — typed event/span envelopes.
+ *
+ * The `ObservabilityEvent` interface above documents the contract, but the
+ * project's "Zod at Boundaries" rule means every shape crossing a package
+ * boundary must also validate at runtime. These schemas make the event and
+ * span envelopes enforceable so web, worker, durable diagnostics, and trace
+ * adapters cannot silently drift apart.
+ */
+const observabilityCorrelationSchema = z
+  .object({
+    traceId: z.string().optional(),
+    requestId: z.string().optional(),
+    runId: z.string().optional(),
+    jobId: z.string().optional(),
+    threadId: z.string().optional(),
+    messageId: z.string().optional(),
+    userId: z.string().optional(),
+  })
+  .passthrough();
+
+/** Runtime-validated event envelope (matches `ObservabilityEvent`). */
+export const observabilityEventSchema = z.object({
+  name: z.enum(OBSERVABILITY_EVENTS),
+  timestamp: z.number().int().nonnegative(),
+  correlation: observabilityCorrelationSchema,
+  status: z.enum(OBSERVABILITY_TERMINAL_STATUSES).optional(),
+  operation: z.string().optional(),
+  errorCode: z.string().optional(),
+  attempt: z.number().int().nonnegative().optional(),
+  providerId: z.string().optional(),
+  modelId: z.string().optional(),
+  agentName: z.string().optional(),
+  metadata: z.record(z.unknown()).optional(),
+});
+
+export type ObservabilityEventParsed = z.infer<typeof observabilityEventSchema>;
+
+/** Parse an unknown value into a validated event envelope. */
+export function parseObservabilityEvent(value: unknown): ObservabilityEventParsed {
+  return observabilityEventSchema.parse(value);
+}
+
+export const OBSERVABILITY_SPAN_KINDS = ['internal', 'ai', 'tool', 'db'] as const;
+export type ObservabilitySpanKind = (typeof OBSERVABILITY_SPAN_KINDS)[number];
+
+/**
+ * The span half of the unified run envelope. One span carries the trace
+ * correlation plus cost/latency/status attributes so tests, production
+ * traces, eval reports, and feedback records all describe the same run.
+ */
+export const observabilitySpanSchema = z.object({
+  traceId: z.string().min(1),
+  spanId: z.string().min(1),
+  parentSpanId: z.string().optional(),
+  name: z.string().min(1),
+  kind: z.enum(OBSERVABILITY_SPAN_KINDS).default('internal'),
+  startTimeMs: z.number().nonnegative(),
+  endTimeMs: z.number().nonnegative().optional(),
+  durationMs: z.number().nonnegative().optional(),
+  status: z.enum(OBSERVABILITY_TERMINAL_STATUSES).optional(),
+  errorCode: z.string().optional(),
+  attributes: z.record(z.unknown()).optional(),
+});
+
+export type ObservabilitySpan = z.infer<typeof observabilitySpanSchema>;
+
+export function parseObservabilitySpan(value: unknown): ObservabilitySpan {
+  return observabilitySpanSchema.parse(value);
 }

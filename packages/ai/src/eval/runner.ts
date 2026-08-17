@@ -144,6 +144,8 @@ export interface PromptResult {
 export interface RunEvalsResult {
   results: PromptResult[];
   reportPath: string;
+  /** Machine-readable JSON report path (written alongside the Markdown). */
+  jsonPath: string;
   score: EvaluationScore;
 }
 
@@ -204,8 +206,14 @@ export async function runEvals(args: RunEvalsArgs): Promise<RunEvalsResult> {
     results,
     score,
   });
+  const jsonPath = await writeJsonReport({
+    reportPath,
+    baseUrl: args.baseUrl,
+    results,
+    score,
+  });
 
-  return { results, reportPath, score };
+  return { results, reportPath, jsonPath, score };
 }
 
 // --- per-prompt fetch ------------------------------------------------------
@@ -670,6 +678,42 @@ async function writeReport(args: WriteReportArgs): Promise<string> {
   return reportPath;
 }
 
+interface WriteJsonReportArgs {
+  /** Markdown report path the JSON file is written alongside. */
+  reportPath: string;
+  baseUrl: string;
+  results: PromptResult[];
+  score: EvaluationScore;
+}
+
+/**
+ * Write a machine-readable JSON report next to the Markdown report.
+ *
+ * Phase C — structured domain oracles: the same run envelope (score,
+ * per-prompt result, assertions, tool calls, metadata) must be consumable
+ * by dashboards, drift tooling, and regression gates without parsing
+ * Markdown. The schema is versioned (`kestrel.eval-report.v1`) so
+ * downstream consumers can migrate independently.
+ */
+async function writeJsonReport(args: WriteJsonReportArgs): Promise<string> {
+  const { reportPath, baseUrl, results, score } = args;
+  const jsonPath = reportPath.endsWith('.md')
+    ? `${reportPath.slice(0, -3)}.json`
+    : `${reportPath}.json`;
+
+  const payload = {
+    schemaVersion: 'kestrel.eval-report.v1',
+    generatedAt: new Date().toISOString(),
+    baseUrl,
+    score,
+    results,
+  };
+
+  await mkdir(dirname(jsonPath), { recursive: true });
+  await writeFile(jsonPath, `${JSON.stringify(payload, null, 2)}\n`, 'utf-8');
+  return jsonPath;
+}
+
 
 interface BuildMarkdownArgs {
   baseUrl: string;
@@ -951,7 +995,7 @@ async function main(): Promise<void> {
       ? fileURLToPath(new URL('./cases.json', import.meta.url))
       : fileURLToPath(new URL('./prompts.json', import.meta.url)));
 
-  const { results, reportPath, score } = await runEvals({
+  const { results, reportPath, jsonPath, score } = await runEvals({
     baseUrl: f.baseUrl,
     cookie: f.cookie,
     outDir: f.outDir,
@@ -962,6 +1006,7 @@ async function main(): Promise<void> {
   const failed = results.filter((r) => !r.ok).length;
   const dirty = results.filter((r) => r.ok && (r.assertions?.length ?? 0) > 0).length;
   process.stdout.write(`\nReport: ${reportPath}\n`);
+  process.stdout.write(`JSON:   ${jsonPath}\n`);
   process.stdout.write(`Score: ${(score.overallPassRate * 100).toFixed(1)}% overall, ${(score.transportPassRate * 100).toFixed(1)}% transport\n`);
   process.stdout.write(
     `Done. ${results.length - failed}/${results.length} succeeded, ${failed} failed${dirty > 0 ? `, ${dirty} with assertion failures` : ''}.\n`,

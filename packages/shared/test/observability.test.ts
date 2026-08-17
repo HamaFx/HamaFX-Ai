@@ -21,6 +21,8 @@ import {
   OBSERVABILITY_TERMINAL_STATUSES,
   isObservabilityEventName,
   isObservabilityTerminalStatus,
+  parseObservabilityEvent,
+  parseObservabilitySpan,
 } from '../src/observability';
 
 describe('observability contracts', () => {
@@ -50,5 +52,40 @@ describe('observability contracts', () => {
     expect(isObservabilityEventName('not-an-event')).toBe(false);
     expect(isObservabilityTerminalStatus('completed_degraded')).toBe(true);
     expect(isObservabilityTerminalStatus('running')).toBe(false);
+  });
+
+  it('validates the typed event envelope with zod at the boundary', () => {
+    const event = parseObservabilityEvent({
+      name: 'agent_failed',
+      timestamp: 1_700_000_000_000,
+      correlation: { traceId: 'trace-1', runId: 'run-1' },
+      status: 'failed',
+      agentName: 'decision',
+      attempt: 2,
+    });
+
+    expect(event).toMatchObject({ name: 'agent_failed', agentName: 'decision', attempt: 2 });
+    expect(event.correlation.traceId).toBe('trace-1');
+  });
+
+  it('rejects malformed event envelopes', () => {
+    expect(() =>
+      parseObservabilityEvent({ name: 'not-an-event', timestamp: 0, correlation: {} }),
+    ).toThrow();
+  });
+
+  it('validates the typed span envelope and applies the default kind', () => {
+    const span = parseObservabilitySpan({
+      traceId: 'trace-1',
+      spanId: 'span-1',
+      name: 'tool:compute_risk',
+      startTimeMs: 1000,
+      durationMs: 42,
+      status: 'completed',
+      attributes: { toolName: 'compute_risk', costUsd: 0.0001 },
+    });
+
+    expect(span.kind).toBe('internal');
+    expect(span.attributes?.toolName).toBe('compute_risk');
   });
 });

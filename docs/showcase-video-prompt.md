@@ -96,5 +96,5 @@ Calm, confident baritone. One line per scene:
 1. **Stitch:** CapCut (free) — drop the 11 clips in order, hard cuts.
 2. **Voiceover:** generate Part 2 lines, one per clip, timestamps aligned.
 3. **Music:** minimal dark-synth pulse at 100–110 BPM (CapCut stock or Suno); swell in the last 20 seconds.
-4. **Captions:** burn in short orange `#F56E0F` monospace keywords over key moments — "32 TOOLS", "RISK VETO", "BYOK", "10 PROVIDERS" — using CapCut auto-captions.
+4. **Captions:** burn in short orange `#F56E0F` monospace keywords over key moments — "33 TOOLS", "RISK VETO", "BYOK", "10 PROVIDERS" — using CapCut auto-captions.
 5. **Vertical version (optional):** set the timeline to 9:16 and re-center; reuse scenes 0, 3, 4, 5, 6, 7, 9 (same prompts, same tool setting changed to 9:16).

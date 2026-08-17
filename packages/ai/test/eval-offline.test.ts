@@ -21,6 +21,8 @@ import { mkdtemp, writeFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
+import { readFile as readFileAsync } from 'node:fs/promises';
+
 import { runEvals } from '../src/eval/runner';
 
 // Deterministic offline eval — Phase 0.7.
@@ -163,6 +165,27 @@ describe('eval offline — Phase 0.7', () => {
       accountUsd: 10000,
       riskPct: 1,
     });
+  });
+
+  it('writes a machine-readable JSON report alongside the Markdown', async () => {
+    const { jsonPath } = await runEvals({
+      baseUrl: 'http://localhost:9999',
+      cookie: 'authjs.session-token=test',
+      outDir: tmpDir,
+      promptsPath,
+      timeoutMs: 5000,
+      onProgress: () => {},
+    });
+
+    expect(jsonPath.endsWith('.json')).toBe(true);
+    const raw = await readFileAsync(jsonPath, 'utf-8');
+    const parsed = JSON.parse(raw) as {
+      schemaVersion: string;
+      results: Array<{ id: string; ok: boolean }>;
+    };
+    expect(parsed.schemaVersion).toBe('kestrel.eval-report.v1');
+    expect(parsed.results).toHaveLength(1);
+    expect(parsed.results[0]).toMatchObject({ id: 'offline-p1', ok: true });
   });
 
   it('fails when a structured numeric output misses the expected value', async () => {
