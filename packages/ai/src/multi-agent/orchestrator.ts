@@ -552,7 +552,9 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
     kind: 'multi_agent_turn',
   }).catch((err) => mlog.warn('recordTelemetry failed', { err: String(err) }));
 
-  metrics.increment('chat_turn_total');
+  // Tag outcome so Grafana can compute a chat-success SLI. This path only
+  // completes on success — failures throw before reaching here.
+  metrics.increment('chat_turn_total', { tags: { result: 'ok' } });
   metrics.observe('turn_cost_usd', totalCostUsd);
   metrics.observe('total_latency_ms', totalLatencyMs);
   completeStep('multi_agent_start', 'completed', Date.now() - startMs, {

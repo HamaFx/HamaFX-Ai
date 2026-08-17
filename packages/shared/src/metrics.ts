@@ -24,9 +24,9 @@
  * Langfuse, health payload) later without changing the call sites.
  *
  * This intentionally stays vendor-neutral, matching the event/span
- * envelopes in `observability.ts`. Percentile tracking is deliberately out
- * of scope for the in-process registry (it needs a reservoir); emit raw
- * observations upstream if you need p50/p95.
+ * envelopes in `observability.ts`. Exact percentiles need a reservoir, so
+ * the registry tracks fixed cumulative buckets instead — enough for
+ * `histogram_quantile`-style p50/p95 estimates in Grafana.
  */
 
 /** Stable metric names for AI and queued-analysis SLIs. */
@@ -62,6 +62,8 @@ export interface HistogramSummary {
   avg: number;
   min: number;
   max: number;
+  /** Cumulative bucket counts aligned with `HISTOGRAM_BUCKET_BOUNDS_MS`. */
+  buckets: number[];
 }
 
 /** Serialized form of the whole registry, safe to log / POST / JSON-stringify. */
@@ -70,11 +72,26 @@ export interface MetricsSnapshot {
   histograms: Record<string, HistogramSummary>;
 }
 
+/**
+ * Fixed upper bounds (same unit as observed values) for histogram buckets.
+ * Observations are counted into every bucket whose bound is >= the value, so
+ * bucket `i` is cumulative: `buckets[i]` = observations <= `BUCKET_BOUNDS[i]`.
+ * These make `{name}_bucket{le="…"}` series available for p95-style
+ * percentiles via `histogram_quantile` in Grafana. Values are recorded in
+ * milliseconds by every caller (ttft, turn latency, tick freshness), so the
+ * bounds are ms-based.
+ */
+export const HISTOGRAM_BUCKET_BOUNDS_MS = [
+  1, 5, 10, 25, 50, 100, 250, 500, 1000, 2000, 5000, 10000, 20000, 30000, 60000, 120000,
+] as const;
+
 interface HistogramAccumulator {
   count: number;
   sum: number;
   min: number;
   max: number;
+  /** Cumulative count of observations <= each bound (aligned with HISTOGRAM_BUCKET_BOUNDS_MS). */
+  buckets: number[];
 }
 
 function keyFor(name: MetricName, tags?: Record<string, string>): string {
@@ -107,13 +124,22 @@ export class MetricsRegistry {
     const key = keyFor(name, opts?.tags);
     const current = this.histograms.get(key);
     if (!current) {
-      this.histograms.set(key, { count: 1, sum: value, min: value, max: value });
+      const buckets = HISTOGRAM_BUCKET_BOUNDS_MS.map(() => 0);
+      for (let i = 0; i < buckets.length; i++) {
+        if (value <= HISTOGRAM_BUCKET_BOUNDS_MS[i]!) buckets[i] = 1;
+      }
+      this.histograms.set(key, { count: 1, sum: value, min: value, max: value, buckets });
       return;
     }
     current.count += 1;
     current.sum += value;
     if (value < current.min) current.min = value;
     if (value > current.max) current.max = value;
+    for (let i = 0; i < current.buckets.length; i++) {
+      if (value <= HISTOGRAM_BUCKET_BOUNDS_MS[i]!) {
+        current.buckets[i] = current.buckets[i]! + 1;
+      }
+    }
   }
 
   /** Export a flat, JSON-serializable snapshot of the registry. */ 
@@ -129,6 +155,8 @@ export class MetricsRegistry {
         avg: acc.count > 0 ? acc.sum / acc.count : 0,
         min: acc.min,
         max: acc.max,
+        // Copy so callers cannot mutate the live accumulator through the snapshot.
+        buckets: [...acc.buckets],
       };
     }
 

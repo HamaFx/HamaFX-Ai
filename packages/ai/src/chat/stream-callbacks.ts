@@ -271,8 +271,15 @@ export function buildStreamCallbacks(args: BuildStreamCallbacksArgs): {
       // telemetry outage must not strand the turn reservation.
       await budget.reconcile(actualCost);
       // Phase E metrics — count the completed turn and observe cost/
-      // latency for the chat SLO.
-      metrics.increment('chat_turn_total');
+      // latency for the chat SLO. Tag the outcome so Grafana can compute
+      // a success-rate SLI (`{result="ok"}` / total). Widened to `string`
+      // because control-flow analysis narrows `streamTerminal` to
+      // `'completed'` here even though `onError` can set it to `'failed'`.
+      metrics.increment('chat_turn_total', {
+        tags: {
+          result: (state.streamTerminal as string) === 'failed' ? 'fail' : 'ok',
+        },
+      });
       metrics.observe('total_latency_ms', Date.now() - startedAt);
       metrics.observe('turn_cost_usd', actualCost);
       // A stream result is returned before onFinish runs, so the

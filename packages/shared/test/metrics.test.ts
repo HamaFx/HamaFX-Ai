@@ -55,7 +55,15 @@ describe('metrics registry', () => {
     registry.observe('ttft_ms', 200);
 
     const summary = registry.snapshot().histograms['ttft_ms'];
-    expect(summary).toEqual({ count: 3, sum: 600, avg: 200, min: 100, max: 300 });
+    // Observations {100, 200, 300}: cumulative buckets — le=100 → 1, le=250 → 2, le=500+ → 3.
+    expect(summary).toEqual({
+      count: 3,
+      sum: 600,
+      avg: 200,
+      min: 100,
+      max: 300,
+      buckets: [0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+    });
   });
 
   it('keeps tagged series independent and stable across observation order', () => {

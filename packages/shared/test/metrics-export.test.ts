@@ -24,6 +24,7 @@ import {
   flushMetrics,
   grafanaOtlpConfigFromEnv,
   grafanaRemoteWriteConfigFromEnv,
+  parseSnapshotKey,
   snapshotToOtlpJson,
   snapshotToPromRemoteWrite,
 } from '../src/metrics-export';
@@ -34,7 +35,15 @@ function snapshot(): MetricsSnapshot {
   return {
     counters: { chat_turn_total: 3 },
     histograms: {
-      total_latency_ms: { count: 2, sum: 600, avg: 300, min: 100, max: 500 },
+      // Observations {100, 500} — cumulative bucket counts follow.
+      total_latency_ms: {
+        count: 2,
+        sum: 600,
+        avg: 300,
+        min: 100,
+        max: 500,
+        buckets: [0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2],
+      },
     },
   };
 }
@@ -66,7 +75,7 @@ describe('buildMetricsUrl', () => {
 });
 
 describe('snapshotToOtlpJson', () => {
-  it('maps counters to monotonic cumulative sums and histograms to gauges', () => {
+  it('maps counters to monotonic cumulative sums and histograms to OTLP histograms + gauges', () => {
     const payload = snapshotToOtlpJson(snapshot(), 'kestrel', '1700000000000000000') as {
       resourceMetrics: Array<{
         resource: { attributes: Array<{ key: string; value: { stringValue: string } }> };
@@ -82,11 +91,10 @@ describe('snapshotToOtlpJson', () => {
     const names = metrics.map((m) => m.name).sort();
     expect(names).toEqual([
       'chat_turn_total',
+      'total_latency_ms',
       'total_latency_ms_avg',
-      'total_latency_ms_count',
       'total_latency_ms_max',
       'total_latency_ms_min',
-      'total_latency_ms_sum',
     ]);
 
     const counter = metrics.find((m) => m.name === 'chat_turn_total') as {
@@ -95,6 +103,26 @@ describe('snapshotToOtlpJson', () => {
     expect(counter.sum.isMonotonic).toBe(true);
     expect(counter.sum.aggregationTemporality).toBe(2);
     expect(counter.sum.dataPoints[0]?.asInt).toBe('3');
+
+    const hist = metrics.find((m) => m.name === 'total_latency_ms') as {
+      histogram: {
+        aggregationTemporality: number;
+        dataPoints: Array<{
+          count: string;
+          sum: number;
+          bucketCounts: string[];
+          explicitBounds: number[];
+        }>;
+      };
+    };
+    expect(hist.histogram.aggregationTemporality).toBe(2);
+    expect(hist.histogram.dataPoints[0]?.count).toBe('2');
+    expect(hist.histogram.dataPoints[0]?.sum).toBe(600);
+    // Cumulative buckets: 100 and 500 land in le=100/500, both in le=1000.
+    expect(hist.histogram.dataPoints[0]?.explicitBounds).toHaveLength(16);
+    expect(hist.histogram.dataPoints[0]?.bucketCounts[5]).toBe('1'); // le=100
+    expect(hist.histogram.dataPoints[0]?.bucketCounts[7]).toBe('1'); // le=500
+    expect(hist.histogram.dataPoints[0]?.bucketCounts[8]).toBe('2'); // le=1000
   });
 });
 
@@ -273,16 +301,17 @@ describe('snapshotToPromRemoteWrite', () => {
     const ts = 1_700_000_000_000; // ms
     const series = parseWriteRequest(snapshotToPromRemoteWrite(snapshot(), 'kestrel', ts));
 
-    expect(series).toHaveLength(6);
-    const names = series.map((s) => s.labels.find((l) => l.name === '__name__')?.value).sort();
-    expect(names).toEqual([
-      'chat_turn_total',
-      'total_latency_ms_avg',
-      'total_latency_ms_count',
-      'total_latency_ms_max',
-      'total_latency_ms_min',
-      'total_latency_ms_sum',
-    ]);
+    // 1 counter + 5 summary fields + 16 bucket bounds + +Inf = 23 series.
+    expect(series).toHaveLength(23);
+    const names = series.map((s) => s.labels.find((l) => l.name === '__name__')?.value);
+    const unique = [...new Set(names)].sort();
+    expect(unique).toContain('chat_turn_total');
+    expect(unique).toContain('total_latency_ms_avg');
+    expect(unique).toContain('total_latency_ms_count');
+    expect(unique).toContain('total_latency_ms_max');
+    expect(unique).toContain('total_latency_ms_min');
+    expect(unique).toContain('total_latency_ms_sum');
+    expect(unique).toContain('total_latency_ms_bucket');
 
     for (const s of series) {
       expect(s.labels).toContainEqual({ name: 'job', value: 'kestrel' });
@@ -297,9 +326,38 @@ describe('snapshotToPromRemoteWrite', () => {
     const sum = series.find((s) =>
       s.labels.some((l) => l.name === '__name__' && l.value === 'total_latency_ms_sum'))!;
     expect(sum.samples[0]!.value).toBe(600);
+
+    // Bucket series follow the Prometheus convention: cumulative `le` labels.
+    const bucket = (le: string) => series.find((s) =>
+      s.labels.some((l) => l.name === '__name__' && l.value === 'total_latency_ms_bucket') &&
+      s.labels.some((l) => l.name === 'le' && l.value === le))!;
+    expect(bucket('100').samples[0]!.value).toBe(1);
+    expect(bucket('500').samples[0]!.value).toBe(1);
+    expect(bucket('1000').samples[0]!.value).toBe(2);
+    expect(bucket('+Inf').samples[0]!.value).toBe(2);
+  });
+
+  it('splits tagged registry keys into proper name + labels (regression: literal {k=v} in __name__)', () => {
+    const ts = 1_700_000_000_000;
+    const series = parseWriteRequest(snapshotToPromRemoteWrite({
+      counters: { 'chat_turn_total{result=ok}': 7 },
+      histograms: {},
+    }, 'kestrel', ts));
+
+    expect(series).toHaveLength(1);
+    const s = series[0]!;
+    expect(s.labels).toContainEqual({ name: '__name__', value: 'chat_turn_total' });
+    expect(s.labels).toContainEqual({ name: 'result', value: 'ok' });
+    expect(s.labels).toContainEqual({ name: 'job', value: 'kestrel' });
+    expect(s.samples[0]!.value).toBe(7);
   });
 
   it('returns an empty buffer for an empty snapshot', () => {
+    expect(parseSnapshotKey('plain_name')).toEqual({ name: 'plain_name', labels: [] });
+    expect(parseSnapshotKey('chat_turn_total{result=ok}')).toEqual({
+      name: 'chat_turn_total',
+      labels: [['result', 'ok']],
+    });
     expect(snapshotToPromRemoteWrite({ counters: {}, histograms: {} }, 'kestrel').length).toBe(0);
   });
 });
@@ -323,7 +381,8 @@ describe('exportMetricsToRemoteWrite + flushMetrics', () => {
     expect(init.headers['content-encoding']).toBe('snappy');
     const expected = Buffer.from('3508468:glc_secret').toString('base64');
     expect(init.headers.authorization).toBe(`Basic ${expected}`);
-    expect(parseWriteRequest(init.body)).toHaveLength(6);
+    // Same 23-series encoding as snapshotToPromRemoteWrite (buckets included).
+    expect(parseWriteRequest(init.body)).toHaveLength(23);
   });
 
   it('does not POST when the snapshot is empty', async () => {

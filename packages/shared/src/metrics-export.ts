@@ -29,7 +29,7 @@
  */
 
 import { compress as snappyCompress } from 'snappyjs';
-import { metrics, type MetricsSnapshot } from './metrics';
+import { metrics, HISTOGRAM_BUCKET_BOUNDS_MS, type MetricsSnapshot } from './metrics';
 
 /** Env var names (single source of truth for docs + callers). */
 export const GRAFANA_OTLP_ENDPOINT_ENV = 'GRAFANA_CLOUD_OTLP_ENDPOINT' as const;
@@ -80,14 +80,31 @@ interface OtlpNumberDataPoint {
   timeUnixNano: string;
   asInt?: string;
   asDouble?: number;
+  attributes?: OtlpKeyValue[];
 }
 
-function intPoint(value: number, nowNs: string): OtlpNumberDataPoint {
-  return { asInt: String(Math.round(value)), timeUnixNano: nowNs };
+function intPoint(
+  value: number,
+  nowNs: string,
+  labels: Array<[string, string]> = [],
+): OtlpNumberDataPoint {
+  return {
+    asInt: String(Math.round(value)),
+    timeUnixNano: nowNs,
+    attributes: labels.map(([k, v]) => ({ key: k, value: { stringValue: v } })),
+  };
 }
 
-function doublePoint(value: number, nowNs: string): OtlpNumberDataPoint {
-  return { asDouble: value, timeUnixNano: nowNs };
+function doublePoint(
+  value: number,
+  nowNs: string,
+  labels: Array<[string, string]> = [],
+): OtlpNumberDataPoint {
+  return {
+    asDouble: value,
+    timeUnixNano: nowNs,
+    attributes: labels.map(([k, v]) => ({ key: k, value: { stringValue: v } })),
+  };
 }
 
 /** Convert the in-process snapshot into an OTLP `ExportMetricsServiceRequest`. */
@@ -98,27 +115,45 @@ export function snapshotToOtlpJson(
 ): unknown {
   const metricsOut: unknown[] = [];
 
-  for (const [name, value] of Object.entries(snapshot.counters)) {
+  for (const [key, value] of Object.entries(snapshot.counters)) {
+    const { name, labels } = parseSnapshotKey(key);
     metricsOut.push({
       name,
       sum: {
-        dataPoints: [intPoint(value, nowNs)],
+        dataPoints: [intPoint(value, nowNs, labels)],
         aggregationTemporality: AGGREGATION_TEMPORALITY_CUMULATIVE,
         isMonotonic: true,
       },
     });
   }
 
-  // Histogram summaries are emitted as per-field gauges (count/sum/avg/min/max)
-  // so no value is dropped and Grafana can query each directly.
-  for (const [name, summary] of Object.entries(snapshot.histograms)) {
-    metricsOut.push(
-      { name: `${name}_count`, gauge: { dataPoints: [intPoint(summary.count, nowNs)] } },
-      { name: `${name}_sum`, gauge: { dataPoints: [doublePoint(summary.sum, nowNs)] } },
-      { name: `${name}_avg`, gauge: { dataPoints: [doublePoint(summary.avg, nowNs)] } },
-      { name: `${name}_min`, gauge: { dataPoints: [doublePoint(summary.min, nowNs)] } },
-      { name: `${name}_max`, gauge: { dataPoints: [doublePoint(summary.max, nowNs)] } },
-    );
+  // Histograms are emitted as a proper OTLP histogram (so Grafana derives
+  // `{name}_bucket/_count/_sum` series usable with `histogram_quantile`),
+  // plus avg/min/max gauges so the central-tendency fields stay queryable.
+  for (const [key, summary] of Object.entries(snapshot.histograms)) {
+    const { name, labels } = parseSnapshotKey(key);
+    metricsOut.push({
+      name,
+      histogram: {
+        dataPoints: [
+          {
+            timeUnixNano: nowNs,
+            count: String(summary.count),
+            sum: summary.sum,
+            bucketCounts: summary.buckets.map((v) => String(v)),
+            explicitBounds: [...HISTOGRAM_BUCKET_BOUNDS_MS],
+            attributes: labels.map(([k, v]) => ({ key: k, value: { stringValue: v } })),
+          },
+        ],
+        aggregationTemporality: AGGREGATION_TEMPORALITY_CUMULATIVE,
+      },
+    });
+    const avg: Array<{ name: string; gauge: { dataPoints: OtlpNumberDataPoint[] } }> = [
+      { name: `${name}_avg`, gauge: { dataPoints: [doublePoint(summary.avg, nowNs, labels)] } },
+      { name: `${name}_min`, gauge: { dataPoints: [doublePoint(summary.min, nowNs, labels)] } },
+      { name: `${name}_max`, gauge: { dataPoints: [doublePoint(summary.max, nowNs, labels)] } },
+    ];
+    metricsOut.push(...avg);
   }
 
   const resourceAttributes: OtlpKeyValue[] = [
@@ -234,6 +269,28 @@ function protoDouble(tag: number, value: number, out: number[]): void {
 
 const ASCII = new TextEncoder();
 
+/**
+ * Split a registry key (`name` or `name{k=v,k2=v2}`) into the metric name and
+ * its tag labels so tagged series export with proper Prometheus/OTLP labels
+ * instead of a literal `{…}` inside the metric name.
+ */
+export function parseSnapshotKey(key: string): {
+  name: string;
+  labels: Array<[string, string]>;
+} {
+  const brace = key.indexOf('{');
+  if (brace === -1) return { name: key, labels: [] };
+  const name = key.slice(0, brace);
+  const inner = key.slice(brace + 1, key.lastIndexOf('}'));
+  const labels: Array<[string, string]> = [];
+  for (const part of inner.split(',')) {
+    const eq = part.indexOf('=');
+    if (eq <= 0) continue;
+    labels.push([part.slice(0, eq), part.slice(eq + 1)]);
+  }
+  return { name, labels };
+}
+
 function encodeLabel(name: string, value: string, out: number[]): void {
   protoBytes(1, ASCII.encode(name), out);
   protoBytes(2, ASCII.encode(value), out);
@@ -261,19 +318,36 @@ export function snapshotToPromRemoteWrite(
   /** Metrics to emit, each with its cumulative sample value(s). */
   const pending: Array<{
     name: string;
+    labels?: Array<[string, string]>;
     samples: Array<{ value: number; timestampMs: number }>;
   }> = [];
 
-  for (const [name, value] of Object.entries(snapshot.counters)) {
-    pending.push({ name, samples: [{ value, timestampMs }] });
+  for (const [key, value] of Object.entries(snapshot.counters)) {
+    const { name, labels } = parseSnapshotKey(key);
+    pending.push({ name, labels, samples: [{ value, timestampMs }] });
   }
-  for (const [name, summary] of Object.entries(snapshot.histograms)) {
+  for (const [key, summary] of Object.entries(snapshot.histograms)) {
+    const { name, labels } = parseSnapshotKey(key);
+    // Prometheus-convention cumulative buckets so `histogram_quantile` works
+    // in Grafana: `{name}_bucket{le=…}` labels plus `{le="+Inf"}` = total.
+    HISTOGRAM_BUCKET_BOUNDS_MS.forEach((bound, i) => {
+      pending.push({
+        name: `${name}_bucket`,
+        labels: [...labels, ['le', String(bound)]],
+        samples: [{ value: summary.buckets[i] ?? 0, timestampMs }],
+      });
+    });
+    pending.push({
+      name: `${name}_bucket`,
+      labels: [...labels, ['le', '+Inf']],
+      samples: [{ value: summary.count, timestampMs }],
+    });
     pending.push(
-      { name: `${name}_count`, samples: [{ value: summary.count, timestampMs }] },
-      { name: `${name}_sum`, samples: [{ value: summary.sum, timestampMs }] },
-      { name: `${name}_avg`, samples: [{ value: summary.avg, timestampMs }] },
-      { name: `${name}_min`, samples: [{ value: summary.min, timestampMs }] },
-      { name: `${name}_max`, samples: [{ value: summary.max, timestampMs }] },
+      { name: `${name}_count`, labels, samples: [{ value: summary.count, timestampMs }] },
+      { name: `${name}_sum`, labels, samples: [{ value: summary.sum, timestampMs }] },
+      { name: `${name}_avg`, labels, samples: [{ value: summary.avg, timestampMs }] },
+      { name: `${name}_min`, labels, samples: [{ value: summary.min, timestampMs }] },
+      { name: `${name}_max`, labels, samples: [{ value: summary.max, timestampMs }] },
     );
   }
 
@@ -282,8 +356,13 @@ export function snapshotToPromRemoteWrite(
   const request: number[] = [];
   for (const metric of pending) {
     const ts: number[] = [];
-    // Each label pair is its own Label message, wrapped in TimeSeries field 1.
-    for (const [name, value] of [['__name__', metric.name], ['job', job ?? 'kestrel']] as const) {
+    // Each label pair is its own WriteMessage, wrapped in TimeSeries field 1.
+    const labels: Array<[string, string]> = [
+      ['__name__', metric.name],
+      ['job', job ?? 'kestrel'],
+      ...(metric.labels ?? []),
+    ];
+    for (const [name, value] of labels) {
       const labelMsg: number[] = [];
       encodeLabel(name, value, labelMsg);
       protoBytes(1, Uint8Array.from(labelMsg), ts);
