@@ -31,6 +31,8 @@ import { runMultiAgentAnalysis } from './multi-agent-analysis.js';
 import { runBudgetRecovery } from './budget-recovery.js';
 import { runPersistenceRecovery } from './persistence-recovery.js';
 import { runRetention } from './retention.js';
+import { runMetricsFlush } from './metrics-flush.js';
+import { runDatasetExport } from './dataset-export.js';
 import type { JobRegistration, JobName } from './types.js';
 
 /**
@@ -133,6 +135,18 @@ export const JOBS: Record<JobName, JobRegistration> = {
     run: runRetention,
     description: 'DB-1 — Daily retention cleanup of telemetry, traces, rate_limits, and provider_daily_quota.',
     schedule: '15 3 * * *',
+  },
+  'metrics-flush': {
+    name: 'metrics-flush',
+    run: runMetricsFlush,
+    description: 'Pushes the in-process metrics registry to Grafana Cloud every minute with live-tick freshness.',
+    schedule: '* * * * *',
+  },
+  'dataset-export': {
+    name: 'dataset-export',
+    run: runDatasetExport,
+    description: 'Nightly governed training-dataset export (eval reports + reviewed feedback → JSONL + manifest → B2).',
+    schedule: '30 3 * * *',
   },
 };
 

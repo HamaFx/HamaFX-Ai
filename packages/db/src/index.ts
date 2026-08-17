@@ -197,6 +197,11 @@ export {
   approveEvalDataset,
   type RegisterEvalDatasetInput,
 } from './queries/eval-datasets';
+export {
+  listReviewedTrainingPairs,
+  type ReviewedTrainingPair,
+  type ListReviewedTrainingPairsOptions,
+} from './queries/training-dataset';
 export type { EvalDatasetRow, EvalDatasetInsert, EvalDatasetStatus } from './schema/eval-datasets';
 export {
   listToolTelemetry,

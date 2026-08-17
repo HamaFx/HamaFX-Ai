@@ -79,7 +79,9 @@ export type JobName =
   | 'multi-agent-analysis'
   | 'budget-recovery'
   | 'persistence-recovery'
-  | 'retention';
+  | 'retention'
+  | 'metrics-flush'
+  | 'dataset-export';
 
 /**
  * PF-04 — Registered job with schedule and healthchecks.io metadata.

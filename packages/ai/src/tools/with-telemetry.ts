@@ -46,6 +46,7 @@
 
 import type { Tool } from 'ai';
 
+import { metrics } from '@kestrel/shared';
 import { recordToolTelemetry } from '../persistence';
 import { maybeGetToolContext, type BatchedToolTelemetry } from '../tool-context';
 import { recordStep, completeStep, recordError } from '../diagnostics';
@@ -144,6 +145,8 @@ export function withTelemetry<T extends Tool<any, any>>(name: string, t: T): T {
       if (parentAbortPromise) races.push(parentAbortPromise);
       const result = await Promise.race(races);
       const ms = Date.now() - startedAt;
+      // Phase E metrics — count every successful tool invocation for SLIs.
+      metrics.increment('tool_call_total');
       // F7-obs — estimate output size in characters for cost/observability tracking.
       const outputChars = estimateResultChars(result);
       if (timeout) clearTimeout(timeout);
@@ -172,6 +175,8 @@ export function withTelemetry<T extends Tool<any, any>>(name: string, t: T): T {
       return result;
     } catch (err) {
       const ms = Date.now() - startedAt;
+      // Phase E metrics — count every failed tool invocation for SLIs.
+      metrics.increment('tool_fail_total');
       if (timeout) clearTimeout(timeout);
       if (parentSignal) {
         parentSignal.removeEventListener('abort', onParentAbort);

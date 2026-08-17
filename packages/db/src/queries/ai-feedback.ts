@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  */
 
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, isNotNull } from 'drizzle-orm';
 import { getDb, schema } from '../client';
 import type { FeedbackReviewStatus } from '../schema/ai-feedback';
 
@@ -121,6 +121,32 @@ export async function listFeedbackForReview(
       ? eq(schema.aiMessageFeedback.reviewStatus, options.reviewStatus)
       : undefined)
     .orderBy(desc(schema.aiMessageFeedback.updatedAt))
+    .limit(options.limit)
+    .offset(options.offset);
+}
+
+export interface ListReviewedForExportOptions {
+  limit: number;
+  offset: number;
+}
+
+/**
+ * Reviewer-approved feedback rows ready to feed a training dataset. Only rows
+ * that a reviewer explicitly labelled (`reviewed` + non-null `reviewerLabel`)
+ * are returned; the caller keys them by `messageId` for the annotation resolver.
+ */
+export async function listReviewedFeedbackForExport(
+  options: ListReviewedForExportOptions,
+): Promise<AiMessageFeedbackRow[]> {
+  const db = getDb();
+  return db
+    .select()
+    .from(schema.aiMessageFeedback)
+    .where(and(
+      eq(schema.aiMessageFeedback.reviewStatus, 'reviewed'),
+      isNotNull(schema.aiMessageFeedback.reviewerLabel),
+    ))
+    .orderBy(desc(schema.aiMessageFeedback.reviewedAt))
     .limit(options.limit)
     .offset(options.offset);
 }

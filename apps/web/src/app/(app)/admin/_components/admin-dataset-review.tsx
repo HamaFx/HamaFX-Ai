@@ -3,7 +3,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { IconDatabase, IconRefresh } from '@tabler/icons-react';
+import { IconDatabase, IconDownload, IconRefresh } from '@tabler/icons-react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
@@ -69,11 +69,35 @@ export function AdminDatasetReview() {
     }
   }
 
+  const [exporting, setExporting] = useState(false);
+
+  async function exportNow() {
+    setExporting(true);
+    try {
+      const data = await apiMutate<{ dataset: DatasetRow; droppedNeedsReview: number }>('/api/admin/eval-datasets/export', {
+        method: 'POST',
+      });
+      toast.success(
+        `Exported ${data.dataset.recordCount} record${data.dataset.recordCount === 1 ? '' : 's'} as ${data.dataset.version}` +
+        (data.droppedNeedsReview > 0 ? ` (${data.droppedNeedsReview} pending review excluded)` : ''),
+      );
+      await fetchRows();
+    } catch (error) {
+      toastApiError(error, 'Dataset export failed');
+    } finally {
+      setExporting(false);
+    }
+  }
+
   if (loading) return <SkeletonCard lines={5} />;
 
   return (
     <SettingsSection title="Evaluation Datasets" description="Content-addressed dataset versions with explicit provenance and approval state.">
-      <div className="mb-3 flex justify-end">
+      <div className="mb-3 flex justify-end gap-2">
+        <Button type="button" variant="secondary" size="sm" disabled={exporting} onClick={() => void exportNow()}>
+          <IconDownload className="size-4" aria-hidden="true" />
+          {exporting ? 'Exporting…' : 'Export now'}
+        </Button>
         <Button type="button" variant="ghost" size="sm" onClick={() => void fetchRows()}><IconRefresh className="size-4" aria-hidden="true" />Refresh</Button>
       </div>
       {rows.length === 0 ? (

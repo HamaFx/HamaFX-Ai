@@ -147,6 +147,12 @@ export interface PromptResult {
    * crashed" with "the model picked a different tool".
    */
   assertions?: AssertionFailure[];
+  /**
+   * Id of the persisted assistant message this case produced, when the
+   * stream completed far enough to emit one. Links the eval case to real
+   * user feedback (`ai_message_feedback.message_id`) for the training loop.
+   */
+  assistantMessageId?: string | null;
 }
 
 export interface RunEvalsResult {
@@ -326,6 +332,7 @@ async function runOnePrompt(args: RunOnePromptArgs): Promise<PromptResult> {
         terminalStatus,
         ok: false,
         error: `stream error: ${parsed.errors.join('; ')}`,
+        assistantMessageId: parsed.assistantMessageId,
       };
     }
     return {
@@ -341,6 +348,7 @@ async function runOnePrompt(args: RunOnePromptArgs): Promise<PromptResult> {
       ok: true,
       citationScore: computeCitationScore(parsed.text, parsed.toolCalls),
       ...(parsed.errors.length > 0 ? { error: `expected terminal failure: ${parsed.errors.join('; ')}` } : {}),
+      assistantMessageId: parsed.assistantMessageId,
     };
   } catch (err) {
     const totalMs = Math.round(performance.now() - startedAtMono);

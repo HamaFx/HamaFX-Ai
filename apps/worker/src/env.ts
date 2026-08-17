@@ -133,6 +133,15 @@ const WorkerEnvSchema = z.object({
    * VMs since stream.binance.com blocks US IPs (HTTP 451).
    */
   BINANCE_WS_URL: optionalUrl,
+
+  /**
+   * Where the nightly training-dataset export writes JSONL + manifest.
+   * Defaults to /opt/kestrel/datasets. Read directly by the dataset-export
+   * job, so a wrong value only degrades that job, never boot.
+   */
+  DATASETS_DIR: optionalNonEmpty,
+  /** Where eval JSON reports are read from. Defaults to <DATASETS_DIR>/eval-reports. */
+  EVAL_REPORTS_DIR: optionalNonEmpty,
 });
 
 export type WorkerEnv = z.infer<typeof WorkerEnvSchema>;

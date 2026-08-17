@@ -25,18 +25,16 @@
 // runChatWithFallback → budget.reconcile().
 
 import { getMessageText, pickAiEnv } from '@kestrel/shared';
-import { logErrorContext, createCategorizedLogger } from '@kestrel/shared/logger';
+import { createCategorizedLogger } from '@kestrel/shared/logger';
 import {
   convertToModelMessages,
   stepCountIs,
   type ModelMessage,
   type UIMessage,
   type LanguageModel,
-  type Tool,
 } from 'ai';
 import type { streamText } from 'ai';
 
-import { flushLangfuse } from './instrumentation';
 import { telemetryConfig } from './telemetry';
 
 import { buildLiveSnapshot } from './context';
@@ -44,47 +42,40 @@ import {
   DEFAULT_MAX_DAILY_USD,
   estimateCostUsd,
 } from './cost';
-import type { FallbackPartPayload } from './fallback';
-import { estimateContextUsage } from './token-estimate';
 import { compactThread } from './memory/thread-summary';
 import {
   derivePlannerModel,
-  getVertexGoogleSearchTool,
   supportsPromptCaching,
 } from './model';
 import { decryptByok, type ProviderId } from '@kestrel/shared/encryption';
 import {
-  appendAssistantMessage,
   appendUserMessage,
   listMessages,
   recordTelemetry,
 } from './persistence';
 import { runPlanner } from './planner';
-import { buildSystemPrompt, userContextFromSettings } from './prompt/system';
 import { extractUserMessageText } from './message-text';
 import { routeTurn, type RoutingDecision } from './routing';
 // generateTitle — moved to chat/auto-title.ts (P0-1)
 import { withToolContext, type ToolContext } from './tool-context';
-import { enforceCitations } from './verification';
-import { waitUntil } from './wait-until';
-import { schema, getUserWithSettings } from '@kestrel/db';
+import { getUserWithSettings } from '@kestrel/db';
 // P2-3 — DI container for testability. Services are registered in
 // services.ts (auto-bootstrap on import). Tests can override via
 // container.register('db', () => mockDb).
 import { container } from '@kestrel/shared';
 // P2-3 — auto-register services (db, llmClient) in the container.
 import './services';
-import { domainToolFilter, type RoutingDomain } from './tools/by-domain';
 import type { RunChatArgs } from './types';
 // UserSettingsRow — moved to chat/auto-title.ts (P0-1)
-import { extractRateLimits } from './rate-limits';
-import { noteLlmRateLimit, awaitLlmHeadroom } from './llm-throttle';
-import { withDiagnostics, persistDiagnosticContext, getDiagnosticContext, recordStep, completeStep, recordError, exportDiagnosticContext } from './diagnostics';
+import { awaitLlmHeadroom } from './llm-throttle';
+import { withDiagnostics, persistDiagnosticContext, getDiagnosticContext, recordStep, completeStep, exportDiagnosticContext } from './diagnostics';
 
 // P0-1 — Extracted pipeline stages from this file.
 import { resolveModelForTurn, type ResolveModelContext } from './chat/resolve-model';
-import { countToolCalls, flushBatchedTelemetry } from './chat/helpers';
-import { runAutoTitleBackground } from './chat/auto-title';
+import { flushBatchedTelemetry } from './chat/helpers';
+import { buildTurnSystemPrompt } from './chat/system-prompt';
+import { resolveActiveTools } from './chat/tools';
+import { buildStreamCallbacks, type StreamCallbackState } from './chat/stream-callbacks';
 import { reserveTurnBudget } from './budget-reservation';
 import { runChatWithFallback, type AttemptResult } from './chat-retry-loop';
 import { DB, LLM_CLIENT } from './tokens';
@@ -255,11 +246,12 @@ async function runChatInner(args: RunChatArgs): Promise<any> {
   // SRP-1: The retry loop + fallback chain is extracted to runChatWithFallback.
   // The attempt callback handles model resolution, planning, and streaming.
 
-  let fallbackInfo: FallbackPartPayload | null = null;
   // A stream can report lifecycle callbacks asynchronously. Keep one
-  // terminal state so a late error cannot downgrade a completed trace or
-  // reconcile/release the same turn twice.
-  let streamTerminal: 'pending' | 'completed' | 'failed' = 'pending';
+  // terminal state (shared with the extracted stream callbacks) so a late
+  // error cannot downgrade a completed trace or reconcile/release the same
+  // turn twice. `fallbackInfo` is written by the retry loop's onFallback and
+  // read by onFinish.
+  const streamState: StreamCallbackState = { streamTerminal: 'pending', fallbackInfo: null };
 
   // resolveCtx is a shared object — checkedProviders persists across attempts.
   const checkedProviders = new Set<string>();
@@ -284,7 +276,7 @@ async function runChatInner(args: RunChatArgs): Promise<any> {
     decryptedByokKeys: decryptedByokKeys as unknown,
     env: { GOOGLE_GENERATIVE_AI_API_KEY: env.GOOGLE_GENERATIVE_AI_API_KEY },
     routing,
-    onFallback: (info) => { fallbackInfo = info; },
+    onFallback: (info) => { streamState.fallbackInfo = info; },
     attempt: async (attemptCtx): Promise<AttemptResult> => {
       // ── Model resolution ────────────────────────────────────────────
       let resolvedModel: LanguageModel;
@@ -366,39 +358,15 @@ async function runChatInner(args: RunChatArgs): Promise<any> {
       }
 
       // ── System prompt + context estimation ──────────────────────────
-      const baseSystem = buildSystemPrompt(
+      const { systemPrompt, effectiveMessages } = buildTurnSystemPrompt({
         snapshot,
-        userContextFromSettings(displayName ?? null, userSettings),
-      );
-      let systemPrompt = compaction.extraSystem
-        ? `${compaction.extraSystem}\n\n${baseSystem}`
-        : baseSystem;
-
-      if (customInstructions && customInstructions.trim().length > 0) {
-        systemPrompt += `\n\n<USER_CUSTOM_INSTRUCTIONS>\n${customInstructions}\n</USER_CUSTOM_INSTRUCTIONS>`;
-      }
-
-      // F4 — Context-window-aware token estimation.
-      let effectiveMessages = modelMessages;
-      const totalContentLen = effectiveMessages.reduce((sum, m) => sum + (typeof m.content === 'string' ? m.content.length : JSON.stringify(m.content).length), 0);
-      const contextEstimate = estimateContextUsage(
+        displayName: displayName ?? null,
+        userSettings,
+        compactionExtraSystem: compaction.extraSystem,
+        customInstructions,
         resolvedModelId,
-        systemPrompt.length,
-        effectiveMessages.length,
-        totalContentLen,
-      );
-      if (contextEstimate.warningNote) {
-        systemPrompt = `${contextEstimate.warningNote}\n\n${systemPrompt}`;
-      }
-      if (contextEstimate.shouldTruncate && contextEstimate.suggestedKeepCount) {
-        recordStep('context_truncation', {
-          estimatedTokens: contextEstimate.estimatedTokens,
-          contextLimit: contextEstimate.contextLimit,
-          originalCount: effectiveMessages.length,
-          keptCount: contextEstimate.suggestedKeepCount,
-        });
-        effectiveMessages = effectiveMessages.slice(-contextEstimate.suggestedKeepCount);
-      }
+        modelMessages,
+      });
 
       // ── Tool context ────────────────────────────────────────────────
       const toolContext: ToolContext = {
@@ -444,14 +412,33 @@ async function runChatInner(args: RunChatArgs): Promise<any> {
 
       // ── Tool filtering ──────────────────────────────────────────────
       const userPlan = (env as Record<string, unknown>).USER_PLAN_TIER as string | undefined;
-      const activeTools = domainToolFilter(routing.domain as RoutingDomain, userPlan) as Record<string, Tool>;
-      const modelNonEssentialDisabled = resolveCtx.nonEssentialDisabled;
-      if (modelNonEssentialDisabled) {
-        delete activeTools.convene_committee;
-        delete activeTools.replay_setup;
-      }
+      const activeTools = resolveActiveTools({
+        routingDomain: routing.domain,
+        userPlanTier: userPlan,
+        nonEssentialDisabled: resolveCtx.nonEssentialDisabled,
+        env,
+        userId,
+      });
 
-      // ── Stream args ─────────────────────────────────────────────────
+      // ── Stream callbacks + args ─────────────────────────────────────
+      const { onError, onFinish } = buildStreamCallbacks({
+        state: streamState,
+        threadId,
+        userId,
+        startedAt,
+        resolvedModelId,
+        providerId,
+        bareModelId,
+        plannerCostUsd,
+        budget,
+        diagnosticContext,
+        toolContext,
+        db,
+        userSettings,
+        env,
+        signal: signal ?? null,
+      });
+
       const streamArgs: Parameters<typeof streamText>[0] = {
         model: resolvedModel,
         system: systemPrompt,
@@ -460,190 +447,10 @@ async function runChatInner(args: RunChatArgs): Promise<any> {
           ? { providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' as const } } } }
           : {}),
         messages: effectiveMessages,
-        tools: routing.domain === 'fundamental' && env.GOOGLE_VERTEX_PROJECT
-          ? { ...activeTools, googleSearch: getVertexGoogleSearchTool(env, userId) }
-          : activeTools,
+        tools: activeTools,
         stopWhen: stepCountIs(env.MAX_TOOL_ITERATIONS),
-
-        onError: async ({ error }) => {
-          if (streamTerminal === 'completed') {
-            alog.warn('late chat stream error after completion', {
-              threadId,
-              model: resolvedModelId,
-              providerId,
-              err: error instanceof Error ? error.message : String(error),
-            });
-            return;
-          }
-          streamTerminal = 'failed';
-          // A stream can fail after streamText() has returned, bypassing
-          // the retry-loop catch and onFinish. Release the reservation so
-          // a disconnected/provider-failed turn cannot strand daily spend.
-          recordError(error);
-          completeStep('stream_text', 'failed', Date.now() - startedAt, {
-            error: error instanceof Error ? error.message : String(error),
-          });
-          alog.error('chat stream failed after handoff', {
-            threadId,
-            model: resolvedModelId,
-            providerId,
-            err: error instanceof Error ? error.message : String(error),
-          });
-          void recordTelemetry({
-            userId,
-            threadId,
-            messageId: null,
-            model: resolvedModelId,
-            inputTokens: 0,
-            outputTokens: 0,
-            toolCalls: 0,
-            ms: Date.now() - startedAt,
-            kind: 'turn_failed',
-          }).catch((telemetryErr) =>
-            alog.error('failed to persist stream failure telemetry', { err: String(telemetryErr) }),
-          );
-          await budget.release();
-          await persistDiagnosticContext(diagnosticContext, 'failed');
-          await flushLangfuse();
-        },
-
-        onFinish: async ({ usage, finishReason, response }) => {
-          if (streamTerminal === 'failed') {
-            alog.warn('chat stream finished after a recorded failure', {
-              threadId,
-              model: resolvedModelId,
-              providerId,
-            });
-            return;
-          }
-          streamTerminal = 'completed';
-          const actualCost = estimateCostUsd(
-            resolvedModelId,
-            usage?.inputTokens ?? 0,
-            usage?.outputTokens ?? 0,
-          ) + plannerCostUsd;
-          try {
-            const assistantUiMsg = response.messages.at(-1);
-            let messageId: string | null = null;
-            if (assistantUiMsg && assistantUiMsg.role === 'assistant') {
-              const baseParts: UIMessage['parts'] = Array.isArray(assistantUiMsg.content)
-                ? (assistantUiMsg.content as UIMessage['parts'])
-                : [{ type: 'text', text: String(assistantUiMsg.content) }];
-
-              let parts: UIMessage['parts'] = baseParts;
-              try {
-                const assistantText = baseParts
-                  .filter(
-                    (p): p is { type: 'text'; text: string } =>
-                      typeof p === 'object' &&
-                      p !== null &&
-                      (p as { type?: string }).type === 'text' &&
-                      typeof (p as { text?: unknown }).text === 'string',
-                  )
-                  .map((p) => p.text)
-                  .join('\n');
-                const warning = enforceCitations({
-                  text: assistantText,
-                  responseMessages: response.messages,
-                });
-                if (warning) {
-                  parts = [...baseParts, warning as unknown as UIMessage['parts'][number]];
-                }
-              } catch (err) {
-                alog.warn('citation enforcer failed', { err: String(err) });
-              }
-
-              if (fallbackInfo) {
-                parts = [...parts, fallbackInfo as unknown as UIMessage['parts'][number]];
-              }
-
-              const ui: UIMessage = {
-                id: crypto.randomUUID(),
-                role: 'assistant',
-                parts,
-              };
-              ({ messageId } = await appendAssistantMessage(userId, threadId, ui));
-            }
-            const rateLimit = extractRateLimits(response.headers);
-            if (rateLimit) {
-              noteLlmRateLimit(`${providerId}:${userId}`, rateLimit);
-              waitUntil(
-                db
-                  .insert(schema.providerTests)
-                  .values({
-                    userId,
-                    providerId,
-                    ok: true,
-                    error: null,
-                    testedAt: new Date().toISOString(),
-                    rateLimit: rateLimit as { remainingRequests?: number; remainingTokens?: number; resetRequests?: string; resetTokens?: string; } | null,
-                  })
-                  .onConflictDoUpdate({
-                    target: [schema.providerTests.userId, schema.providerTests.providerId],
-                    set: {
-                      ok: true,
-                      error: null,
-                      testedAt: new Date().toISOString(),
-                      rateLimit: rateLimit as { remainingRequests?: number; remainingTokens?: number; resetRequests?: string; resetTokens?: string; } | null,
-                    },
-                  })
-                  .execute()
-                  .catch((err: unknown) =>
-                    alog.warn('failed to save provider test rate limits', { err: String(err) }),
-                  ),
-              );
-            }
-            const buffer = toolContext.toolTelemetryBuffer;
-            if (buffer && buffer.length > 0) {
-              const telemetryFlush = await flushBatchedTelemetry(buffer);
-              recordStep('tool_telemetry_flush', {
-                attempted: telemetryFlush.attempted,
-                failed: telemetryFlush.failed,
-              });
-              buffer.length = 0;
-            }
-
-            await recordTelemetry({
-              userId,
-              threadId,
-              messageId,
-              model: resolvedModelId,
-              inputTokens: usage?.inputTokens ?? 0,
-              outputTokens: usage?.outputTokens ?? 0,
-              toolCalls: countToolCalls(response.messages),
-              ms: Date.now() - startedAt,
-            });
-            if (env.LOG_PROMPTS) {
-              console.info('[ai] finish reason=%s tokens=%o', finishReason, usage);
-            }
-          } catch (err) {
-            logErrorContext(err, 'persistence/telemetry_failed', { threadId }, 'ai');
-          } finally {
-            // Reconcile independently of message/telemetry persistence. A
-            // telemetry outage must not strand the turn reservation.
-            await budget.reconcile(actualCost);
-            // A stream result is returned before onFinish runs, so the
-            // diagnostic wrapper defers completion until this callback.
-            await persistDiagnosticContext(diagnosticContext, 'completed');
-            // Vercel/serverless runtimes may freeze as soon as the stream
-            // callback completes; flush after terminal persistence so the
-            // Langfuse trace is not lost in the exporter queue.
-            await flushLangfuse();
-          }
-
-          waitUntil(
-            runAutoTitleBackground({
-              threadId,
-              userId,
-              userSettings: {
-                ...userSettings,
-                chatModel: `${providerId}:${bareModelId}`,
-              },
-              env,
-              signal: signal ?? null,
-            }),
-          );
-        },
+        onError,
+        onFinish,
       };
       if (signal) streamArgs.abortSignal = signal;
 

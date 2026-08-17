@@ -44,6 +44,10 @@ export const METRIC_NAMES = [
   'ttft_ms',
   'total_latency_ms',
   'turn_cost_usd',
+  // Exporter + worker health signals.
+  'metrics_flush_failed_total',
+  'worker_flush_total',
+  'worker_tick_freshness_ms',
 ] as const;
 
 export type MetricName = (typeof METRIC_NAMES)[number];

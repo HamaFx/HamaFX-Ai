@@ -33,6 +33,7 @@ import { saveAgentOpinions } from './persistence';
 import { appendUserMessage, appendAssistantMessage, recordTelemetry } from '../persistence';
 import { enforceCitations } from '../verification';
 import { logErrorContext, createCategorizedLogger } from '@kestrel/shared/logger';
+import { metrics } from '@kestrel/shared';
 import { completeStep, recordError, recordStep } from '../diagnostics';
 import { TechnicalAgent } from './agents/technical-agent';
 import { FundamentalAgent } from './agents/fundamental-agent';
@@ -241,6 +242,7 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
             completeStep(`agent:${agent.name}`, 'failed', Date.now() - agentStartMs, { error: msg });
             failedAgents.push(agent.name as SpecialistAgentName);
             failedAgentReasons.push(`${agent.name}: ${msg}`);
+            metrics.increment('agent_failed_total');
             logErrorContext(err, 'multi-agent/agent_failed', { agentName: agent.name }, 'ai');
             void recordTelemetry({
               userId,
@@ -314,6 +316,7 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
         failedAgents,
         error: 'Full analysis stopped because a required specialist failed. No partial answer was returned.',
       });
+      metrics.increment('run_failed_total');
       throw failure;
     }
 
@@ -393,6 +396,7 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
           failedAgents: [],
           error: 'Full analysis stopped because the Decision agent failed. No partial answer was returned.',
         });
+        metrics.increment('run_failed_total');
         throw failure;
       }
 
@@ -548,6 +552,9 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
     kind: 'multi_agent_turn',
   }).catch((err) => mlog.warn('recordTelemetry failed', { err: String(err) }));
 
+  metrics.increment('chat_turn_total');
+  metrics.observe('turn_cost_usd', totalCostUsd);
+  metrics.observe('total_latency_ms', totalLatencyMs);
   completeStep('multi_agent_start', 'completed', Date.now() - startMs, {
     totalCostUsd,
     specialistCount: validOpinions.length,

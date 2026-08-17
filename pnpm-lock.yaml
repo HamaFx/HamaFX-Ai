@@ -490,6 +490,9 @@ importers:
       server-only:
         specifier: ^0.0.1
         version: 0.0.1
+      snappyjs:
+        specifier: ^0.7.0
+        version: 0.7.0
       zod:
         specifier: ^3.23.8
         version: 3.25.76
@@ -6074,6 +6077,9 @@ packages:
   smol-toml@1.7.1:
     resolution: {integrity: sha512-PPlsspAZ4jbMBu5DMFhfUGDQLu/vrL4SyBROVS37x8ynnVmFIs1VPBz1Co8Xks3TvpIaZXmU85y4DrQ+UyVFoQ==}
     engines: {node: '>= 18'}
+
+  snappyjs@0.7.0:
+    resolution: {integrity: sha512-u5iEEXkMe2EInQio6Wv9LWHOQYRDbD2O9hzS27GpT/lwfIQhTCnHCTqedqHIHe9ZcvQo+9au6vngQayipz1NYw==}
 
   socks-proxy-agent@8.0.5:
     resolution: {integrity: sha512-HehCEsotFqbPW9sJ8WVYB6UbmIMv7kUUORIF2Nncq4VQvBfNBLibW9YZR5dlYCSUhwcD628pRllm7n+E+YTzJw==}
@@ -12414,6 +12420,8 @@ snapshots:
   smart-buffer@4.2.0: {}
 
   smol-toml@1.7.1: {}
+
+  snappyjs@0.7.0: {}
 
   socks-proxy-agent@8.0.5:
     dependencies:

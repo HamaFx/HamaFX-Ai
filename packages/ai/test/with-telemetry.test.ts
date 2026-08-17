@@ -17,6 +17,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { z } from 'zod';
 
+import { metrics } from '@kestrel/shared';
 import { withTelemetry } from '../src/tools/with-telemetry';
 import {
   getDiagnosticContext,
@@ -48,6 +49,7 @@ describe('withTelemetry — diagnostics integration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockMaybeGetToolContext.mockReturnValue(null);
+    metrics.reset();
   });
 
   it('records a diagnostic step on execute', async () => {
@@ -257,5 +259,24 @@ describe('withTelemetry — diagnostics integration', () => {
     const toolDef = { description: 'schema only', inputSchema: z.object({}) };
     const wrapped = withTelemetry('schema_only', toolDef);
     expect(wrapped).toBe(toolDef);
+  });
+
+  it('increments tool_call_total on success', async () => {
+    const tool = withTelemetry('counted_tool', makeTool(async () => 'ok'));
+    await tool.execute!({}, { toolCallId: 'test', messages: [] });
+    expect(metrics.snapshot().counters.tool_call_total).toBe(1);
+    expect(metrics.snapshot().counters.tool_fail_total ?? 0).toBe(0);
+  });
+
+  it('increments tool_fail_total on failure', async () => {
+    const tool = withTelemetry(
+      'counted_fail_tool',
+      makeTool(async () => {
+        throw new Error('nope');
+      }),
+    );
+    await expect(tool.execute!({}, { toolCallId: 'test', messages: [] })).rejects.toThrow('nope');
+    expect(metrics.snapshot().counters.tool_fail_total).toBe(1);
+    expect(metrics.snapshot().counters.tool_call_total ?? 0).toBe(0);
   });
 });

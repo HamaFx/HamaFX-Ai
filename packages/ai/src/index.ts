@@ -288,6 +288,18 @@ export {
   type TrainingExportRecord,
   type DatasetManifest,
 } from './eval/training-export';
+export {
+  assembleTrainingDataset,
+  writeAssembledDataset,
+  type AssembleDatasetInput,
+  type AssembledDataset,
+} from './eval/assemble-dataset';
+export {
+  resolveEvaluationAnnotations,
+  type ResolveAnnotationsInput,
+  type FeedbackAnnotationInput,
+} from './eval/annotation-resolver';
+export type { PromptResult, PromptDef, RunEvalsResult, EvaluationScore } from './eval/runner';
 export { computeDrift, type DriftReport, type DriftBucket } from './eval/drift';
 export { buildToolCatalogue, type CatalogueEntry } from './catalogue';
 

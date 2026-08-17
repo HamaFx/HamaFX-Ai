@@ -4,7 +4,9 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -45,6 +47,10 @@
     "./logger": {
       "types": "./dist/logger.d.ts",
       "import": "./dist/logger.js"
+    },
+    "./metrics-export": {
+      "types": "./dist/metrics-export.d.ts",
+      "import": "./dist/metrics-export.js"
     }
   },
   "scripts": {
@@ -58,6 +64,7 @@
   "dependencies": {
     "pino": "^10.3.1",
     "server-only": "^0.0.1",
+    "snappyjs": "^0.7.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {

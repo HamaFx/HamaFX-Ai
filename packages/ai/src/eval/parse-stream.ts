@@ -64,6 +64,13 @@ export interface ParsedStreamResult {
   ttftMs: number | null;
   /** Wall-clock ms from `startedAt` to stream completion. */
   totalMs: number;
+  /**
+   * Id of the final assistant message as emitted by the server, when the
+   * stream produced one. This is the same id persisted in `chat_messages`,
+   * which lets the dataset job link an eval case back to real user feedback
+   * rows (`ai_message_feedback.message_id`).
+   */
+  assistantMessageId: string | null;
   /** Concatenated text of every `text` part on the final assistant message. */
   text: string;
   /** One entry per `tool-*` part on the final assistant message. */
@@ -158,8 +165,9 @@ export async function consumeUIMessageStream(
   const totalMs = Date.now() - startedAt;
   const text = lastMessage ? extractText(lastMessage) : '';
   const toolCalls = lastMessage ? extractToolCalls(lastMessage) : [];
+  const assistantMessageId = lastMessage && typeof lastMessage.id === 'string' ? lastMessage.id : null;
 
-  return { ttftMs, totalMs, text, toolCalls, agentProgress, metadata, errors };
+  return { ttftMs, totalMs, text, toolCalls, agentProgress, metadata, errors, assistantMessageId };
 }
 
 // --- helpers ---------------------------------------------------------------
