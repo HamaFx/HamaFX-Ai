@@ -214,6 +214,48 @@ describe('eval offline — Phase 0.7', () => {
     ]);
   });
 
+  it('scores citation: unsupported numeric/event claims pull the score down', async () => {
+    server.use(
+      http.post('http://localhost:9999/api/chat', () => {
+        // One numeric claim (XAUUSD 2400.25) + one event claim (FOMC), no
+        // market-data or news tool call — the citation score should be 0.
+        const stream = makeStream([
+          JSON.stringify({ type: 'text-start', id: 't0' }),
+          JSON.stringify({ type: 'text-delta', id: 't0', delta: 'XAUUSD is at 2400.25 ahead of the FOMC decision.' }),
+          JSON.stringify({ type: 'text-end', id: 't0' }),
+          JSON.stringify({ type: 'finish', finishReason: 'stop' }),
+        ]);
+        return new HttpResponse(stream, { headers: { 'content-type': 'text/event-stream' } });
+      }),
+    );
+
+    const { results } = await runEvals({
+      baseUrl: 'http://localhost:9999',
+      cookie: 'authjs.session-token=test',
+      outDir: tmpDir,
+      promptsPath,
+      timeoutMs: 5000,
+      onProgress: () => {},
+    });
+
+    expect(results[0]?.citationScore).toBe(0);
+  });
+
+  it('scores citation: tool-backed claims stay grounded at 1.0', async () => {
+    // The default recorded stream calls compute_risk (a numeric-support tool)
+    // and mentions XAUUSD, so the numeric claim is supported → 1.0.
+    const { results } = await runEvals({
+      baseUrl: 'http://localhost:9999',
+      cookie: 'authjs.session-token=test',
+      outDir: tmpDir,
+      promptsPath,
+      timeoutMs: 5000,
+      onProgress: () => {},
+    });
+
+    expect(results[0]?.citationScore).toBe(1);
+  });
+
   it('fails grounding and safety quality gates for unsupported claims', async () => {
     const qualityPromptPath = join(tmpDir, 'quality-failure.json');
     await writeFile(qualityPromptPath, JSON.stringify([

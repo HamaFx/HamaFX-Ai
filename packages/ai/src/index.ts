@@ -288,6 +288,7 @@ export {
   type TrainingExportRecord,
   type DatasetManifest,
 } from './eval/training-export';
+export { computeDrift, type DriftReport, type DriftBucket } from './eval/drift';
 export { buildToolCatalogue, type CatalogueEntry } from './catalogue';
 
 // P2-3 — DI-backed getDb() wrapper.

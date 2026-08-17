@@ -42,6 +42,7 @@ import {
   type ParsedStreamMetadata,
   type ParsedToolCall,
 } from './parse-stream';
+import { computeDrift } from './drift';
 
 // --- types -----------------------------------------------------------------
 
@@ -132,6 +133,13 @@ export interface PromptResult {
   terminalStatus: string | null;
   ok: boolean;
   error?: string;
+  /**
+   * Phase C citation oracle — 0..1. Fraction of numeric/event claims in the
+   * text that are supported by an appropriate market-data / news tool call.
+   * 1.0 means every detected claim is grounded (or no claims were made);
+   * null means the result errored before text could be scored.
+   */
+  citationScore?: number | null;
   /**
    * Phase 7c — assertion failures collected from the case definition. The
    * `ok` flag remains driven by transport / parse failures; assertion
@@ -331,6 +339,7 @@ async function runOnePrompt(args: RunOnePromptArgs): Promise<PromptResult> {
       metadata: parsed.metadata,
       terminalStatus,
       ok: true,
+      citationScore: computeCitationScore(parsed.text, parsed.toolCalls),
       ...(parsed.errors.length > 0 ? { error: `expected terminal failure: ${parsed.errors.join('; ')}` } : {}),
     };
   } catch (err) {
@@ -655,6 +664,33 @@ function hasAnyTool(calledTools: Set<string>, supportedTools: ReadonlySet<string
   return false;
 }
 
+// Global variants for counting claims (the single-match regexes above are
+// only used for pass/fail detection).
+const INSTRUMENT_PRICE_CLAIM_GLOBAL = /\b(?:xauusd|gold|eurusd|gbpusd|usdjpy|btcusdt)\b[^.!?\n]{0,100}\b(?:\d{1,5}\.\d{2,5}|0\.\d{3,6})\b/gi;
+const EVENT_CLAIM_GLOBAL = /\b(?:cpi|nfp|fomc|ecb|boe|federal reserve|rate decision|central bank)\b/gi;
+
+/**
+ * Phase C citation oracle. Every detected numeric or event claim must be
+ * backed by an appropriate tool call; unsupported claims pull the score
+ * toward zero. A response with no detectable claims scores 1.0.
+ */
+export function computeCitationScore(text: string, toolCalls: ParsedToolCall[]): number {
+  const calledTools = new Set(toolCalls.map((t) => t.name));
+  const numericClaims = countMatches(text, INSTRUMENT_PRICE_CLAIM_GLOBAL);
+  const eventClaims = countMatches(text, EVENT_CLAIM_GLOBAL);
+  const totalClaims = numericClaims + eventClaims;
+  if (totalClaims === 0) return 1;
+
+  const numericSupported = hasAnyTool(calledTools, NUMERIC_SUPPORT_TOOLS) ? numericClaims : 0;
+  const eventSupported = hasAnyTool(calledTools, EVENT_SUPPORT_TOOLS) ? eventClaims : 0;
+  return (numericSupported + eventSupported) / totalClaims;
+}
+
+function countMatches(text: string, regex: RegExp): number {
+  const matches = text.match(regex);
+  return matches ? matches.length : 0;
+}
+
 // --- report writing --------------------------------------------------------
 
 interface WriteReportArgs {
@@ -706,6 +742,7 @@ async function writeJsonReport(args: WriteJsonReportArgs): Promise<string> {
     generatedAt: new Date().toISOString(),
     baseUrl,
     score,
+    drift: computeDrift(results),
     results,
   };
 
@@ -772,6 +809,9 @@ function buildMarkdown(args: BuildMarkdownArgs): string {
     if (r.metadata.totalCostUsd !== undefined) lines.push(`- Reported cost: $${r.metadata.totalCostUsd.toFixed(4)}`);
     if (r.metadata.totalLatencyMs !== undefined) lines.push(`- Server latency: ${r.metadata.totalLatencyMs}ms`);
     if (r.metadata.ttfbMs !== undefined) lines.push(`- Server TTFB: ${r.metadata.ttfbMs === null ? 'n/a' : `${r.metadata.ttfbMs}ms`}`);
+    if (r.citationScore !== undefined && r.citationScore !== null) {
+      lines.push(`- Citation score: ${(r.citationScore * 100).toFixed(0)}%`);
+    }
     lines.push('');
     if (!r.ok) {
       lines.push('**Error**');
