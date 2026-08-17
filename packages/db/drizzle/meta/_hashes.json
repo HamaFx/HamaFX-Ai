@@ -307,6 +307,14 @@
     {
       "tag": "0077_persistence_outbox",
       "hash": "10a25cdf331fa79137fcecf024d3489dab853b48dc4e1ad1c771c6996b650ba4"
+    },
+    {
+      "tag": "0078_ai_message_feedback",
+      "hash": "f5246c80af483e61102db5d4ef986fbcbecbbc5d92cc00c7198b929e9411ce33"
+    },
+    {
+      "tag": "0079_eval_dataset_registry",
+      "hash": "f1480c18b9742a8826884bd1cf33bf118dc40c9b3e3becd29a1b4f5778843889"
     }
   ]
 }

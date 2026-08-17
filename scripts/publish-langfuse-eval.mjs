@@ -77,6 +77,7 @@ for (const item of cases) {
       expectedTools: item.expectedTools ?? [],
       expectedAgents: item.expectedAgents ?? [],
       expectedAgentStatuses: item.expectedAgentStatuses ?? {},
+      expectedTerminalStatus: item.expectedTerminalStatus ?? null,
       mustContainSubstrings: item.mustContainSubstrings ?? [],
     },
     metadata: { source: 'packages/ai/src/eval/cases.json', version: '2026-08' },

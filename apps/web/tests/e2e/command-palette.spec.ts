@@ -28,6 +28,7 @@ test.describe('Command palette', () => {
   test('opens with Ctrl+K and shows the search input', async ({ authedPage }) => {
     const page = authedPage;
     await page.goto('/chat');
+    await expect(page.locator('[data-command-palette-ready="true"]')).toBeAttached();
 
     await page.keyboard.press('Control+K');
 
@@ -39,6 +40,7 @@ test.describe('Command palette', () => {
   test('announces a live result count while typing', async ({ authedPage }) => {
     const page = authedPage;
     await page.goto('/chat');
+    await expect(page.locator('[data-command-palette-ready="true"]')).toBeAttached();
 
     await page.keyboard.press('Control+K');
     const search = page.getByRole('combobox', { name: /search commands/i });
@@ -52,6 +54,7 @@ test.describe('Command palette', () => {
   test('arrow keys move the active option', async ({ authedPage }) => {
     const page = authedPage;
     await page.goto('/chat');
+    await expect(page.locator('[data-command-palette-ready="true"]')).toBeAttached();
 
     await page.keyboard.press('Control+K');
     const search = page.getByRole('combobox', { name: /search commands/i });
@@ -66,6 +69,7 @@ test.describe('Command palette', () => {
   test('Enter runs the selected command and closes the palette', async ({ authedPage }) => {
     const page = authedPage;
     await page.goto('/chat');
+    await expect(page.locator('[data-command-palette-ready="true"]')).toBeAttached();
 
     await page.keyboard.press('Control+K');
     const search = page.getByRole('combobox', { name: /search commands/i });
@@ -79,6 +83,7 @@ test.describe('Command palette', () => {
   test('Escape closes the palette without navigating', async ({ authedPage }) => {
     const page = authedPage;
     await page.goto('/chat');
+    await expect(page.locator('[data-command-palette-ready="true"]')).toBeAttached();
 
     await page.keyboard.press('Control+K');
     await expect(page.getByRole('combobox', { name: /search commands/i })).toBeVisible();
@@ -90,6 +95,7 @@ test.describe('Command palette', () => {
   test('shows an empty state when nothing matches', async ({ authedPage }) => {
     const page = authedPage;
     await page.goto('/chat');
+    await expect(page.locator('[data-command-palette-ready="true"]')).toBeAttached();
 
     await page.keyboard.press('Control+K');
     const search = page.getByRole('combobox', { name: /search commands/i });

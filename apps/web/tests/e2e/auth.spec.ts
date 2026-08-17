@@ -34,6 +34,7 @@ test.describe('Authentication', () => {
     // Use a fresh context with no saved storageState
     const context = await browser.newContext({
       baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+      storageState: { cookies: [], origins: [] },
     });
     const page = await context.newPage();
 
@@ -43,7 +44,7 @@ test.describe('Authentication', () => {
     // The auth layout renders an <h1> with the product name ("Kestrel")
     // and the login form has a "Sign in" button. Assert both so the test
     // confirms we landed on the login page.
-    await expect(page.getByRole('heading', { name: /hamafx/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /kestrel/i })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Sign in', exact: true })).toBeVisible();
 
     await context.close();
@@ -55,6 +56,7 @@ test.describe('Authentication', () => {
   test.fixme('successful login redirects to chat', async ({ browser }) => {
     const context = await browser.newContext({
       baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+      storageState: { cookies: [], origins: [] },
     });
     const page = await context.newPage();
 
@@ -62,7 +64,7 @@ test.describe('Authentication', () => {
 
     await page.locator('#email').fill('test@example.com');
     await page.locator('#password').fill('password123');
-    await page.getByRole('button', { name: /sign in/i }).click();
+    await page.getByRole('button', { name: 'Sign in', exact: true }).click();
 
     await expect(page).toHaveURL(/.*\/chat.*/, { timeout: 30_000 });
 
@@ -72,6 +74,7 @@ test.describe('Authentication', () => {
   test('invalid credentials show error message', async ({ browser }) => {
     const context = await browser.newContext({
       baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+      storageState: { cookies: [], origins: [] },
     });
     const page = await context.newPage();
 
@@ -79,7 +82,7 @@ test.describe('Authentication', () => {
 
     await page.locator('#email').fill('test@example.com');
     await page.locator('#password').fill('wrongpassword');
-    await page.getByRole('button', { name: /sign in/i }).click();
+    await page.getByRole('button', { name: 'Sign in', exact: true }).click();
 
     // Error alert should appear (role="alert" in the login form)
     await expect(page.getByRole('alert')).toBeVisible({ timeout: 10_000 });
@@ -93,6 +96,7 @@ test.describe('Authentication', () => {
   test('login page has link to register', async ({ browser }) => {
     const context = await browser.newContext({
       baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+      storageState: { cookies: [], origins: [] },
     });
     const page = await context.newPage();
 
@@ -109,6 +113,7 @@ test.describe('Authentication', () => {
   test('login page has forgot password link', async ({ browser }) => {
     const context = await browser.newContext({
       baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+      storageState: { cookies: [], origins: [] },
     });
     const page = await context.newPage();
 
@@ -127,6 +132,7 @@ test.describe('Registration', () => {
   test('register page renders with required fields', async ({ browser }) => {
     const context = await browser.newContext({
       baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+      storageState: { cookies: [], origins: [] },
     });
     const page = await context.newPage();
 
@@ -144,6 +150,7 @@ test.describe('Registration', () => {
   test('password mismatch shows validation error', async ({ browser }) => {
     const context = await browser.newContext({
       baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+      storageState: { cookies: [], origins: [] },
     });
     const page = await context.newPage();
 
@@ -163,6 +170,7 @@ test.describe('Registration', () => {
   test('password strength indicators appear', async ({ browser }) => {
     const context = await browser.newContext({
       baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+      storageState: { cookies: [], origins: [] },
     });
     const page = await context.newPage();
 

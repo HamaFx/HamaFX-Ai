@@ -16,6 +16,43 @@
 
 import { AppError } from './errors';
 
+const PRIVATE_CONTENT_KEY_PATTERN =
+  /^(?:prompt|content|text|input|output|args|parts|messages|response|query|snippet|body)$/i;
+const SENSITIVE_KEY_PATTERN =
+  /api[_-]?key|access[_-]?token|auth[_-]?token|token|secret|password|passwd|cookie|webhook|private[_-]?key|client[_-]?secret|refresh[_-]?token/i;
+const SECRET_STRING_PATTERNS: Array<[RegExp, string]> = [
+  [/(?:authorization)\s*[:=]\s*(?:(?:Bearer|Basic|Token)\s+)?[^\s,&;]+/gi, 'authorization=<redacted>'],
+  [/\bBearer\s+[A-Za-z0-9._~+/=-]+/gi, 'Bearer <redacted>'],
+  [/\b(?:api[_-]?key|access[_-]?token|token|secret|password|cookie)\s*[=:]\s*[^\s,&;]+/gi, '<redacted-secret>'],
+];
+
+/**
+ * Redact private content before a payload is sent to logs, Sentry, or an
+ * agent-facing bug report. This is deliberately exported from the shared
+ * package so every observability sink can use the same boundary policy.
+ */
+export function redactDiagnosticPayload(value: unknown): unknown {
+  if (typeof value === 'string') {
+    return SECRET_STRING_PATTERNS.reduce(
+      (result, [pattern, replacement]) => result.replace(pattern, replacement),
+      value,
+    );
+  }
+  if (Array.isArray(value)) return value.map(redactDiagnosticPayload);
+  if (value !== null && typeof value === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [key, child] of Object.entries(value)) {
+      out[key] = SENSITIVE_KEY_PATTERN.test(key)
+        ? '<redacted>'
+        : PRIVATE_CONTENT_KEY_PATTERN.test(key)
+          ? '<redacted-content>'
+          : redactDiagnosticPayload(child);
+    }
+    return out;
+  }
+  return value;
+}
+
 export interface DiagnosticStep {
   name: string;
   status: 'started' | 'completed' | 'failed';
@@ -153,9 +190,11 @@ export function generateBugReport(err: unknown, options: BugReportOptions): BugR
         userId: String(options.trace.userId ?? ''),
         threadId: String(options.trace.threadId ?? ''),
         durationMs: Number(options.trace.durationMs ?? 0),
-        steps: Array.isArray(options.trace.steps) ? (options.trace.steps as DiagnosticStep[]) : [],
+        steps: Array.isArray(options.trace.steps)
+          ? (redactDiagnosticPayload(options.trace.steps) as DiagnosticStep[])
+          : [],
         errors: Array.isArray(options.trace.errors)
-          ? (options.trace.errors as DiagnosticError[])
+          ? (redactDiagnosticPayload(options.trace.errors) as DiagnosticError[])
           : [],
       }
     : undefined;
@@ -164,13 +203,15 @@ export function generateBugReport(err: unknown, options: BugReportOptions): BugR
 
   const error: BugReport['error'] = {
     name: errorObj.name,
-    message: errorObj.message,
+    message: redactDiagnosticPayload(errorObj.message) as string,
     code: appError?.code ?? 'INTERNAL',
-    stack: errorObj.stack ?? '',
+    stack: redactDiagnosticPayload(errorObj.stack ?? '') as string,
   };
   if (stackInfo.file) error.file = stackInfo.file;
   if (stackInfo.line) error.line = stackInfo.line;
-  if (errorObj.cause) error.cause = String(errorObj.cause).slice(0, 500);
+  if (errorObj.cause) {
+    error.cause = String(redactDiagnosticPayload(String(errorObj.cause))).slice(0, 500);
+  }
 
   const report: BugReport = {
     reportId: generateReportId(),

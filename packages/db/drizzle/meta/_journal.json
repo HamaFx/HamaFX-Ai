@@ -540,6 +540,20 @@
       "when": 1786719600003,
       "tag": "0077_persistence_outbox",
       "breakpoints": true
+    },
+    {
+      "idx": 77,
+      "version": "7",
+      "when": 1786719600004,
+      "tag": "0078_ai_message_feedback",
+      "breakpoints": true
+    },
+    {
+      "idx": 78,
+      "version": "7",
+      "when": 1786719600005,
+      "tag": "0079_eval_dataset_registry",
+      "breakpoints": true
     }
   ]
 }

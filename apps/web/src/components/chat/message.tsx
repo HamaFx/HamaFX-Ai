@@ -61,10 +61,12 @@ import { ChatToolPart, type ToolPartState } from './parts/registry';
 import { PlanPart } from './parts/plan';
 import { TextPart } from './parts/text';
 import { MessageFooter } from './_components/message-footer';
+import { MessageFeedback } from './_components/message-feedback';
 import { RegenModelPicker } from './_components/regen-model-picker';
 
 interface MessageProps {
   message: UIMessage;
+  threadId: string;
   onCopy?: (text: string) => void;
   onRegenerate?: (opts?: { modelOverride?: string }) => void;
   onEdit?: (messageId: string, newText: string) => void;
@@ -89,7 +91,7 @@ const REGEN_MENU_TRIGGER = 'regen-menu-trigger';
  */
 const REGEN_CLOSE_ALL = 'kestrel:close-regen-menus';
 
-function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: MessageProps) {
+function MessageImpl({ threadId, message, onCopy, onRegenerate, onEdit, isStreaming }: MessageProps) {
   const isUser = message.role === 'user';
   const isSystem = message.role === 'system';
   const prefersReducedMotion = useReducedMotion();
@@ -212,6 +214,7 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
       initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 300, damping: 30 }}
+      data-message-role={message.role}
       className={cn('group flex w-full flex-col gap-2', isUser ? 'items-end' : 'items-start')}
     >
       {/* Outer wrapper: brand accent icon for assistant, plain for user */}
@@ -291,6 +294,7 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
 
           {/* Action row — only assistant messages, only when there's something
               to do. Visible on hover/focus, accessible via keyboard. */}
+          {!isUser && !isStreaming ? <MessageFeedback threadId={threadId} messageId={message.id} /> : null}
           {hasActions ? (
             <div
               className={cn(
@@ -399,6 +403,7 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
 }
 
 export const Message = memo(MessageImpl, (prev, next) => {
+  if (prev.threadId !== next.threadId) return false;
   if (prev.message.id !== next.message.id) return false;
   if (prev.onRegenerate !== next.onRegenerate) return false;
   if (prev.onEdit !== next.onEdit) return false;

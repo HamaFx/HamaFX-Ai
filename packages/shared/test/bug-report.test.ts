@@ -16,7 +16,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { generateBugReport } from '../src';
+import { generateBugReport, redactDiagnosticPayload } from '../src';
 import { AppError } from '../src';
 
 describe('generateBugReport', () => {
@@ -124,6 +124,40 @@ describe('generateBugReport', () => {
 
     const report = generateBugReport(err, { operation: 'op', module: 'mod', trace });
     expect(report.trace).toEqual(trace);
+  });
+
+  it('redacts prompt and tool payloads from bug-report traces', () => {
+    const report = generateBugReport(new Error('tool failed'), {
+      operation: 'toolCall',
+      module: 'ai',
+      trace: {
+        traceId: 't-123',
+        userId: 'u-123',
+        threadId: 'th-456',
+        durationMs: 100,
+        steps: [{
+          name: 'get_price',
+          status: 'failed',
+          metadata: { input: { accountId: 'private' }, tool: 'get_price', durationMs: 12 },
+          timestamp: Date.now(),
+        }],
+        errors: [],
+      },
+    });
+
+    const metadata = report.trace?.steps[0]?.metadata;
+    expect(metadata?.input).toBe('<redacted-content>');
+    expect(metadata?.tool).toBe('get_price');
+    expect(metadata?.durationMs).toBe(12);
+    expect(JSON.stringify(report)).not.toContain('private');
+  });
+
+  it('redacts diagnostic payload content while preserving safe fields', () => {
+    expect(redactDiagnosticPayload({ text: 'private', durationMs: 3, token: 'secret' })).toEqual({
+      text: '<redacted-content>',
+      durationMs: 3,
+      token: '<redacted>',
+    });
   });
 
   it('handles non-Error values', () => {

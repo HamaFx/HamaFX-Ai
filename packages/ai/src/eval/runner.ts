@@ -39,6 +39,7 @@ import { fileURLToPath } from 'node:url';
 import {
   consumeUIMessageStream,
   type AgentProgressSnapshot,
+  type ParsedStreamMetadata,
   type ParsedToolCall,
 } from './parse-stream';
 
@@ -78,6 +79,25 @@ export interface PromptDef {
   expectedAgents?: string[];
   /** Final observed status required for each specialist. */
   expectedAgentStatuses?: Record<string, string>;
+  /** Expected terminal result status; supports expected Full-mode failures. */
+  expectedTerminalStatus?: 'complete' | 'failed' | 'retrying';
+  /** Exact numeric values expected in a structured tool output. */
+  expectedToolOutputs?: Array<{
+    tool: string;
+    path: string;
+    value: number;
+    tolerance?: number;
+  }>;
+  /** Deterministic quality gates for safety, grounding, latency, and cost. */
+  quality?: {
+    requireNumericToolSupport?: boolean;
+    requireEventToolSupport?: boolean;
+    forbiddenOutputSubstrings?: string[];
+    requiredOutputSubstrings?: string[];
+    maxTtftMs?: number;
+    maxTotalMs?: number;
+    maxCostUsd?: number;
+  };
 }
 
 export interface AssertionFailure {
@@ -87,7 +107,16 @@ export interface AssertionFailure {
     | 'missing_substring'
     | 'wrong_mode'
     | 'missing_agent'
-    | 'wrong_agent_status';
+    | 'wrong_agent_status'
+    | 'wrong_terminal_status'
+    | 'numeric_mismatch'
+    | 'unsupported_numeric_claim'
+    | 'unsupported_event_claim'
+    | 'unsafe_output'
+    | 'missing_safety_text'
+    | 'ttft_exceeded'
+    | 'latency_exceeded'
+    | 'cost_exceeded';
   detail: string;
 }
 
@@ -99,6 +128,8 @@ export interface PromptResult {
   text: string;
   toolCalls: ParsedToolCall[];
   agentProgress: AgentProgressSnapshot[];
+  metadata: ParsedStreamMetadata;
+  terminalStatus: string | null;
   ok: boolean;
   error?: string;
   /**
@@ -151,7 +182,8 @@ export async function runEvals(args: RunEvalsArgs): Promise<RunEvalsResult> {
     if (
       result.ok &&
       (prompt.expectedTools || prompt.forbiddenTools || prompt.mustContainSubstrings ||
-        prompt.analysisMode || prompt.expectedAgents || prompt.expectedAgentStatuses)
+        prompt.analysisMode || prompt.expectedAgents || prompt.expectedAgentStatuses ||
+        prompt.expectedTerminalStatus || prompt.expectedToolOutputs || prompt.quality)
     ) {
       result.assertions = evaluateAssertions(prompt, result);
     }
@@ -204,6 +236,8 @@ async function runOnePrompt(args: RunOnePromptArgs): Promise<PromptResult> {
       text: '',
       toolCalls: [],
       agentProgress: [],
+      metadata: {},
+      terminalStatus: null,
       ok: false,
       error: err instanceof Error ? err.message : String(err),
     };
@@ -253,13 +287,17 @@ async function runOnePrompt(args: RunOnePromptArgs): Promise<PromptResult> {
         text: '',
         toolCalls: [],
         agentProgress: [],
+        metadata: {},
+        terminalStatus: null,
         ok: false,
         error: `HTTP ${response.status} ${response.statusText}${text ? `: ${text.slice(0, 500)}` : ''}`,
       };
     }
 
     const parsed = await consumeUIMessageStream(response, { startedAt });
-    if (parsed.errors.length > 0) {
+    const terminalStatus = parsed.agentProgress.at(-1)?.status ?? null;
+    const expectedFailure = prompt.expectedTerminalStatus === 'failed';
+    if (parsed.errors.length > 0 && !expectedFailure) {
       return {
         id: prompt.id,
         prompt: prompt.prompt,
@@ -268,6 +306,8 @@ async function runOnePrompt(args: RunOnePromptArgs): Promise<PromptResult> {
         text: parsed.text,
         toolCalls: parsed.toolCalls,
         agentProgress: parsed.agentProgress,
+        metadata: parsed.metadata,
+        terminalStatus,
         ok: false,
         error: `stream error: ${parsed.errors.join('; ')}`,
       };
@@ -280,7 +320,10 @@ async function runOnePrompt(args: RunOnePromptArgs): Promise<PromptResult> {
       text: parsed.text,
       toolCalls: parsed.toolCalls,
       agentProgress: parsed.agentProgress,
+      metadata: parsed.metadata,
+      terminalStatus,
       ok: true,
+      ...(parsed.errors.length > 0 ? { error: `expected terminal failure: ${parsed.errors.join('; ')}` } : {}),
     };
   } catch (err) {
     const totalMs = Math.round(performance.now() - startedAtMono);
@@ -298,6 +341,8 @@ async function runOnePrompt(args: RunOnePromptArgs): Promise<PromptResult> {
       text: '',
       toolCalls: [],
       agentProgress: [],
+      metadata: {},
+      terminalStatus: null,
       ok: false,
       error: message,
     };
@@ -384,6 +429,9 @@ async function loadPrompts(path: string): Promise<PromptDef[]> {
         analysisMode?: unknown;
         expectedAgents?: unknown;
         expectedAgentStatuses?: unknown;
+        expectedTerminalStatus?: unknown;
+        expectedToolOutputs?: unknown;
+        quality?: unknown;
       };
       const def: PromptDef = { id: obj.id, prompt: obj.prompt };
       if (Array.isArray(obj.expectedTools)) {
@@ -408,6 +456,14 @@ async function loadPrompts(path: string): Promise<PromptDef[]> {
           Object.entries(obj.expectedAgentStatuses).filter((entry): entry is [string, string] => typeof entry[0] === 'string' && typeof entry[1] === 'string'),
         );
       }
+      if (obj.expectedTerminalStatus === 'complete' || obj.expectedTerminalStatus === 'failed' || obj.expectedTerminalStatus === 'retrying') {
+        def.expectedTerminalStatus = obj.expectedTerminalStatus;
+      }
+      if (Array.isArray(obj.expectedToolOutputs)) {
+        const expected = obj.expectedToolOutputs.filter(isExpectedToolOutput);
+        if (expected.length > 0) def.expectedToolOutputs = expected;
+      }
+      if (isQualityConfig(obj.quality)) def.quality = obj.quality;
       out.push(def);
     } else {
       throw new Error(`prompts file ${path} contains an entry without {id, prompt}`);
@@ -442,6 +498,12 @@ function evaluateAssertions(prompt: PromptDef, result: PromptResult): AssertionF
       failures.push({ kind: 'wrong_agent_status', detail: `${agent}: expected ${expectedStatus}, observed ${latestAgents.get(agent) ?? 'missing'}` });
     }
   }
+  if (prompt.expectedTerminalStatus && result.terminalStatus !== prompt.expectedTerminalStatus) {
+    failures.push({
+      kind: 'wrong_terminal_status',
+      detail: `expected ${prompt.expectedTerminalStatus}, observed ${result.terminalStatus ?? 'missing'}`,
+    });
+  }
   for (const t of prompt.expectedTools ?? []) {
     if (!calledTools.has(t)) {
       failures.push({ kind: 'missing_tool', detail: t });
@@ -458,7 +520,131 @@ function evaluateAssertions(prompt: PromptDef, result: PromptResult): AssertionF
       failures.push({ kind: 'missing_substring', detail: sub });
     }
   }
+
+  for (const expected of prompt.expectedToolOutputs ?? []) {
+    const call = result.toolCalls.find((toolCall) => toolCall.name === expected.tool);
+    const actual = call ? readPath(call.output, expected.path) : undefined;
+    if (typeof actual !== 'number' || !Number.isFinite(actual)) {
+      failures.push({
+        kind: 'numeric_mismatch',
+        detail: `${expected.tool}.${expected.path}: expected ${expected.value}, observed ${String(actual ?? 'missing')}`,
+      });
+      continue;
+    }
+    const tolerance = expected.tolerance ?? 0;
+    if (Math.abs(actual - expected.value) > tolerance) {
+      failures.push({
+        kind: 'numeric_mismatch',
+        detail: `${expected.tool}.${expected.path}: expected ${expected.value} ± ${tolerance}, observed ${actual}`,
+      });
+    }
+  }
+
+  const quality = prompt.quality;
+  if (quality) {
+    if (quality.requireNumericToolSupport && hasUnsupportedNumericClaim(result.text, calledTools)) {
+      failures.push({
+        kind: 'unsupported_numeric_claim',
+        detail: 'price-like instrument claim was not accompanied by a numeric market-data tool call',
+      });
+    }
+    if (quality.requireEventToolSupport && hasUnsupportedEventClaim(result.text, calledTools)) {
+      failures.push({
+        kind: 'unsupported_event_claim',
+        detail: 'macro/event claim was not accompanied by a news or calendar tool call',
+      });
+    }
+    for (const forbidden of quality.forbiddenOutputSubstrings ?? []) {
+      if (lowerText.includes(forbidden.toLowerCase())) {
+        failures.push({ kind: 'unsafe_output', detail: forbidden });
+      }
+    }
+    for (const required of quality.requiredOutputSubstrings ?? []) {
+      if (!lowerText.includes(required.toLowerCase())) {
+        failures.push({ kind: 'missing_safety_text', detail: required });
+      }
+    }
+    if (quality.maxTtftMs !== undefined && (result.ttftMs === null || result.ttftMs > quality.maxTtftMs)) {
+      failures.push({
+        kind: 'ttft_exceeded',
+        detail: `expected ≤ ${quality.maxTtftMs}ms, observed ${result.ttftMs === null ? 'missing' : `${result.ttftMs}ms`}`,
+      });
+    }
+    if (quality.maxTotalMs !== undefined && result.totalMs > quality.maxTotalMs) {
+      failures.push({ kind: 'latency_exceeded', detail: `expected ≤ ${quality.maxTotalMs}ms, observed ${result.totalMs}ms` });
+    }
+    if (quality.maxCostUsd !== undefined && (result.metadata.totalCostUsd === undefined || result.metadata.totalCostUsd > quality.maxCostUsd)) {
+      failures.push({
+        kind: 'cost_exceeded',
+        detail: `expected ≤ $${quality.maxCostUsd.toFixed(4)}, observed ${result.metadata.totalCostUsd === undefined ? 'missing' : `$${result.metadata.totalCostUsd.toFixed(4)}`}`,
+      });
+    }
+  }
   return failures;
+}
+
+interface ExpectedToolOutput {
+  tool: string;
+  path: string;
+  value: number;
+  tolerance?: number;
+}
+
+function isExpectedToolOutput(value: unknown): value is ExpectedToolOutput {
+  if (typeof value !== 'object' || value === null) return false;
+  const item = value as Record<string, unknown>;
+  return (
+    typeof item.tool === 'string' &&
+    typeof item.path === 'string' &&
+    typeof item.value === 'number' &&
+    Number.isFinite(item.value) &&
+    (item.tolerance === undefined || (typeof item.tolerance === 'number' && item.tolerance >= 0))
+  );
+}
+
+function isQualityConfig(value: unknown): value is NonNullable<PromptDef['quality']> {
+  if (typeof value !== 'object' || value === null) return false;
+  const config = value as Record<string, unknown>;
+  const booleans = ['requireNumericToolSupport', 'requireEventToolSupport'];
+  const arrays = ['forbiddenOutputSubstrings', 'requiredOutputSubstrings'];
+  const numbers = ['maxTtftMs', 'maxTotalMs', 'maxCostUsd'];
+  return (
+    booleans.every((key) => config[key] === undefined || typeof config[key] === 'boolean') &&
+    arrays.every((key) => config[key] === undefined || (Array.isArray(config[key]) && config[key].every((item) => typeof item === 'string'))) &&
+    numbers.every((key) => config[key] === undefined || (typeof config[key] === 'number' && Number.isFinite(config[key]) && config[key] >= 0))
+  );
+}
+
+function readPath(value: unknown, path: string): unknown {
+  let current = value;
+  for (const segment of path.split('.')) {
+    if (segment.length === 0 || typeof current !== 'object' || current === null) return undefined;
+    current = (current as Record<string, unknown>)[segment];
+  }
+  return current;
+}
+
+const NUMERIC_SUPPORT_TOOLS = new Set([
+  'get_price', 'get_candles', 'get_indicators', 'get_market_structure',
+  'forecast_volatility', 'analyze_technical', 'analyze_fundamental',
+  'get_session_levels', 'get_intermarket', 'compute_position_health',
+  'compute_risk', 'replay_setup',
+]);
+const EVENT_SUPPORT_TOOLS = new Set(['get_news', 'get_calendar', 'analyze_fundamental', 'web_search', 'search_knowledge']);
+const INSTRUMENT_PRICE_CLAIM = /\b(?:xauusd|gold|eurusd|gbpusd|usdjpy|btcusdt)\b[^.!?\n]{0,100}\b(?:\d{1,5}\.\d{2,5}|0\.\d{3,6})\b/i;
+const EVENT_CLAIM = /\b(?:cpi|nfp|fomc|ecb|boe|federal reserve|rate decision|central bank)\b/i;
+
+function hasUnsupportedNumericClaim(text: string, calledTools: Set<string>): boolean {
+  return INSTRUMENT_PRICE_CLAIM.test(text) && !hasAnyTool(calledTools, NUMERIC_SUPPORT_TOOLS);
+}
+
+function hasUnsupportedEventClaim(text: string, calledTools: Set<string>): boolean {
+  return EVENT_CLAIM.test(text) && !hasAnyTool(calledTools, EVENT_SUPPORT_TOOLS);
+}
+
+function hasAnyTool(calledTools: Set<string>, supportedTools: ReadonlySet<string>): boolean {
+  for (const tool of supportedTools) if (calledTools.has(tool)) return true;
+  return false;
 }
 
 // --- report writing --------------------------------------------------------
@@ -539,6 +725,9 @@ function buildMarkdown(args: BuildMarkdownArgs): string {
     lines.push('');
     lines.push(`- TTFT: ${r.ttftMs === null ? 'n/a' : `${r.ttftMs}ms`}`);
     lines.push(`- Total: ${r.totalMs}ms`);
+    if (r.metadata.totalCostUsd !== undefined) lines.push(`- Reported cost: $${r.metadata.totalCostUsd.toFixed(4)}`);
+    if (r.metadata.totalLatencyMs !== undefined) lines.push(`- Server latency: ${r.metadata.totalLatencyMs}ms`);
+    if (r.metadata.ttfbMs !== undefined) lines.push(`- Server TTFB: ${r.metadata.ttfbMs === null ? 'n/a' : `${r.metadata.ttfbMs}ms`}`);
     lines.push('');
     if (!r.ok) {
       lines.push('**Error**');
@@ -578,7 +767,8 @@ function buildMarkdown(args: BuildMarkdownArgs): string {
       for (const a of r.assertions) {
         if (a.kind === 'missing_tool') lines.push(`- expected tool not called: \`${a.detail}\``);
         else if (a.kind === 'forbidden_tool') lines.push(`- forbidden tool was called: \`${a.detail}\``);
-        else lines.push(`- text missing substring: \`${a.detail}\``);
+        else if (a.kind === 'wrong_terminal_status') lines.push(`- terminal status mismatch: ${a.detail}`);
+        else lines.push(`- ${a.kind}: ${a.detail}`);
       }
       lines.push('');
     }

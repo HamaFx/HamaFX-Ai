@@ -362,6 +362,11 @@ export function ChatScreen({
           }),
         });
         toast.success('Forked into a new thread');
+        // Match newChat(): refresh the server component so the forked
+        // thread's messages hydrate into useChat, then navigate. Without
+        // the refresh, useChat keeps the source thread's state and the
+        // forked thread renders stale messages.
+        router.refresh();
         router.push(`/chat/${newThreadId}`);
       } catch (err) {
         toast.error(
@@ -435,6 +440,7 @@ export function ChatScreen({
             />
           ) : (
             <MessageList
+              threadId={threadId}
               messages={messages}
               isStreaming={isStreaming}
               showTypingIndicator={status === 'submitted'}

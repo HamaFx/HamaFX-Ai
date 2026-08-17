@@ -64,9 +64,20 @@ test.describe('PWA Service Worker', () => {
   test('service worker controls the page after activation', async ({ page }) => {
     await page.goto('/');
 
+    // Fresh browser contexts register + activate the SW on first load.
+    // The activate handler calls clients.claim(), but the controller is
+    // assigned asynchronously, so navigator.serviceWorker.ready may resolve
+    // before the page becomes controlled. Wait for controllerchange instead.
     const controlled = await page.evaluate(async () => {
       await navigator.serviceWorker.ready;
-      return !!navigator.serviceWorker.controller;
+      if (navigator.serviceWorker.controller) return true;
+      return new Promise<boolean>((resolve) => {
+        const timer = setTimeout(() => resolve(false), 10_000);
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          clearTimeout(timer);
+          resolve(true);
+        });
+      });
     });
 
     expect(controlled).toBe(true);

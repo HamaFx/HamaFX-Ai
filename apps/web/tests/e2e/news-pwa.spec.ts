@@ -30,8 +30,9 @@ test.describe('News page', () => {
     const page = authedPage;
     await page.goto('/news');
 
-    // Page header
-    await expect(page.getByRole('heading', { name: /news/i })).toBeVisible();
+    // Page header. The /news/i regex also matches article headings that
+    // contain the word "news", so pin to the exact page title.
+    await expect(page.getByRole('heading', { name: 'News', exact: true })).toBeVisible();
 
     // Search input is present and labelled
     const search = page.getByRole('searchbox', { name: /search headlines/i });
@@ -56,10 +57,12 @@ test.describe('News page', () => {
       return;
     }
 
-    const bullish = page.getByRole('radio', { name: /bullish/i });
+    // Scope radio lookups to the sentiment group: the symbol filter also
+    // exposes an "All" radio with the same accessible name.
+    const bullish = group.getByRole('radio', { name: /bullish/i });
     await bullish.click();
     await expect(bullish).toHaveAttribute('aria-checked', 'true');
-    await expect(page.getByRole('radio', { name: 'All' })).toHaveAttribute('aria-checked', 'false');
+    await expect(group.getByRole('radio', { name: 'All', exact: true })).toHaveAttribute('aria-checked', 'false');
   });
 
   test('refresh button is available for manual sync', async ({ authedPage }) => {

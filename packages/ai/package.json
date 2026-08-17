@@ -35,7 +35,9 @@
     "./title": {"types": "./dist/title.d.ts", "import": "./dist/title.js"},
     "./rag": {"types": "./dist/rag.d.ts", "import": "./dist/rag.js"},
     "./usage": {"types": "./dist/usage.d.ts", "import": "./dist/usage.js"},
-    "./instrumentation": {"types": "./dist/instrumentation.d.ts", "import": "./dist/instrumentation.js"}
+    "./instrumentation": {"types": "./dist/instrumentation.d.ts", "import": "./dist/instrumentation.js"},
+    "./eval/training-export": {"types": "./dist/eval/training-export.d.ts", "import": "./dist/eval/training-export.js"},
+    "./eval/runner": {"types": "./dist/eval/runner.d.ts", "import": "./dist/eval/runner.js"}
   },
   "scripts": {
     "lint": "eslint .",

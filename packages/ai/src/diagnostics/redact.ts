@@ -63,6 +63,16 @@ const SENSITIVE_KEY_PATTERN =
   /api[_-]?key|access[_-]?token|auth[_-]?token|token|secret|password|passwd|cookie|webhook|private[_-]?key|client[_-]?secret|refresh[_-]?token/i;
 
 /**
+ * Diagnostic payloads may contain model prompts, tool arguments, outputs, or
+ * retrieved snippets even when they do not contain a credential. Those values
+ * are useful in a local debugger but are not safe to send to logs/Sentry by
+ * default. Keep operational counters and identifiers, but remove content
+ * fields at the metadata boundary.
+ */
+const PRIVATE_CONTENT_KEY_PATTERN =
+  /^(?:prompt|content|text|input|output|args|parts|messages|response|query|snippet|body)$/i;
+
+/**
  * Redact secrets from any value — string, array, or object.
  *
  * For strings: applies all regex patterns sequentially.
@@ -97,6 +107,8 @@ export function redactSecrets(value: unknown): unknown {
     for (const [k, v] of Object.entries(value)) {
       if (SENSITIVE_KEY_PATTERN.test(k)) {
         out[k] = '<redacted>';
+      } else if (PRIVATE_CONTENT_KEY_PATTERN.test(k)) {
+        out[k] = '<redacted-content>';
       } else {
         out[k] = redactSecrets(v);
       }

@@ -59,7 +59,6 @@ const isCI = !!process.env.CI;
 // Build the webServer command with the correct ENCRYPTION_SECRET from
 // .env.production.local (since .env.local has an empty override).
 function buildWebServerCommand(): string {
-  const encKey = process.env.ENCRYPTION_SECRET;
   // Next.js 16 uses Turbopack by default; no bundler flag is needed. The
   // security-critical values are supplied through webServer.env below so
   // they do not appear in the child process command line.
@@ -82,7 +81,7 @@ export default defineConfig({
 
   // Reporters: HTML for local, + JUnit + list for CI
   reporter: isCI
-    ? [['html', { open: 'never' }], ['junit', { outputFile: 'test-results/junit.xml' }], ['list']]
+    ? [['blob'], ['junit', { outputFile: 'test-results/junit.xml' }], ['list']]
     : 'html',
 
   use: {
@@ -163,7 +162,10 @@ export default defineConfig({
 
   webServer: {
     command: `${buildWebServerCommand()} --port ${e2ePort}`,
-    url: e2eBaseUrl,
+    // The root page performs application work during its first compile and can
+    // exceed Playwright's readiness probe in a cold workspace. NextAuth's
+    // session endpoint is a lightweight, unauthenticated readiness check.
+    url: `${e2eBaseUrl}/api/auth/session`,
     env: {
       AUTH_MODE: 'normal',
       NEXTAUTH_URL: e2eBaseUrl,
@@ -173,11 +175,14 @@ export default defineConfig({
         : {}),
     },
     // Never reuse an already-running server: it may have been started with
-    // AUTH_MODE=legacy or a different signing secret.
-    reuseExistingServer: false,
+    // AUTH_MODE=legacy or a different signing secret. The explicit env escape
+    // hatch lets an operator warm a slow-filesystem dev server manually and
+    // point the run at it instead of waiting through a cold compile.
+    reuseExistingServer: process.env.REUSE_EXISTING_SERVER === 'true',
     // Next's first compile can exceed 30s on the repository's network-backed
-    // workspace. Keep local runs deterministic instead of failing before the
-    // browser suite starts; CI retains the stricter production-like timeout.
-    timeout: isCI ? 120_000 : 90_000,
+    // workspace (and far more on slow local filesystems). Keep local runs
+    // deterministic instead of failing before the browser suite starts; CI
+    // retains the stricter production-like timeout.
+    timeout: isCI ? 120_000 : 180_000,
   },
 });

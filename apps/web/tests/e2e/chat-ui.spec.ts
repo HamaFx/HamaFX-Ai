@@ -32,17 +32,13 @@ test.describe('Chat UI — empty state', () => {
     // Navigate to a fresh chat thread
     await page.goto('/chat');
 
-    // Brand mark should be visible (SVG logo)
-    await expect(page.locator('svg.text-brand')).toBeAttached();
+    // The empty state uses the shared decorative lockup image rather than an inline SVG.
+    await expect(page.locator('[data-brand-variant="lockup"] img')).toBeAttached();
 
-    // Title should be present
-    await expect(page.getByText('Kestrel')).toBeVisible();
-
-    // Subtitle
-    await expect(page.getByText('Start a conversation')).toBeVisible();
-
-    // Quick prompts should be visible
-    await expect(page.getByRole('button', { name: /analyze|price|news|outlook/i }).first()).toBeVisible();
+    // Empty-state copy and adaptive quick prompts should be present.
+    await expect(page.getByText('What are you watching?')).toBeVisible();
+    await expect(page.getByText(/Ask Kestrel about price action/i)).toBeVisible();
+    await expect(page.locator('button').filter({ hasText: /session|calendar|structure|gold|XAU|bias/i }).first()).toBeVisible();
   });
 
   test('empty state has functional quick prompt buttons', async ({ authedPage }) => {
@@ -50,7 +46,7 @@ test.describe('Chat UI — empty state', () => {
     await page.goto('/chat');
 
     // Quick prompts should be clickable
-    const firstPrompt = page.getByRole('button', { name: /analyze/i }).first();
+    const firstPrompt = page.locator('button').filter({ hasText: /session|calendar|structure|gold|XAU|bias/i }).first();
     await expect(firstPrompt).toBeEnabled();
   });
 });
@@ -133,8 +129,8 @@ test.describe('Chat UI — message rendering', () => {
     // Assistant response should appear
     await expect(page.getByText('Mock AI response')).toBeVisible({ timeout: 15_000 });
 
-    // Brand accent icon SVG should be present in assistant messages
-    const brandIcons = page.locator('svg.text-brand');
+    // The assistant brand mark is decorative and uses the shared icon asset.
+    const brandIcons = page.locator('[data-brand-variant="mark"] img');
     await expect(brandIcons.first()).toBeAttached();
   });
 
@@ -150,7 +146,7 @@ test.describe('Chat UI — message rendering', () => {
     await expect(page.getByText('Mock AI response')).toBeVisible({ timeout: 15_000 });
 
     // Copy button should be present
-    const copyButton = page.getByRole('button', { name: /copy message/i });
+    const copyButton = page.getByRole('button', { name: /copy message/i }).first();
     await expect(copyButton).toBeAttached();
   });
 

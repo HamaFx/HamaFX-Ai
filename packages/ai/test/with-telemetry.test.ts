@@ -61,7 +61,7 @@ describe('withTelemetry — diagnostics integration', () => {
       const step = ctx.steps.find((s) => s.name === 'tool:test_tool');
       expect(step).toBeTruthy();
       expect(step!.status).toBe('completed');
-      expect(step!.metadata?.input).toEqual({ foo: 'bar' });
+      expect(step!.metadata?.input).toBe('<redacted-content>');
       expect(step!.durationMs).toBeGreaterThanOrEqual(0);
     });
   });

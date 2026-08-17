@@ -119,6 +119,18 @@ describe('cron VM operational policy', () => {
     expect(deployment).toContain('hamafx-ai.vercel.app');
   });
 
+  it('provisions the SLO health alert delivery timer with a bounded webhook call', () => {
+    const provisioner = read('infra/cron-vm/_provision-docker.sh');
+    const service = read('infra/cron-vm/units/kestrel-health-alerts.service');
+    const timer = read('infra/cron-vm/units/kestrel-health-alerts.timer');
+
+    expect(provisioner).toContain('kestrel-health-alerts.timer');
+    expect(service).toContain('/api/cron/health-alerts');
+    expect(service).toContain('Authorization: Bearer ${CRON_SECRET}');
+    expect(service).toContain('curl -fsS -m 30');
+    expect(timer).toContain('OnCalendar=*:0/5');
+  });
+
   it('does not fail cleanup when its optional healthcheck ID is missing', () => {
     const unit = read('infra/cron-vm/units/kestrel-light-cleanup-uploads.service');
     expect(unit).toContain('test -z "$HC_CLEANUP_UPLOADS_UUID"');

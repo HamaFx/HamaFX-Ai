@@ -92,7 +92,11 @@ export function KestrelBrand({
   }
 
   return (
-    <span aria-hidden={isDecorative || undefined} className={wrapperClassName}>
+    <span
+      aria-hidden={isDecorative || undefined}
+      data-brand-variant={variant}
+      className={wrapperClassName}
+    >
       {content}
     </span>
   );

@@ -276,6 +276,18 @@ export {
 // Phase 7c — planner, citation enforcement, tool catalogue
 export { runPlanner, type PlanResult, type PlannerEnv } from './planner';
 export { enforceCitations } from './verification';
+export {
+  buildTrainingRecords,
+  buildDatasetManifest,
+  writeTrainingExport,
+  TRAINING_RECORD_SCHEMA,
+  DATASET_MANIFEST_SCHEMA,
+  type EvaluationAnnotation,
+  type EvaluationLabel,
+  type TrainingExportOptions,
+  type TrainingExportRecord,
+  type DatasetManifest,
+} from './eval/training-export';
 export { buildToolCatalogue, type CatalogueEntry } from './catalogue';
 
 // P2-3 — DI-backed getDb() wrapper.

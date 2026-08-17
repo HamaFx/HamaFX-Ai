@@ -195,17 +195,28 @@ pnpm --filter @kestrel/ai eval -- \
   --out docs/eval
 ```
 
-The checked-in acceptance dataset in `packages/ai/src/eval/cases.json` covers tools, Quick/Standard/Full/Single modes, all four specialists, the Decision stage, and degraded sentiment. Each prompt specifies expected tools, agent lifecycle/status assertions, and forbidden tools or text requirements. The runner creates a fresh thread per prompt, POSTs to `/api/chat`, captures the SSE stream, and writes a scored markdown report with transport, assertion, and agent-coverage rates.
+The checked-in acceptance dataset in `packages/ai/src/eval/cases.json` covers tools, Quick/Standard/Full/Single modes, all four specialists, the Decision stage, and strict Full-mode failure semantics. Each prompt can specify expected tools, agent lifecycle/status assertions, terminal status, structured numeric outputs, grounding requirements, safety substrings, and latency/cost ceilings. The runner creates a fresh thread per prompt, POSTs to `/api/chat`, captures the SSE stream, and writes a scored markdown report with transport, assertion, terminal-status, agent-coverage, timing, and reported-cost data. Expected terminal failures are valid cases; unexpected stream failures remain transport failures.
 
 ### Case Format
 
 ```json
 {
-  "label": "Get gold price",
-  "prompt": "What is XAUUSD trading at?",
-  "expectedTools": ["get_price"],
+  "id": "risk-sizing",
+  "prompt": "Size a 1% risk long on XAUUSD.",
+  "expectedTools": ["compute_risk"],
   "forbiddenTools": ["analyze_fundamental"],
-  "mustContainSubstrings": []
+  "expectedTerminalStatus": "complete",
+  "expectedToolOutputs": [
+    { "tool": "compute_risk", "path": "riskUsd", "value": 50, "tolerance": 0.01 }
+  ],
+  "quality": {
+    "requireNumericToolSupport": true,
+    "forbiddenOutputSubstrings": ["guaranteed profit"],
+    "maxTtftMs": 45000,
+    "maxTotalMs": 55000,
+    "maxCostUsd": 0.25
+  },
+  "mustContainSubstrings": ["XAUUSD"]
 }
 ```
 
@@ -213,18 +224,117 @@ The checked-in acceptance dataset in `packages/ai/src/eval/cases.json` covers to
 
 `packages/ai/src/eval/cases.json` is the versioned acceptance dataset. It
 covers tool selection, Quick/Standard/Full/Single modes, all four specialists,
-the Decision stage, and degraded sentiment. `--cases` reports transport,
-assertion, and agent-coverage rates; a non-zero exit means a case failed.
+the Decision stage, and strict Full-mode terminal failures. `--cases` reports transport, assertion, terminal-status, and agent-coverage
+rates, plus per-case TTFT, total latency, server metadata cost, and quality
+failures. Quality fields include `expectedToolOutputs` for numeric oracle
+checks, `requireNumericToolSupport` / `requireEventToolSupport` for grounding,
+`forbiddenOutputSubstrings` / `requiredOutputSubstrings` for safety contracts,
+and `maxTtftMs` / `maxTotalMs` / `maxCostUsd` for performance and spend
+regressions. Expected failures must be declared with
+`expectedTerminalStatus: "failed"`, while unexpected failures still produce a
+non-zero result.
 
 The optional `pnpm eval:publish` command publishes only prompts and expected
 metadata to a Langfuse dataset. It never uploads user conversations or model
 outputs and requires explicit Langfuse credentials.
 
-## E2E Testing (Playwright)
+### Reviewable training records
+
+`@kestrel/ai/eval/training-export` provides `buildTrainingRecords()` and
+`writeTrainingExport()` for a vendor-neutral JSONL contract. By default records
+contain only prompt/output hashes, tool names, quality assertion kinds,
+terminal state, latency, and cost; prompts, tool arguments, and model output
+are omitted. Including assistant text requires both `includeAssistantText: true`
+and an explicit `approvedBy` identity, and supports reviewer annotations
+(`pass`, `fail`, or `needs_review`).This makes dataset review and provenance explicit before any record is sent to a training or fine-tuning system.
+
+### Production feedback and dataset governance
+
+Assistant messages expose authenticated thumbs-up/thumbs-down controls at:
+`/api/chat/threads/:threadId/messages/:messageId/feedback`. Feedback is scoped
+by both user and thread ownership, upserted idempotently per user/message, and
+stores only the rating, optional user note, and trace correlation — not a copy
+of the conversation. Admins can triage the queue from the **Feedback** tab,
+assign a reviewer label (`pass`, `fail`, or `needs_review`), classify issues
+(`hallucination`, `wrong_number`, `bad_tool_choice`, `unsafe_advice`,
+`bad_citation`, `poor_reasoning`, or `other`), and save an auditable review.
+
+Dataset manifests are content-addressed with `contentSha256` and registered
+through the admin dataset registry. Lifecycle is intentionally explicit:
+`draft → in_review → approved → archived`. The registry stores record count,
+source, provenance, creator, approver, and timestamps, while the export writer
+creates a `${path}.manifest.json` sidecar. A governed export must not contain
+`needs_review` records, and assistant text requires explicit `approvedBy`.
+The **Datasets** admin tab exposes lifecycle transitions without exposing raw
+prompts or model output. Governed exports must provide an explicit annotation
+for every record, may assign deterministic `train`, `validation`, and `test`
+splits, and reject approved assistant text containing email, phone, or
+credential patterns after redaction.
+
+### Unmocked staging system flow
+
+The normal Playwright suite uses mocked chat responses for deterministic UI
+coverage. The opt-in `tests/e2e/real-system.spec.ts` deliberately does not
+mock `/api/chat` or Full-mode polling. Run it only against an isolated staging
+application with a real database, configured model provider, and running
+worker:
 
 ```bash
-pnpm --filter @kestrel/web exec playwright test
+KESTREL_REAL_E2E=true \
+PLAYWRIGHT_BASE_URL=https://staging.example.com \
+DATABASE_URL=... AUTH_SECRET=... ENCRYPTION_SECRET=... \
+pnpm --filter @kestrel/web exec playwright test tests/e2e/real-system.spec.ts
+```The manual GitHub workflow `.github/workflows/e2e-staging.yml` performs the same run after applying migrations and reads credentials only from the
+`staging` environment. It must never target production.
+
+### SLO alert delivery
+
+`/api/health/alerts` remains a read-only machine-readable monitor endpoint and
+returns `503` for degraded or unhealthy reliability signals. The authenticated
+`/api/cron/health-alerts` route evaluates the same snapshot and optionally sends
+a sanitized vendor-neutral webhook when `HEALTH_ALERT_WEBHOOK_URL` is set.
+`HEALTH_ALERT_WEBHOOK_TOKEN` adds a bearer credential and
+`HEALTH_ALERT_WEBHOOK_TIMEOUT_MS` bounds delivery latency. Webhook failures are
+logged but do not change the health computation or expose request content.
+Configure an external scheduler to call the cron route with `CRON_SECRET`; keep
+the webhook URL and token in staging/production secret storage only.
+
+## E2E Testing (Playwright)
+
+The primary E2E workflow is local and does not require GitHub Actions. Use the
+bounded shard runner so a connection/session interruption does not discard
+completed shard results:
+
+```bash
+# Four sequential Chromium shards; logs and summary go to artifacts/e2e-local/
+pnpm test:e2e:local
+
+# Smaller bounded run while debugging a feature
+pnpm test:e2e:local -- --shards=2 --project=chromium --grep="Multi-Agent"
+
+# Inspect the machine-readable result
+cat artifacts/e2e-local/summary.json
+
+# Run only shard 3/4; useful when a previous connection ended mid-run
+pnpm test:e2e:local -- --shards=4 --only-shard=3
 ```
+
+Each shard writes `shard-N-of-M.log` and the runner stops at the first failed
+shard. Rerun only the failed shard directly when debugging:
+
+```bash
+pnpm --filter @kestrel/web exec playwright test \\
+  --project=chromium --shard=3/4
+```
+
+The unsharded command remains available for small runs:
+
+```bash
+pnpm --filter @kestrel/web exec playwright test --project=chromium
+```
+
+The GitHub workflow files are optional CI mirrors; they are not required for
+local or staging verification.
 
 E2E tests in `apps/web/tests/e2e/` (16 spec files):
 - `auth.spec.ts` — login flow, unauthenticated redirect
@@ -451,10 +561,13 @@ See `packages/ai/test/base-agent-contract.test.ts` for the canonical example.
 
 Three-tier CI pipeline:
 
-### ci-fast.yml (every PR)
+### ci-fast.yml (optional every-PR mirror)
 1. `lint-and-typecheck`: ESLint + TypeScript + `pnpm audit --audit-level=critical` + build + bundle analysis
 2. `unit-tests`: `pnpm turbo run test -- --coverage` + empty-guard + coverage report
-3. `e2e-tests`: Playwright (2-way shard), HTML + JUnit reports, failure artifacts
+3. `e2e-tests`: Playwright (2-way shard), blob/JUnit reports, failure artifacts
+
+For repositories without GitHub Actions access, `pnpm test:e2e:local` is the
+supported equivalent for the E2E portion.
 
 ### ci-slow.yml (push to main + nightly)
 1. `lint-and-typecheck`: Full lint + typecheck

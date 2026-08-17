@@ -189,6 +189,15 @@ export {
   listAdminAuditLogs,
 } from './queries/admin-audit';
 export type { AdminAuditLogRow, AdminAuditLogInsert } from './schema/admin-audit';
+export type { AiMessageFeedbackRow, AiMessageFeedbackInsert, FeedbackRating, FeedbackReviewStatus, FeedbackLabel } from './schema/ai-feedback';
+export {
+  registerEvalDataset,
+  getEvalDataset,
+  listEvalDatasets,
+  approveEvalDataset,
+  type RegisterEvalDatasetInput,
+} from './queries/eval-datasets';
+export type { EvalDatasetRow, EvalDatasetInsert, EvalDatasetStatus } from './schema/eval-datasets';
 export {
   listToolTelemetry,
 } from './queries/chat-telemetry';
@@ -275,4 +284,14 @@ export {
   listMtdAgentOpinions,
   type AgentOpinionRow,
 } from './queries/agent-opinions';
+export {
+  upsertMessageFeedback,
+  getMessageFeedback,
+  deleteMessageFeedback,
+  listFeedbackForReview,
+  reviewMessageFeedback,
+  type SaveMessageFeedbackInput,
+  type ListFeedbackOptions,
+  type ReviewMessageFeedbackInput,
+} from './queries/ai-feedback';
 export * as queries from './queries';

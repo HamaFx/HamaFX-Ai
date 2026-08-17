@@ -120,26 +120,31 @@ test.describe('Navigation drawer', () => {
     // Wait for drawer to be visible
     await expect(page.getByRole('dialog', { name: /primary navigation/i })).toBeVisible();
 
-    // Click the overlay (the area outside the drawer)
-    // The overlay is the region between the drawer and the edge of the screen
+    // Click the overlay (the area outside the drawer). The drawer sits on the
+    // left edge, so click toward the right side of the viewport to avoid
+    // hitting the drawer's own subtree.
     const overlay = page.locator('[data-vaul-overlay]').or(page.locator('.vaul-overlay'));
     if (await overlay.count() > 0) {
-      await overlay.first().click({ position: { x: 10, y: 10 } });
+      const viewport = page.viewportSize();
+      const x = (viewport?.width ?? 1280) - 50;
+      await overlay.first().click({ position: { x, y: 100 } });
       await expect(page.getByRole('dialog', { name: /primary navigation/i })).not.toBeVisible();
     }
   });
 
-  test('menu trigger toggles drawer state', async ({ authedPage }) => {
+  test('menu trigger opens the drawer and reflects state', async ({ authedPage }) => {
     const page = authedPage;
 
     const navTrigger = page.getByRole('button', { name: /open navigation/i });
+    await expect(navTrigger).toHaveAttribute('aria-expanded', 'false');
 
     // Click to open
     await navTrigger.click();
     await expect(page.getByRole('dialog', { name: /primary navigation/i })).toBeVisible();
 
-    // Click trigger again to close
-    await navTrigger.click();
+    // While the modal drawer is open the trigger is aria-hidden behind the
+    // overlay, so close via Escape (the supported keyboard path).
+    await page.keyboard.press('Escape');
     await expect(page.getByRole('dialog', { name: /primary navigation/i })).not.toBeVisible();
   });
 

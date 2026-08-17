@@ -21,6 +21,7 @@
     "test:watch": "turbo run test -- --watch",
     "test:coverage": "turbo run test -- --coverage",
     "test:e2e": "pnpm --filter @kestrel/web exec playwright test",
+    "test:e2e:local": "node scripts/run-e2e-local.mjs",
     "test:web": "pnpm --filter @kestrel/web test",
     "test:ai": "pnpm --filter @kestrel/ai test",
     "test:shared": "pnpm --filter @kestrel/shared test",

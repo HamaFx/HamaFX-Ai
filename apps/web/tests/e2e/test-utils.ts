@@ -20,7 +20,7 @@ import { encode } from '@auth/core/jwt';
 import { getDb, schema } from '@kestrel/db';
 import type { Page } from '@playwright/test';
 import bcrypt from 'bcryptjs';
-import { sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 /**
  * Encrypt a dummy BYOK payload for the test user so the chat page
@@ -97,6 +97,11 @@ export async function ensureTestUser(
         ...(encryptedKey ? { aiApiKeys: encryptedKey } : {}),
       },
     });
+
+  // Reset the watchlist to a known-empty state so settings/symbol tests
+  // (and any other watchlist-dependent test) start deterministic instead of
+  // inheriting symbols left behind by a previously aborted run.
+  await db.delete(schema.userSymbols).where(eq(schema.userSymbols.userId, user.id));
 
   return user;
 }

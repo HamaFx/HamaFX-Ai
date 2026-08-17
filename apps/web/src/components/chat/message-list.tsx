@@ -44,6 +44,7 @@ function StreamingLiveRegion({ text }: { text: string }) {
 }
 
 interface MessageListProps {
+  threadId: string;
   messages: UIMessage[];
   isStreaming?: boolean;
   showTypingIndicator?: boolean;
@@ -56,6 +57,7 @@ interface MessageListProps {
 }
 
 export const MessageList = memo(function MessageList({
+  threadId,
   messages,
   isStreaming,
   showTypingIndicator,
@@ -142,6 +144,7 @@ export const MessageList = memo(function MessageList({
             }}
           >
             <Message
+              threadId={threadId}
               message={m}
               isStreaming={isStreaming}
               onCopy={onCopy}

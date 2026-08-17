@@ -69,6 +69,10 @@ export * from './provider-daily-quota';
 export * from './billing';
 // U2 — Background multi-agent analysis jobs
 export * from './analysis-jobs';
+// Durable user feedback and reviewer annotations
+export * from './ai-feedback';
+// Governed evaluation dataset registry
+export * from './eval-datasets';
 // Telegram webhook idempotency dedup
 export * from './telegram-updates';
 // H1 — Shared provider health store for cross-instance failover scoring

@@ -74,3 +74,6 @@ apps/web/public/sw-precache.json
 K6_LOAD_TESTING_LOG.md
 loadtest/results/
 loadtest/node_modules/
+
+# local E2E shard runner output
+artifacts/

@@ -5,6 +5,13 @@ on:
     branches: [main]
   schedule:
     - cron: '0 0 * * *' # Nightly
+  workflow_dispatch:
+    inputs:
+      runLiveEval:
+        description: 'Run the live acceptance suite against the configured isolated staging app'
+        required: false
+        default: false
+        type: boolean
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -61,12 +68,13 @@ jobs:
         working-directory: ./apps/web
       - run: pnpm exec playwright test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
         working-directory: ./apps/web
-      - name: Upload HTML report
+      - name: Upload blob report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report-shard-${{ matrix.shardIndex }}
-          path: apps/web/playwright-report/
+          name: playwright-blob-shard-${{ matrix.shardIndex }}
+          path: apps/web/blob-report/
+          if-no-files-found: ignore
           retention-days: 30
       - name: Upload JUnit results
         if: always()
@@ -85,11 +93,12 @@ jobs:
             apps/web/test-results/.last-run.json
           retention-days: 7
 
-  nightly-eval:
-    name: AI Eval Harness
-    if: github.event_name == 'schedule'
+  merge-e2e-reports:
+    name: Merge Playwright Reports
+    if: always()
+    needs: e2e-tests
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -98,4 +107,75 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm turbo run eval
+      - name: Download shard blobs
+        uses: actions/download-artifact@v4
+        with:
+          pattern: playwright-blob-shard-*
+          path: apps/web/blob-reports
+          merge-multiple: true
+      - name: Merge HTML report
+        working-directory: ./apps/web
+        run: pnpm exec playwright merge-reports --reporter=html blob-reports
+        continue-on-error: true
+      - name: Upload merged report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-merged
+          path: apps/web/playwright-report/
+          if-no-files-found: ignore
+          retention-days: 30
+
+  nightly-eval:
+    name: AI Eval Harness (offline contract)
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # This deterministic gate always runs in CI and does not require model
+      # credentials. It validates the stream parser, assertion engine, and
+      # strict Full-mode terminal contract.
+      - run: pnpm --filter @kestrel/ai test -- --run test/eval-offline.test.ts
+
+  live-eval:
+    name: AI Eval Harness (isolated staging)
+    if: (github.event_name == 'schedule' && vars.EVAL_BASE_URL != '') || (github.event_name == 'workflow_dispatch' && inputs.runLiveEval == true)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      EVAL_BASE_URL: ${{ vars.EVAL_BASE_URL }}
+      EVAL_COOKIE: ${{ secrets.EVAL_COOKIE }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Validate isolated staging credentials
+        run: |
+          test -n "$EVAL_BASE_URL" || { echo 'EVAL_BASE_URL is required'; exit 1; }
+          test -n "$EVAL_COOKIE" || { echo 'EVAL_COOKIE is required'; exit 1; }
+          case "$EVAL_BASE_URL" in
+            http://localhost:*|http://127.0.0.1:*)
+              echo 'EVAL_BASE_URL must point to an isolated staging app, not localhost.'
+              exit 1
+              ;;
+          esac
+      - name: Run live acceptance cases
+        run: pnpm --filter @kestrel/ai eval -- --base-url "$EVAL_BASE_URL" --cookie "$EVAL_COOKIE" --cases --out artifacts/eval
+      - name: Upload eval report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-ai-eval-report
+          path: artifacts/eval/
+          retention-days: 30

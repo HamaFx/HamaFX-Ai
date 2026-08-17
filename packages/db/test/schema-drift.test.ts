@@ -95,7 +95,7 @@ function getSchemaTableColumns(): Map<string, string[]> {
     'daily-ai-spend.ts', 'rate-limits.ts', 'live-ticks.ts', 'candles-1m.ts',
     'throttle.ts', 'intermarket-resonance.ts', 'audit.ts', 'provider-tests.ts',
     'symbol-catalog.ts', 'cron-runs.ts', 'portfolio.ts',
-    'noise-control.ts', 'bot-links.ts', 'billing.ts', 'telegram-updates.ts',
+    'noise-control.ts', 'bot-links.ts', 'billing.ts', 'telegram-updates.ts', 'ai-feedback.ts', 'eval-datasets.ts',
   ];
   for (const file of files) {
     try {

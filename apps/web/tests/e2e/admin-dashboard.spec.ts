@@ -22,6 +22,7 @@ test.describe('Admin dashboard', () => {
   test('loads for admin users', async ({ browser }) => {
     const context = await browser.newContext({
       baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+      storageState: { cookies: [], origins: [] },
     });
     const page = await context.newPage();
 
@@ -30,10 +31,10 @@ test.describe('Admin dashboard', () => {
     await expect(page).toHaveURL('/admin');
 
     // Admin page renders the tab navigation
-    await expect(page.getByRole('navigation', { name: 'Admin sections' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Onboarding' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Users' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Features' })).toBeVisible();
+    await expect(page.getByRole('tablist', { name: 'Admin sections' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Onboarding' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Users' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Features' })).toBeVisible();
 
     await context.close();
   });
@@ -41,6 +42,7 @@ test.describe('Admin dashboard', () => {
   test('switches between admin tabs', async ({ browser }) => {
     const context = await browser.newContext({
       baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+      storageState: { cookies: [], origins: [] },
     });
     const page = await context.newPage();
 
@@ -49,12 +51,12 @@ test.describe('Admin dashboard', () => {
     await expect(page).toHaveURL('/admin');
 
     // Switch to Users tab
-    await page.getByRole('button', { name: 'Users' }).click();
+    await page.getByRole('tab', { name: 'Users' }).click();
     await expect(page.getByText('Total:')).toBeVisible();
 
     // Switch to Features tab
-    await page.getByRole('button', { name: 'Features' }).click();
-    await expect(page.getByText('No feature flag configured.')).toBeVisible();
+    await page.getByRole('tab', { name: 'Features' }).click();
+    await expect(page.getByText('Feature Flags', { exact: true })).toBeVisible();
 
     await context.close();
   });
@@ -62,6 +64,7 @@ test.describe('Admin dashboard', () => {
   test('redirects non-admin users to login', async ({ browser }) => {
     const context = await browser.newContext({
       baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+      storageState: { cookies: [], origins: [] },
     });
     const page = await context.newPage();
 

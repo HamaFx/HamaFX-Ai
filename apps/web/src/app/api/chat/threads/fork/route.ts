@@ -7,9 +7,15 @@
 // Request body:
 //   {
 //     sourceThreadId: string  — UUID of the thread being forked
-//     atMessageId: string     — UUID of the user message being edited
+//     atMessageId: string     — id of the user message being edited
 //     newText: string         — replacement text (max 4000 chars)
 //   }
+//
+// atMessageId is intentionally NOT validated as a UUID: user messages are
+// created client-side by the AI SDK's useChat, which generates `msg_...`
+// ids, and appendUserMessage persists that id into chat_messages.id.
+// Requiring a UUID here made editing/forking a non-terminal message fail
+// with a 400 in production for every real user.
 //
 // Response:
 //   200 { threadId: string }  — the new thread's id
@@ -31,7 +37,8 @@ export const dynamic = 'force-dynamic';
 
 const ForkSchema = z.object({
   sourceThreadId: z.string().uuid(),
-  atMessageId: z.string().uuid(),
+  // Not a UUID — see the comment above. Bounded to keep the query safe.
+  atMessageId: z.string().min(1).max(200),
   // Same cap as the composer (composer-helpers.MAX_TEXT_CHARS).
   newText: z.string().min(1).max(4000),
 });

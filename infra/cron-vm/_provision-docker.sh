@@ -206,7 +206,7 @@ for unit in \
   kestrel-backup-db kestrel-backup-journal kestrel-verify-restore \
   kestrel-tenant-export kestrel-tenant-delete kestrel-billing-dlq \
   kestrel-disk-check kestrel-docker-prune \
-  kestrel-update kestrel-docker-autoheal kestrel-webhook; do
+  kestrel-update kestrel-docker-autoheal kestrel-webhook kestrel-health-alerts; do
   for ext in service timer; do
     [[ -f "${STAGE}/units/${unit}.${ext}" ]] && \
       install -m 644 "${STAGE}/units/${unit}.${ext}" "/etc/systemd/system/"
@@ -223,7 +223,7 @@ for timer in \
   kestrel-verify-restore.timer \
   kestrel-tenant-export.timer kestrel-tenant-delete.timer kestrel-billing-dlq.timer \
   kestrel-disk-check.timer kestrel-docker-prune.timer \
-  kestrel-update.timer kestrel-docker-autoheal.timer; do
+  kestrel-update.timer kestrel-docker-autoheal.timer kestrel-health-alerts.timer; do
   systemctl enable --now "$timer" 2>/dev/null || true
 done
 

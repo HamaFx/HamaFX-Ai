@@ -119,6 +119,26 @@ describe('recordStep — step recording', () => {
       expect(ctx!.steps[0]!.metadata!.endpoint).toBe('/data');
     });
   });
+
+  it('redacts prompt and tool payload fields while preserving operational metadata', async () => {
+    await withDiagnostics('user-1', 'thread-1', async () => {
+      recordStep('tool_call', {
+        tool: 'get_price',
+        prompt: 'private user strategy',
+        args: { symbols: ['XAUUSD'], accountId: 'private-account' },
+        output: { price: 2400.25, privateNote: 'do not retain' },
+        durationMs: 42,
+      });
+      const metadata = getDiagnosticContext()!.steps[0]!.metadata!;
+      expect(metadata.tool).toBe('get_price');
+      expect(metadata.durationMs).toBe(42);
+      expect(metadata.prompt).toBe('<redacted-content>');
+      expect(metadata.args).toBe('<redacted-content>');
+      expect(metadata.output).toBe('<redacted-content>');
+      expect(JSON.stringify(metadata)).not.toContain('private user strategy');
+      expect(JSON.stringify(metadata)).not.toContain('private-account');
+    });
+  });
 });
 
 describe('completeStep — step completion', () => {

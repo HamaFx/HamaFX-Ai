@@ -25,12 +25,23 @@ export interface ParsedToolCall {
   name: string;
   /** Tool input (a.k.a. args). `unknown` because this is provider data. */
   args: unknown;
+  /** Structured tool output, when the provider emitted one. */
+  output?: unknown;
   /**
    * `JSON.stringify(output ?? null).slice(0, 200)` once the tool has emitted
    * an output, or `null` if the tool never produced one (still streaming,
    * errored, etc).
    */
   resultSummary: string | null;
+}
+
+export interface ParsedStreamMetadata {
+  /** Multi-agent aggregate cost emitted in the transient metadata part. */
+  totalCostUsd?: number;
+  /** Multi-agent server-side latency emitted in the transient metadata part. */
+  totalLatencyMs?: number;
+  /** Multi-agent server-side time to first byte/text. */
+  ttfbMs?: number | null;
 }
 
 export interface AgentProgressEntry {
@@ -42,6 +53,10 @@ export interface AgentProgressEntry {
 export interface AgentProgressSnapshot {
   mode: string | null;
   agents: AgentProgressEntry[];
+  /** Terminal lifecycle state when the producer has reached one. */
+  status?: string;
+  /** Stable public error for a failed terminal state. */
+  error?: string;
 }
 
 export interface ParsedStreamResult {
@@ -55,6 +70,8 @@ export interface ParsedStreamResult {
   toolCalls: ParsedToolCall[];
   /** Agent lifecycle snapshots emitted by multi-agent streams. */
   agentProgress: AgentProgressSnapshot[];
+  /** Stream-level metadata emitted by the server, when present. */
+  metadata: ParsedStreamMetadata;
   /**
    * Stream-level errors emitted by the server (e.g. AI Gateway billing /
    * upstream provider failures). Each entry is the verbatim `errorText` from
@@ -93,6 +110,7 @@ export async function consumeUIMessageStream(
   let lastMessage: UIMessage | null = null;
   const errors: string[] = [];
   const agentProgress: AgentProgressSnapshot[] = [];
+  const metadata: ParsedStreamMetadata = {};
 
   // Tee the SSE-decoded chunk stream: one branch feeds `readUIMessageStream`
   // for normal message reconstruction, the other surfaces `type: 'error'`
@@ -119,6 +137,9 @@ export async function consumeUIMessageStream(
           if (chunk.type === 'data-agent-progress' && isAgentProgressData(chunk.data)) {
             agentProgress.push(chunk.data);
           }
+          if (chunk.type === 'data-multi-agent-meta' && isStreamMetadata(chunk.data)) {
+            Object.assign(metadata, chunk.data);
+          }
         }
       }
     } finally {
@@ -138,7 +159,7 @@ export async function consumeUIMessageStream(
   const text = lastMessage ? extractText(lastMessage) : '';
   const toolCalls = lastMessage ? extractToolCalls(lastMessage) : [];
 
-  return { ttftMs, totalMs, text, toolCalls, agentProgress, errors };
+  return { ttftMs, totalMs, text, toolCalls, agentProgress, metadata, errors };
 }
 
 // --- helpers ---------------------------------------------------------------
@@ -165,10 +186,27 @@ function extractText(message: UIMessage): string {
 
 function isAgentProgressData(value: unknown): value is AgentProgressSnapshot {
   if (typeof value !== 'object' || value === null) return false;
-  const data = value as { mode?: unknown; agents?: unknown };
+  const data = value as {
+    mode?: unknown;
+    agents?: unknown;
+    status?: unknown;
+    error?: unknown;
+  };
   if (typeof data.mode !== 'string' || !Array.isArray(data.agents)) return false;
+  if (data.status !== undefined && typeof data.status !== 'string') return false;
+  if (data.error !== undefined && typeof data.error !== 'string') return false;
   const agents = data.agents.filter((agent): agent is Record<string, unknown> => typeof agent === 'object' && agent !== null);
   return agents.every((agent) => typeof agent.agentName === 'string' && typeof agent.status === 'string');
+}
+
+function isStreamMetadata(value: unknown): value is ParsedStreamMetadata {
+  if (typeof value !== 'object' || value === null) return false;
+  const data = value as Record<string, unknown>;
+  return (
+    (data.totalCostUsd === undefined || typeof data.totalCostUsd === 'number') &&
+    (data.totalLatencyMs === undefined || typeof data.totalLatencyMs === 'number') &&
+    (data.ttfbMs === undefined || data.ttfbMs === null || typeof data.ttfbMs === 'number')
+  );
 }
 
 function extractToolCalls(message: UIMessage): ParsedToolCall[] {
@@ -187,10 +225,15 @@ function extractToolCalls(message: UIMessage): ParsedToolCall[] {
     };
 
     const name = p.toolName ?? part.type.slice('tool-'.length);
-    const resultSummary =
-      p.state === 'output-available' ? JSON.stringify(p.output ?? null).slice(0, 200) : null;
+    const hasOutput = p.state === 'output-available';
+    const resultSummary = hasOutput ? JSON.stringify(p.output ?? null).slice(0, 200) : null;
 
-    out.push({ name, args: p.input, resultSummary });
+    out.push({
+      name,
+      args: p.input,
+      ...(hasOutput ? { output: p.output } : {}),
+      resultSummary,
+    });
   }
 
   return out;

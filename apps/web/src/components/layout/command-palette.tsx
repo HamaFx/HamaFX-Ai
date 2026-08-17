@@ -209,6 +209,11 @@ export function CommandPalette({ onNewChat }: CommandPaletteProps) {
 
   return (
     <>
+      <span
+        data-command-palette-ready="true"
+        aria-hidden="true"
+        className="hidden"
+      />
       <Drawer open={open} onOpenChange={setOpen}>
         <DrawerContent className="max-h-[80svh]">
           <DrawerHeader>

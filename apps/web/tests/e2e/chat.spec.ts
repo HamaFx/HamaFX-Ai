@@ -22,7 +22,11 @@
 // Uses the composable fixtures (authedPage + mockChatApi).
 // ---------------------------------------------------------------------------
 
+import { appendUserMessage, createThread, deleteThread } from '@kestrel/ai/persistence';
+import type { UIMessage } from 'ai';
+
 import { test, expect } from './fixtures';
+import { ensureTestUser } from './test-utils';
 
 test.describe('Chat Flows', () => {
   test('can create a new thread and send a message', async ({ authedPage, mockChatApi }) => {
@@ -76,25 +80,46 @@ test.describe('Chat Flows', () => {
 
     await mockChatApi(page);
 
-    // Send a message to create a thread
+    // Send a message to populate the fixture thread.
     const textarea = page.getByRole('textbox');
     await textarea.fill('Test message for thread navigation');
     await textarea.press('Enter');
-
-    // Wait for thread URL
     await expect(page).toHaveURL(/.*\/chat\/[a-zA-Z0-9_-]+/, { timeout: 15_000 });
-    const threadUrl = page.url();
+    const threadAUrl = page.url();
+    const threadAId = new URL(threadAUrl).pathname.split('/').pop();
+    if (!threadAId) throw new Error(`Could not determine thread id from ${threadAUrl}`);
 
-    // Navigate to /chat (landing) and back
-    await page.goto('/chat');
-    await expect(page).toHaveURL(/.*\/chat.*/);
+    // The mocked stream bypasses the real route persistence, so seed the
+    // message explicitly — this verifies reload/navigation persistence rather
+    // than mock side effects.
+    const user = await ensureTestUser('test@example.com', 'password123');
+    await appendUserMessage(user.id, threadAId, {
+      id: `e2e-navigation-a-${Date.now()}`,
+      role: 'user',
+      parts: [{ type: 'text', text: 'Test message for thread navigation' }],
+    } as UIMessage);
 
-    // Navigate back to the specific thread
-    await page.goto(threadUrl);
-    await expect(page).toHaveURL(threadUrl);
+    // Create a second, distinct thread with its own seeded message. Navigating
+    // between two DIFFERENT thread URLs avoids the same-URL navigation race
+    // (a goto to the current URL can be aborted by the client router's own
+    // refresh under parallel workers).
+    const threadB = await createThread(user.id, { pinnedSymbol: null });
+    await appendUserMessage(user.id, threadB.id, {
+      id: `e2e-navigation-b-${Date.now()}`,
+      role: 'user',
+      parts: [{ type: 'text', text: 'Second thread message' }],
+    } as UIMessage);
 
-    // The message we sent should still be visible
+    // Navigate to thread B via URL and confirm its message renders.
+    await page.goto(`/chat/${threadB.id}`, { waitUntil: 'load' });
+    await expect(page.getByText('Second thread message')).toBeVisible({ timeout: 15_000 });
+
+    // Navigate back to thread A via URL and confirm its message renders.
+    await page.goto(threadAUrl, { waitUntil: 'load' });
+    await expect(page).toHaveURL(threadAUrl);
     await expect(page.getByText('Test message for thread navigation')).toBeVisible({ timeout: 15_000 });
+
+    await deleteThread(user.id, threadB.id).catch(() => undefined);
   });
 
   test('chat handles API error gracefully', async ({ authedPage }) => {

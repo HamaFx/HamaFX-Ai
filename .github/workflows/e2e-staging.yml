@@ -1,0 +1,56 @@
+name: staging-real-e2e
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'Isolated staging URL, including https://'
+        required: true
+        type: string
+      grep:
+        description: 'Optional Playwright grep, for example real-system'
+        required: false
+        default: 'Real Kestrel system flow'
+        type: string
+
+concurrency:
+  group: staging-real-e2e
+  cancel-in-progress: true
+
+jobs:
+  real-system:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: staging
+    env:
+      PLAYWRIGHT_BASE_URL: ${{ inputs.base_url }}
+      KESTREL_REAL_E2E: 'true'
+      DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+      POSTGRES_URL: ${{ secrets.STAGING_DATABASE_URL }}
+      AUTH_SECRET: ${{ secrets.STAGING_AUTH_SECRET }}
+      ENCRYPTION_SECRET: ${{ secrets.STAGING_ENCRYPTION_SECRET }}
+      CRON_SECRET: ${{ secrets.STAGING_CRON_SECRET }}
+      AI_E2E_PROVIDER: ${{ secrets.STAGING_AI_E2E_PROVIDER }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.11.1
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Apply staging migrations
+        run: pnpm --filter @kestrel/db migrate:apply
+      - name: Run unmocked system flow
+        run: pnpm --filter @kestrel/web exec playwright test tests/e2e/real-system.spec.ts --grep "$PLAYWRIGHT_GREP"
+        env:
+          PLAYWRIGHT_GREP: ${{ inputs.grep }}
+      - name: Upload Playwright artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-real-e2e-results
+          path: apps/web/test-results/
+          if-no-files-found: ignore

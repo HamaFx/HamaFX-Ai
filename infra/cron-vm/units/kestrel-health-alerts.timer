@@ -1,0 +1,10 @@
+[Unit]
+Description=SLO health alert delivery every 5 minutes
+
+[Timer]
+OnCalendar=*:0/5
+RandomizedDelaySec=30
+Unit=kestrel-health-alerts.service
+
+[Install]
+WantedBy=timers.target

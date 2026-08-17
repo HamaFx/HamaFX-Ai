@@ -33,8 +33,8 @@ test.describe('Theme tokens — semantic colors', () => {
     const bearColor = await page.evaluate(() =>
       getComputedStyle(document.documentElement).getPropertyValue('--color-bear').trim(),
     );
-    // Should be a red-ish color
-    expect(bearColor).toBe('#EF4444');
+    // Should be a red-ish color. The browser lowercases computed hex values.
+    expect(bearColor.toLowerCase()).toBe('#ef4444');
   });
 
   test('bull token renders as green accent', async ({ authedPage }) => {
@@ -44,7 +44,7 @@ test.describe('Theme tokens — semantic colors', () => {
     const bullColor = await page.evaluate(() =>
       getComputedStyle(document.documentElement).getPropertyValue('--color-bull').trim(),
     );
-    expect(bullColor).toBe('#22C55E');
+    expect(bullColor.toLowerCase()).toBe('#22c55e');
   });
 
   test('brand token renders as orange accent', async ({ authedPage }) => {
@@ -54,7 +54,7 @@ test.describe('Theme tokens — semantic colors', () => {
     const brandColor = await page.evaluate(() =>
       getComputedStyle(document.documentElement).getPropertyValue('--color-brand').trim(),
     );
-    expect(brandColor).toBe('#F56E0F');
+    expect(brandColor.toLowerCase()).toBe('#f56e0f');
   });
 
   test('bg token renders as near-black', async ({ authedPage }) => {
@@ -110,7 +110,7 @@ test.describe('Theme tokens — text colors', () => {
     const fgColor = await page.evaluate(() =>
       getComputedStyle(document.documentElement).getPropertyValue('--color-fg').trim(),
     );
-    expect(fgColor).toBe('#F0F0F0');
+    expect(fgColor.toLowerCase()).toBe('#f0f0f0');
   });
 
   test('fg-muted token renders', async ({ authedPage }) => {
@@ -120,7 +120,8 @@ test.describe('Theme tokens — text colors', () => {
     const fgMuted = await page.evaluate(() =>
       getComputedStyle(document.documentElement).getPropertyValue('--color-fg-muted').trim(),
     );
-    expect(fgMuted).toBe('#808080');
+    // #808080 is the gray color keyword; the browser may emit either form.
+    expect(['#808080', 'gray']).toContain(fgMuted.toLowerCase());
   });
 });
 

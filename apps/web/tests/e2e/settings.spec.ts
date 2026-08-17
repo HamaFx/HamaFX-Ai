@@ -35,7 +35,9 @@ test.describe('Settings', () => {
     await nameInput.fill('Updated Test User');
     await page.getByRole('button', { name: /save|submit/i }).click();
 
-    await expect(page.getByText(/profile updated successfully/i)).toBeVisible({ timeout: 10_000 });
+    // The toast is announced twice (visible text + sr-only aria-live); assert
+    // the visible notification.
+    await expect(page.getByText(/profile updated successfully/i).first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('2. API key save + test flow — enter key, test, save', async ({ authedPage }) => {
@@ -52,7 +54,7 @@ test.describe('Settings', () => {
 
     const saveButton = page.getByRole('button', { name: /save keys/i });
     await saveButton.click();
-    await expect(page.getByText(/saved/i)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText('Saved', { exact: true })).toBeVisible({ timeout: 10_000 });
   });
 
   test('3. Symbol add/remove/reorder flow', async ({ authedPage }) => {
@@ -61,17 +63,27 @@ test.describe('Settings', () => {
     await page.goto('/settings/symbols');
     await expect(page.getByRole('heading', { name: /symbols watchlist/i })).toBeVisible();
 
-    // Add EURUSD
+    // Add EURUSD (the watchlist may start empty, so this is row 0)
     await page.getByPlaceholder(/search catalog by symbol or name/i).fill('EURUSD');
     await page.getByRole('button', { name: /add EURUSD to watchlist/i }).click();
-    await expect(page.getByText(/EURUSD added to watchlist/i)).toBeVisible({ timeout: 10_000 });
+    // Toast text renders twice (visible + sr-only aria-live); assert the
+    // visible notification.
+    await expect(page.getByText(/EURUSD added to watchlist/i).first()).toBeVisible({ timeout: 10_000 });
 
-    // Reorder — move up
-    await page.getByRole('button', { name: /move symbol up/i }).first().click();
+    // Add a second symbol so the reorder step has two rows
+    await page.getByPlaceholder(/search catalog by symbol or name/i).fill('GBPUSD');
+    await page.getByRole('button', { name: /add GBPUSD to watchlist/i }).click();
+    await expect(page.getByText(/GBPUSD added to watchlist/i).first()).toBeVisible({ timeout: 10_000 });
 
-    // Remove
+    // Reorder — move GBPUSD (the last row) up; EURUSD's move-up button
+    // stays disabled at index 0.
+    await page.getByRole('button', { name: /move symbol up/i }).last().click();
+
+    // Remove both
+    await page.getByRole('button', { name: /remove GBPUSD from watchlist/i }).click();
+    await expect(page.getByText(/GBPUSD removed from watchlist/i).first()).toBeVisible({ timeout: 10_000 });
     await page.getByRole('button', { name: /remove EURUSD from watchlist/i }).click();
-    await expect(page.getByText(/EURUSD removed from watchlist/i)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(/EURUSD removed from watchlist/i).first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('4. Model picker selection flow — select a chat model', async ({ authedPage }) => {
@@ -99,15 +111,21 @@ test.describe('Settings', () => {
     await page.goto('/settings/models');
     await expect(page.getByRole('heading', { name: /models/i })).toBeVisible();
 
-    const select = page.locator('select').first();
-    await expect(select).toBeEnabled({ timeout: 15_000 });
+    // The chat picker hydrates after its GET settles, so other selects
+    // (fallback chain) may appear first. Target the picker by its label.
+    // "Pick a model" appears in the collapsed Advanced pickers too, but the
+    // chat picker is first in DOM order.
+    const pickerLabel = page.locator('label').filter({ hasText: /pick a model/i }).first();
+    const select = pickerLabel.locator('select');
+    await expect(select).toBeVisible({ timeout: 15_000 });
 
     const options = await select.locator('option').all();
     if (options.length > 1) {
       const firstOptionValue = await options[1]!.getAttribute('value');
       if (firstOptionValue) {
         await select.selectOption(firstOptionValue);
-        await expect(page.getByText(/current chat model updated/i)).toBeVisible({ timeout: 10_000 });
+        // Toast + sr-only aria-live duplicate; assert the visible one.
+        await expect(page.getByText(/current chat model updated/i).first()).toBeVisible({ timeout: 10_000 });
       }
     }
   });
@@ -122,7 +140,8 @@ test.describe('Settings', () => {
     await budgetInput.fill('50');
 
     await page.getByRole('button', { name: /save changes/i }).click();
-    await expect(page.getByText(/usage limits and alerts updated successfully/i)).toBeVisible({ timeout: 10_000 });
+    // Toast + sr-only aria-live duplicate; assert the visible notification.
+    await expect(page.getByText(/usage limits and alerts updated successfully/i).first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('6. Settings navigation — all settings pages load', async ({ authedPage }) => {

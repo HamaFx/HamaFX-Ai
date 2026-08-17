@@ -22,6 +22,8 @@ import {
   IconTerminal,
   IconHeartbeat,
   IconSettingsBolt,
+  IconMessageReport,
+  IconDatabase,
 } from '@tabler/icons-react';
 
 import { cn } from '@/lib/cn';
@@ -104,6 +106,16 @@ const AdminAuditTable = dynamic(
   { loading: TabFallback },
 ) as ComponentType;
 
+const AdminFeedbackReview = dynamic(
+  () => import('./_components/admin-feedback-review').then((m) => m.AdminFeedbackReview),
+  { loading: TabFallback },
+) as ComponentType;
+
+const AdminDatasetReview = dynamic(
+  () => import('./_components/admin-dataset-review').then((m) => m.AdminDatasetReview),
+  { loading: TabFallback },
+) as ComponentType;
+
 const TABS = [
   { id: 'health', label: 'Health', icon: IconHeartbeat, Component: AdminSystemHealth },
   { id: 'onboarding', label: 'Onboarding', icon: IconRefresh, Component: AdminOnboardingControl },
@@ -114,6 +126,8 @@ const TABS = [
   { id: 'features', label: 'Features', icon: IconFlag, Component: AdminFeatureFlags },
   { id: 'logs', label: 'Logs', icon: IconTerminal, Component: AdminLogViewer },
   { id: 'audit', label: 'Audit', icon: IconHistory, Component: AdminAuditTable },
+  { id: 'feedback', label: 'Feedback', icon: IconMessageReport, Component: AdminFeedbackReview },
+  { id: 'datasets', label: 'Datasets', icon: IconDatabase, Component: AdminDatasetReview },
   { id: 'devtools', label: 'Dev Tools', icon: IconSettingsBolt, Component: AdminDevTools },
 ] as const;
 

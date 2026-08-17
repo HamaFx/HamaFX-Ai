@@ -22,6 +22,7 @@
 // the broken UI login — see useActionState + NextAuth redirect issue).
 // ---------------------------------------------------------------------------
 
+import { createThread } from '@kestrel/ai/persistence';
 import { expect, test } from '@playwright/test';
 
 import { createSessionForUser, ensureTestUser } from './test-utils';
@@ -46,20 +47,31 @@ test.describe('Multi-User Isolation', () => {
     const pageB = await contextB.newPage();
 
     try {
-      // 2. Login as User A and create a thread
+      // 2. Login as User A and create a dedicated thread. Navigating to a
+      //    specific thread (rather than the /chat landing redirect) keeps this
+      //    test deterministic: the redirect picks the user's latest thread,
+      //    which can be the pinned briefings thread from earlier runs.
       const userA = await ensureTestUser('user-a@example.com', 'passwordA');
       const cookieA = await createSessionForUser(userA);
       await contextA.addCookies([cookieA]);
-      await pageA.goto('/chat');
+      const threadA = await createThread(userA.id, { pinnedSymbol: null });
+      await pageA.goto(`/chat/${threadA.id}`);
       await expect(pageA).toHaveURL(/.*\/chat.*/, { timeout: 30_000 });
 
       // Mock the AI chat endpoint
       await pageA.route('**/api/chat', (route) => {
         route.fulfill({
           status: 200,
-          contentType: 'text/plain; charset=utf-8',
-          headers: { 'x-vercel-ai-data-stream': 'v1' },
-          body: '0:"Mock AI response"\n',
+          contentType: 'text/event-stream',
+          headers: { 'Cache-Control': 'no-cache', Connection: 'keep-alive' },
+          body: [
+            'data: {"type":"text-start","id":"isolation-message"}',
+            '',
+            'data: {"type":"text-delta","id":"isolation-message","delta":"Mock AI response"}',
+            '',
+            'data: {"type":"text-end","id":"isolation-message"}',
+            '',
+          ].join('\n'),
         });
       });
 
@@ -67,10 +79,7 @@ test.describe('Multi-User Isolation', () => {
       await textareaA.fill('A unique message from User A');
       await textareaA.press('Enter');
 
-      await expect(pageA.locator('.group.items-end').first()).toBeVisible({ timeout: 15_000 });
-      await expect(pageA.locator('.group.items-end').first()).toContainText(
-        'A unique message from User A',
-      );
+      await expect(pageA.getByText('A unique message from User A')).toBeVisible({ timeout: 15_000 });
       await expect(pageA).toHaveURL(/.*\/chat\/[a-zA-Z0-9_-]+/);
 
       // Grab the thread ID from the URL
@@ -85,7 +94,15 @@ test.describe('Multi-User Isolation', () => {
       await expect(pageB).toHaveURL(/.*\/chat.*/, { timeout: 30_000 });
 
       // 4. Verify User B cannot access User A's thread directly
-      await pageB.goto(`/chat/${threadId}`);
+      try {
+        await pageB.goto(`/chat/${threadId}`);
+      } catch (error) {
+        // Next.js may abort the original navigation when the protected route
+        // redirects away from a thread owned by another user.
+        if (!(error instanceof Error) || !error.message.includes('ERR_ABORTED')) {
+          throw error;
+        }
+      }
 
       // The app should either 404, show an error, or redirect away.
       // Check that User B is NOT seeing User A's message.

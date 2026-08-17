@@ -34,7 +34,7 @@ export async function GET(request: Request): Promise<Response> {
   if (authResponse.status !== 200 || !snapshot) return authResponse;
 
   const criticalAnomalies = snapshot.anomalies.filter((anomaly) =>
-    /database|db |tick|worker|stuck|stale|dead-letter|budget reservation|diagnostic trace|provider fallback|Full-mode completion|Sentiment specialist|Recovery telemetry|Cron completion|AI tool success/i.test(anomaly),
+    /database|db |tick|worker|stuck|stale|dead-letter|budget reservation|diagnostic trace|provider fallback|Full-mode completion|Sentiment specialist|Recovery telemetry|Cron completion|cron telemetry|No cron runs|AI tool success|AI tool telemetry|No AI tool calls|Chat telemetry|No chat turns/i.test(anomaly),
   );
   const healthy = snapshot.dbOk && criticalAnomalies.length === 0;
   return Response.json(

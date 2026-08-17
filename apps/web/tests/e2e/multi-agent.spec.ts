@@ -22,7 +22,7 @@
 // verification that the correct mode is sent in the request body.
 // ---------------------------------------------------------------------------
 
-import { test, expect, FULL_MODE_SSE, QUICK_MODE_SSE, STANDARD_MODE_SSE } from './fixtures';
+import { test, expect, FULL_MODE_SSE, QUICK_MODE_SSE, SINGLE_MODE_SSE, STANDARD_MODE_SSE } from './fixtures';
 
 test.describe('Multi-Agent Chat', () => {
   test('full mode shows 4 agent progress indicators', async ({ authedPage, mockChatApi }) => {
@@ -141,7 +141,7 @@ test.describe('Multi-Agent Chat', () => {
     expect(pollCount).toBeGreaterThanOrEqual(2);
   });
 
-  test('full mode keeps a specialist failure visible in the completed degraded result', async ({ authedPage }) => {
+  test('full mode stops without a partial result when a required specialist fails', async ({ authedPage }) => {
     const page = authedPage;
     let pollCount = 0;
 
@@ -151,24 +151,27 @@ test.describe('Multi-Agent Chat', () => {
         { agentName: 'technical', status: 'done', opinion: { agentName: 'technical', bias: 'bullish', confidence: 0.8, reasoning: 'Trend aligned' } },
         { agentName: 'fundamental', status: 'done', opinion: { agentName: 'fundamental', bias: 'neutral', confidence: 0.5, reasoning: 'Mixed macro' } },
         { agentName: 'risk', status: 'done', opinion: { agentName: 'risk', bias: 'neutral', confidence: 0.5, reasoning: 'Risk contained' } },
-        { agentName: 'sentiment', status: 'error', error: 'Agent unavailable. Please try again.' },
-        { agentName: 'decision', status: 'done' },
+        { agentName: 'sentiment', status: 'error', error: 'Required agent failed.' },
+        { agentName: 'decision', status: 'error', error: 'Full analysis stopped.' },
       ];
+      const progress = {
+        type: 'data-agent-progress',
+        data: {
+          agents,
+          mode: 'full',
+          status: 'failed',
+          error: 'Full analysis stopped. No partial answer was returned.',
+        },
+      };
       return route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify(pollCount === 1
-          ? { status: 'running', progress: [{ type: 'data-agent-progress', data: { agents, mode: 'full' } }] }
+          ? { status: 'running', progress: [progress] }
           : {
-              status: 'complete',
-              result: {
-                finalText: '**Bottom Line:** degraded committee result using three available specialists.',
-                agentOpinions: agents.filter((agent) => agent.opinion).map((agent) => agent.opinion),
-                mode: 'full',
-                totalCostUsd: 0.03,
-                totalLatencyMs: 900,
-                messageId: 'degraded-assistant-message',
-              },
+              status: 'failed',
+              progress: [progress],
+              error: 'Full analysis could not be completed. No partial answer was returned.',
             }),
       });
     });
@@ -185,8 +188,10 @@ test.describe('Multi-Agent Chat', () => {
     await page.getByRole('textbox').press('Enter');
 
     await expect(page.getByLabel('Sentiment agent: error')).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText(/Sentiment agent failed/i)).toBeVisible();
-    await expect(page.getByText(/degraded committee result/i)).toBeVisible();
+    await expect(page.getByLabel('Decision agent: error')).toBeVisible();
+    await expect(page.getByText(/Full analysis was not completed/i)).toBeVisible();
+    await expect(page.getByText(/No partial answer was returned/i)).toBeVisible();
+    await expect(page.getByText(/degraded committee result/i)).not.toBeVisible();
     await expect.poll(() => pollCount, { timeout: 15_000 }).toBeGreaterThanOrEqual(2);
   });
 
@@ -232,9 +237,9 @@ test.describe('Multi-Agent Chat', () => {
 
       route.fulfill({
         status: 200,
-        contentType: 'text/plain; charset=utf-8',
-        headers: { 'x-vercel-ai-data-stream': 'v1' },
-        body: '0:"Single agent response"\n',
+        contentType: 'text/event-stream',
+        headers: { 'Cache-Control': 'no-cache', Connection: 'keep-alive' },
+        body: SINGLE_MODE_SSE,
       });
     });
 

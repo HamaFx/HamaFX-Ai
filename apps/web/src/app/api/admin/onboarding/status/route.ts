@@ -17,7 +17,8 @@ const querySchema = z.object({
 
 export const GET = withAdminAuth(async (req, { user: admin }) => {
   const { userId } = parseSearchParams(req, querySchema);
-  const targetUserId = userId ?? admin.userId;
+  // Blank/whitespace userId means "my own account". Fall back to the admin.
+  const targetUserId = userId?.trim() || admin.userId;
 
   const { settings } = await getUserWithSettings(targetUserId);
   const symbols = await listUserSymbols(targetUserId);

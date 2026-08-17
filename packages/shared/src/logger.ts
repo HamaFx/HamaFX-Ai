@@ -215,7 +215,7 @@ export function logErrorContext(
       operation,
       ...correlation,
       error,
-      ...context,
+      ...(redactDiagnosticPayload(context) as Record<string, unknown>),
       ...(pattern
         ? {
             suggestedFix: pattern.suggestedFix,
@@ -329,7 +329,7 @@ export function logForAgent(
       category: data.category,
       ...correlation,
       ...(report ? { bugReport: report } : {}),
-      ...(data.context ?? {}),
+      ...(redactDiagnosticPayload(data.context ?? {}) as Record<string, unknown>),
       ...(data.suggestedFix ? { suggestedFix: data.suggestedFix } : {}),
       ...(data.relatedFiles ? { relatedFiles: data.relatedFiles } : {}),
     },
@@ -338,4 +338,4 @@ export function logForAgent(
 }
 
 // Import here to avoid circular dependency issues at module top level.
-import { generateBugReport } from './bug-report';
+import { generateBugReport, redactDiagnosticPayload } from './bug-report';

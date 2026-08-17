@@ -28,7 +28,10 @@
 //   test('my test', async ({ authedPage }) => { ... });
 // ---------------------------------------------------------------------------
 
+import { createThread, deleteThread } from '@kestrel/ai/persistence';
 import { test as base, expect, type Page } from '@playwright/test';
+
+import { ensureTestUser } from './test-utils';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -72,8 +75,18 @@ async function mockChatApi(page: Page, opts: ChatMockOptions = {}) {
     multiAgentBody,
   } = opts;
 
-  await page.route('**/api/chat', (route) => {
-    const body = route.request().postDataJSON();
+  // Match only the exact chat endpoint. A broader `**/api/chat` glob also
+  // intercepts `/api/chat/threads/fork` (and other sub-routes), which would
+  // swallow the fork request and return a chat stream instead of the fork
+  // JSON response.
+  await page.route(/\/api\/chat(?:\?.*)?$/, (route) => {
+    let body: { analysisMode?: string } | undefined;
+    try {
+      body = route.request().postDataJSON() as { analysisMode?: string };
+    } catch {
+      // A malformed request is still given the deterministic mock response;
+      // the UI test is validating rendering, not request serialization.
+    }
     const isMultiAgent = body?.analysisMode && body.analysisMode !== 'single';
 
     if (isMultiAgent && multiAgentBody) {
@@ -84,21 +97,42 @@ async function mockChatApi(page: Page, opts: ChatMockOptions = {}) {
         body: multiAgentBody,
       });
     } else {
+      const text = extractMockText(singleAgentBody);
       route.fulfill({
         status,
-        contentType: 'text/plain; charset=utf-8',
-        headers: { 'x-vercel-ai-data-stream': 'v1' },
-        body: singleAgentBody,
+        contentType: 'text/event-stream',
+        headers: { 'Cache-Control': 'no-cache', Connection: 'keep-alive' },
+        body: [
+          `data: ${JSON.stringify({ type: 'text-start', id: TEST_MESSAGE_ID })}`,
+          '',
+          `data: ${JSON.stringify({ type: 'text-delta', id: TEST_MESSAGE_ID, delta: text })}`,
+          '',
+          `data: ${JSON.stringify({ type: 'text-end', id: TEST_MESSAGE_ID })}`,
+          '',
+        ].join('\n'),
       });
     }
   });
+}
+
+function extractMockText(dataStream: string): string {
+  const firstTextPart = dataStream.match(/^0:(.*)$/m)?.[1]?.trim();
+  if (!firstTextPart) return dataStream;
+  try {
+    return JSON.parse(firstTextPart) as string;
+  } catch {
+    return dataStream;
+  }
 }
 
 // ---------------------------------------------------------------------------
 // Multi-agent SSE mock bodies — current ChatStreamEventSchema protocol.
 // ---------------------------------------------------------------------------
 
-const TEST_MESSAGE_ID = 'test-message-id';
+// The message id becomes the persisted assistant message id, and the fork
+// flow validates it as a UUID server-side. A literal non-UUID id makes
+// editing/forking fail with a 400, so generate a real UUID per mock.
+const TEST_MESSAGE_ID = crypto.randomUUID();
 
 export const FULL_MODE_SSE = [
   'data: {"type":"data-agent-progress","data":{"agents":[{"agentName":"technical","status":"running"},{"agentName":"fundamental","status":"pending"},{"agentName":"risk","status":"pending"},{"agentName":"sentiment","status":"pending"},{"agentName":"decision","status":"pending"}],"mode":"full"}}',
@@ -137,6 +171,15 @@ export const QUICK_MODE_SSE = [
   '',
 ].join('\n');
 
+export const SINGLE_MODE_SSE = [
+  `data: {"type":"text-start","id":"${TEST_MESSAGE_ID}"}`,
+  '',
+  `data: {"type":"text-delta","id":"${TEST_MESSAGE_ID}","delta":"Single agent response"}`,
+  '',
+  `data: {"type":"text-end","id":"${TEST_MESSAGE_ID}"}`,
+  '',
+].join('\n');
+
 // ---------------------------------------------------------------------------
 // Fixtures
 // ---------------------------------------------------------------------------
@@ -147,10 +190,33 @@ export const test = base.extend<Fixtures>({
   },
 
   authedPage: async ({ page }, use) => {
-    // The storageState is already loaded via the project config.
-    // We just navigate to the app to verify the session is valid.
-    await page.goto('/');
+    // The storageState is already loaded via the project config. Create a
+    // dedicated empty thread so tests do not depend on auth-setup or another
+    // test's most-recent-thread state.
+    const user = await ensureTestUser('test@example.com', 'password123');
+    const thread = await createThread(user.id, { pinnedSymbol: null });
+
+    // Specs commonly navigate to `/chat`, whose server redirect chooses the
+    // user's latest thread. Parallel tests share the seeded user, so that
+    // redirect can select another worker's thread just before its teardown.
+    // Keep landing-page navigation isolated while leaving explicit thread
+    // routes (`/chat/{id}`) and `/api/chat*` API requests unchanged. The
+    // regex anchors the path end so `/api/chat/threads/fork` is untouched.
+    await page.route(/\/chat(?:\?.*)?$/, async (route) => {
+      const url = new URL(route.request().url());
+      // Never rewrite API paths: `/api/chat` ends in `/chat` but must reach
+      // the mock/real route, not the landing redirect.
+      if (url.pathname.startsWith('/api/')) {
+        await route.continue();
+        return;
+      }
+      url.pathname = `/chat/${thread.id}`;
+      await route.continue({ url: url.toString() });
+    });
+
+    await page.goto(`/chat/${thread.id}`);
     await use(page);
+    await deleteThread(user.id, thread.id).catch(() => undefined);
   },
 
   mockChatApi: async ({}, use) => {

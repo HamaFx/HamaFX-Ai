@@ -93,12 +93,13 @@ jobs:
         working-directory: ./apps/web
       - run: pnpm exec playwright test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
         working-directory: ./apps/web
-      - name: Upload HTML report
+      - name: Upload blob report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report-shard-${{ matrix.shardIndex }}
-          path: apps/web/playwright-report/
+          name: playwright-blob-shard-${{ matrix.shardIndex }}
+          path: apps/web/blob-report/
+          if-no-files-found: ignore
           retention-days: 30
       - name: Upload JUnit results
         if: always()
@@ -116,3 +117,36 @@ jobs:
             apps/web/test-results/output/
             apps/web/test-results/.last-run.json
           retention-days: 7
+
+  merge-e2e-reports:
+    name: Merge Playwright Reports
+    if: always()
+    needs: e2e-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Download shard blobs
+        uses: actions/download-artifact@v4
+        with:
+          pattern: playwright-blob-shard-*
+          path: apps/web/blob-reports
+          merge-multiple: true
+      - name: Merge HTML report
+        working-directory: ./apps/web
+        run: pnpm exec playwright merge-reports --reporter=html blob-reports
+        continue-on-error: true
+      - name: Upload merged report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-merged
+          path: apps/web/playwright-report/
+          if-no-files-found: ignore
+          retention-days: 30

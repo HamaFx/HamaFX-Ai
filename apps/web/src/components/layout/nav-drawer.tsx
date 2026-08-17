@@ -140,6 +140,10 @@ export function NavDrawer({ userName, userEmail, userId: _userId, isAdmin }: { u
             paddingBottom: 'env(safe-area-inset-bottom)',
           }}
         >
+          {/* Vaul derives the dialog's accessible name from its Title. Keep
+              the name deterministic ("Primary navigation") instead of letting
+              the user-identity strip below become the dialog title. */}
+          <DrawerPrimitive.Title className="sr-only">Primary navigation</DrawerPrimitive.Title>
           {/* Vaul drag handle (vertical edge). */}
           <div
             aria-hidden="true"
@@ -155,21 +159,19 @@ export function NavDrawer({ userName, userEmail, userId: _userId, isAdmin }: { u
           </div>
 
           {/* Identity strip */}
-          <DrawerPrimitive.Title asChild>
-            <div className="flex items-center gap-3 px-5 pt-6 pb-5">
-              <div className="size-11 rounded-sm bg-bg-elev-2 text-fg flex items-center justify-center text-sm font-bold ">
-                <span className="text-lg font-bold">{initial}</span>
-              </div>
-              <div className="flex flex-col gap-0.5 min-w-0">
-                <span className="text-fg text-base font-bold tracking-tight truncate">
-                  {userName ?? 'Kestrel User'}
-                </span>
-                <span className="text-fg-subtle text-xs truncate">
-                  {userEmail ?? 'Personal trading copilot'}
-                </span>
-              </div>
+          <div className="flex items-center gap-3 px-5 pt-6 pb-5">
+            <div className="size-11 rounded-sm bg-bg-elev-2 text-fg flex items-center justify-center text-sm font-bold ">
+              <span className="text-lg font-bold">{initial}</span>
             </div>
-          </DrawerPrimitive.Title>
+            <div className="flex flex-col gap-0.5 min-w-0">
+              <span className="text-fg text-base font-bold tracking-tight truncate">
+                {userName ?? 'Kestrel User'}
+              </span>
+              <span className="text-fg-subtle text-xs truncate">
+                {userEmail ?? 'Personal trading copilot'}
+              </span>
+            </div>
+          </div>
 
           <DrawerPrimitive.Description className="sr-only">
             Navigate between chat, chart, news, calendar, alerts, journal, and settings.

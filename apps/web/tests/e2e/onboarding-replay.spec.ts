@@ -32,16 +32,14 @@ test.describe('Onboarding replay', () => {
     // Onboarding reset card is visible
     await expect(page.getByText('Reset and replay the onboarding wizard.')).toBeVisible();
 
-    // Click reset and confirm
-    page.on('dialog', (dialog) => {
-      void dialog.accept();
-    });
-
+    // The reset uses the app's ConfirmDrawer, not a native dialog. Open it and
+    // confirm via its "Reset" button.
     await page.getByRole('button', { name: /reset onboarding/i }).click();
+    await page.getByRole('button', { name: 'Reset', exact: true }).click();
 
     // Should redirect to onboarding and render the wizard
     await expect(page).toHaveURL(/.*\/onboarding.*/, { timeout: 30_000 });
-    await expect(page.getByText('Welcome to Kestrel')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Welcome to Kestrel' })).toBeVisible();
 
     await context.close();
   });
@@ -56,18 +54,18 @@ test.describe('Onboarding replay', () => {
     await page.goto('/admin');
     await expect(page).toHaveURL('/admin');
 
-    // Onboarding tab is active by default
-    await expect(page.getByText('Reset and replay the onboarding wizard.')).toBeVisible();
+    // The admin dashboard defaults to the Health tab. Activate Onboarding
+    // explicitly and wait for the inspector to load the current user.
+    await page.getByRole('tab', { name: 'Onboarding' }).click();
+    await expect(page.getByRole('button', { name: /reset onboarding/i })).toBeVisible();
 
-    page.on('dialog', (dialog) => {
-      void dialog.accept();
-    });
-
+    // Confirm via the app's ConfirmDrawer, not a native dialog.
     await page.getByRole('button', { name: /reset onboarding/i }).click();
+    await page.getByRole('button', { name: 'Reset', exact: true }).click();
 
     // Should redirect to onboarding and render the wizard
     await expect(page).toHaveURL(/.*\/onboarding.*/, { timeout: 30_000 });
-    await expect(page.getByText('Welcome to Kestrel')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Welcome to Kestrel' })).toBeVisible();
 
     await context.close();
   });

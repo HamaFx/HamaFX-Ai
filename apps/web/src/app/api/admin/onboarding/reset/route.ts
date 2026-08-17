@@ -18,7 +18,10 @@ const resetSchema = z.object({
 
 export const POST = withAdminAuth(async (req, { user: admin }) => {
   const body = await parseJsonBody(req, resetSchema);
-  const targetUserId = body.userId ?? admin.userId;
+  // The admin inspector can submit an empty-string userId to mean "my own
+  // account". Treat blank/whitespace values as unset so they fall back to
+  // the authenticated admin instead of failing the user lookup.
+  const targetUserId = body.userId?.trim() || admin.userId;
 
   // Verify target user exists
   const targetUser = await getUserById(targetUserId);

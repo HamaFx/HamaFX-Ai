@@ -22,7 +22,11 @@
 // Cmd/Ctrl+Enter saves the revision through the chat API.
 // ---------------------------------------------------------------------------
 
+import { appendUserMessage } from '@kestrel/ai/persistence';
+import type { UIMessage } from 'ai';
+
 import { test, expect } from './fixtures';
+import { ensureTestUser } from './test-utils';
 
 test.describe('Message edit mode', () => {
   test('opens an accessible edit textarea from the edit prompt action', async ({
@@ -70,18 +74,41 @@ test.describe('Message edit mode', () => {
     const page = authedPage;
     await mockChatApi(page);
 
+    // The mocked stream bypasses /api/chat persistence. Capture the exact
+    // client message submitted by useChat, then persist that user row so this
+    // test exercises the real fork route and its idempotency-key lookup.
+    let submittedUserMessage: UIMessage | undefined;
+    page.on('request', (request) => {
+      if (request.method() !== 'POST' || !/\/api\/chat$/.test(new URL(request.url()).pathname)) return;
+      try {
+        const body = request.postDataJSON() as { messages?: UIMessage[] };
+        const last = body.messages?.at(-1);
+        if (last?.role === 'user') submittedUserMessage = last;
+      } catch {
+        // The mock helper deliberately tolerates malformed request bodies.
+      }
+    });
+
     const textarea = page.getByRole('textbox', { name: /chat message input/i });
     await textarea.fill('Original question');
     await textarea.press('Enter');
     await expect(page.getByText('Mock AI response')).toBeVisible({ timeout: 15_000 });
+    expect(submittedUserMessage).toBeDefined();
+
+    const user = await ensureTestUser('test@example.com', 'password123');
+    const threadId = new URL(page.url()).pathname.split('/').at(-1);
+    expect(threadId).toBeTruthy();
+    await appendUserMessage(user.id, threadId!, submittedUserMessage!);
 
     await page.getByRole('button', { name: /edit prompt/i }).click();
     const editBox = page.getByRole('textbox', { name: /edit message/i });
     await editBox.fill('Revised question');
     await page.keyboard.press('Control+Enter');
 
-    // Edit closes; the revised text is now the user message.
-    await expect(page.getByRole('textbox', { name: /edit message/i })).not.toBeVisible();
-    await expect(page.getByText('Revised question')).toBeVisible();
+    // Editing a non-terminal message branches the thread. Confirm the branch
+    // dialog; a successful fork navigates to the new thread URL.
+    await page.getByRole('button', { name: /create branch/i }).click();
+    await expect(page).toHaveURL(/.*\/chat\/[a-zA-Z0-9_-]+/, { timeout: 15_000 });
+    await expect(page.getByText('Revised question')).toBeVisible({ timeout: 15_000 });
   });
 });

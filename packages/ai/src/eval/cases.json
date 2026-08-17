@@ -4,35 +4,40 @@
     "prompt": "Give me a top-down read on gold from 4H down to 15M.",
     "expectedTools": ["analyze_technical"],
     "forbiddenTools": [],
-    "mustContainSubstrings": ["XAUUSD"]
+    "mustContainSubstrings": ["XAUUSD"],
+    "quality": { "requireNumericToolSupport": true }
   },
   {
     "id": "p02",
     "prompt": "What's the bias on EURUSD right now and why?",
     "expectedTools": ["analyze_technical"],
     "forbiddenTools": [],
-    "mustContainSubstrings": ["EURUSD"]
+    "mustContainSubstrings": ["EURUSD"],
+    "quality": { "requireNumericToolSupport": true }
   },
   {
     "id": "p03",
     "prompt": "Are there any high-impact USD events in the next 24h?",
     "expectedTools": ["get_calendar"],
     "forbiddenTools": [],
-    "mustContainSubstrings": []
+    "mustContainSubstrings": [],
+    "quality": { "requireEventToolSupport": true }
   },
   {
     "id": "p04",
     "prompt": "Summarise today's gold-relevant news and tell me what to watch.",
     "expectedTools": ["get_news"],
     "forbiddenTools": [],
-    "mustContainSubstrings": []
+    "mustContainSubstrings": [],
+    "quality": { "requireEventToolSupport": true }
   },
   {
     "id": "p05",
     "prompt": "Show RSI divergence on GBPUSD 1H if any.",
     "expectedTools": ["get_indicators"],
     "forbiddenTools": [],
-    "mustContainSubstrings": ["GBPUSD"]
+    "mustContainSubstrings": ["GBPUSD"],
+    "quality": { "requireNumericToolSupport": true }
   },
   {
     "id": "p06",
@@ -74,7 +79,11 @@
     "prompt": "I'm thinking long EURUSD at 1.0850 with a stop at 1.0815 and target 1.0920 on a 5k account at 1% risk. Size me up and verify.",
     "expectedTools": ["compute_risk", "verify_call"],
     "forbiddenTools": [],
-    "mustContainSubstrings": ["EURUSD"]
+    "mustContainSubstrings": ["EURUSD"],
+    "expectedToolOutputs": [
+      { "tool": "compute_risk", "path": "riskUsd", "value": 50, "tolerance": 0.01 }
+    ],
+    "quality": { "requireNumericToolSupport": true }
   },
   {
     "id": "p12",
@@ -88,7 +97,8 @@
     "prompt": "Expected range for XAUUSD over the next 8 hours given today's events?",
     "expectedTools": ["forecast_volatility"],
     "forbiddenTools": [],
-    "mustContainSubstrings": ["XAUUSD"]
+    "mustContainSubstrings": ["XAUUSD"],
+    "quality": { "requireNumericToolSupport": true }
   },
   {
     "id": "p14",
@@ -110,6 +120,7 @@
     "analysisMode": "quick",
     "expectedAgents": ["technical"],
     "expectedAgentStatuses": {"technical": "done"},
+    "expectedTerminalStatus": "complete",
     "mustContainSubstrings": ["XAUUSD"]
   },
   {
@@ -118,6 +129,7 @@
     "analysisMode": "standard",
     "expectedAgents": ["technical", "fundamental"],
     "expectedAgentStatuses": {"technical": "done", "fundamental": "done"},
+    "expectedTerminalStatus": "complete",
     "mustContainSubstrings": ["XAUUSD"]
   },
   {
@@ -126,15 +138,17 @@
     "analysisMode": "full",
     "expectedAgents": ["technical", "fundamental", "risk", "sentiment", "decision"],
     "expectedAgentStatuses": {"technical": "done", "fundamental": "done", "risk": "done", "sentiment": "done", "decision": "done"},
+    "expectedTerminalStatus": "complete",
     "mustContainSubstrings": ["XAUUSD"]
   },
   {
     "id": "mode-full-sentiment-degraded",
-    "prompt": "Complete the full XAUUSD committee analysis even if sentiment is unavailable.",
+    "prompt": "Run strict Full mode on XAUUSD when sentiment is unavailable; no partial answer should be returned.",
     "analysisMode": "full",
     "expectedAgents": ["technical", "fundamental", "risk", "sentiment", "decision"],
-    "expectedAgentStatuses": {"technical": "done", "fundamental": "done", "risk": "done", "sentiment": "error", "decision": "done"},
-    "mustContainSubstrings": ["XAUUSD"]
+    "expectedAgentStatuses": {"technical": "done", "fundamental": "done", "risk": "done", "sentiment": "error", "decision": "error"},
+    "expectedTerminalStatus": "failed",
+    "mustContainSubstrings": []
   },
   {
     "id": "mode-single",

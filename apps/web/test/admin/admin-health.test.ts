@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { computeHealthSloService } from '@/lib/services/admin-health';
 
-function createMockDb(scenario: 'healthy' | 'missing-live-ticks' | 'stale-tick' = 'healthy') {
+function createMockDb(scenario: 'healthy' | 'missing-live-ticks' | 'stale-tick' | 'silent' = 'healthy') {
   // The service always issues queries in the same order:
   // 1) DB probe, 2) live_ticks, 3) cron_runs, 4) chat_tool_telemetry,
   // 5) chat_telemetry, 6) analysis_jobs, 7) operational recovery signals.
@@ -30,15 +30,21 @@ function createMockDb(scenario: 'healthy' | 'missing-live-ticks' | 'stale-tick' 
       }
 
       if (callIndex === 3) {
-        return { rows: [{ total: '10', done: '9', stuck: '1' }] };
+        return scenario === 'silent'
+          ? { rows: [{ total: '0', done: '0', stuck: '0' }] }
+          : { rows: [{ total: '10', done: '9', stuck: '1' }] };
       }
 
       if (callIndex === 4) {
-        return { rows: [{ total: '100', ok: '99' }] };
+        return scenario === 'silent'
+          ? { rows: [{ total: '0', ok: '0' }] }
+          : { rows: [{ total: '100', ok: '99' }] };
       }
 
       if (callIndex === 5) {
-        return { rows: [{ turns: '50' }] };
+        return scenario === 'silent'
+          ? { rows: [{ turns: '0' }] }
+          : { rows: [{ turns: '50' }] };
       }
 
       if (callIndex === 6) {
@@ -132,5 +138,15 @@ describe('computeHealthSloService', () => {
 
     expect(result.anomalies.some((a) => a.includes('stale'))).toBe(true);
     expect(result.overall).toBe('degraded');
+  });
+
+  it('flags silent AI telemetry instead of reporting an unverified healthy window', async () => {
+    const db = createMockDb('silent');
+    const result = await computeHealthSloService(db, { hours: 1 });
+
+    expect(result.overall).toBe('degraded');
+    expect(result.anomalies).toContain('No AI tool calls in the selected window — gateway health cannot be verified');
+    expect(result.anomalies).toContain('No chat turns in the selected window — chat health cannot be verified');
+    expect(result.anomalies).toContain('No cron runs in the selected window — cron health cannot be verified');
   });
 });

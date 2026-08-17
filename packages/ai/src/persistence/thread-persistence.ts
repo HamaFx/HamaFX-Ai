@@ -260,7 +260,13 @@ export async function forkThread(input: ForkThreadInput): Promise<ForkThreadResu
     throw new Error(`thread is too long to fork (maximum ${MAX_FORK_MESSAGES} messages)`);
   }
 
-  const editIdx = sourceMessages.findIndex((m) => m.id === atMessageId);
+  // Persisted messages use a UUID primary key, but a newly submitted
+  // `useChat` message is identified in the browser by `msg_...`. The default
+  // user-message idempotency key is `ui:${message.id}`, so resolve either
+  // representation within this already ownership-scoped thread.
+  const editIdx = sourceMessages.findIndex(
+    (m) => m.id === atMessageId || m.idempotencyKey === `ui:${atMessageId}`,
+  );
   if (editIdx === -1) throw new Error(`message not found: ${atMessageId}`);
   const target = sourceMessages[editIdx]!;
   if (target.role !== 'user') throw new Error(`can only edit user messages, got role=${target.role}`);

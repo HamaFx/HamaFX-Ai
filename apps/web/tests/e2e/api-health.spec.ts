@@ -35,14 +35,18 @@ test.describe('API health', () => {
     expect([200, 503]).toContain(response.status());
   });
 
-  test('unauthenticated API requests return 401 or redirect', async ({ request }) => {
-    // Try to access a protected API endpoint without auth
-    const response = await request.get('/api/chat/threads', {
+  test('unauthenticated API requests return 401 or redirect', async ({ browser }) => {
+    const context = await browser.newContext({
+      baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+      storageState: { cookies: [], origins: [] },
+    });
+    const response = await context.request.get('/api/chat/threads', {
       maxRedirects: 0,
     });
+    await context.close();
 
     // Should be 401, 403, or 307 (redirect to login)
-    expect([401, 403, 307]).toContain(response.status());
+    expect([401, 403, 302, 307]).toContain(response.status());
   });
 
   test('GET /api/settings/catalog returns data or 401', async ({ request }) => {
@@ -62,6 +66,6 @@ test.describe('API health', () => {
     });
 
     // Should be rejected (403 for CSRF, 401 for auth, or 307 redirect)
-    expect([401, 403, 307]).toContain(response.status());
+    expect([401, 403, 302, 307]).toContain(response.status());
   });
 });

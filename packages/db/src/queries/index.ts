@@ -54,3 +54,5 @@ export * as userSessions from './user-sessions';
 export * as ipnEvents from './ipn-events';
 export * as candles from './candles';
 export * as agentOpinions from './agent-opinions';
+export * as aiFeedback from './ai-feedback';
+export * as evalDatasets from './eval-datasets';
