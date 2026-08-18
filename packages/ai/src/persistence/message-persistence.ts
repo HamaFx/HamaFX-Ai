@@ -39,6 +39,8 @@ export interface DbMessage {
   /** Vercel AI SDK v5 message-parts JSON (tool calls, tool results, etc.). */
   parts: unknown;
   createdAt: number;
+  /** Original UI idempotency key when available. */
+  idempotencyKey?: string | null;
 }
 
 export async function listMessages(userId: string, threadId: string, limit = 200): Promise<DbMessage[]> {
@@ -57,6 +59,7 @@ export async function listMessages(userId: string, threadId: string, limit = 200
     content: r.content,
     parts: r.parts,
     createdAt: r.createdAt.getTime(),
+    ...(r.idempotencyKey ? { idempotencyKey: r.idempotencyKey } : {}),
   }));
 }
 

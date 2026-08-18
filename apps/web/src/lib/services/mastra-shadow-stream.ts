@@ -4,12 +4,24 @@ import 'server-only';
 
 import { consumeUIMessageStream, waitUntil } from '@kestrel/ai';
 
-import { runMastraShadowComparison, type MastraShadowComparison } from './mastra-shadow-comparison';
+import {
+  runLegacyShadowComparison,
+  runMastraShadowComparison,
+  type MastraShadowComparison,
+} from './mastra-shadow-comparison';
+import type { XauusdResearchReport } from '@kestrel/ai/mastra';
+import type { UIMessage } from 'ai';
 
 export interface MastraShadowStreamInput {
   userId: string;
   threadId: string;
   prompt: string;
+}
+
+export interface LegacyShadowStreamInput extends MastraShadowStreamInput {
+  userMessage: UIMessage;
+  mastraText: string;
+  report: XauusdResearchReport | null;
 }
 
 /**
@@ -53,4 +65,26 @@ export function attachMastraShadowToResponse(
     statusText: response.statusText,
     headers: response.headers,
   });
+}
+
+/**
+ * Run the legacy pipeline beside a user-facing Mastra response. Unlike the
+ * legacy-primary wrapper above, this does not tee the client response because
+ * the primary Mastra result is already available as a completed stream.
+ */
+export function attachLegacyShadowToMastraResponse(
+  response: Response,
+  input: LegacyShadowStreamInput,
+  onComparison?: (comparison: MastraShadowComparison | null) => void,
+): Response {
+  waitUntil(
+    runLegacyShadowComparison(input)
+      .then((comparison) => {
+        onComparison?.(comparison);
+      })
+      .catch(() => {
+        onComparison?.(null);
+      }),
+  );
+  return response;
 }

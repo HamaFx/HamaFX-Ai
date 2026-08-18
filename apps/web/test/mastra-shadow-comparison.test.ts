@@ -7,6 +7,8 @@ const mocks = vi.hoisted(() => ({
   reserveTurnBudget: vi.fn(),
   estimateCostUsd: vi.fn(),
   getServerEnv: vi.fn(),
+  runChat: vi.fn(),
+  consumeUIMessageStream: vi.fn(),
   runMastraXauusdResearch: vi.fn(),
   metrics: { increment: vi.fn(), observe: vi.fn() },
 }));
@@ -15,11 +17,17 @@ vi.mock('@kestrel/ai', () => ({
   DEFAULT_MAX_DAILY_USD: 5,
   estimateCostUsd: mocks.estimateCostUsd,
   reserveTurnBudget: mocks.reserveTurnBudget,
+  runChat: mocks.runChat,
+  consumeUIMessageStream: mocks.consumeUIMessageStream,
 }));
 vi.mock('@kestrel/db', () => ({
   getUserWithSettings: mocks.getUserWithSettings,
 }));
-vi.mock('@kestrel/shared', () => ({ metrics: mocks.metrics }));
+vi.mock('@kestrel/shared', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@kestrel/shared')>()),
+  metrics: mocks.metrics,
+}));
+vi.mock('@kestrel/ai/agent', () => ({ runChat: mocks.runChat }));
 vi.mock('@kestrel/shared/logger', () => ({
   createCategorizedLogger: () => ({ info: vi.fn(), warn: vi.fn() }),
 }));
@@ -97,6 +105,38 @@ describe('Mastra shadow comparison', () => {
     expect(budget.release).not.toHaveBeenCalled();
     expect(mocks.metrics.increment).toHaveBeenCalledWith('mastra_shadow_total', expect.objectContaining({
       tags: expect.objectContaining({ outcome: 'completed' }),
+    }));
+  });
+
+  it('runs the legacy comparison without persisting a second message', async () => {
+    mocks.runChat.mockResolvedValue({
+      toUIMessageStreamResponse: () => new Response('legacy-stream'),
+    });
+    mocks.consumeUIMessageStream.mockResolvedValue({
+      text: 'Legacy gold analysis',
+      errors: [],
+    });
+
+    const { runLegacyShadowComparison } = await import('@/lib/services/mastra-shadow-comparison');
+    const result = await runLegacyShadowComparison({
+      userId: 'user-1',
+      threadId: 'thread-1',
+      prompt: 'Analyse XAUUSD',
+      userMessage: {
+        id: 'message-1',
+        role: 'user',
+        parts: [{ type: 'text', text: 'Analyse XAUUSD' }],
+      },
+      mastraText: 'Mastra gold analysis',
+      report: null,
+    });
+
+    expect(result).not.toBeNull();
+    expect(mocks.runChat).toHaveBeenCalledWith(expect.objectContaining({
+      persistMessages: false,
+      telemetryKind: 'legacy_shadow',
+      excludeMessageIdempotencyKeys: ['mastra:thread-1:message-1:assistant'],
+      threadId: 'thread-1',
     }));
   });
 

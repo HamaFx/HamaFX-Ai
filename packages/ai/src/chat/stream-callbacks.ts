@@ -87,6 +87,8 @@ export interface BuildStreamCallbacksArgs {
   userSettings: UserSettingsRow;
   env: RunChatArgs['env'];
   signal: AbortSignal | null;
+  persistMessages: boolean;
+  telemetryKind?: 'legacy_shadow';
 }
 
 export function buildStreamCallbacks(args: BuildStreamCallbacksArgs): {
@@ -109,6 +111,8 @@ export function buildStreamCallbacks(args: BuildStreamCallbacksArgs): {
     userSettings,
     env,
     signal,
+    persistMessages,
+    telemetryKind,
   } = args;
 
   const onError: OnError = async ({ error }) => {
@@ -145,7 +149,7 @@ export function buildStreamCallbacks(args: BuildStreamCallbacksArgs): {
       outputTokens: 0,
       toolCalls: 0,
       ms: Date.now() - startedAt,
-      kind: 'turn_failed',
+      kind: telemetryKind === 'legacy_shadow' ? 'legacy_shadow_failed' : 'turn_failed',
     }).catch((telemetryErr) =>
       alog.error('failed to persist stream failure telemetry', { err: String(telemetryErr) }),
     );
@@ -173,7 +177,7 @@ export function buildStreamCallbacks(args: BuildStreamCallbacksArgs): {
     try {
       const assistantUiMsg = response.messages.at(-1);
       let messageId: string | null = null;
-      if (assistantUiMsg && assistantUiMsg.role === 'assistant') {
+      if (persistMessages && assistantUiMsg && assistantUiMsg.role === 'assistant') {
         const baseParts: UIMessage['parts'] = Array.isArray(assistantUiMsg.content)
           ? (assistantUiMsg.content as UIMessage['parts'])
           : [{ type: 'text', text: String(assistantUiMsg.content) }];
@@ -260,6 +264,7 @@ export function buildStreamCallbacks(args: BuildStreamCallbacksArgs): {
         outputTokens: usage?.outputTokens ?? 0,
         toolCalls: countToolCalls(response.messages),
         ms: Date.now() - startedAt,
+        ...(telemetryKind ? { kind: telemetryKind } : {}),
       });
       if (env.LOG_PROMPTS) {
         console.info('[ai] finish reason=%s tokens=%o', finishReason, usage);
@@ -293,6 +298,8 @@ export function buildStreamCallbacks(args: BuildStreamCallbacksArgs): {
       // registry before the runtime can recycle the instance.
       await flushMetrics();
     }
+
+    if (!persistMessages) return;
 
     waitUntil(
       runAutoTitleBackground({

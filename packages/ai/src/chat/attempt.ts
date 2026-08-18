@@ -76,6 +76,8 @@ export interface BuildAttemptArgs {
   diagnosticContext: RunDiagnosticContext | null;
   startedAt: number;
   signal: AbortSignal | null;
+  persistMessages: boolean;
+  telemetryKind?: 'legacy_shadow';
 }
 
 /**
@@ -106,6 +108,8 @@ export function buildAttemptCallback(
     diagnosticContext,
     startedAt,
     signal,
+    persistMessages,
+    telemetryKind,
   } = args;
 
   return async (attemptCtx): Promise<AttemptResult<StreamTextResult>> => {
@@ -268,6 +272,8 @@ export function buildAttemptCallback(
       userSettings,
       env,
       signal: signal ?? null,
+      persistMessages,
+      ...(telemetryKind ? { telemetryKind } : {}),
     });
 
     const streamArgs: Parameters<typeof streamText>[0] = {

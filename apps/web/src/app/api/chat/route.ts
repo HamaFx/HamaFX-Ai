@@ -21,7 +21,10 @@ import {
   decideMastraXauusdShadow,
   isMastraXauusdShadowEnabled,
 } from '@/lib/services/mastra-shadow-routing';
-import { attachMastraShadowToResponse } from '@/lib/services/mastra-shadow-stream';
+import {
+  attachLegacyShadowToMastraResponse,
+  attachMastraShadowToResponse,
+} from '@/lib/services/mastra-shadow-stream';
 import {
   AnalysisQueuedEventSchema,
   BudgetExceededError,
@@ -185,9 +188,9 @@ export const POST = withAuth<void>(async (req, { user }) => {
       });
       metrics.increment('mastra_chat_route_total', { tags: { decision: decision.route, reason: decision.reason } });
 
-      if (decision.route === 'legacy') {
-        // Start the independent shadow-flag lookup while the legacy model runs.
-        // It is awaited only after the legacy response exists, so flag latency
+      if (decision.route === 'legacy' || decision.route === 'mastra') {
+        // Start the independent shadow-flag lookup while the primary model runs.
+        // It is awaited only after the primary result exists, so flag latency
         // does not add a second model round-trip to the user request.
         shadowEnabledPromise = isMastraXauusdShadowEnabled().catch((error) => {
           log.warn({ err: String(error) }, 'Mastra shadow flag lookup failed; shadow disabled');
@@ -205,7 +208,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
             prompt: userText,
             signal: req.signal,
           });
-          return mastraChatResponse({
+          const mastraResponse = mastraChatResponse({
             messageId: crypto.randomUUID(),
             text: run.result.text,
             runId: run.runId,
@@ -217,6 +220,17 @@ export const POST = withAuth<void>(async (req, { user }) => {
             packetId: run.packet.packetId,
             observedCost: run.observedCost,
           });
+          if (shadowEnabledPromise && await shadowEnabledPromise) {
+            return attachLegacyShadowToMastraResponse(mastraResponse, {
+              userId: user.userId,
+              threadId: body.threadId,
+              prompt: userText,
+              userMessage: last as UIMessage,
+              mastraText: run.result.text,
+              report: run.report,
+            });
+          }
+          return mastraResponse;
         } catch (error) {
           metrics.increment('mastra_chat_fallback_total', { tags: { reason: 'mastra-failed' } });
           log.warn({ err: String(error), threadId: body.threadId }, 'Mastra chat failed; falling back to legacy agent');

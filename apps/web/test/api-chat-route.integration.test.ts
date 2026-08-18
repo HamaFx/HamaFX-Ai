@@ -11,6 +11,7 @@ const {
   mockRunMastraXauusdChat,
   mockShadowEnabled,
   mockAttachMastraShadow,
+  mockAttachLegacyShadow,
 } = vi.hoisted(() => ({
   mockEnqueueAnalysisJob: vi.fn(),
   mockGetThread: vi.fn(),
@@ -21,6 +22,7 @@ const {
   mockRunMastraXauusdChat: vi.fn(),
   mockShadowEnabled: vi.fn(),
   mockAttachMastraShadow: vi.fn((response: Response) => response),
+  mockAttachLegacyShadow: vi.fn((response: Response) => response),
 }));
 
 vi.mock('@sentry/nextjs', () => ({
@@ -66,6 +68,7 @@ vi.mock('@/lib/services/mastra-shadow-routing', () => ({
 }));
 vi.mock('@/lib/services/mastra-shadow-stream', () => ({
   attachMastraShadowToResponse: mockAttachMastraShadow,
+  attachLegacyShadowToMastraResponse: mockAttachLegacyShadow,
 }));
 vi.mock('@/lib/services/mastra-chat', () => ({
   runMastraXauusdChat: mockRunMastraXauusdChat,
@@ -162,6 +165,31 @@ describe('POST /api/chat boundary', () => {
       prompt: 'Analyze XAUUSD',
     }));
     expect(mockRunChat).not.toHaveBeenCalled();
+  });
+
+  it('runs a non-persisting legacy comparison when Mastra is user-facing', async () => {
+    mockMastraEnabled.mockResolvedValue(true);
+    mockShadowEnabled.mockResolvedValue(true);
+    mockRunMastraXauusdChat.mockResolvedValue({
+      runId: 'mastra-run-1',
+      modelId: 'mistral-small-latest',
+      providerId: 'mistral',
+      observedCost: 0.001,
+      packet: { packetId: 'packet-1', status: 'ready', dataQuality: 'partial' },
+      report: null,
+      result: { text: 'Grounded gold analysis' },
+    });
+
+    const response = await POST(request(body()), { params: Promise.resolve(undefined) });
+
+    expect(response.status).toBe(200);
+    expect(mockAttachLegacyShadow).toHaveBeenCalledWith(expect.any(Response), expect.objectContaining({
+      userId: 'user-1',
+      threadId: '11111111-1111-4111-8111-111111111111',
+      prompt: 'Analyze XAUUSD',
+      mastraText: 'Grounded gold analysis',
+    }));
+    expect(mockAttachMastraShadow).not.toHaveBeenCalled();
   });
 
   it('falls back to the legacy agent when Mastra fails', async () => {

@@ -52,4 +52,13 @@ export interface RunChatArgs {
   signal?: AbortSignal;
   /** HTTP request id used to correlate route logs with the AI trace. */
   requestId?: string;
+  /**
+   * Background comparison mode. It runs the normal agent pipeline without
+   * appending chat messages or generating an automatic title.
+   */
+  persistMessages?: boolean;
+  /** Durable telemetry label for a background legacy comparison run. */
+  telemetryKind?: 'legacy_shadow';
+  /** Optional idempotency keys omitted from the authenticated history snapshot. */
+  excludeMessageIdempotencyKeys?: readonly string[];
 }

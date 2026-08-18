@@ -98,6 +98,7 @@ export async function runChat(args: RunChatArgs) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function runChatInner(args: RunChatArgs): Promise<any> {
   const { threadId, userId, userMessage, env, modelOverride, customInstructions, signal } = args;
+  const persistMessages = args.persistMessages !== false;
   const startedAt = Date.now();
   const diagnosticContext = getDiagnosticContext();
 
@@ -129,19 +130,43 @@ async function runChatInner(args: RunChatArgs): Promise<any> {
   const budget = await reserveTurnBudget({ userId, maxDailyUsd });
 
   try {
-    // 2) Persist the user message before we start streaming. If the model fails
-    //    we still want the prompt in history so retries can resume.
-    await appendUserMessage(userId, threadId, userMessage);
-  recordStep('persist_user_message', { threadId });
+    // 2) Persist the user message before we start streaming. Shadow runs
+    //    intentionally skip this write but add the authenticated prompt to the
+    //    in-memory model context below.
+    if (persistMessages) {
+      await appendUserMessage(userId, threadId, userMessage);
+    }
+    recordStep('persist_user_message', { threadId, persisted: persistMessages });
 
   // 3) Load history + ambient snapshot in parallel; THEN apply rolling-summary
   //    compaction once we know the message count.
   recordStep('fetch_history_and_snapshot');
-  const [history, snapshot] = await Promise.all([
+  const [loadedHistory, snapshot] = await Promise.all([
     listMessages(userId, threadId, 60),
     buildLiveSnapshot({ signal, userId }),
   ]);
   completeStep('fetch_history_and_snapshot', 'completed');
+  const excludedMessageKeys = new Set(args.excludeMessageIdempotencyKeys ?? []);
+  const history = excludedMessageKeys.size > 0
+    ? loadedHistory.filter((message) => !message.idempotencyKey || !excludedMessageKeys.has(message.idempotencyKey))
+    : loadedHistory;
+
+  const currentMessageAlreadyPersisted = history.some(
+    (message) => message.idempotencyKey === `ui:${userMessage.id}`,
+  );
+  const contextHistory = persistMessages || currentMessageAlreadyPersisted
+    ? history
+    : [
+        ...history,
+        {
+          id: userMessage.id,
+          threadId,
+          role: 'user' as const,
+          content: getMessageText(userMessage),
+          parts: userMessage.parts,
+          createdAt: Date.now(),
+        },
+      ];
 
 
   // Phase F — compaction uses the same cheap-model derivation as
@@ -151,7 +176,7 @@ async function runChatInner(args: RunChatArgs): Promise<any> {
   const compactArgs: Parameters<typeof compactThread>[0] = {
     threadId,
     userId,
-    history,
+    history: contextHistory,
     env,
     compactionModelId,
   };
@@ -274,6 +299,8 @@ async function runChatInner(args: RunChatArgs): Promise<any> {
       diagnosticContext,
       startedAt,
       signal: signal ?? null,
+      persistMessages,
+      ...(args.telemetryKind ? { telemetryKind: args.telemetryKind } : {}),
     }),
   });
 

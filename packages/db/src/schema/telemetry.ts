@@ -73,6 +73,8 @@ export type ChatTelemetryKind =
   | 'mastra_xauusd_poc_failed'
   | 'mastra_xauusd_shadow'
   | 'mastra_xauusd_shadow_failed'
+  | 'legacy_shadow'
+  | 'legacy_shadow_failed'
   | 'turn_failed';
 
 /**

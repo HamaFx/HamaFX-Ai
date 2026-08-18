@@ -4,9 +4,14 @@ import 'server-only';
 
 import {
   DEFAULT_MAX_DAILY_USD,
+  consumeUIMessageStream,
   estimateCostUsd,
   reserveTurnBudget,
 } from '@kestrel/ai';
+import { runChat } from '@kestrel/ai/agent';
+import type { RunChatArgs } from '@kestrel/ai/types';
+import type { UIMessage } from 'ai';
+import type { XauusdResearchReport } from '@kestrel/ai/mastra';
 import { runMastraXauusdResearch } from './mastra-xauusd';
 import { metrics } from '@kestrel/shared';
 import { createCategorizedLogger } from '@kestrel/shared/logger';
@@ -35,6 +40,15 @@ export interface RunMastraShadowComparisonInput {
   threadId: string;
   prompt: string;
   legacyText: string;
+}
+
+export interface RunLegacyShadowComparisonInput {
+  userId: string;
+  threadId: string;
+  prompt: string;
+  userMessage: UIMessage;
+  mastraText: string;
+  report: XauusdResearchReport | null;
 }
 
 function normalizedTokens(text: string): Set<string> {
@@ -181,6 +195,76 @@ export async function runMastraShadowComparison(
     }
     recordShadowFailure('failed', error instanceof Error && error.name === 'TimeoutError' ? 'timeout' : 'run');
     slog.warn('Mastra shadow comparison failed; legacy response is unaffected', {
+      threadId: input.threadId,
+      error: error instanceof Error ? error.name : 'UnknownError',
+      durationMs: Date.now() - startedAt,
+    });
+    return null;
+  }
+}
+
+/**
+ * Run the legacy agent beside a user-facing Mastra report. The legacy pipeline
+ * receives the authenticated prompt in memory but is forbidden from writing
+ * chat messages, titles, or assistant responses to the thread.
+ */
+export async function runLegacyShadowComparison(
+  input: RunLegacyShadowComparisonInput,
+): Promise<MastraShadowComparison | null> {
+  const startedAt = Date.now();
+  try {
+    const shadowEnv: RunChatArgs['env'] = getServerEnv();
+    const legacyRun = await runChat({
+      userId: input.userId,
+      threadId: input.threadId,
+      userMessage: input.userMessage,
+      env: shadowEnv,
+      persistMessages: false,
+      telemetryKind: 'legacy_shadow',
+      excludeMessageIdempotencyKeys: [`mastra:${input.threadId}:${input.userMessage.id}:assistant`],
+      signal: AbortSignal.timeout(MASTRA_SHADOW_TIMEOUT_MS),
+    });
+    const legacy = await consumeUIMessageStream(legacyRun.toUIMessageStreamResponse());
+    if (legacy.errors.length > 0) {
+      throw new Error('legacy shadow stream reported an error');
+    }
+
+    const comparison = compareMastraShadowTexts(
+      legacy.text,
+      input.mastraText,
+      input.report
+        ? { bias: input.report.bias, dataQuality: input.report.dataQuality }
+        : null,
+    );
+    metrics.increment('mastra_shadow_total', {
+      tags: {
+        outcome: 'completed',
+        side: 'legacy',
+        overlap: comparison.overlap,
+        dataQuality: comparison.mastraDataQuality ?? 'unknown',
+      },
+    });
+    metrics.observe('total_latency_ms', Date.now() - startedAt, {
+      tags: { agent: 'legacy-shadow' },
+    });
+    slog.info('Legacy shadow comparison completed', {
+      threadId: input.threadId,
+      legacyChars: comparison.legacyChars,
+      mastraChars: comparison.mastraChars,
+      sharedTokenRatio: comparison.sharedTokenRatio,
+      overlap: comparison.overlap,
+      mastraVerified: comparison.mastraVerified,
+      durationMs: Date.now() - startedAt,
+    });
+    return comparison;
+  } catch (error) {
+    metrics.increment('mastra_shadow_total', {
+      tags: { outcome: 'failed', side: 'legacy' },
+    });
+    metrics.increment('mastra_shadow_failed_total', {
+      tags: { reason: error instanceof Error && error.name === 'TimeoutError' ? 'timeout' : 'legacy-run' },
+    });
+    slog.warn('Legacy shadow comparison failed; Mastra response is unaffected', {
       threadId: input.threadId,
       error: error instanceof Error ? error.name : 'UnknownError',
       durationMs: Date.now() - startedAt,

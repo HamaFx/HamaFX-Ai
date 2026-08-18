@@ -1285,13 +1285,15 @@ The shadow path is eligible only for:
 - Requests without explicit model overrides
 - Requests where Mastra was not already attempted
 
-When eligible, the route tees the legacy UI stream. The client receives the original response immediately while a bounded background task consumes a copy and runs Mastra with a 30-second timeout. The shadow task:
+When the legacy agent is user-facing, the route tees its UI stream and runs Mastra in the background with a 30-second timeout. When Mastra is user-facing, the route instead runs the legacy pipeline in the background with persistence disabled. This means both rollout flags can be enabled together and the two systems are genuinely compared on the same eligible request.
+
+The shadow task:
 
 - Uses the existing user-scoped BYOK resolver.
 - Uses the existing daily budget reservation and reconciliation.
-- Does not append user or assistant messages.
-- Uses separate durable telemetry kinds: `mastra_xauusd_shadow` and `mastra_xauusd_shadow_failed`.
-- Never changes the legacy response if its flag lookup, parser, provider, budget, or persistence path fails.
+- Does not append user or assistant messages or generate titles.
+- Uses separate durable telemetry kinds: `mastra_xauusd_shadow`, `mastra_xauusd_shadow_failed`, `legacy_shadow`, and `legacy_shadow_failed`.
+- Keeps the current user-facing result unchanged if the comparison provider, parser, budget, or persistence path fails.
 - Uses the existing `waitUntil` integration so Vercel can finish the comparison after the response closes.
 
 Comparison telemetry intentionally stores aggregates rather than raw response text:
@@ -1308,4 +1310,4 @@ New metrics are:
 - `mastra_shadow_failed_total`
 - `mastra_shadow_skipped_total`
 
-The shadow flag remains off in production until an operator explicitly enables it. This milestone provides the safe measurement boundary needed before comparing quality, cost, latency, grounding, and failure rates at scale.
+Both rollout flags are now enabled in the private production environment for direct review. This milestone provides the safe measurement boundary needed to compare quality, cost, latency, grounding, and failure rates at scale without exposing shadow output to the user.
