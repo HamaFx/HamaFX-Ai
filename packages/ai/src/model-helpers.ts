@@ -64,7 +64,14 @@ export function envFallbackKeys(env: ResolveModelEnv): ByokPayload {
   // SDK via process.env for `google-vertex/...` gateway-style ids, but
   // BYOK factories need the JSON body itself.
   if (env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
-    out.vertex = env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
+    // Skip a malformed service-account value instead of letting it poison the
+    // fallback chain. A broken GOOGLE_APPLICATION_CREDENTIALS_JSON previously
+    // made every env-only resolution pick Vertex and then throw at factory
+    // time (or hang on auth), which silently broke chat for users without
+    // their own BYOK keys. Skipping it lets the next configured provider win.
+    if (isUsableVertexCredentials(env.GOOGLE_APPLICATION_CREDENTIALS_JSON)) {
+      out.vertex = env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
+    }
   }
   // Optional operator env keys (common self-host names). Only populate
   // when present so we never invent empty credentials.
@@ -108,6 +115,22 @@ export function supportsPromptCaching(modelId: string): boolean {
 // ───────────────────────────────────────────────────────────────────────
 // Internal helpers (exported for sibling resolver modules only).
 // ───────────────────────────────────────────────────────────────────────
+
+/**
+ * Cheap structural check for a Vertex service-account JSON value. Kept local
+ * to the env-fallback path so broken operator config degrades to the next
+ * provider instead of hanging every env-only model resolution on Vertex.
+ */
+function isUsableVertexCredentials(json: string): boolean {
+  try {
+    const parsed = JSON.parse(json) as Record<string, unknown>;
+    return typeof parsed.client_email === 'string'
+      && typeof parsed.private_key === 'string'
+      && parsed.private_key.length > 0;
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Internal helper — parse a stored "<providerId>:<bareModelId>" string

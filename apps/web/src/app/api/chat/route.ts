@@ -209,13 +209,22 @@ export const POST = withAuth<void>(async (req, { user }) => {
 
       if (decision.route === 'mastra') {
         mastraAttempted = true;
+        // M6 — the Mastra path needs the same hard route-level timeout as
+        // the legacy fallback. Without it a stalled provider or research
+        // fetch would run until Vercel kills the function at 60s, leaving
+        // the client stuck on "Thinking…". Aborting at 55s lets the catch
+        // below fall back to the legacy agent with a clean stream.
+        const mastraTimeoutSignal = AbortSignal.timeout(ROUTE_TIMEOUT_MS);
+        const mastraSignal = req.signal
+          ? AbortSignal.any([req.signal, mastraTimeoutSignal])
+          : mastraTimeoutSignal;
         try {
           const run = await runMastraXauusdChat({
             userId: user.userId,
             threadId: body.threadId,
             userMessage: last as UIMessage,
             prompt: userText,
-            signal: req.signal,
+            signal: mastraSignal,
             ...(priorReport ? { followup: true, priorReport } : {}),
           });
           const mastraResponse = mastraChatResponse({

@@ -167,6 +167,25 @@ describe('POST /api/chat boundary', () => {
     expect(mockRunChat).not.toHaveBeenCalled();
   });
 
+  it('gives the Mastra path a hard route timeout so a stalled provider falls back instead of hanging', async () => {
+    mockMastraEnabled.mockResolvedValue(true);
+    mockRunMastraXauusdChat.mockResolvedValue({
+      runId: 'mastra-run-1',
+      modelId: 'mistral-small-latest',
+      providerId: 'mistral',
+      observedCost: 0.001,
+      packet: { packetId: 'packet-1', status: 'ready', dataQuality: 'partial' },
+      report: null,
+      result: { text: 'Grounded gold analysis' },
+    });
+
+    await POST(request(body()), { params: Promise.resolve(undefined) });
+
+    const signal = mockRunMastraXauusdChat.mock.calls[0]?.[0]?.signal;
+    expect(signal).toBeInstanceOf(AbortSignal);
+    expect(signal?.aborted).toBe(false);
+  });
+
   it('routes Auto-mode XAUUSD turns to Mastra so the default UI mode is reviewable', async () => {
     mockMastraEnabled.mockResolvedValue(true);
     mockRunMastraXauusdChat.mockResolvedValue({
