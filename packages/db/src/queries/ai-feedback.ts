@@ -177,5 +177,16 @@ export async function reviewMessageFeedback(
     })
     .where(eq(schema.aiMessageFeedback.id, input.id))
     .returning();
+
+  if (row) {
+    // Keep review persistence independent from the training-loop side record.
+    // A transient secondary failure must not lose the admin's review.
+    try {
+      const { syncAiRegressionCase } = await import('./ai-regression-cases');
+      await syncAiRegressionCase(row.id);
+    } catch {
+      // The next review save can retry synchronization.
+    }
+  }
   return row ?? null;
 }

@@ -15,13 +15,19 @@ export const dynamic = 'force-dynamic';
 const querySchema = z.object({
   hours: z.coerce.number().int().min(1).max(720).default(168),
   limit: z.coerce.number().int().min(1).max(500).default(100),
+  primaryAgent: z.enum(['mastra', 'legacy']).optional(),
+  outcome: z.enum(['completed', 'failed']).optional(),
+  verified: z.enum(['true', 'false']).transform((value) => value === 'true').optional(),
 });
 
 export const GET = withAdminAuth(async (req) => {
-  const { hours, limit } = parseSearchParams(req, querySchema);
+  const { hours, limit, primaryAgent, outcome, verified } = parseSearchParams(req, querySchema);
   const rows = await listAiShadowComparisons({
     limit,
     from: new Date(Date.now() - hours * 60 * 60 * 1000),
+    ...(primaryAgent ? { primaryAgent } : {}),
+    ...(outcome ? { outcome } : {}),
+    ...(verified !== undefined ? { mastraVerified: verified } : {}),
   });
 
   return Response.json({

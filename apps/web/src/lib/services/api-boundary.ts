@@ -127,6 +127,8 @@ export {
   reviewMessageFeedback,
   listAiShadowComparisons,
   summarizeAiShadowComparisons,
+  listAiRegressionCases,
+  updateAiRegressionCaseStatus,
   listReviewedTrainingPairs,
   registerEvalDataset,
   getEvalDataset,

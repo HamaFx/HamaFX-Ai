@@ -1355,3 +1355,52 @@ The combined milestone is locally validated before deployment. After deployment,
 5. Compare Mastra and legacy on grounding, missing-data disclosure, latency, cost, and user feedback—not token overlap alone.
 
 Do not disable the legacy fallback or add mutation tools yet. The next engineering decision should be based on a meaningful sample of reviewed comparisons: improve the weakest evidence source, report behavior, or workflow stage first; only then consider reducing shadow traffic or removing legacy orchestration.
+
+## 33. Implemented feedback regression and report follow-up milestone
+
+Reviewed failures now enter a durable improvement queue automatically:
+
+- A reviewer-labelled `fail` creates an `ai_regression_cases` record.
+- The record stores only source IDs, prompt/output hashes, issue codes, and reviewer notes.
+- It never copies raw conversation text into the regression table.
+- Reclassifying the feedback dismisses the old case instead of deleting its audit history.
+- Admins can resolve, dismiss, reopen, and inspect cases from **Admin → Regressions**.
+
+The comparison dashboard now supports:
+
+- Time-window filters
+- Mastra versus legacy filters
+- Completed versus failed filters
+- Verified versus unverified filters
+- Daily totals, completion, verification, and overlap trends
+
+Safe report-aware follow-ups are also supported. A follow-up can inherit a schema-validated prior Mastra report only when it is read-only and explanation-oriented. It receives a fresh bounded packet plus the prior report as context, cannot use mutation tools, and fails closed if it introduces an unsupported market number.
+
+## 34. Remaining validation gates
+
+The remaining work is no longer foundational code:
+
+- Run real provider checks for every supported BYOK provider.
+- Collect enough private production comparisons to choose the better system.
+- Add reviewed failures to the offline eval cases and hidden regression set.
+- Improve optional macro providers and add structure/session/positioning evidence where data quality justifies it.
+- Decide whether to reduce or remove the legacy shadow path only after evidence supports it.
+
+Alerts, schedules, trade mutations, broad-symbol Mastra routing, unlimited memory, multi-agent Mastra committees, and fine-tuning remain deliberately deferred.
+
+## 35. Implemented vendor-neutral evaluation quality gate milestone
+
+The evaluation runner now produces one machine-readable quality-gate result alongside every Markdown and JSON report. The gate is independent of model vendor and checks the dimensions that matter for safe agent changes:
+
+- Transport success rate
+- Overall case/assertion pass rate
+- Grounding/citation score
+- Safety failures represented by assertion failures
+- Average time to first token and total latency
+- Average reported model cost
+
+The gate uses conservative defaults and can be tuned without code changes through `EVAL_*` environment variables. A maximum can be disabled explicitly with `disabled`. The live evaluation command exits non-zero when the gate fails, so an isolated staging evaluation can block a release rather than only recording a report.
+
+The offline suite uses MSW-recorded streams and no provider credentials. It now covers both passing and failing gate outcomes, environment threshold parsing, empty-run fail-closed behavior, grounding/safety assertions, latency, cost, and transport failures. The scheduled CI job runs this deterministic contract suite, while the optional isolated-staging job applies the same gate to real responses.
+
+The report schema remains versioned as `kestrel.eval-report.v1`, and the gate schema is `kestrel.eval-gate.v1`. This keeps dashboards and future CI tooling from parsing human-readable Markdown.

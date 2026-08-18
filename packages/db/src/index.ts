@@ -309,4 +309,11 @@ export {
   type ListAiShadowComparisonsOptions,
   type RecordAiShadowComparisonInput,
 } from './queries/ai-shadow-comparisons';
+export {
+  listAiRegressionCases,
+  syncAiRegressionCase,
+  updateAiRegressionCaseStatus,
+  type AiRegressionCaseRow,
+  type ListAiRegressionCasesOptions,
+} from './queries/ai-regression-cases';
 export * as queries from './queries';

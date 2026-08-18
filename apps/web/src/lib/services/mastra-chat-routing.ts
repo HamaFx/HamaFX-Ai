@@ -40,22 +40,34 @@ export function decideMastraXauusdChatRoute(args: {
   prompt: string;
   featureEnabled: boolean;
   hasModelOverride?: boolean;
+  hasCurrentReport?: boolean;
 }): MastraChatRouteDecision {
   if (!args.featureEnabled) return { route: 'legacy', reason: 'disabled' };
-  if (!isMastraXauusdCandidate(args.prompt)) {
+  const reportFollowup = args.hasCurrentReport === true && isMastraXauusdFollowupCandidate(args.prompt);
+  if (!isMastraXauusdCandidate(args.prompt) && !reportFollowup) {
     return {
       route: 'legacy',
-      reason: XAUUSD_TERMS.test(args.prompt)
-        ? INJECTION_TERMS.test(args.prompt)
-          ? 'unsafe-request'
-          : OTHER_SYMBOL_TERMS.test(args.prompt)
-            ? 'mixed-symbols'
-            : 'mutating-request'
-        : 'not-xauusd',
+      reason: INJECTION_TERMS.test(args.prompt)
+        ? 'unsafe-request'
+        : MUTATING_TERMS.test(args.prompt)
+          ? 'mutating-request'
+          : XAUUSD_TERMS.test(args.prompt)
+            ? OTHER_SYMBOL_TERMS.test(args.prompt)
+              ? 'mixed-symbols'
+              : 'mutating-request'
+            : 'not-xauusd',
     };
   }
   if (args.hasModelOverride) return { route: 'legacy', reason: 'model-override' };
   return { route: 'mastra', reason: 'enabled' };
+}
+
+/** Follow-ups inherit XAUUSD scope from the saved report but remain read-only. */
+export function isMastraXauusdFollowupCandidate(prompt: string): boolean {
+  return /\b(?:why|explain|how|what\s+changed|based\s+on|according\s+to|invalidation|trigger|scenario|risk|report|analysis|you\s+said)\b/i.test(prompt)
+    && !OTHER_SYMBOL_TERMS.test(prompt)
+    && !MUTATING_TERMS.test(prompt)
+    && !INJECTION_TERMS.test(prompt);
 }
 
 /**

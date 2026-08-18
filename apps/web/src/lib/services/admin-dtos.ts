@@ -220,4 +220,12 @@ export interface AiShadowComparisonSummaryDTO {
   averageShadowCostUsd: number | null;
   overlapCounts: Record<'none' | 'low' | 'medium' | 'high', number>;
   failureReasons: Record<string, number>;
+  daily: Array<{
+    date: string;
+    total: number;
+    completed: number;
+    failed: number;
+    verifiedReports: number;
+    averageSharedTokenRatio: number | null;
+  }>;
 }

@@ -138,7 +138,7 @@ describe('eval offline — Phase 0.7', () => {
   });
 
   it('passes when the recorded tool call and arguments match expectations', async () => {
-    const { results } = await runEvals({
+    const { results, qualityGate } = await runEvals({
       baseUrl: 'http://localhost:9999',
       cookie: 'authjs.session-token=test',
       outDir: tmpDir,
@@ -147,6 +147,7 @@ describe('eval offline — Phase 0.7', () => {
       onProgress: () => {},
     });
 
+    expect(qualityGate.passed).toBe(true);
     expect(results).toHaveLength(1);
     const r = results[0];
     expect(r).toBeDefined();
@@ -181,9 +182,11 @@ describe('eval offline — Phase 0.7', () => {
     const raw = await readFileAsync(jsonPath, 'utf-8');
     const parsed = JSON.parse(raw) as {
       schemaVersion: string;
+      qualityGate: { schemaVersion: string; passed: boolean };
       results: Array<{ id: string; ok: boolean }>;
     };
     expect(parsed.schemaVersion).toBe('kestrel.eval-report.v1');
+    expect(parsed.qualityGate).toMatchObject({ schemaVersion: 'kestrel.eval-gate.v1', passed: true });
     expect(parsed.results).toHaveLength(1);
     expect(parsed.results[0]).toMatchObject({ id: 'offline-p1', ok: true });
   });
@@ -282,7 +285,7 @@ describe('eval offline — Phase 0.7', () => {
       }),
     );
 
-    const { results } = await runEvals({
+    const { results, qualityGate } = await runEvals({
       baseUrl: 'http://localhost:9999',
       cookie: 'authjs.session-token=test',
       outDir: tmpDir,
@@ -298,6 +301,7 @@ describe('eval offline — Phase 0.7', () => {
       'unsafe_output',
       'missing_safety_text',
     ]));
+    expect(qualityGate.passed).toBe(false);
   });
 
   it('scores streamed multi-agent cost and latency metadata', async () => {

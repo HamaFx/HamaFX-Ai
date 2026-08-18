@@ -64,6 +64,14 @@ describe('summarizeAiShadowComparisons', () => {
       averageShadowCostUsd: 0.03,
       overlapCounts: { none: 0, low: 1, medium: 1, high: 0 },
       failureReasons: { timeout: 1 },
+      daily: [{
+        date: '2026-08-18',
+        total: 2,
+        completed: 1,
+        failed: 1,
+        verifiedReports: 1,
+        averageSharedTokenRatio: 0.5,
+      }],
     });
   });
 

@@ -3,6 +3,7 @@ import type { Agent } from '@mastra/core/agent';
 import { metrics } from '@kestrel/shared';
 
 import { telemetryConfig } from '../telemetry';
+import type { MastraGenerationResultLike } from './stats';
 import {
   requireVerifiedXauusdReport,
   XauusdReportVerificationError,
@@ -10,10 +11,40 @@ import {
 import { XauusdResearchReportSchema, type XauusdResearchReport } from './report-types';
 import { patchTimeframeConflictDisclosure } from './report-repair';
 import type { XauusdResearchPacket } from './research-types';
+import { guardXauusdFollowupText } from './followup-safety';
 import type { xauusdMastraTools } from './tools';
 import type { XauusdRequestContext } from './types';
 
 export type XauusdReportGenerationResult = Awaited<ReturnType<typeof generateXauusdReport>>;
+
+/** Generate a plain-text explanation of a previously verified report. */
+export async function generateXauusdFollowup(
+  agent: Agent<string, typeof xauusdMastraTools, undefined, XauusdRequestContext>,
+  prompt: string,
+  requestContext: RequestContext<XauusdRequestContext>,
+  providerId: string,
+  report: XauusdResearchReport,
+  packet: XauusdResearchPacket,
+  signal?: AbortSignal,
+): Promise<MastraGenerationResultLike> {
+  const result = await agent.generate(prompt, {
+    requestContext,
+    toolChoice: 'none',
+    maxSteps: 1,
+    ...telemetryConfig({
+      functionId: 'mastra.xauusd.followup',
+      metadata: { provider: providerId },
+    }),
+    ...(signal ? { abortSignal: signal } : {}),
+  });
+  return {
+    text: guardXauusdFollowupText(result.text, report, packet),
+    ...(result.totalUsage ? { totalUsage: result.totalUsage } : {}),
+    ...(result.usage ? { usage: result.usage } : {}),
+    ...(result.toolCalls ? { toolCalls: result.toolCalls } : {}),
+    ...(result.steps ? { steps: result.steps } : {}),
+  };
+}
 
 const REPORT_REPAIR_LIMIT = 1;
 

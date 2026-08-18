@@ -25,6 +25,7 @@ import {
   IconMessageReport,
   IconDatabase,
   IconChartDots,
+  IconBug,
 } from '@tabler/icons-react';
 
 import { cn } from '@/lib/cn';
@@ -122,6 +123,11 @@ const AdminAiShadow = dynamic(
   { loading: TabFallback },
 ) as ComponentType;
 
+const AdminRegressionCases = dynamic(
+  () => import('./_components/admin-regression-cases').then((m) => m.AdminRegressionCases),
+  { loading: TabFallback },
+) as ComponentType;
+
 const TABS = [
   { id: 'health', label: 'Health', icon: IconHeartbeat, Component: AdminSystemHealth },
   { id: 'onboarding', label: 'Onboarding', icon: IconRefresh, Component: AdminOnboardingControl },
@@ -135,6 +141,7 @@ const TABS = [
   { id: 'feedback', label: 'Feedback', icon: IconMessageReport, Component: AdminFeedbackReview },
   { id: 'datasets', label: 'Datasets', icon: IconDatabase, Component: AdminDatasetReview },
   { id: 'ai-shadow', label: 'AI Compare', icon: IconChartDots, Component: AdminAiShadow },
+  { id: 'regressions', label: 'Regressions', icon: IconBug, Component: AdminRegressionCases },
   { id: 'devtools', label: 'Dev Tools', icon: IconSettingsBolt, Component: AdminDevTools },
 ] as const;
 

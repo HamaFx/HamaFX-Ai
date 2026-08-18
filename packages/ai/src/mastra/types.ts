@@ -19,6 +19,8 @@ export const XauusdRequestContextSchema = z.object({
   threadId: z.string().min(1).optional(),
   /** Trusted server-created packet supplied to the synthesis model. */
   researchPacket: z.unknown().optional(),
+  /** Optional prior verified report used only to explain a follow-up. */
+  priorReport: z.unknown().optional(),
 });
 
 export type XauusdRequestContext = z.infer<typeof XauusdRequestContextSchema>;

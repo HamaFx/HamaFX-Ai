@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { and, desc, gte, lte } from 'drizzle-orm';
+import { and, desc, eq, gte, lte } from 'drizzle-orm';
 
 import { getDb, schema } from '../client';
 import type {
@@ -65,6 +65,9 @@ export interface ListAiShadowComparisonsOptions {
   limit?: number;
   from?: Date;
   to?: Date;
+  primaryAgent?: ShadowComparisonAgent;
+  outcome?: ShadowComparisonOutcome;
+  mastraVerified?: boolean;
 }
 
 export async function listAiShadowComparisons(
@@ -73,6 +76,10 @@ export async function listAiShadowComparisons(
   const conditions = [];
   if (options.from) conditions.push(gte(schema.aiShadowComparisons.createdAt, options.from));
   if (options.to) conditions.push(lte(schema.aiShadowComparisons.createdAt, options.to));
+  if (options.primaryAgent) conditions.push(eq(schema.aiShadowComparisons.primaryAgent, options.primaryAgent));
+  if (options.outcome) conditions.push(eq(schema.aiShadowComparisons.outcome, options.outcome));
+  if (options.mastraVerified === true) conditions.push(eq(schema.aiShadowComparisons.mastraVerified, true));
+  if (options.mastraVerified === false) conditions.push(eq(schema.aiShadowComparisons.mastraVerified, false));
 
   return getDb()
     .select()
@@ -96,6 +103,14 @@ export interface AiShadowComparisonSummary {
   averageShadowCostUsd: number | null;
   overlapCounts: Record<ShadowOverlap, number>;
   failureReasons: Record<string, number>;
+  daily: Array<{
+    date: string;
+    total: number;
+    completed: number;
+    failed: number;
+    verifiedReports: number;
+    averageSharedTokenRatio: number | null;
+  }>;
 }
 
 export function summarizeAiShadowComparisons(
@@ -113,8 +128,34 @@ export function summarizeAiShadowComparisons(
   let primaryCostCount = 0;
   let shadowCostSum = 0;
   let shadowCostCount = 0;
+  const dailyBuckets = new Map<string, {
+    total: number;
+    completed: number;
+    failed: number;
+    verifiedReports: number;
+    ratioSum: number;
+    ratioCount: number;
+  }>();
 
   for (const row of rows) {
+    const date = row.createdAt.toISOString().slice(0, 10);
+    const bucket = dailyBuckets.get(date) ?? {
+      total: 0,
+      completed: 0,
+      failed: 0,
+      verifiedReports: 0,
+      ratioSum: 0,
+      ratioCount: 0,
+    };
+    bucket.total += 1;
+    if (row.outcome === 'completed') bucket.completed += 1;
+    if (row.outcome === 'failed') bucket.failed += 1;
+    if (row.mastraVerified === true) bucket.verifiedReports += 1;
+    if (row.sharedTokenRatio !== null) {
+      bucket.ratioSum += Number(row.sharedTokenRatio);
+      bucket.ratioCount += 1;
+    }
+    dailyBuckets.set(date, bucket);
     if (row.overlap) overlapCounts[row.overlap] += 1;
     if (row.failureReason) failureReasons[row.failureReason] = (failureReasons[row.failureReason] ?? 0) + 1;
     if (row.sharedTokenRatio !== null) {
@@ -153,5 +194,15 @@ export function summarizeAiShadowComparisons(
     averageShadowCostUsd: shadowCostCount > 0 ? shadowCostSum / shadowCostCount : null,
     overlapCounts,
     failureReasons,
+    daily: [...dailyBuckets.entries()]
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([date, bucket]) => ({
+        date,
+        total: bucket.total,
+        completed: bucket.completed,
+        failed: bucket.failed,
+        verifiedReports: bucket.verifiedReports,
+        averageSharedTokenRatio: bucket.ratioCount > 0 ? bucket.ratioSum / bucket.ratioCount : null,
+      })),
   };
 }

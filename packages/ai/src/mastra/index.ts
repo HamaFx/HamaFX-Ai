@@ -11,6 +11,7 @@ export {
   type RunXauusdMastraArgs,
   type XauusdMastraModel,
   type XauusdMastraSettings,
+  type XauusdMastraRunResult,
 } from './run';
 export {
   xauusdCandlesTool,
@@ -63,6 +64,7 @@ export {
   type MastraRunOutcome,
   type MastraUsageLike,
 } from './telemetry';
+export type { MastraGenerationResultLike } from './stats';
 export {
   buildXauusdModelEvidenceContext,
   serializeXauusdModelEvidenceContext,

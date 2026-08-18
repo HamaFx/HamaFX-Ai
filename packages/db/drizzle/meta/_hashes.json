@@ -319,6 +319,10 @@
     {
       "tag": "0080_ai_shadow_comparisons",
       "hash": "0cbc7dff40d184fc11170ceaca95a864289ebfe92bab80da52b0682541972d33"
+    },
+    {
+      "tag": "0081_ai_regression_cases",
+      "hash": "c1a026b1539bfb394148d87dca886a81bb975f2d0b84fd32d1e50cc359ecc3bc"
     }
   ]
 }

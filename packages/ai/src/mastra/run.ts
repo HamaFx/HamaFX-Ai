@@ -14,10 +14,11 @@ import {
 import { createXauusdMastraAgent } from './agent';
 import { collectXauusdResearchPacket } from './research-packet';
 import { blockedXauusdResearchText } from './report-text';
-import { generateVerifiedXauusdReport } from './report-generation';
+import { generateVerifiedXauusdReport, generateXauusdFollowup } from './report-generation';
 import type { XauusdResearchPacket } from './research-types';
 import { XauusdRequestContextSchema, type XauusdRequestContext } from './types';
 import type { XauusdResearchReport } from './report-types';
+import type { MastraGenerationResultLike, MastraGenerationStats } from './stats';
 
 export type XauusdMastraSettings = Pick<UserSettingsRow, 'aiApiKeys' | 'chatModel'>;
 
@@ -31,6 +32,9 @@ export interface RunXauusdMastraArgs {
   signal?: AbortSignal;
   /** Marks background comparisons separately in durable telemetry. */
   telemetryKind?: 'mastra_xauusd_poc' | 'mastra_xauusd_shadow';
+  /** When set, answer using the latest verified report instead of creating a new report. */
+  followup?: boolean;
+  priorReport?: XauusdResearchReport | null;
 }
 
 export function resolveXauusdMastraModel(
@@ -52,6 +56,7 @@ function contextForRun(
     runId: args.runId,
     threadId: args.threadId,
     researchPacket,
+    ...(args.priorReport ? { priorReport: args.priorReport } : {}),
   };
   XauusdRequestContextSchema.parse(values);
   return new RequestContext([
@@ -62,11 +67,20 @@ function contextForRun(
   ]);
 }
 
-function blockedStats() {
+function blockedStats(): MastraGenerationStats {
   return { inputTokens: 0, outputTokens: 0, toolCalls: 0, steps: 0 };
 }
 
-async function executeXauusdMastraRun(args: RunXauusdMastraArgs) {
+export interface XauusdMastraRunResult {
+  result: MastraGenerationResultLike;
+  report: XauusdResearchReport | null;
+  packet: XauusdResearchPacket;
+  modelId: string;
+  providerId: string;
+  stats: MastraGenerationStats;
+}
+
+async function executeXauusdMastraRun(args: RunXauusdMastraArgs): Promise<XauusdMastraRunResult> {
   const startedAt = Date.now();
   let resolution: ChatModelResolution | null = null;
 
@@ -105,15 +119,18 @@ async function executeXauusdMastraRun(args: RunXauusdMastraArgs) {
     }
 
     const agent = createXauusdMastraAgent({ model: resolution.model });
-    const verified = await generateVerifiedXauusdReport(
-      agent,
-      args.prompt,
-      contextForRun(args, packet),
-      resolution.providerId,
-      packet,
-      args.signal,
-    );
-    const { result, report } = verified;
+    const requestContext = contextForRun(args, packet);
+    const generated = args.followup && args.priorReport
+      ? { result: await generateXauusdFollowup(agent, args.prompt, requestContext, resolution.providerId, args.priorReport, packet, args.signal), report: null }
+      : await generateVerifiedXauusdReport(
+        agent,
+        args.prompt,
+        requestContext,
+        resolution.providerId,
+        packet,
+        args.signal,
+      );
+    const { result, report } = generated;
     const stats = getMastraGenerationStats(result);
 
     await finishMastraRun({
@@ -164,7 +181,7 @@ async function executeXauusdMastraRun(args: RunXauusdMastraArgs) {
  * their own persisted diagnostic trace, which keeps the POC independently
  * testable and observable.
  */
-export function runXauusdMastra(args: RunXauusdMastraArgs) {
+export function runXauusdMastra(args: RunXauusdMastraArgs): Promise<XauusdMastraRunResult> {
   if (getDiagnosticContext()) return executeXauusdMastraRun(args);
   return withDiagnostics(
     args.userId,

@@ -140,9 +140,10 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       # This deterministic gate always runs in CI and does not require model
-      # credentials. It validates the stream parser, assertion engine, and
-      # strict Full-mode terminal contract.
-      - run: pnpm --filter @kestrel/ai test -- --run test/eval-offline.test.ts
+      # credentials. It validates the stream parser, assertion engine, strict
+      # Full-mode terminal contract, and the vendor-neutral quality gate for
+      # transport, grounding, safety, latency, and cost regressions.
+      - run: pnpm --filter @kestrel/ai test -- --run test/eval-offline.test.ts test/eval-quality-gate.test.ts
 
   live-eval:
     name: AI Eval Harness (isolated staging)

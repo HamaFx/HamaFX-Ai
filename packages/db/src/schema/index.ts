@@ -73,6 +73,7 @@ export * from './analysis-jobs';
 export * from './ai-feedback';
 // Privacy-safe Mastra versus legacy rollout comparisons
 export * from './ai-shadow-comparisons';
+export * from './ai-regression-cases';
 // Governed evaluation dataset registry
 export * from './eval-datasets';
 // Telegram webhook idempotency dedup

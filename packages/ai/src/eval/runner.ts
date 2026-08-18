@@ -45,6 +45,13 @@ import {
 import { computeDrift } from './drift';
 import { emitEvalMetrics } from './eval-metrics';
 import { flushMetrics } from '@kestrel/shared/metrics-export';
+import {
+  DEFAULT_EVAL_QUALITY_GATE_THRESHOLDS,
+  evaluateEvalQualityGate,
+  thresholdsFromEnv,
+  type EvalQualityGateResult,
+  type EvalQualityGateThresholds,
+} from './quality-gate';
 
 // --- types -----------------------------------------------------------------
 
@@ -61,6 +68,7 @@ export interface RunEvalsArgs {
   timeoutMs?: number;
   /** Optional progress sink. Defaults to `console.log`. */
   onProgress?: (line: string) => void;
+  qualityGate?: EvalQualityGateThresholds;
 }
 
 export interface PromptDef {
@@ -163,6 +171,7 @@ export interface RunEvalsResult {
   /** Machine-readable JSON report path (written alongside the Markdown). */
   jsonPath: string;
   score: EvaluationScore;
+  qualityGate: EvalQualityGateResult;
 }
 
 export interface EvaluationScore {
@@ -216,20 +225,26 @@ export async function runEvals(args: RunEvalsArgs): Promise<RunEvalsResult> {
   }
 
   const score = calculateScore(results);
+  const qualityGate = evaluateEvalQualityGate(
+    results,
+    args.qualityGate ?? DEFAULT_EVAL_QUALITY_GATE_THRESHOLDS,
+  );
   const reportPath = await writeReport({
     outDir: args.outDir,
     baseUrl: args.baseUrl,
     results,
     score,
+    qualityGate,
   });
   const jsonPath = await writeJsonReport({
     reportPath,
     baseUrl: args.baseUrl,
     results,
     score,
+    qualityGate,
   });
 
-  return { results, reportPath, jsonPath, score };
+  return { results, reportPath, jsonPath, score, qualityGate };
 }
 
 // --- per-prompt fetch ------------------------------------------------------
@@ -708,19 +723,20 @@ interface WriteReportArgs {
   baseUrl: string;
   results: PromptResult[];
   score: EvaluationScore;
+  qualityGate: EvalQualityGateResult;
 }
 
 const MAX_OUTPUT_CHARS = 2000;
 
 async function writeReport(args: WriteReportArgs): Promise<string> {
-  const { outDir, baseUrl, results, score } = args;
+  const { outDir, baseUrl, results, score, qualityGate } = args;
   const stamp = utcStamp(new Date());
   const reportPath = isAbsolute(outDir)
     ? resolve(outDir, `${stamp}.md`)
     : resolve(process.cwd(), outDir, `${stamp}.md`);
 
   await mkdir(dirname(reportPath), { recursive: true });
-  await writeFile(reportPath, buildMarkdown({ baseUrl, results, stamp, score }), 'utf-8');
+  await writeFile(reportPath, buildMarkdown({ baseUrl, results, stamp, score, qualityGate }), 'utf-8');
   return reportPath;
 }
 
@@ -730,6 +746,7 @@ interface WriteJsonReportArgs {
   baseUrl: string;
   results: PromptResult[];
   score: EvaluationScore;
+  qualityGate: EvalQualityGateResult;
 }
 
 /**
@@ -742,7 +759,7 @@ interface WriteJsonReportArgs {
  * downstream consumers can migrate independently.
  */
 async function writeJsonReport(args: WriteJsonReportArgs): Promise<string> {
-  const { reportPath, baseUrl, results, score } = args;
+  const { reportPath, baseUrl, results, score, qualityGate } = args;
   const jsonPath = reportPath.endsWith('.md')
     ? `${reportPath.slice(0, -3)}.json`
     : `${reportPath}.json`;
@@ -752,6 +769,7 @@ async function writeJsonReport(args: WriteJsonReportArgs): Promise<string> {
     generatedAt: new Date().toISOString(),
     baseUrl,
     score,
+    qualityGate,
     drift: computeDrift(results),
     results,
   };
@@ -767,10 +785,11 @@ interface BuildMarkdownArgs {
   results: PromptResult[];
   stamp: string;
   score: EvaluationScore;
+  qualityGate: EvalQualityGateResult;
 }
 
 function buildMarkdown(args: BuildMarkdownArgs): string {
-  const { baseUrl, results, stamp, score } = args;
+  const { baseUrl, results, stamp, score, qualityGate } = args;
   const total = results.length;
   const failed = results.filter((r) => !r.ok).length;
   const ok = total - failed;
@@ -797,6 +816,8 @@ function buildMarkdown(args: BuildMarkdownArgs): string {
   lines.push(`- Assertion pass rate: ${(score.assertionPassRate * 100).toFixed(1)}%`);
   lines.push(`- Agent coverage: ${score.agentCoverageRate === null ? 'n/a' : `${(score.agentCoverageRate * 100).toFixed(1)}%`}`);
   lines.push(`- Overall pass rate: ${(score.overallPassRate * 100).toFixed(1)}%`);
+  lines.push(`- Quality gate: ${qualityGate.passed ? 'PASS' : 'FAIL'}`);
+  for (const failure of qualityGate.failures) lines.push(`- Gate failure: ${failure}`);
   lines.push('');
   lines.push('---');
   lines.push('');
@@ -1045,12 +1066,13 @@ async function main(): Promise<void> {
       ? fileURLToPath(new URL('./cases.json', import.meta.url))
       : fileURLToPath(new URL('./prompts.json', import.meta.url)));
 
-  const { results, reportPath, jsonPath, score } = await runEvals({
+  const { results, reportPath, jsonPath, score, qualityGate } = await runEvals({
     baseUrl: f.baseUrl,
     cookie: f.cookie,
     outDir: f.outDir,
     timeoutMs: f.timeoutMs,
     promptsPath,
+    qualityGate: thresholdsFromEnv(),
   });
 
   const failed = results.filter((r) => !r.ok).length;
@@ -1067,7 +1089,7 @@ async function main(): Promise<void> {
   emitEvalMetrics(results);
   await flushMetrics();
 
-  process.exit(failed > 0 || dirty > 0 ? 1 : 0);
+  process.exit(failed > 0 || dirty > 0 || !qualityGate.passed ? 1 : 0);
 }
 
 // Only run main() when this file is executed directly (not when imported).

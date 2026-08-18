@@ -3,6 +3,7 @@
 import 'server-only';
 
 import type { UIMessage } from 'ai';
+import type { XauusdMastraRunResult, XauusdResearchReport } from '@kestrel/ai/mastra';
 import {
   DEFAULT_MAX_DAILY_USD,
   appendAssistantMessage,
@@ -22,13 +23,15 @@ export interface RunMastraXauusdChatInput {
   userMessage: UIMessage;
   prompt: string;
   signal?: AbortSignal;
+  followup?: boolean;
+  priorReport?: XauusdResearchReport | null;
 }
 
 /**
  * Execute one feature-flagged Mastra turn using the same persistence and daily
  * budget guardrails as the legacy agent. The caller owns fallback policy.
  */
-export async function runMastraXauusdChat(input: RunMastraXauusdChatInput) {
+export async function runMastraXauusdChat(input: RunMastraXauusdChatInput): Promise<XauusdMastraRunResult & { runId: string; observedCost: number }> {
   const { settings } = await getUserWithSettings(input.userId);
   if (!settings) {
     throw new Error('User settings not found. Please complete onboarding.');
@@ -55,6 +58,8 @@ export async function runMastraXauusdChat(input: RunMastraXauusdChatInput) {
       runId,
       prompt: input.prompt,
       ...(input.signal ? { signal: input.signal } : {}),
+      ...(input.followup ? { followup: true } : {}),
+      ...(input.priorReport ? { priorReport: input.priorReport } : {}),
     });
 
     observedCost = estimateCostUsd(

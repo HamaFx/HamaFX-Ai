@@ -51,7 +51,8 @@ function instructionsForRequest({
   requestContext: RequestContext<XauusdRequestContext>;
 }): string {
   const packet = requestContext.get('researchPacket');
-  if (packet === undefined) return XAUUSD_RESEARCH_INSTRUCTIONS;
+  const priorReport = requestContext.get('priorReport');
+  if (packet === undefined && priorReport === undefined) return XAUUSD_RESEARCH_INSTRUCTIONS;
   const serializedContext = serializeXauusdModelEvidenceContext(packet as XauusdResearchPacket);
   alog.debug('Mastra model evidence context prepared', {
     packetId: (packet as XauusdResearchPacket).packetId,
@@ -59,7 +60,10 @@ function instructionsForRequest({
     candleLimit: MODEL_CONTEXT_CANDLE_LIMIT,
     indicatorValueLimit: MODEL_CONTEXT_INDICATOR_LIMIT,
   });
-  return `${XAUUSD_RESEARCH_INSTRUCTIONS}\n\nTrusted server-collected research context (compact model view; deterministic verification uses the full packet):\n${serializedContext}`;
+  const priorReportContext = priorReport === undefined
+    ? ''
+    : '\n\nPreviously verified report for follow-up context (not current market evidence):\n' + JSON.stringify(priorReport) + '\n\nFor this follow-up, explain the saved report without introducing new unsupported numbers or current market facts. If the user asks for a new price or current conclusion, say that a fresh analysis is required.';
+  return `${XAUUSD_RESEARCH_INSTRUCTIONS}\n\nTrusted server-collected research context (compact model view; deterministic verification uses the full packet):\n${serializedContext}${priorReportContext}`;
 }
 
 export interface XauusdMastraAgentOptions {

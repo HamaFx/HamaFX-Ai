@@ -17,6 +17,7 @@ import {
   decideMastraXauusdChatRoute,
   isMastraXauusdChatEnabled,
 } from '@/lib/services/mastra-chat-routing';
+import { extractLatestMastraReport, mayReferToMastraReport } from '@/lib/services/mastra-report-context';
 import {
   decideMastraXauusdShadow,
   isMastraXauusdShadowEnabled,
@@ -165,6 +166,9 @@ export const POST = withAuth<void>(async (req, { user }) => {
     // orchestrator auto-detects based on the user's message.
     const analysisMode = body.analysisMode ?? 'single';
     const userText = extractUserMessageText(last as UIMessage);
+    const priorReport = mayReferToMastraReport(userText)
+      ? extractLatestMastraReport(await listMessages(user.userId, body.threadId, 100))
+      : null;
     let mastraAttempted = false;
     let shadowEnabledPromise: Promise<boolean> | null = null;
 
@@ -185,6 +189,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
         prompt: userText,
         featureEnabled,
         hasModelOverride: false,
+        hasCurrentReport: priorReport !== null,
       });
       metrics.increment('mastra_chat_route_total', { tags: { decision: decision.route, reason: decision.reason } });
 
@@ -207,6 +212,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
             userMessage: last as UIMessage,
             prompt: userText,
             signal: req.signal,
+            ...(priorReport ? { followup: true, priorReport } : {}),
           });
           const mastraResponse = mastraChatResponse({
             messageId: crypto.randomUUID(),

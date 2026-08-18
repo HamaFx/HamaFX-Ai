@@ -2,10 +2,11 @@
 
 import 'server-only';
 
-import { runXauusdMastra } from '@kestrel/ai/mastra';
+import { runXauusdMastra, type XauusdMastraRunResult } from '@kestrel/ai/mastra';
 import { getThread, getUserWithSettings } from '@kestrel/db';
 import { notFound } from '@kestrel/shared';
 import { getServerEnv } from '@/lib/env';
+import type { XauusdResearchReport } from '@kestrel/ai/mastra';
 
 export interface RunMastraXauusdResearchInput {
   userId: string;
@@ -14,9 +15,11 @@ export interface RunMastraXauusdResearchInput {
   prompt: string;
   signal?: AbortSignal;
   telemetryKind?: 'mastra_xauusd_poc' | 'mastra_xauusd_shadow';
+  followup?: boolean;
+  priorReport?: XauusdResearchReport | null;
 }
 
-export async function runMastraXauusdResearch(input: RunMastraXauusdResearchInput) {
+export async function runMastraXauusdResearch(input: RunMastraXauusdResearchInput): Promise<XauusdMastraRunResult> {
   const thread = await getThread(input.userId, input.threadId);
   if (!thread) throw notFound('Thread not found');
 
@@ -34,5 +37,7 @@ export async function runMastraXauusdResearch(input: RunMastraXauusdResearchInpu
     env: getServerEnv(),
     ...(input.signal ? { signal: input.signal } : {}),
     ...(input.telemetryKind ? { telemetryKind: input.telemetryKind } : {}),
+    ...(input.followup ? { followup: true } : {}),
+    ...(input.priorReport ? { priorReport: input.priorReport } : {}),
   });
 }
