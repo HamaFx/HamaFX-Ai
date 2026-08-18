@@ -32,6 +32,7 @@
  * (or cleanly passing) records can ever be exported.
  */
 
+import { redactString } from '../diagnostics/redact';
 import type { EvaluationAnnotation } from './training-export';
 import type { PromptResult } from './runner';
 
@@ -43,6 +44,7 @@ export interface FeedbackAnnotationInput {
   reviewerId?: string | null;
   issueCodes?: string[] | null;
   reviewerNote?: string | null;
+  userNote?: string | null;
 }
 
 export interface ResolveAnnotationsInput {
@@ -92,7 +94,7 @@ function resolveOne(
       label: feedback.reviewerLabel,
       ...(feedback.reviewerId ? { reviewerId: feedback.reviewerId } : {}),
       ...(feedback.issueCodes?.length ? { issueCodes: feedback.issueCodes } : {}),
-      ...(feedback.reviewerNote ? { note: feedback.reviewerNote } : {}),
+      ...annotationNote(feedback),
     };
   }
 
@@ -100,8 +102,17 @@ function resolveOne(
   // operator decision, it flags the record for review — never auto-pass/fail.
   return {
     label: 'needs_review',
-    note: `user ${feedback.rating} feedback awaiting review`,
+    note: `user ${feedback.rating} feedback awaiting review${feedback.userNote ? `: ${redactString(feedback.userNote)}` : ''}`,
   };
+}
+
+function annotationNote(feedback: FeedbackAnnotationInput): Pick<EvaluationAnnotation, 'note'> | Record<never, never> {
+  const userNote = feedback.userNote ? `user: ${redactString(feedback.userNote)}` : null;
+  const reviewerNote = feedback.reviewerNote ? redactString(feedback.reviewerNote) : null;
+  if (userNote && reviewerNote) return { note: [userNote, `reviewer: ${reviewerNote}`].join(String.fromCharCode(10)) };
+  if (reviewerNote) return { note: reviewerNote };
+  if (userNote) return { note: userNote };
+  return {};
 }
 
 function evalFallback(result: PromptResult): EvaluationAnnotation {

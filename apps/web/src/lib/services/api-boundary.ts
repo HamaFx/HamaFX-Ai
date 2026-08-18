@@ -15,6 +15,8 @@ import 'server-only';
 // AI agent and persistence APIs.
 export {
   BYOK_PROVIDERS,
+  assembleTrainingDataset,
+  resolveEvaluationAnnotations,
   testProviderKey,
   runMultiAgentChat,
   resolveMode,
@@ -70,6 +72,7 @@ export {
   forkThread,
 } from '@kestrel/ai/persistence';
 export { runChat } from '@kestrel/ai/agent';
+export type { FeedbackAnnotationInput, PromptResult } from '@kestrel/ai';
 export { BudgetExceededError } from '@kestrel/ai/cost';
 
 // Database queries and infrastructure used by controllers that do not yet
@@ -122,6 +125,9 @@ export {
   deleteMessageFeedback,
   listFeedbackForReview,
   reviewMessageFeedback,
+  listAiShadowComparisons,
+  summarizeAiShadowComparisons,
+  listReviewedTrainingPairs,
   registerEvalDataset,
   getEvalDataset,
   listEvalDatasets,

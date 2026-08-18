@@ -6,6 +6,7 @@ import {
   XauusdCandlesEvidenceSchema,
   XauusdIndicatorsEvidenceSchema,
   XauusdPriceEvidenceSchema,
+  XauusdMacroEvidenceSchema,
 } from './types';
 import { TimeframeSchema } from '@kestrel/shared';
 
@@ -20,6 +21,7 @@ export const XauusdResearchPacketSchema = z.object({
   price: XauusdPriceEvidenceSchema.nullable(),
   candles: z.array(XauusdCandlesEvidenceSchema),
   indicators: z.array(XauusdIndicatorsEvidenceSchema),
+  macro: XauusdMacroEvidenceSchema.nullable(),
   missingData: z.array(z.string()),
   warnings: z.array(z.string()),
 });

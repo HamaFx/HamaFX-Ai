@@ -1119,7 +1119,7 @@ The packet is split into small modules for maintainability:
 - `research-packet-stages.ts` — diagnostic stage helpers
 - `research-packet-tool.ts` — Mastra tool boundary
 
-If required price, candle, or indicator data is unavailable, the packet is marked `blocked`, the missing scope is recorded, and the agent is instructed to stop rather than invent an answer. Macro, news, calendar, dollar, and yield analysis remain explicitly unavailable in this POC and are disclosed to the user.
+If required price, candle, or indicator data is unavailable, the packet is marked `blocked`, the missing scope is recorded, and the agent is instructed to stop rather than invent an answer. Macro, news, calendar, dollar, and yield inputs are optional evidence: provider gaps remain typed and visible rather than being filled from model memory.
 
 Additional monitoring metrics:
 
@@ -1230,7 +1230,7 @@ The repair path never invents prices, levels, indicators, or trading conclusions
 With the runtime BiQuote URL set to `https://biquote.io`, a real XAUUSD packet and Mistral report completed successfully:
 
 - Research packet: `ready`
-- Data quality: `partial` because macro data is not in the POC
+- Data quality: `partial` when optional macro providers are not configured
 - Model: `mistral-small-latest`
 - Verification: passed
 - Attempts: 2
@@ -1311,3 +1311,47 @@ New metrics are:
 - `mastra_shadow_skipped_total`
 
 Both rollout flags are now enabled in the private production environment for direct review. This milestone provides the safe measurement boundary needed to compare quality, cost, latency, grounding, and failure rates at scale without exposing shadow output to the user.
+
+## 30. Implemented comparison dashboard and governed feedback loop
+
+Shadow results are now durable and reviewable rather than existing only as metrics:
+
+- `ai_shadow_comparisons` stores prompt hashes and aggregate comparison fields only; raw prompts and model output are not persisted.
+- The admin-only `AI Compare` tab reads `/api/admin/ai-shadow` and shows completion, verification, overlap, latency, cost, and failure summaries.
+- The API deliberately omits `userId` and `tenantId` from the client DTO even though the server uses them for persistence and ownership.
+- Migration `0080_ai_shadow_comparisons` is idempotent and included in the normal migration chain.
+
+The feedback-to-evaluation path is governed:
+
+- User ratings remain hints and never automatically become pass/fail labels.
+- Only reviewer-labelled feedback can enter a governed export.
+- Rejected or `needs_review` records are excluded.
+- Reviewer notes and issue codes are carried into annotations with redaction.
+- Manual admin exports and nightly worker exports share the same annotation resolver and dataset assembly rules.
+- Dataset manifests remain content-addressed and do not include raw prompt or assistant text by default.
+
+## 31. Implemented XAUUSD macro evidence milestone
+
+The deterministic research packet now optionally collects, in parallel:
+
+- Gold-relevant news through the existing Finnhub/Marketaux failover adapter.
+- Upcoming USD economic events through the existing calendar adapter.
+- Broad dollar index observations through FRED `DTWEXBGS`.
+- US 10-year real yields through FRED `DFII10`.
+- US 10-year breakeven inflation through FRED `T10YIE`.
+
+Macro evidence is one provenance-bearing packet with its own evidence ID. The model receives it through the same compact, trusted request-context boundary, and numeric macro claims can be checked against deterministic values. If a provider is unavailable, the packet remains usable when technical requirements are present but explicitly reports the missing category and marks macro quality as degraded. If all macro sources return no data, the packet contains a typed gap instead of fabricated context.
+
+The macro fetch is still bounded by the existing Mastra run timeout and uses existing provider adapters rather than introducing a second data-access framework. Fixture tests cover complete data, partial provider failure, empty results, timestamp handling, and packet assembly.
+
+## 32. Current review boundary and next decision
+
+The combined milestone is locally validated before deployment. After deployment, review these in the private admin dashboard and normal chat:
+
+1. Send several safe XAUUSD analysis prompts and confirm the report card is useful.
+2. Open **Admin → AI Compare** and check that completed and failed comparisons appear.
+3. Use the existing helpful/not-helpful control and add reviewer labels in **Admin → Feedback**.
+4. Export only after reviewing labels in **Admin → Datasets**.
+5. Compare Mastra and legacy on grounding, missing-data disclosure, latency, cost, and user feedback—not token overlap alone.
+
+Do not disable the legacy fallback or add mutation tools yet. The next engineering decision should be based on a meaningful sample of reviewed comparisons: improve the weakest evidence source, report behavior, or workflow stage first; only then consider reducing shadow traffic or removing legacy orchestration.

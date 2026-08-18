@@ -37,6 +37,7 @@ export async function generateXauusdReport(
         'Return every required field in the schema; never omit fields with arrays.',
         'evidenceIds must be a non-empty array containing the cited evidence IDs.',
         'sources must be a non-empty array with evidenceId, source, and ISO dataAsOf for each source.',
+        'Use the macro evidence for fundamentalSummary when it is present; if macro evidence is partial, explicitly name the missing categories.',
         'numericClaims must contain every numeric market fact you state, with label, value, evidenceId, and tolerance.',
         'Include at least two scenarios, and every scenario must include trigger, invalidation, risks, and evidenceIds.',
         'List meaningful conflicts between timeframes or evidence in contradictions; do not leave contradictions empty when the packet shows conflicting signals.',

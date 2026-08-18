@@ -228,6 +228,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
               userMessage: last as UIMessage,
               mastraText: run.result.text,
               report: run.report,
+              mastraCostUsd: run.observedCost,
             });
           }
           return mastraResponse;

@@ -1,8 +1,9 @@
 import { buildPriceEvidence } from './evidence-builders';
-import { XAUUSD_RESEARCH_WINDOWS, RESEARCH_MACRO_GAP } from './research-config';
+import { XAUUSD_RESEARCH_WINDOWS } from './research-config';
 import type { XauusdResearchFetchResult } from './research-packet-fetch';
 import { collectCandleEvidence } from './research-packet-candles';
 import { collectIndicatorEvidence } from './research-packet-indicators';
+import { assembleXauusdMacroEvidence } from './research-packet-macro';
 import {
   completeResearchStage,
   recordResearchStageFailure,
@@ -19,7 +20,7 @@ export function assembleXauusdResearchPacket(
   fetched: XauusdResearchFetchResult,
 ): XauusdResearchPacket {
   const warnings: string[] = [];
-  const missingData: string[] = [RESEARCH_MACRO_GAP];
+  const missingData: string[] = [];
   let price: XauusdResearchPacket['price'] = null;
 
   startResearchStage('price', { packetId, symbol: XAUUSD });
@@ -42,6 +43,11 @@ export function assembleXauusdResearchPacket(
     warnings.push(warningForResearchFailure('Current XAUUSD price'));
     recordResearchStageFailure('price', fetched.price.reason, { packetId, symbol: XAUUSD });
   }
+
+  const macroResult = assembleXauusdMacroEvidence(packetId, generatedAt, fetched.macro);
+  if (macroResult.evidence) warnings.push(...macroResult.evidence.warnings);
+  missingData.push(...macroResult.missingData);
+  warnings.push(...macroResult.warnings);
 
   const candleResult = collectCandleEvidence(packetId, fetched, warnings, missingData);
   const indicators = collectIndicatorEvidence(
@@ -82,6 +88,7 @@ export function assembleXauusdResearchPacket(
     price,
     candles: candleResult.candles,
     indicators,
+    macro: macroResult.evidence,
     missingData: uniqueResearchValues(missingData),
     warnings: uniqueResearchValues(warnings),
   });

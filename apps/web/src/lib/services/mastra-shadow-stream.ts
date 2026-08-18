@@ -22,6 +22,8 @@ export interface LegacyShadowStreamInput extends MastraShadowStreamInput {
   userMessage: UIMessage;
   mastraText: string;
   report: XauusdResearchReport | null;
+  mastraCostUsd?: number;
+  mastraLatencyMs?: number;
 }
 
 /**

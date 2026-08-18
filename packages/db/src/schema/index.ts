@@ -71,6 +71,8 @@ export * from './billing';
 export * from './analysis-jobs';
 // Durable user feedback and reviewer annotations
 export * from './ai-feedback';
+// Privacy-safe Mastra versus legacy rollout comparisons
+export * from './ai-shadow-comparisons';
 // Governed evaluation dataset registry
 export * from './eval-datasets';
 // Telegram webhook idempotency dedup

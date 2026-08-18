@@ -108,6 +108,7 @@ describe('Mastra report repair', () => {
       price: null,
       candles: [],
       indicators: [evidence('ind-1h', '1h', 2, 1), evidence('ind-4h', '4h', 1, 2)],
+      macro: null,
       missingData: ['Macro unavailable'],
       warnings: [],
     });

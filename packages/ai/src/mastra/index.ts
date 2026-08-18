@@ -77,9 +77,11 @@ export {
   XauusdCandlesEvidenceSchema,
   XauusdIndicatorsEvidenceSchema,
   XauusdPriceEvidenceSchema,
+  XauusdMacroEvidenceSchema,
   XauusdRequestContextSchema,
   type XauusdCandlesEvidence,
   type XauusdIndicatorsEvidence,
   type XauusdPriceEvidence,
+  type XauusdMacroEvidence,
   type XauusdRequestContext,
 } from './types';

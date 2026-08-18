@@ -13,11 +13,11 @@ import { recordAdminAudit } from '@/lib/services/admin';
 import { registerEvalDataset } from '@/lib/services/api-boundary';
 import {
   assembleTrainingDataset,
+  listReviewedTrainingPairs,
   resolveEvaluationAnnotations,
   type FeedbackAnnotationInput,
   type PromptResult,
-} from '@kestrel/ai';
-import { listReviewedTrainingPairs } from '@kestrel/db';
+} from '@/lib/services/api-boundary';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -41,6 +41,7 @@ export const POST = withAdminAuth(async (req, { user }) => {
         reviewerLabel: pair.reviewerLabel,
         issueCodes: pair.issueCodes,
         reviewerNote: pair.reviewerNote,
+        userNote: pair.userNote,
       });
     }
     const results: PromptResult[] = pairs.map((pair) => ({

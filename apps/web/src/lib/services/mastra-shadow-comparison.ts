@@ -2,6 +2,8 @@
 
 import 'server-only';
 
+import { createHash } from 'node:crypto';
+
 import {
   DEFAULT_MAX_DAILY_USD,
   consumeUIMessageStream,
@@ -15,7 +17,10 @@ import type { XauusdResearchReport } from '@kestrel/ai/mastra';
 import { runMastraXauusdResearch } from './mastra-xauusd';
 import { metrics } from '@kestrel/shared';
 import { createCategorizedLogger } from '@kestrel/shared/logger';
-import { getUserWithSettings } from '@kestrel/db';
+import {
+  getUserWithSettings,
+  recordAiShadowComparison,
+} from '@kestrel/db';
 
 import { getServerEnv } from '@/lib/env';
 
@@ -49,6 +54,8 @@ export interface RunLegacyShadowComparisonInput {
   userMessage: UIMessage;
   mastraText: string;
   report: XauusdResearchReport | null;
+  mastraCostUsd?: number;
+  mastraLatencyMs?: number;
 }
 
 function normalizedTokens(text: string): Set<string> {
@@ -92,6 +99,21 @@ export function compareMastraShadowTexts(
     mastraBias: report?.bias ?? null,
     mastraDataQuality: report?.dataQuality ?? null,
   };
+}
+
+function promptHash(prompt: string): string {
+  return createHash('sha256').update(prompt, 'utf8').digest('hex');
+}
+
+async function persistComparisonSafely(input: Parameters<typeof recordAiShadowComparison>[0]): Promise<void> {
+  try {
+    await recordAiShadowComparison(input);
+  } catch (error) {
+    slog.warn('Shadow comparison persistence failed', {
+      threadId: input.threadId,
+      error: error instanceof Error ? error.name : 'UnknownError',
+    });
+  }
 }
 
 function recordShadowFailure(outcome: 'failed' | 'skipped', reason: string): void {
@@ -159,6 +181,22 @@ export async function runMastraShadowComparison(
         ? { bias: result.report.bias, dataQuality: result.report.dataQuality }
         : null,
     );
+    await persistComparisonSafely({
+      userId: input.userId,
+      threadId: input.threadId,
+      promptSha256: promptHash(input.prompt),
+      primaryAgent: 'legacy',
+      outcome: 'completed',
+      legacyChars: comparison.legacyChars,
+      mastraChars: comparison.mastraChars,
+      sharedTokenRatio: comparison.sharedTokenRatio,
+      overlap: comparison.overlap,
+      mastraVerified: comparison.mastraVerified,
+      mastraBias: comparison.mastraBias,
+      mastraDataQuality: comparison.mastraDataQuality,
+      shadowLatencyMs: Date.now() - startedAt,
+      shadowCostUsd: observedCost,
+    });
     metrics.increment('mastra_shadow_total', {
       tags: {
         outcome: 'completed',
@@ -193,7 +231,17 @@ export async function runMastraShadowComparison(
         });
       }
     }
-    recordShadowFailure('failed', error instanceof Error && error.name === 'TimeoutError' ? 'timeout' : 'run');
+    const reason = error instanceof Error && error.name === 'TimeoutError' ? 'timeout' : 'run';
+    await persistComparisonSafely({
+      userId: input.userId,
+      threadId: input.threadId,
+      promptSha256: promptHash(input.prompt),
+      primaryAgent: 'legacy',
+      outcome: 'failed',
+      failureReason: reason,
+      shadowLatencyMs: Date.now() - startedAt,
+    });
+    recordShadowFailure('failed', reason);
     slog.warn('Mastra shadow comparison failed; legacy response is unaffected', {
       threadId: input.threadId,
       error: error instanceof Error ? error.name : 'UnknownError',
@@ -236,6 +284,23 @@ export async function runLegacyShadowComparison(
         ? { bias: input.report.bias, dataQuality: input.report.dataQuality }
         : null,
     );
+    await persistComparisonSafely({
+      userId: input.userId,
+      threadId: input.threadId,
+      promptSha256: promptHash(input.prompt),
+      primaryAgent: 'mastra',
+      outcome: 'completed',
+      legacyChars: comparison.legacyChars,
+      mastraChars: comparison.mastraChars,
+      sharedTokenRatio: comparison.sharedTokenRatio,
+      overlap: comparison.overlap,
+      mastraVerified: comparison.mastraVerified,
+      mastraBias: comparison.mastraBias,
+      mastraDataQuality: comparison.mastraDataQuality,
+      primaryLatencyMs: input.mastraLatencyMs ?? null,
+      primaryCostUsd: input.mastraCostUsd ?? null,
+      shadowLatencyMs: Date.now() - startedAt,
+    });
     metrics.increment('mastra_shadow_total', {
       tags: {
         outcome: 'completed',
@@ -258,11 +323,23 @@ export async function runLegacyShadowComparison(
     });
     return comparison;
   } catch (error) {
+    const reason = error instanceof Error && error.name === 'TimeoutError' ? 'timeout' : 'legacy-run';
+    await persistComparisonSafely({
+      userId: input.userId,
+      threadId: input.threadId,
+      promptSha256: promptHash(input.prompt),
+      primaryAgent: 'mastra',
+      outcome: 'failed',
+      failureReason: reason,
+      primaryLatencyMs: input.mastraLatencyMs ?? null,
+      primaryCostUsd: input.mastraCostUsd ?? null,
+      shadowLatencyMs: Date.now() - startedAt,
+    });
     metrics.increment('mastra_shadow_total', {
       tags: { outcome: 'failed', side: 'legacy' },
     });
     metrics.increment('mastra_shadow_failed_total', {
-      tags: { reason: error instanceof Error && error.name === 'TimeoutError' ? 'timeout' : 'legacy-run' },
+      tags: { reason },
     });
     slog.warn('Legacy shadow comparison failed; Mastra response is unaffected', {
       threadId: input.threadId,

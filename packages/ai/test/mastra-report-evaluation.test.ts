@@ -45,6 +45,7 @@ function packet() {
     },
     candles: [],
     indicators: [],
+    macro: null,
     missingData: ['Macro context is unavailable'],
     warnings: [],
   });

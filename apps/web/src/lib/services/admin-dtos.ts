@@ -182,3 +182,42 @@ export interface OnboardingInspectDTO {
 export interface FeatureFlagsDTO {
   features: Record<string, boolean>;
 }
+
+// ── AI shadow comparison ────────────────────────────────────────────────────
+
+export interface AiShadowComparisonDTO {
+  id: string;
+  threadId: string;
+  promptSha256: string;
+  primaryAgent: 'mastra' | 'legacy';
+  outcome: 'completed' | 'failed';
+  failureReason: string | null;
+  legacyChars: number | null;
+  mastraChars: number | null;
+  sharedTokenRatio: number | null;
+  overlap: 'none' | 'low' | 'medium' | 'high' | null;
+  mastraVerified: boolean | null;
+  mastraBias: string | null;
+  mastraDataQuality: string | null;
+  primaryLatencyMs: number | null;
+  shadowLatencyMs: number | null;
+  primaryCostUsd: number | null;
+  shadowCostUsd: number | null;
+  createdAt: string;
+}
+
+export interface AiShadowComparisonSummaryDTO {
+  total: number;
+  completed: number;
+  failed: number;
+  mastraPrimary: number;
+  legacyPrimary: number;
+  verifiedReports: number;
+  averageSharedTokenRatio: number | null;
+  averagePrimaryLatencyMs: number | null;
+  averageShadowLatencyMs: number | null;
+  averagePrimaryCostUsd: number | null;
+  averageShadowCostUsd: number | null;
+  overlapCounts: Record<'none' | 'low' | 'medium' | 'high', number>;
+  failureReasons: Record<string, number>;
+}

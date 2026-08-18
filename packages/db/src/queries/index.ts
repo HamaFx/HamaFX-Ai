@@ -55,4 +55,5 @@ export * as ipnEvents from './ipn-events';
 export * as candles from './candles';
 export * as agentOpinions from './agent-opinions';
 export * as aiFeedback from './ai-feedback';
+export * as aiShadowComparisons from './ai-shadow-comparisons';
 export * as evalDatasets from './eval-datasets';

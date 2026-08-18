@@ -2,6 +2,7 @@ import type {
   XauusdCandlesEvidence,
   XauusdIndicatorsEvidence,
   XauusdPriceEvidence,
+  XauusdMacroEvidence,
 } from './types';
 import type { XauusdResearchPacket } from './research-types';
 
@@ -31,6 +32,7 @@ export interface XauusdModelEvidenceContext {
   price: XauusdPriceEvidence | null;
   candles: CompactCandlesEvidence[];
   indicators: CompactIndicatorsEvidence[];
+  macro: XauusdMacroEvidence | null;
   missingData: string[];
   warnings: string[];
 }
@@ -68,6 +70,7 @@ export function buildXauusdModelEvidenceContext(
         })),
       },
     })),
+    macro: packet.macro,
     missingData: [...packet.missingData],
     warnings: [...packet.warnings],
   };

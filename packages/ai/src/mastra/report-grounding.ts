@@ -6,6 +6,7 @@ export function availableEvidenceIds(packet: XauusdResearchPacket): Set<string> 
     ...(packet.price ? [packet.price.evidenceId] : []),
     ...packet.candles.map((evidence) => evidence.evidenceId),
     ...packet.indicators.map((evidence) => evidence.evidenceId),
+    ...(packet.macro ? [packet.macro.evidenceId] : []),
   ]);
 }
 
@@ -50,6 +51,14 @@ function numericEvidenceValues(packet: XauusdResearchPacket): Map<string, number
       }
     }
     values.set(evidence.evidenceId, indicatorValues);
+  }
+  if (packet.macro) {
+    values.set(packet.macro.evidenceId, [
+      ...packet.macro.data.dollarIndex.map((item) => item.value),
+      ...packet.macro.data.realYields.map((item) => item.value),
+      ...packet.macro.data.breakevenInflation.map((item) => item.value),
+      ...packet.macro.data.events.flatMap((item) => [item.actual, item.forecast, item.previous].filter((value): value is number => value !== null)),
+    ]);
   }
   return values;
 }

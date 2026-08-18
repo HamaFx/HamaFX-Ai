@@ -63,6 +63,7 @@ describe('Mastra BYOK runner', () => {
       price: null,
       candles: [],
       indicators: [],
+      macro: null,
       missingData: [],
       warnings: [],
     });

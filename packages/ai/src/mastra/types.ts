@@ -6,6 +6,8 @@ import {
   SymbolSchema,
   TickSchema,
   TimeframeSchema,
+  NewsArticleSchema,
+  EconomicEventSchema,
 } from '@kestrel/shared';
 
 export const XAUUSD = 'XAUUSD' as const;
@@ -68,6 +70,19 @@ export const XauusdIndicatorsEvidenceSchema = EvidenceMetadataSchema.extend({
   }),
 });
 
+export const XauusdMacroEvidenceSchema = EvidenceMetadataSchema.extend({
+  kind: z.literal('macro'),
+  symbol: z.literal(XAUUSD),
+  data: z.object({
+    news: z.array(NewsArticleSchema),
+    events: z.array(EconomicEventSchema),
+    dollarIndex: z.array(z.object({ date: z.string(), value: z.number() })),
+    realYields: z.array(z.object({ date: z.string(), value: z.number() })),
+    breakevenInflation: z.array(z.object({ date: z.string(), value: z.number() })),
+  }),
+});
+
 export type XauusdPriceEvidence = z.infer<typeof XauusdPriceEvidenceSchema>;
 export type XauusdCandlesEvidence = z.infer<typeof XauusdCandlesEvidenceSchema>;
 export type XauusdIndicatorsEvidence = z.infer<typeof XauusdIndicatorsEvidenceSchema>;
+export type XauusdMacroEvidence = z.infer<typeof XauusdMacroEvidenceSchema>;

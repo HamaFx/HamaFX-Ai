@@ -66,6 +66,7 @@ function packetFixture(): XauusdResearchPacket {
       warnings: [],
       data: { results, candleCount: candles.length, stale: false },
     }],
+    macro: null,
     missingData: ['Macro context is unavailable.'],
     warnings: ['Macro context is unavailable.'],
   };

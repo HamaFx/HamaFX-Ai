@@ -19,6 +19,7 @@ export interface ReviewedTrainingPair {
   reviewerLabel: 'pass' | 'fail' | 'needs_review' | null;
   issueCodes: string[] | null;
   reviewerNote: string | null;
+  userNote: string | null;
   reviewedAt: Date | null;
 }
 
@@ -67,6 +68,7 @@ export async function listReviewedTrainingPairs(
       reviewerLabel: feedback.reviewerLabel,
       issueCodes: feedback.issueCodes,
       reviewerNote: feedback.reviewerNote,
+      userNote: feedback.userNote,
       reviewedAt: feedback.reviewedAt,
       assistantText: assistant.content,
       prompt: promptSql,

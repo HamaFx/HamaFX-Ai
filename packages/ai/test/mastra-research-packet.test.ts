@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   getPriceWithMeta: vi.fn(),
   getCandlesWithMeta: vi.fn(),
+  fetchNews: vi.fn(),
+  fetchUpcomingEvents: vi.fn(),
   recordStep: vi.fn(),
   completeStep: vi.fn(),
   logErrorContext: vi.fn(),
@@ -11,6 +13,8 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@kestrel/data', () => ({
   getPriceWithMeta: mocks.getPriceWithMeta,
   getCandlesWithMeta: mocks.getCandlesWithMeta,
+  fetchNews: mocks.fetchNews,
+  fetchUpcomingEvents: mocks.fetchUpcomingEvents,
 }));
 vi.mock('../src/diagnostics', () => ({
   recordStep: mocks.recordStep,
@@ -66,6 +70,8 @@ describe('bounded XAUUSD research packet', () => {
     metrics.reset();
     mocks.getPriceWithMeta.mockReset();
     mocks.getCandlesWithMeta.mockReset();
+    mocks.fetchNews.mockReset().mockResolvedValue([]);
+    mocks.fetchUpcomingEvents.mockReset().mockResolvedValue([]);
     mocks.recordStep.mockReset();
     mocks.completeStep.mockReset();
     mocks.logErrorContext.mockReset();
@@ -87,9 +93,11 @@ describe('bounded XAUUSD research packet', () => {
     expect(packet.candles).toHaveLength(4);
     expect(packet.indicators).toHaveLength(4);
     expect(packet.indicators[0]?.data.results).toHaveLength(6);
-    expect(packet.missingData).toContain(
-      'Macro, economic-calendar, news, dollar, and yield context are not included in this proof of concept.',
-    );
+    expect(packet.missingData).toEqual(expect.arrayContaining([
+      'Dollar-strength data is unavailable.',
+      'US real-yield and inflation-expectation data is unavailable.',
+      'No macro evidence was returned by the configured providers.',
+    ]));
     expect(mocks.getPriceWithMeta).toHaveBeenCalledOnce();
     expect(mocks.getCandlesWithMeta).toHaveBeenCalledTimes(4);
     expect(metrics.snapshot().counters['mastra_research_packet_total{status=ready,symbol=XAUUSD}']).toBe(1);
