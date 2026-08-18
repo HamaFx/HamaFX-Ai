@@ -171,6 +171,7 @@ export {
   ChatStreamEventSchema,
   logStreamHub,
   pickAiEnv,
+  metrics,
 } from '@kestrel/shared';
 export { configuredProviders, decryptByok, PROVIDER_IDS } from '@kestrel/shared/encryption';
 export { REQUIRED_HEALTH_ENV_VARS } from '@kestrel/shared/env-secrets';

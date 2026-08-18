@@ -22,7 +22,7 @@ jobs:
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22.13.0
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm turbo run lint
@@ -59,7 +59,7 @@ jobs:
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22.13.0
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       # Phase 0.8: coverage on the PR path so coverage regressions are caught
@@ -86,7 +86,7 @@ jobs:
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22.13.0
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps
@@ -129,7 +129,7 @@ jobs:
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22.13.0
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Download shard blobs

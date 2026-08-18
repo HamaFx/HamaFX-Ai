@@ -51,6 +51,18 @@ export const METRIC_NAMES = [
   // Eval/training loop signals.
   'dataset_publish_total',
   'eval_case_total',
+  // Mastra proof-of-concept lifecycle and tool SLIs.
+  'mastra_run_total',
+  'mastra_run_failed_total',
+  'mastra_tool_call_total',
+  'mastra_tool_failed_total',
+  'mastra_research_packet_total',
+  'mastra_research_packet_blocked_total',
+  'mastra_report_verification_total',
+  'mastra_report_verification_failed_total',
+  'mastra_report_repair_total',
+  'mastra_chat_route_total',
+  'mastra_chat_fallback_total',
 ] as const;
 
 export type MetricName = (typeof METRIC_NAMES)[number];

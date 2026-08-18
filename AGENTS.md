@@ -22,7 +22,7 @@
 | Question | Answer |
 |----------|--------|
 | Package manager | pnpm 9.15.4 |
-| Node | >= 20.11 |
+| Node | >= 22.13.0 |
 | Monorepo tool | Turborepo 2 |
 | Framework | Next.js 16 App Router + React 19 |
 | Styling | Tailwind CSS v4 + shadcn/ui (Radix) |

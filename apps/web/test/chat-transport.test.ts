@@ -134,6 +134,35 @@ describe('createKestrelChatTransport', () => {
     expect(chunks.some((chunk) => chunk.type === 'data-multi-agent-meta')).toBe(true);
   });
 
+  it('preserves Mastra report metadata in the AI SDK data stream', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      sseResponse([
+        { type: 'text-start', id: 'mastra-message' },
+        { type: 'text-delta', id: 'mastra-message', delta: 'gold report' },
+        { type: 'text-end', id: 'mastra-message' },
+        {
+          type: 'data-multi-agent-meta',
+          id: 'mastra-message',
+          transient: true,
+          data: { agent: 'mastra-xauusd', report: { bias: 'neutral' } },
+        },
+      ]),
+    );
+
+    const transport = createKestrelChatTransport({ api: '/api/chat' });
+    const stream = await transport.sendMessages({
+      chatId: 'thread-1',
+      messages: [],
+      abortSignal: new AbortController().signal,
+    });
+    const chunks = await readChunks(stream as ReadableStream<Record<string, unknown>>);
+    const meta = chunks.find((chunk) => chunk.type === 'data-multi-agent-meta');
+
+    expect(meta).toMatchObject({
+      data: { agent: 'mastra-xauusd', report: { bias: 'neutral' } },
+    });
+  });
+
   it('surfaces malformed SSE instead of presenting truncated text as complete', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(
       'data: {"type":"text-start","id":"server-message-id"}\\n\\ndata: {not-json}\\n\\n',

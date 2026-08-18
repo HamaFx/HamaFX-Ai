@@ -6,6 +6,12 @@
       "sourceType": "github",
       "skillPath": "skills/langfuse/SKILL.md",
       "computedHash": "aded53f72ede17c2959f10467b28ac5c2aff98ef999ad396da08d5ed408f0c52"
+    },
+    "mastra": {
+      "source": "mastra-ai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/mastra/SKILL.md",
+      "computedHash": "6482dad39fb72d1fe9d02078c15c3ee708774fd026a8557b4c7dc37fb554977a"
     }
   }
 }

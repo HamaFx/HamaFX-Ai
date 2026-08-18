@@ -38,7 +38,7 @@ body:
     attributes:
       label: Environment
       description: OS, Node.js version, Docker version (if applicable)
-      placeholder: e.g., Ubuntu 22.04, Node 20.x
+      placeholder: e.g., Ubuntu 22.04, Node 22.x
     validations:
       required: true
   - type: textarea

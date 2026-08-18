@@ -93,7 +93,7 @@ The command-line installer (`scripts/setup/`) is the recommended first step for 
 
 The flow has seven steps:
 
-1. **Prerequisites** — Node 20+, pnpm/Corepack, Git, Docker detection with guidance.
+1. **Prerequisites** — Node 22.13+, pnpm/Corepack, Git, Docker detection with guidance.
 2. **Mode** — arrow-key picker: **Simple** (PGlite, no Docker) vs **Full** (Docker + pgvector + worker).
 3. **Existing install** — if `.env`/`node_modules` exist: Continue / Repair / Fresh start.
 4. **Market data** (optional) — checkbox multi-select for Finnhub, Marketaux, FRED, Alpha Vantage with masked key input.

@@ -27,7 +27,7 @@ jobs:
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22.13.0
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm turbo run lint
@@ -42,7 +42,7 @@ jobs:
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22.13.0
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm turbo run test -- --coverage
@@ -61,7 +61,7 @@ jobs:
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22.13.0
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps
@@ -104,7 +104,7 @@ jobs:
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22.13.0
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Download shard blobs
@@ -136,7 +136,7 @@ jobs:
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22.13.0
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       # This deterministic gate always runs in CI and does not require model
@@ -157,7 +157,7 @@ jobs:
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22.13.0
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Validate isolated staging credentials

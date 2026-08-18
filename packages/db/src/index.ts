@@ -162,6 +162,7 @@ export {
   type TraceExplorerFilters,
 } from './queries/diagnostic-traces';
 export {
+  getFeatureFlag,
   listFeatureFlags,
   upsertFeatureFlag,
   type FeatureFlagRow,

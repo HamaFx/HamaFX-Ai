@@ -21,6 +21,7 @@
 import './services';
 
 export { runChat } from './agent';
+export { reserveTurnBudget, type BudgetHandle } from './budget-reservation';
 export { type RunChatArgs } from './types';
 export { toolRegistry, type ToolRegistry } from './tools';
 export {

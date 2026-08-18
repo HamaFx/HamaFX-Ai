@@ -59,6 +59,7 @@ import { CitationWarningPartView } from './parts/citation-warning';
 import { FallbackPartView } from './parts/fallback';
 import { ChatToolPart, type ToolPartState } from './parts/registry';
 import { PlanPart } from './parts/plan';
+import { MastraReportPart } from './parts/mastra-report';
 import { TextPart } from './parts/text';
 import { MessageFooter } from './_components/message-footer';
 import { MessageFeedback } from './_components/message-feedback';
@@ -443,6 +444,9 @@ function renderPart(
   // streamText finishes (citation warning, verify warning) or written
   // into a sibling system message before the turn (data-plan, handled
   // at the message level above).
+  if (part.type === 'data-multi-agent-meta' && 'data' in part) {
+    return <MastraReportPart key={idx} data={(part as { data?: unknown }).data} />;
+  }
   if (part.type === 'data-citation-warning') {
     const parsed = CitationWarningPartSchema.safeParse(part);
     if (!parsed.success) {

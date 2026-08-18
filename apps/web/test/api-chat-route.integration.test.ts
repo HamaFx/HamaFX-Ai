@@ -7,12 +7,16 @@ const {
   mockGetUserWithSettings,
   mockRunChat,
   mockWithRateLimit,
+  mockMastraEnabled,
+  mockRunMastraXauusdChat,
 } = vi.hoisted(() => ({
   mockEnqueueAnalysisJob: vi.fn(),
   mockGetThread: vi.fn(),
   mockGetUserWithSettings: vi.fn(),
   mockRunChat: vi.fn(),
   mockWithRateLimit: vi.fn(),
+  mockMastraEnabled: vi.fn(),
+  mockRunMastraXauusdChat: vi.fn(),
 }));
 
 vi.mock('@sentry/nextjs', () => ({
@@ -42,6 +46,17 @@ vi.mock('@/lib/logger', () => ({
   }),
 }));
 
+vi.mock('@/lib/services/mastra-chat-routing', () => ({
+  isMastraXauusdChatEnabled: mockMastraEnabled,
+  decideMastraXauusdChatRoute: (args: { prompt: string; featureEnabled: boolean; hasModelOverride?: boolean }) =>
+    args.featureEnabled && /gold|xauusd/i.test(args.prompt) && !args.hasModelOverride
+      ? { route: 'mastra', reason: 'enabled' }
+      : { route: 'legacy', reason: args.featureEnabled ? 'not-xauusd' : 'disabled' },
+}));
+vi.mock('@/lib/services/mastra-chat', () => ({
+  runMastraXauusdChat: mockRunMastraXauusdChat,
+}));
+
 vi.mock('@/lib/services/api-boundary', () => ({
   AnalysisQueuedEventSchema: { parse: (value: unknown) => value },
   BudgetExceededError: class BudgetExceededError extends Error {},
@@ -61,6 +76,7 @@ vi.mock('@/lib/services/api-boundary', () => ({
   flushLangfuse: vi.fn().mockResolvedValue(undefined),
   traceIdStorage: { getStore: () => 'trace-route-1' },
   withRateLimit: mockWithRateLimit,
+  metrics: { increment: vi.fn() },
   withDiagnostics: async (_userId: string, _threadId: string, fn: () => Promise<Response>) => fn(),
 }));
 
@@ -103,9 +119,72 @@ function body(overrides: Record<string, unknown> = {}): Record<string, unknown> 
 describe('POST /api/chat boundary', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockMastraEnabled.mockResolvedValue(false);
+    mockWithRateLimit.mockResolvedValue({ allowed: true, count: 1, limit: 30 });
+    mockGetThread.mockResolvedValue({ id: 'thread-1', userId: 'user-1' });
   });
 
-  it('hands an authenticated single-mode turn to runChat with server-owned context', async () => {
+  it('routes an eligible XAUUSD turn to Mastra when the rollout flag is enabled', async () => {
+    mockMastraEnabled.mockResolvedValue(true);
+    mockRunMastraXauusdChat.mockResolvedValue({
+      runId: 'mastra-run-1',
+      modelId: 'mistral-small-latest',
+      providerId: 'mistral',
+      observedCost: 0.001,
+      packet: { packetId: 'packet-1', status: 'ready', dataQuality: 'partial' },
+      report: null,
+      result: { text: 'Grounded gold analysis' },
+    });
+
+    const response = await POST(request(body()), { params: Promise.resolve(undefined) });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toContain('text/event-stream');
+    expect(await response.text()).toContain('Grounded gold analysis');
+    expect(mockRunMastraXauusdChat).toHaveBeenCalledWith(expect.objectContaining({
+      userId: 'user-1',
+      threadId: '11111111-1111-4111-8111-111111111111',
+      prompt: 'Analyze XAUUSD',
+    }));
+    expect(mockRunChat).not.toHaveBeenCalled();
+  });
+
+  it('falls back to the legacy agent when Mastra fails', async () => {
+    mockMastraEnabled.mockResolvedValue(true);
+    mockRunMastraXauusdChat.mockRejectedValue(new Error('provider unavailable'));
+    mockRunChat.mockResolvedValue({
+      toUIMessageStreamResponse: () => new Response('legacy-stream', { status: 200 }),
+    });
+
+    const response = await POST(request(body()), { params: Promise.resolve(undefined) });
+
+    expect(response.status).toBe(200);
+    expect(await response.text()).toBe('legacy-stream');
+    expect(mockRunMastraXauusdChat).toHaveBeenCalled();
+    expect(mockRunChat).toHaveBeenCalled();
+  });
+
+  it('keeps non-XAUUSD turns on the legacy agent even when Mastra is enabled', async () => {
+    mockMastraEnabled.mockResolvedValue(true);
+    mockRunChat.mockResolvedValue({
+      toUIMessageStreamResponse: () => new Response('legacy-stream', { status: 200 }),
+    });
+
+    const response = await POST(request(body({
+      messages: [{
+        id: 'user-message-1',
+        role: 'user',
+        content: 'Analyse EURUSD',
+        parts: [{ type: 'text', text: 'Analyse EURUSD' }],
+      }],
+    })), { params: Promise.resolve(undefined) });
+
+    expect(response.status).toBe(200);
+    expect(mockRunMastraXauusdChat).not.toHaveBeenCalled();
+    expect(mockRunChat).toHaveBeenCalled();
+  });
+
+  it('hands an authenticated single-mode turn to runChat with server-owned context, by default', async () => {
     mockWithRateLimit.mockResolvedValue({ allowed: true, count: 1, limit: 30 });
     mockGetThread.mockResolvedValue({ id: 'thread-1', userId: 'user-1' });
     mockGetUserWithSettings.mockResolvedValue({ settings, user: { name: 'Ada', email: 'ada@example.com' } });

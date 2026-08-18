@@ -11,6 +11,12 @@ import { z } from 'zod';
 import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';
 import { getServerEnv } from '@/lib/env';
 import { createRequestLogger } from '@/lib/logger';
+import { runMastraXauusdChat } from '@/lib/services/mastra-chat';
+import { mastraChatResponse } from '@/lib/services/mastra-chat-response';
+import {
+  decideMastraXauusdChatRoute,
+  isMastraXauusdChatEnabled,
+} from '@/lib/services/mastra-chat-routing';
 import {
   AnalysisQueuedEventSchema,
   BudgetExceededError,
@@ -30,6 +36,7 @@ import {
   traceIdStorage,
   withRateLimit,
   withDiagnostics,
+  metrics,
 } from '@/lib/services/api-boundary';
 
 export const runtime = 'nodejs';
@@ -149,6 +156,55 @@ export const POST = withAuth<void>(async (req, { user }) => {
     // analysisMode is provided and not 'single'. When 'auto', the
     // orchestrator auto-detects based on the user's message.
     const analysisMode = body.analysisMode ?? 'single';
+    const userText = extractUserMessageText(last as UIMessage);
+
+    // Gradual Mastra rollout. This gate is deliberately narrow: only
+    // explicit single-mode, read-only XAUUSD requests are eligible, and an
+    // explicitly selected model always stays on the legacy path until Mastra
+    // supports model overrides. Any flag/config/provider failure falls back
+    // to the existing agent rather than breaking chat.
+    if (analysisMode === 'single' && body.modelOverride == null) {
+      let featureEnabled = false;
+      try {
+        featureEnabled = await isMastraXauusdChatEnabled();
+      } catch (error) {
+        log.warn({ err: String(error) }, 'Mastra chat feature flag lookup failed; using legacy agent');
+      }
+
+      const decision = decideMastraXauusdChatRoute({
+        prompt: userText,
+        featureEnabled,
+        hasModelOverride: false,
+      });
+      metrics.increment('mastra_chat_route_total', { tags: { decision: decision.route, reason: decision.reason } });
+
+      if (decision.route === 'mastra') {
+        try {
+          const run = await runMastraXauusdChat({
+            userId: user.userId,
+            threadId: body.threadId,
+            userMessage: last as UIMessage,
+            prompt: userText,
+            signal: req.signal,
+          });
+          return mastraChatResponse({
+            messageId: crypto.randomUUID(),
+            text: run.result.text,
+            runId: run.runId,
+            modelId: run.modelId,
+            providerId: run.providerId,
+            report: run.report,
+            researchStatus: run.packet.status,
+            dataQuality: run.packet.dataQuality,
+            packetId: run.packet.packetId,
+            observedCost: run.observedCost,
+          });
+        } catch (error) {
+          metrics.increment('mastra_chat_fallback_total', { tags: { reason: 'mastra-failed' } });
+          log.warn({ err: String(error), threadId: body.threadId }, 'Mastra chat failed; falling back to legacy agent');
+        }
+      }
+    }
 
     if (analysisMode !== 'single') {
       const { settings: userSettings, user: userRow } = await getUserWithSettings(user.userId);
@@ -158,7 +214,6 @@ export const POST = withAuth<void>(async (req, { user }) => {
 
       const displayName =
         userRow?.name?.trim() || (userRow?.email ? userRow.email.split('@')[0] : null);
-      const userText = extractUserMessageText(last as UIMessage);
       const resolvedMode = resolveMode(analysisMode, userText);
 
       if (resolvedMode !== 'single') {

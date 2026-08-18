@@ -1,0 +1,133 @@
+import type { RequestContext } from '@mastra/core/request-context';
+import type { Agent } from '@mastra/core/agent';
+import { metrics } from '@kestrel/shared';
+
+import { telemetryConfig } from '../telemetry';
+import {
+  requireVerifiedXauusdReport,
+  XauusdReportVerificationError,
+} from './report-verifier';
+import { XauusdResearchReportSchema, type XauusdResearchReport } from './report-types';
+import { patchTimeframeConflictDisclosure } from './report-repair';
+import type { XauusdResearchPacket } from './research-types';
+import type { xauusdMastraTools } from './tools';
+import type { XauusdRequestContext } from './types';
+
+export type XauusdReportGenerationResult = Awaited<ReturnType<typeof generateXauusdReport>>;
+
+const REPORT_REPAIR_LIMIT = 1;
+
+export async function generateXauusdReport(
+  agent: Agent<string, typeof xauusdMastraTools, undefined, XauusdRequestContext>,
+  prompt: string,
+  requestContext: RequestContext<XauusdRequestContext>,
+  providerId: string,
+  signal?: AbortSignal,
+) {
+  return agent.generate(prompt, {
+    requestContext,
+    // The packet has already been collected deterministically. Prevent the
+    // synthesis step from fetching a different snapshot or inventing a path.
+    toolChoice: 'none',
+    maxSteps: 1,
+    structuredOutput: {
+      schema: XauusdResearchReportSchema,
+      jsonPromptInjection: 'auto',
+      instructions: [
+        'Return every required field in the schema; never omit fields with arrays.',
+        'evidenceIds must be a non-empty array containing the cited evidence IDs.',
+        'sources must be a non-empty array with evidenceId, source, and ISO dataAsOf for each source.',
+        'numericClaims must contain every numeric market fact you state, with label, value, evidenceId, and tolerance.',
+        'Include at least two scenarios, and every scenario must include trigger, invalidation, risks, and evidenceIds.',
+        'List meaningful conflicts between timeframes or evidence in contradictions; do not leave contradictions empty when the packet shows conflicting signals.',
+        'Return only the structured object; do not substitute prose for required arrays.',
+      ].join('\n'),
+    },
+    ...telemetryConfig({
+      functionId: 'mastra.xauusd.report',
+      metadata: { provider: providerId },
+    }),
+    ...(signal ? { abortSignal: signal } : {}),
+  });
+}
+
+function repairPrompt(prompt: string, findings: readonly string[]): string {
+  return [
+    prompt,
+    '',
+    'The previous structured report failed deterministic verification.',
+    'Return a corrected complete report using the same trusted packet.',
+    'Do not remove evidence or lower disclosure quality to bypass verification.',
+    `Verification findings to fix:\n${findings.map((finding) => `- ${finding}`).join('\n')}`,
+  ].join('\n');
+}
+
+function verificationFindings(error: unknown): readonly string[] | null {
+  if (error instanceof XauusdReportVerificationError) return error.findings;
+  if (typeof error === 'object' && error !== null && 'findings' in error) {
+    const findings = (error as { findings?: unknown }).findings;
+    if (Array.isArray(findings) && findings.every((finding) => typeof finding === 'string')) {
+      return findings;
+    }
+  }
+  return null;
+}
+
+export async function generateVerifiedXauusdReport(
+  agent: Agent<string, typeof xauusdMastraTools, undefined, XauusdRequestContext>,
+  prompt: string,
+  requestContext: RequestContext<XauusdRequestContext>,
+  providerId: string,
+  packet: XauusdResearchPacket,
+  signal?: AbortSignal,
+): Promise<{
+  result: XauusdReportGenerationResult;
+  report: XauusdResearchReport;
+  attempts: number;
+}> {
+  let findingsForRepair: readonly string[] = [];
+
+  for (let repairAttempt = 0; repairAttempt <= REPORT_REPAIR_LIMIT; repairAttempt += 1) {
+    const result = await generateXauusdReport(
+      agent,
+      repairAttempt === 0 ? prompt : repairPrompt(prompt, findingsForRepair),
+      requestContext,
+      providerId,
+      signal,
+    );
+
+    try {
+      const report = requireVerifiedXauusdReport(result.object, packet);
+      if (repairAttempt > 0) {
+        metrics.increment('mastra_report_repair_total', {
+          tags: { result: 'passed' },
+        });
+      }
+      return { result, report, attempts: repairAttempt + 1 };
+    } catch (error) {
+      const findings = verificationFindings(error);
+      if (!findings) throw error;
+      if (repairAttempt >= REPORT_REPAIR_LIMIT) {
+        const patched = patchTimeframeConflictDisclosure(result.object, packet, findings);
+        if (patched) {
+          metrics.increment('mastra_report_repair_total', {
+            tags: { result: 'patched' },
+          });
+          return { result, report: patched, attempts: repairAttempt + 1 };
+        }
+        if (repairAttempt > 0) {
+          metrics.increment('mastra_report_repair_total', {
+            tags: { result: 'failed' },
+          });
+        }
+        throw error;
+      }
+      findingsForRepair = findings;
+      metrics.increment('mastra_report_repair_total', {
+        tags: { result: 'requested' },
+      });
+    }
+  }
+
+  throw new Error('Mastra report repair loop ended unexpectedly');
+}

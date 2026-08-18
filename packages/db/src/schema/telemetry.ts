@@ -69,6 +69,8 @@ export type ChatTelemetryKind =
   | 'multi_specialist_sentiment_failed'
   | 'multi_specialist_decision'
   | 'multi_agent_turn'
+  | 'mastra_xauusd_poc'
+  | 'mastra_xauusd_poc_failed'
   | 'turn_failed';
 
 /**
