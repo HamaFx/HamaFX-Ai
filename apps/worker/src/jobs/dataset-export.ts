@@ -28,6 +28,7 @@ import { eq } from 'drizzle-orm';
 import {
   assembleTrainingDataset,
   getDb,
+  publishTrainingDatasetToLangfuse,
   resolveEvaluationAnnotations,
   type FeedbackAnnotationInput,
   type PromptResult,
@@ -243,11 +244,27 @@ export async function runDatasetExport(ctx: JobContext): Promise<JobResult> {
     log.warn('B2 upload skipped or failed (dataset stays local)', { err: String(err) });
   }
 
+  // 8 — Langfuse dataset publish (fail-open: disabled without LANGFUSE_* env).
+  // Uses a stable dataset name — Langfuse versions items on every add, so a
+  // nightly publish appends a new dataset version rather than replacing one.
+  let langfuseStatus = 'skipped';
+  try {
+    const publishResult = await publishTrainingDatasetToLangfuse(assembled, {
+      datasetName: 'kestrel-training',
+      description: `Governed eval training records — ${version}`,
+    });
+    langfuseStatus = publishResult.status;
+  } catch (err) {
+    langfuseStatus = 'failed';
+    log.warn('Langfuse dataset publish skipped or failed (dataset stays local)', { err: String(err) });
+  }
+
   return {
     processed: assembled.manifest.recordCount,
     note:
       `version=${version} records=${assembled.manifest.recordCount} ` +
       `evalReports=${reportFiles} evalCases=${evalResults.length} ` +
-      `feedback=${pairs.length} registered=${registered} b2=${b2Uploaded}`,
+      `feedback=${pairs.length} registered=${registered} b2=${b2Uploaded} ` +
+      `langfuse=${langfuseStatus}`,
   };
 }

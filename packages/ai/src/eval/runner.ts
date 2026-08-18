@@ -43,6 +43,8 @@ import {
   type ParsedToolCall,
 } from './parse-stream';
 import { computeDrift } from './drift';
+import { emitEvalMetrics } from './eval-metrics';
+import { flushMetrics } from '@kestrel/shared/metrics-export';
 
 // --- types -----------------------------------------------------------------
 
@@ -1059,6 +1061,12 @@ async function main(): Promise<void> {
   process.stdout.write(
     `Done. ${results.length - failed}/${results.length} succeeded, ${failed} failed${dirty > 0 ? `, ${dirty} with assertion failures` : ''}.\n`,
   );
+
+  // Export the eval SLI to Grafana (no-op when GRAFANA_CLOUD_* env is absent)
+  // so the nightly run feeds the eval-success SLO.
+  emitEvalMetrics(results);
+  await flushMetrics();
+
   process.exit(failed > 0 || dirty > 0 ? 1 : 0);
 }
 

@@ -23,6 +23,7 @@
 // double-count underflows.
 
 import { createCategorizedLogger } from '@kestrel/shared/logger';
+import { metrics } from '@kestrel/shared';
 import {
   applyBudgetDelta,
   BudgetExceededError,
@@ -72,6 +73,10 @@ export async function reserveTurnBudget(args: {
     throw new BudgetExceededError(reservation.spent, reservation.max);
   }
 
+  // Phase D SLI — successful reservations. The denominator for the
+  // budget-release-failure rate signal.
+  metrics.increment('budget_reserved_total');
+
   const state = { released: false };
 
   return {
@@ -119,6 +124,8 @@ export async function reserveTurnBudget(args: {
         // Do not claim success when the reservation release did not reach the
         // database. The caller may invoke release again after the transient
         // database failure clears.
+        // Phase D SLI — stranded spend is the budget-release-failure signal.
+        metrics.increment('budget_release_failed_total');
         alog.error('applyBudgetDelta failed in release; reservation remains open', {
           userId: args.userId,
           reservedUsd: estimateUsd,

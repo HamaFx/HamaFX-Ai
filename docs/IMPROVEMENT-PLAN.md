@@ -113,6 +113,22 @@
     pipeline row (tick freshness with 30s threshold, metrics-flush health,
     spend $/h). Renders cleanly (snapshot validated); panels show no data
     until the deployed code pushes metrics with buckets + result tags.
+11. **Eval regression SLO (shipped via gcx, 2026-08-18).** The nightly eval
+    runner and the worker `dataset-export` job now emit
+    `eval_case_total{result="ok"|"fail"}` per case — a case counts as "fail"
+    on transport failure *or* any assertion failure (matching the runner's
+    non-zero exit contract). Ratio SLO live (manifest at
+    `infra/grafana/slos/kestrel-eval-success.yaml`):
+
+    | SLO | Type | Target | Basis |
+    |-----|------|--------|-------|
+    | Kestrel Eval Success | ratio | 90% / 7d | `eval_case_total{result="ok"}` ÷ total |
+
+    The training loop is also closed: `publishTrainingDatasetToLangfuse` runs
+    in `dataset-export` (stable dataset `kestrel-training`, versioned on each
+    nightly publish) alongside the existing JSONL + B2 + `eval_datasets`
+    registration, and `dataset_publish_total{result=…}` tracks publish
+    health.
 
 ### Working configuration (verified 2026-08-17)
 

@@ -24,40 +24,20 @@
 // top-to-bottom as: setup → reserveTurnBudget → build messages → route →
 // runChatWithFallback → budget.reconcile().
 
-import { getMessageText, pickAiEnv } from '@kestrel/shared';
-import { createCategorizedLogger } from '@kestrel/shared/logger';
+import { getMessageText, metrics, pickAiEnv } from '@kestrel/shared';
 import {
   convertToModelMessages,
-  stepCountIs,
   type ModelMessage,
   type UIMessage,
-  type LanguageModel,
 } from 'ai';
-import type { streamText } from 'ai';
-
-import { telemetryConfig } from './telemetry';
 
 import { buildLiveSnapshot } from './context';
-import {
-  DEFAULT_MAX_DAILY_USD,
-  estimateCostUsd,
-} from './cost';
+import { DEFAULT_MAX_DAILY_USD } from './cost';
 import { compactThread } from './memory/thread-summary';
-import {
-  derivePlannerModel,
-  supportsPromptCaching,
-} from './model';
-import { decryptByok, type ProviderId } from '@kestrel/shared/encryption';
-import {
-  appendUserMessage,
-  listMessages,
-  recordTelemetry,
-} from './persistence';
-import { runPlanner } from './planner';
-import { extractUserMessageText } from './message-text';
+import { derivePlannerModel } from './model';
+import { decryptByok } from '@kestrel/shared/encryption';
+import { appendUserMessage, listMessages } from './persistence';
 import { routeTurn, type RoutingDecision } from './routing';
-// generateTitle — moved to chat/auto-title.ts (P0-1)
-import { withToolContext, type ToolContext } from './tool-context';
 import { getUserWithSettings } from '@kestrel/db';
 // P2-3 — DI container for testability. Services are registered in
 // services.ts (auto-bootstrap on import). Tests can override via
@@ -66,21 +46,15 @@ import { container } from '@kestrel/shared';
 // P2-3 — auto-register services (db, llmClient) in the container.
 import './services';
 import type { RunChatArgs } from './types';
-// UserSettingsRow — moved to chat/auto-title.ts (P0-1)
-import { awaitLlmHeadroom } from './llm-throttle';
 import { withDiagnostics, persistDiagnosticContext, getDiagnosticContext, recordStep, completeStep, exportDiagnosticContext } from './diagnostics';
 
 // P0-1 — Extracted pipeline stages from this file.
-import { resolveModelForTurn, type ResolveModelContext } from './chat/resolve-model';
-import { flushBatchedTelemetry } from './chat/helpers';
-import { buildTurnSystemPrompt } from './chat/system-prompt';
-import { resolveActiveTools } from './chat/tools';
-import { buildStreamCallbacks, type StreamCallbackState } from './chat/stream-callbacks';
+import { type ResolveModelContext } from './chat/resolve-model';
+import { type StreamCallbackState } from './chat/stream-callbacks';
+import { buildAttemptCallback } from './chat/attempt';
 import { reserveTurnBudget } from './budget-reservation';
-import { runChatWithFallback, type AttemptResult } from './chat-retry-loop';
-import { DB, LLM_CLIENT } from './tokens';
-
-const alog = createCategorizedLogger('ai', { component: 'agent' });
+import { runChatWithFallback } from './chat-retry-loop';
+import { DB } from './tokens';
 /**
  * Runs one chat turn end-to-end:
  *   1. Daily-budget guardrail.
@@ -129,6 +103,9 @@ async function runChatInner(args: RunChatArgs): Promise<any> {
 
   // F5 — Record the start of the chat turn.
   recordStep('chat_turn_start', { threadId, model: modelOverride ?? 'default' });
+  // Phase D SLI — every request that reaches the agent counts here; failures
+  // after this point are visible via run_failed_total / chat_turn_total.
+  metrics.increment('chat_request_total');
 
   const db = container.resolve(DB);
   const { settings: userSettings, user: userRow } = await getUserWithSettings(userId);
@@ -244,7 +221,8 @@ async function runChatInner(args: RunChatArgs): Promise<any> {
 
   // ── Retry / fallback loop ──────────────────────────────────────────
   // SRP-1: The retry loop + fallback chain is extracted to runChatWithFallback.
-  // The attempt callback handles model resolution, planning, and streaming.
+  // The attempt callback (model resolution, planning, streaming) is built by
+  // buildAttemptCallback — a pure function of an explicit context object.
 
   // A stream can report lifecycle callbacks asynchronously. Keep one
   // terminal state (shared with the extracted stream callbacks) so a late
@@ -265,8 +243,7 @@ async function runChatInner(args: RunChatArgs): Promise<any> {
     routing,
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const streamResult: any = await runChatWithFallback({
+  const streamResult = await runChatWithFallback({
     maxAttempts: 5,
     initialModelOverride: modelOverride ?? undefined,
     userId,
@@ -277,231 +254,27 @@ async function runChatInner(args: RunChatArgs): Promise<any> {
     env: { GOOGLE_GENERATIVE_AI_API_KEY: env.GOOGLE_GENERATIVE_AI_API_KEY },
     routing,
     onFallback: (info) => { streamState.fallbackInfo = info; },
-    attempt: async (attemptCtx): Promise<AttemptResult> => {
-      // ── Model resolution ────────────────────────────────────────────
-      let resolvedModel: LanguageModel;
-      let resolvedModelId: string;
-      let providerId: ProviderId | undefined;
-
-      try {
-        resolveCtx.currentModelOverride = attemptCtx.currentModelOverride;
-        resolveCtx.nonEssentialDisabled = attemptCtx.nonEssentialDisabled;
-        const result = await resolveModelForTurn(resolveCtx);
-        resolvedModel = result.resolvedModel;
-        resolvedModelId = result.resolvedModelId;
-        providerId = result.providerId;
-        // Update shared context from result (may have been changed by budget checks)
-        if (result.nonEssentialDisabled !== undefined) {
-          resolveCtx.nonEssentialDisabled = result.nonEssentialDisabled;
-        }
-      } catch (err) {
-        return { success: false, error: err, nonEssentialDisabled: attemptCtx.nonEssentialDisabled };
-      }
-
-      // ── Planner ─────────────────────────────────────────────────────
-      let plannerResult: Awaited<ReturnType<typeof runPlanner>> | null = null;
-      let plannerCostUsd = 0;
-      const parts = resolvedModelId.split('/');
-      const bareModelId = parts.length > 1 ? parts[1] : resolvedModelId;
-
-      if (routing.planRequired) {
-        const plannerModelId =
-          derivePlannerModel(
-            {
-              aiApiKeys: userSettings.aiApiKeys,
-              chatModel: `${providerId}:${bareModelId}`,
-            },
-            env,
-          ) ?? env.AI_DEFAULT_MODEL;
-        try {
-          plannerResult = await runPlanner({
-            threadId,
-            userMessage,
-            routing,
-            plannerModelId,
-            env: pickAiEnv(env),
-            ...(signal ? { signal } : {}),
-          });
-          plannerCostUsd = estimateCostUsd(
-            plannerModelId,
-            plannerResult.inputTokens,
-            plannerResult.outputTokens,
-          );
-          if (plannerResult.source === 'llm' && env.LOG_PROMPTS) {
-            console.info(
-              '[ai] planner ok (steps=%d, tools=%o)',
-              plannerResult.plan.steps.length,
-              plannerResult.plan.expectedTools,
-            );
-          }
-          void recordTelemetry({
-            userId,
-            threadId,
-            messageId: plannerResult.messageId,
-            model: plannerModelId,
-            inputTokens: plannerResult.inputTokens,
-            outputTokens: plannerResult.outputTokens,
-            toolCalls: 0,
-            ms: plannerResult.ms,
-            kind:
-              plannerResult.source === 'llm'
-                ? 'plan_generated'
-                : plannerResult.reason === 'budget'
-                  ? 'plan_skipped_budget'
-                  : 'plan_failed',
-          }).catch((telemetryErr) =>
-            alog.error('planner telemetry failed', { threadId, err: String(telemetryErr) }),
-          );
-        } catch (err) {
-          alog.warn('planner threw — falling back', { err: String(err) });
-        }
-      }
-
-      // ── System prompt + context estimation ──────────────────────────
-      const { systemPrompt, effectiveMessages } = buildTurnSystemPrompt({
-        snapshot,
-        displayName: displayName ?? null,
-        userSettings,
-        compactionExtraSystem: compaction.extraSystem,
-        customInstructions,
-        resolvedModelId,
-        modelMessages,
-      });
-
-      // ── Tool context ────────────────────────────────────────────────
-      const toolContext: ToolContext = {
-        threadId,
-        userId,
-        latestUserMessageText: extractUserMessageText(userMessage),
-        env: pickAiEnv(env),
-        signal: signal ?? null,
-        budget: { spent: budget.spent, max: maxDailyUsd },
-        userSettings,
-        db,
-        toolTelemetryBuffer: [],
-      };
-
-      if (env.LOG_PROMPTS) {
-        console.info(
-          '[ai] routing domain=%s model=%s plan=%s rationale=%s',
-          routing.domain,
-          resolvedModelId,
-          routing.planRequired,
-          routing.rationale,
-        );
-        console.info('[ai] system prompt:\n%s', systemPrompt);
-        console.info(
-          '[ai] history (%d msgs, compacted %d)',
-          modelMessages.length,
-          compaction.compacted,
-        );
-      }
-
-      // Routing telemetry breadcrumb
-      void recordTelemetry({
-        userId,
-        threadId,
-        messageId: null,
-        model: resolvedModelId,
-        inputTokens: 0,
-        outputTokens: 0,
-        toolCalls: 0,
-        ms: 0,
-        kind: `routing_${routing.domain}` as const,
-      }).catch((err) => alog.warn('routing telemetry failed', { err: String(err) }));
-
-      // ── Tool filtering ──────────────────────────────────────────────
-      const userPlan = (env as Record<string, unknown>).USER_PLAN_TIER as string | undefined;
-      const activeTools = resolveActiveTools({
-        routingDomain: routing.domain,
-        userPlanTier: userPlan,
-        nonEssentialDisabled: resolveCtx.nonEssentialDisabled,
-        env,
-        userId,
-      });
-
-      // ── Stream callbacks + args ─────────────────────────────────────
-      const { onError, onFinish } = buildStreamCallbacks({
-        state: streamState,
-        threadId,
-        userId,
-        startedAt,
-        resolvedModelId,
-        providerId,
-        bareModelId,
-        plannerCostUsd,
-        budget,
-        diagnosticContext,
-        toolContext,
-        db,
-        userSettings,
-        env,
-        signal: signal ?? null,
-      });
-
-      const streamArgs: Parameters<typeof streamText>[0] = {
-        model: resolvedModel,
-        system: systemPrompt,
-        ...telemetryConfig({ functionId: 'chat.stream' }),
-        ...(supportsPromptCaching(resolvedModelId)
-          ? { providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' as const } } } }
-          : {}),
-        messages: effectiveMessages,
-        tools: activeTools,
-        stopWhen: stepCountIs(env.MAX_TOOL_ITERATIONS),
-        onError,
-        onFinish,
-      };
-      if (signal) streamArgs.abortSignal = signal;
-
-      // ── Stream ──────────────────────────────────────────────────────
-      try {
-        const headroomKey = `${providerId}:${userId}`;
-        await awaitLlmHeadroom(headroomKey, signal ? { signal } : {});
-        recordStep('stream_text', { model: resolvedModelId, attempt: attemptCtx.attemptNumber });
-        const result = await withToolContext(toolContext, async () => {
-          const client = container.resolve(LLM_CLIENT);
-          const streamTextOpts: Record<string, unknown> = {
-            model: resolvedModel,
-            system: systemPrompt,
-            messages: effectiveMessages,
-            telemetry: telemetryConfig({ functionId: 'chat.stream' }),
-          };
-          if (streamArgs.tools) streamTextOpts.tools = streamArgs.tools;
-          if (streamArgs.stopWhen) streamTextOpts.stopWhen = streamArgs.stopWhen;
-          if (signal) streamTextOpts.abortSignal = signal;
-          if (streamArgs.providerOptions) streamTextOpts.providerOptions = streamArgs.providerOptions;
-          if (streamArgs.onFinish) streamTextOpts.onFinish = streamArgs.onFinish;
-          if (streamArgs.onError) streamTextOpts.onError = streamArgs.onError;
-
-          return client.streamText(streamTextOpts as unknown as Parameters<typeof client.streamText>[0]);
-        });
-        completeStep('stream_text', 'completed');
-        return {
-          success: true,
-          value: result,
-          providerId,
-          bareModelId,
-        };
-      } catch (err) {
-        const buffer = toolContext.toolTelemetryBuffer;
-        if (buffer && buffer.length > 0) {
-          void flushBatchedTelemetry(buffer).catch((telemetryErr) =>
-            alog.error('tool telemetry flush failed after stream error', {
-              threadId,
-              err: String(telemetryErr),
-            }),
-          );
-        }
-        return {
-          success: false,
-          error: err,
-          providerId,
-          bareModelId,
-          nonEssentialDisabled: resolveCtx.nonEssentialDisabled,
-        };
-      }
-    },
+    attempt: buildAttemptCallback({
+      streamState,
+      resolveCtx,
+      routing,
+      userSettings,
+      env,
+      snapshot,
+      compaction,
+      modelMessages,
+      displayName: displayName ?? null,
+      customInstructions,
+      threadId,
+      userId,
+      userMessage,
+      maxDailyUsd,
+      budget,
+      db,
+      diagnosticContext,
+      startedAt,
+      signal: signal ?? null,
+    }),
   });
 
   return streamResult;

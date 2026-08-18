@@ -308,6 +308,9 @@ importers:
       '@kestrel/shared':
         specifier: workspace:*
         version: link:../shared
+      '@langfuse/client':
+        specifier: ^5.5.3
+        version: 5.10.1(@opentelemetry/api@1.9.1)
       '@langfuse/otel':
         specifier: ^5.5.3
         version: 5.5.3(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.221.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.10.0(@opentelemetry/api@1.9.1))
@@ -1760,6 +1763,16 @@ packages:
   '@js-sdsl/ordered-map@4.4.2':
     resolution: {integrity: sha512-iUKgm52T8HOE/makSxjqoWhe95ZJA1/G1sYsGev2JDKUSS14KAgg1LHb+Ba+IPow0xflbnSkOsZcO08C7w1gYw==}
 
+  '@langfuse/client@5.10.1':
+    resolution: {integrity: sha512-isfMUbb55mXnp5EjIKnKmdB6aVxy+jPYK65RkaLdi2xveUbifVeov9kAwHQN6lWtzkR/ssSk6+JwvTCLaPcvTQ==}
+    peerDependencies:
+      '@opentelemetry/api': ^1.9.0
+
+  '@langfuse/core@5.10.1':
+    resolution: {integrity: sha512-W8UArizWSy1DdeLGTsTwJwl7bkA7OQQcGZW8RtoopXyJZ93O0rwG7wzzeiZjhjpj5OtWOUTEaJuNkwOrF31UDw==}
+    peerDependencies:
+      '@opentelemetry/api': ^1.9.0
+
   '@langfuse/core@5.5.3':
     resolution: {integrity: sha512-F2auGm6l4/QhQ6Y86+f6QqulXNetVsaI3u7ccyqADEtGcDWk1+faSczxuSMJ0X/EfrjVZ+98Luy/FEEah+HDRA==}
     peerDependencies:
@@ -1773,6 +1786,12 @@ packages:
       '@opentelemetry/core': ^2.0.1
       '@opentelemetry/exporter-trace-otlp-http': '>=0.202.0 <1.0.0'
       '@opentelemetry/sdk-trace-base': ^2.0.1
+
+  '@langfuse/tracing@5.10.1':
+    resolution: {integrity: sha512-m2kK4D0MsH8g4Og6KpnlYk8NLdQTYe0JR5M4KKpfNj99XXLlbdpXE/g3uJSqkcrWFhpiIb+3cyS9+uV6wQ6WtA==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@opentelemetry/api': ^1.9.0
 
   '@manypkg/find-root@1.1.0':
     resolution: {integrity: sha512-mki5uBvhHzO8kYYix/WRy2WX8S3B5wdVSc9D6KcU5lQNglP2yt58/VfLuAK49glRXChosY8ap2oJ1qgma3GUVA==}
@@ -5353,6 +5372,10 @@ packages:
       typescript:
         optional: true
 
+  mustache@4.2.0:
+    resolution: {integrity: sha512-71ippSywq5Yb7/tVYyGbkBggbU8H3u5Rz56fH60jGFgr8uHwxs+aSKeqmluIVzM0m0kB7xQjKS6qPfd0b2ZoqQ==}
+    hasBin: true
+
   mute-stream@3.0.0:
     resolution: {integrity: sha512-dkEJPVvun4FryqBmZ5KhDo0K9iDXAwn08tMLDinNdRBNPcYEDiWYysLcc6k3mjTMlbP9KyylvRpd4wFtwrT9rw==}
     engines: {node: ^20.17.0 || >=22.9.0}
@@ -7844,6 +7867,17 @@ snapshots:
 
   '@js-sdsl/ordered-map@4.4.2': {}
 
+  '@langfuse/client@5.10.1(@opentelemetry/api@1.9.1)':
+    dependencies:
+      '@langfuse/core': 5.10.1(@opentelemetry/api@1.9.1)
+      '@langfuse/tracing': 5.10.1(@opentelemetry/api@1.9.1)
+      '@opentelemetry/api': 1.9.1
+      mustache: 4.2.0
+
+  '@langfuse/core@5.10.1(@opentelemetry/api@1.9.1)':
+    dependencies:
+      '@opentelemetry/api': 1.9.1
+
   '@langfuse/core@5.5.3(@opentelemetry/api@1.9.1)':
     dependencies:
       '@opentelemetry/api': 1.9.1
@@ -7855,6 +7889,11 @@ snapshots:
       '@opentelemetry/core': 2.10.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/exporter-trace-otlp-http': 0.221.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/sdk-trace-base': 2.10.0(@opentelemetry/api@1.9.1)
+
+  '@langfuse/tracing@5.10.1(@opentelemetry/api@1.9.1)':
+    dependencies:
+      '@langfuse/core': 5.10.1(@opentelemetry/api@1.9.1)
+      '@opentelemetry/api': 1.9.1
 
   '@manypkg/find-root@1.1.0':
     dependencies:
@@ -11674,6 +11713,8 @@ snapshots:
       typescript: 7.0.2
     transitivePeerDependencies:
       - '@types/node'
+
+  mustache@4.2.0: {}
 
   mute-stream@3.0.0: {}
 

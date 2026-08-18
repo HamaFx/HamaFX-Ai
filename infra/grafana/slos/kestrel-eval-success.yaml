@@ -1,0 +1,39 @@
+apiVersion: slo.ext.grafana.app/v1alpha1
+kind: SLO
+metadata:
+  name: kestrelevalsuccess
+spec:
+  name: Kestrel Eval Success
+  description: "Nightly acceptance eval cases passing (transport + assertions) — target 90%"
+  query:
+    type: ratio
+    ratio:
+      successMetric:
+        prometheusMetric: 'eval_case_total{result="ok"}'
+      totalMetric:
+        prometheusMetric: 'eval_case_total'
+      groupByLabels:
+        - job
+  objectives:
+    - value: 0.9
+      window: 7d
+  destinationDatasource:
+    uid: grafanacloud-prom
+  labels:
+    - key: service
+      value: kestrel
+    - key: sli
+      value: eval-success
+  alerting:
+    fastBurn:
+      annotations:
+        - key: summary
+          value: "Kestrel eval regressing fast — acceptance cases failing (check latest eval report + drift)"
+        - key: runbook
+          value: "https://github.com/HamaFx/Kestrel/blob/main/docs/INCIDENT-RESPONSE.md"
+    slowBurn:
+      annotations:
+        - key: summary
+          value: "Kestrel eval success degrading over time"
+        - key: runbook
+          value: "https://github.com/HamaFx/Kestrel/blob/main/docs/INCIDENT-RESPONSE.md"

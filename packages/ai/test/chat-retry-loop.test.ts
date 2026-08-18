@@ -20,6 +20,8 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { metrics } from '@kestrel/shared';
+
 vi.mock('server-only', () => ({}));
 
 let mockClassifyStreamError: ReturnType<typeof vi.fn>;
@@ -91,6 +93,7 @@ describe('runChatWithFallback', () => {
     mockClassifyStreamError = vi.fn(() => ({ fallback: false }));
     mockMakeFallbackPart = vi.fn(() => ({ type: 'fallback' as const }));
     mockPickNextFallbackProvider = vi.fn();
+    metrics.reset();
   });
 
   // ── First-attempt success ──
@@ -161,6 +164,9 @@ describe('runChatWithFallback', () => {
     await expect(runChatWithFallback(args)).rejects.toThrow('final error');
     expect(attempt).toHaveBeenCalledTimes(3);
     expect(budget.release).toHaveBeenCalledTimes(1);
+    // Phase D SLI — every failed attempt is counted even when the loop
+    // ultimately exhausts.
+    expect(metrics.snapshot().counters['provider_attempt_failed_total']).toBe(3);
   });
 
   // ── Non-retryable error ──
@@ -213,6 +219,9 @@ describe('runChatWithFallback', () => {
     expect(onFallback).toHaveBeenCalledTimes(1);
     // Called with the label matching the original model
     expect(onFallback).toHaveBeenCalledWith({ type: 'fallback' });
+    // Phase D SLI — one failed attempt + one real provider switch.
+    expect(metrics.snapshot().counters['provider_attempt_failed_total']).toBe(1);
+    expect(metrics.snapshot().counters['provider_fallback_total']).toBe(1);
   });
 
   // ── Fallback chain exhausts → throws ──

@@ -36,6 +36,7 @@ import type { BudgetHandle } from './budget-reservation';
 import type { ProviderId } from '@kestrel/shared/encryption';
 import type { RoutingDecision } from './routing';
 import { createCategorizedLogger } from '@kestrel/shared/logger';
+import { metrics } from '@kestrel/shared';
 import { completeStep, recordStep } from './diagnostics';
 
 const alog = createCategorizedLogger('ai', { component: 'retry-loop' });
@@ -148,6 +149,10 @@ export async function runChatWithFallback<T>(args: RetryLoopArgs<T>): Promise<T>
     if (attemptResult.nonEssentialDisabled !== undefined) {
       nonEssentialDisabled = attemptResult.nonEssentialDisabled;
     }
+    // Phase D SLI — every failed provider attempt is counted so the provider
+    // health signal (provider_attempt_failed_total) exists independently of
+    // whether the retry loop ultimately recovered via fallback.
+    metrics.increment('provider_attempt_failed_total');
 
     completeStep('provider_attempt', 'failed', undefined, {
       providerId,
@@ -197,6 +202,10 @@ export async function runChatWithFallback<T>(args: RetryLoopArgs<T>): Promise<T>
       await args.budget.release();
       throw lastError;
     }
+
+    // Phase D SLI — a real provider switch happened (not just a failed
+    // attempt). Powers the provider-fallback rate signal in Grafana.
+    metrics.increment('provider_fallback_total');
 
     recordStep('provider_fallback', {
       attempt: attempts,

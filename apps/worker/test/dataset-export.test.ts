@@ -13,7 +13,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Hoisted mock controllers — vi.mock factories are hoisted above all other
 // statements, so shared mock fns must live here to avoid TDZ failures.
-const { mockAssemble, mockListPairs, mockRegister, mockDb } = vi.hoisted(() => {
+const { mockAssemble, mockListPairs, mockRegister, mockDb, mockPublishLangfuse } = vi.hoisted(() => {
+  const mockPublishLangfuse = vi.fn(async () => ({
+    status: 'ok' as const,
+    datasetName: 'kestrel-training',
+    published: 3,
+    failed: 0,
+    total: 3,
+    errors: [],
+  }));
   const mockAssemble = vi.fn((input: { results: unknown[]; datasetVersion: string; source?: string; provenance?: Record<string, unknown> }) => ({
     jsonlContent: input.results.map((r) => JSON.stringify({ id: (r as { id: string }).id })).join('\n') + '\n',
     manifest: {
@@ -35,7 +43,7 @@ const { mockAssemble, mockListPairs, mockRegister, mockDb } = vi.hoisted(() => {
       }),
     }),
   };
-  return { mockAssemble, mockListPairs, mockRegister, mockDb };
+  return { mockAssemble, mockListPairs, mockRegister, mockDb, mockPublishLangfuse };
 });
 
 vi.mock('@kestrel/ai', () => ({
@@ -59,6 +67,7 @@ vi.mock('@kestrel/ai', () => ({
     return out;
   },
   assembleTrainingDataset: mockAssemble,
+  publishTrainingDatasetToLangfuse: mockPublishLangfuse,
 }));
 
 vi.mock('@kestrel/db', () => ({
@@ -183,6 +192,14 @@ describe('runDatasetExport', () => {
     expect(result.note).toContain('evalReports=1');
     expect(result.note).toContain('registered=true');
     expect(result.note).toContain('b2=false');
+    expect(result.note).toContain('langfuse=ok');
+
+    // Langfuse dataset publish closed the training loop.
+    expect(mockPublishLangfuse).toHaveBeenCalledTimes(1);
+    expect(mockPublishLangfuse).toHaveBeenCalledWith(
+      expect.objectContaining({ manifest: expect.objectContaining({ recordCount: 3 }) }),
+      expect.objectContaining({ datasetName: 'kestrel-training' }),
+    );
   });
 
   it('returns a no-op note when there is nothing to export', async () => {

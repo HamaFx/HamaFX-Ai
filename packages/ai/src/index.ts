@@ -301,6 +301,17 @@ export {
 } from './eval/annotation-resolver';
 export type { PromptResult, PromptDef, RunEvalsResult, EvaluationScore } from './eval/runner';
 export { computeDrift, type DriftReport, type DriftBucket } from './eval/drift';
+export { emitEvalMetrics, isEvalCaseOk } from './eval/eval-metrics';
+export {
+  publishTrainingDatasetToLangfuse,
+  createLangfuseClientFromEnv,
+  LangfuseSdkClient,
+  recordToDatasetItem,
+  stableDatasetItemId,
+  type LangfuseDatasetClient,
+  type LangfusePublishOptions,
+  type LangfusePublishResult,
+} from './eval/langfuse-publisher';
 export { buildToolCatalogue, type CatalogueEntry } from './catalogue';
 
 // P2-3 — DI-backed getDb() wrapper.

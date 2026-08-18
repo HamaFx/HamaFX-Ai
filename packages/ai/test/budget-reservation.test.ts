@@ -20,6 +20,8 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { metrics } from '@kestrel/shared';
+
 vi.mock('server-only', () => ({}));
 
 let mockTryReserveBudget: ReturnType<typeof vi.fn>;
@@ -56,6 +58,10 @@ const BudgetExceededErrorActual = (
 import { reserveTurnBudget } from '../src/budget-reservation';
 import type { BudgetHandle } from '../src/budget-reservation';
 
+beforeEach(() => {
+  metrics.reset();
+});
+
 describe('reserveTurnBudget', () => {
   beforeEach(() => {
     mockTryReserveBudget = vi.fn();
@@ -74,6 +80,8 @@ describe('reserveTurnBudget', () => {
     expect(handle.max).toBe(5.0);
     expect(handle.released).toBe(false);
     expect(mockTryReserveBudget).toHaveBeenCalledWith('u1', 0.01, 5.0);
+    // Phase D SLI — a successful reservation increments the counter.
+    expect(metrics.snapshot().counters['budget_reserved_total']).toBe(1);
   });
 
   it('uses custom estimateUsd when provided', async () => {
@@ -91,6 +99,8 @@ describe('reserveTurnBudget', () => {
     await expect(
       reserveTurnBudget({ userId: 'u1', maxDailyUsd: 5.0 }),
     ).rejects.toThrow(BudgetExceededErrorActual);
+    // A rejected reservation must not count as reserved.
+    expect(metrics.snapshot().counters['budget_reserved_total']).toBeUndefined();
   });
 });
 
@@ -212,6 +222,8 @@ describe('BudgetHandle.release', () => {
     await handle.release();
     expect(handle.released).toBe(true);
     expect(mockApplyBudgetDelta).toHaveBeenCalledTimes(2);
+    // Phase D SLI — the stranded-release failure is counted.
+    expect(metrics.snapshot().counters['budget_release_failed_total']).toBe(1);
   });
 
   it('uses the durable ledger for release when an id is returned', async () => {

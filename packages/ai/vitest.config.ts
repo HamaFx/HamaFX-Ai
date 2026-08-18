@@ -9,10 +9,14 @@ export default defineConfig({
       include: ['src/**/*.ts'],
       exclude: ['src/**/*.test.ts', 'src/index.ts'],
       thresholds: {
-        statements: 49,
-        branches: 49,
-        functions: 49,
-        lines: 49,
+        // Global floor — enforce, not just report. Current ~59% stmts/lines.
+        statements: 55,
+        branches: 70,
+        functions: 60,
+        lines: 55,
+        // Core orchestration must never silently regress below ~80%.
+        'src/agent.ts': { statements: 80, branches: 60, functions: 90, lines: 80 },
+        'src/multi-agent/orchestrator.ts': { statements: 80, branches: 60, functions: 90, lines: 80 },
       },
     },
     server: {

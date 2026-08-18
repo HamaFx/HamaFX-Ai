@@ -48,6 +48,9 @@ export const METRIC_NAMES = [
   'metrics_flush_failed_total',
   'worker_flush_total',
   'worker_tick_freshness_ms',
+  // Eval/training loop signals.
+  'dataset_publish_total',
+  'eval_case_total',
 ] as const;
 
 export type MetricName = (typeof METRIC_NAMES)[number];
