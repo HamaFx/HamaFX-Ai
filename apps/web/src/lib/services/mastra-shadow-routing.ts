@@ -13,7 +13,7 @@ export type MastraShadowDecision = {
   enabled: boolean;
   reason:
     | 'disabled'
-    | 'non-single-mode'
+    | 'non-report-mode'
     | 'model-override'
     | 'mastra-already-attempted'
     | 'not-xauusd'
@@ -33,7 +33,9 @@ export function decideMastraXauusdShadow(args: {
   mastraAlreadyAttempted: boolean;
 }): MastraShadowDecision {
   if (!args.featureEnabled) return { enabled: false, reason: 'disabled' };
-  if (args.analysisMode !== 'single') return { enabled: false, reason: 'non-single-mode' };
+  if (args.analysisMode !== 'single' && args.analysisMode !== 'auto') {
+    return { enabled: false, reason: 'non-report-mode' };
+  }
   if (args.hasModelOverride) return { enabled: false, reason: 'model-override' };
   if (args.mastraAlreadyAttempted) return { enabled: false, reason: 'mastra-already-attempted' };
   if (!isMastraXauusdCandidate(args.prompt)) return { enabled: false, reason: 'not-xauusd' };

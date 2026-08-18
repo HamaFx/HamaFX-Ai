@@ -20,15 +20,19 @@ describe('Mastra XAUUSD shadow eligibility', () => {
     });
   });
 
-  it('accepts only eligible read-only single-mode XAUUSD requests', () => {
+  it('accepts eligible read-only single and auto-mode XAUUSD requests', () => {
     expect(decideMastraXauusdShadow(base)).toEqual({ enabled: true, reason: 'eligible' });
+    expect(decideMastraXauusdShadow({ ...base, analysisMode: 'auto' })).toEqual({
+      enabled: true,
+      reason: 'eligible',
+    });
     expect(decideMastraXauusdShadow({ ...base, prompt: 'Analyse EURUSD' })).toEqual({
       enabled: false,
       reason: 'not-xauusd',
     });
     expect(decideMastraXauusdShadow({ ...base, analysisMode: 'full' })).toEqual({
       enabled: false,
-      reason: 'non-single-mode',
+      reason: 'non-report-mode',
     });
   });
 

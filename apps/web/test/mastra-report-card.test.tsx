@@ -60,6 +60,7 @@ describe('MastraReportCard', () => {
     render(<MastraReportCard meta={baseMeta} />);
 
     expect(screen.getByRole('region', { name: 'Verified XAUUSD report' })).toBeTruthy();
+    expect(screen.getByTestId('mastra-agent-badge')).toHaveTextContent('Mastra');
     expect(screen.getByText('neutral')).toBeTruthy();
     expect(screen.getByText('Gold has mixed signals; wait for confirmation.')).toBeTruthy();
     expect(screen.getByText('Bullish continuation')).toBeTruthy();

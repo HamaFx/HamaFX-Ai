@@ -26,10 +26,17 @@ export function MastraReportCard({ meta }: { meta: MastraReportMetaView }) {
       aria-label="Verified XAUUSD report"
       className="mt-3 flex flex-col gap-3 rounded-sm border border-border bg-bg-elev-1 p-3"
       data-testid="mastra-report-card"
+      data-mastra-agent="mastra-xauusd"
     >
       <header className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <IconDatabase className="size-4 text-fg-muted" aria-hidden="true" />
+          <span
+            className="rounded-sm border border-bull/30 bg-bull/5 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-bull"
+            data-testid="mastra-agent-badge"
+          >
+            Mastra
+          </span>
           <h3 className="text-sm font-semibold text-fg">Verified XAUUSD report</h3>
         </div>
         <div className="flex items-center gap-2 text-caption text-fg-subtle">

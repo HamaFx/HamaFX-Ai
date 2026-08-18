@@ -46,7 +46,10 @@ export function mastraChatResponse(input: MastraChatResponseInput): Response {
     {
       type: 'data-multi-agent-meta',
       id: input.messageId,
-      transient: true,
+      // This metadata is part of the user-visible report, not ephemeral
+      // progress. Keeping it non-transient lets useChat attach it to the
+      // assistant message so the Mastra card renders immediately and remains
+      // available after a page reload from persisted history.
       data: meta,
     },
   ];

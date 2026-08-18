@@ -173,11 +173,15 @@ export const POST = withAuth<void>(async (req, { user }) => {
     let shadowEnabledPromise: Promise<boolean> | null = null;
 
     // Gradual Mastra rollout. This gate is deliberately narrow: only
-    // explicit single-mode, read-only XAUUSD requests are eligible, and an
+    // single-mode or Auto-mode, read-only XAUUSD requests are eligible, and an
     // explicitly selected model always stays on the legacy path until Mastra
     // supports model overrides. Any flag/config/provider failure falls back
     // to the existing agent rather than breaking chat.
-    if (analysisMode === 'single' && body.modelOverride == null) {
+    //
+    // Auto is included because it is the normal UI default. Without this,
+    // users who leave the selector on Auto would never exercise Mastra and
+    // would correctly see only the legacy response.
+    if ((analysisMode === 'single' || analysisMode === 'auto') && body.modelOverride == null) {
       let featureEnabled = false;
       try {
         featureEnabled = await isMastraXauusdChatEnabled();

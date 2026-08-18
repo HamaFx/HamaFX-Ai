@@ -167,6 +167,31 @@ describe('POST /api/chat boundary', () => {
     expect(mockRunChat).not.toHaveBeenCalled();
   });
 
+  it('routes Auto-mode XAUUSD turns to Mastra so the default UI mode is reviewable', async () => {
+    mockMastraEnabled.mockResolvedValue(true);
+    mockRunMastraXauusdChat.mockResolvedValue({
+      runId: 'mastra-run-auto',
+      modelId: 'mistral-small-latest',
+      providerId: 'mistral',
+      observedCost: 0.001,
+      packet: { packetId: 'packet-auto', status: 'ready', dataQuality: 'complete' },
+      report: null,
+      result: { text: 'Auto Mastra analysis' },
+    });
+
+    const response = await POST(
+      request(body({ analysisMode: 'auto' })),
+      { params: Promise.resolve(undefined) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.text()).toContain('Auto Mastra analysis');
+    expect(mockRunMastraXauusdChat).toHaveBeenCalledWith(expect.objectContaining({
+      prompt: 'Analyze XAUUSD',
+    }));
+    expect(mockRunChat).not.toHaveBeenCalled();
+  });
+
   it('runs a non-persisting legacy comparison when Mastra is user-facing', async () => {
     mockMastraEnabled.mockResolvedValue(true);
     mockShadowEnabled.mockResolvedValue(true);
