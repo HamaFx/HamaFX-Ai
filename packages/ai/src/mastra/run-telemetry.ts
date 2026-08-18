@@ -27,6 +27,8 @@ export interface MastraRunObservation {
   toolCalls: number;
   steps: number;
   outcome: MastraRunOutcome;
+  /** Identifies whether this run served a user or was a background shadow. */
+  telemetryKind?: 'mastra_xauusd_poc' | 'mastra_xauusd_shadow';
   error?: unknown;
 }
 
@@ -112,7 +114,11 @@ export async function finishMastraRun(args: MastraRunObservation): Promise<void>
       outputTokens: args.outputTokens,
       toolCalls: args.toolCalls,
       ms: durationMs,
-      kind: args.outcome === 'success' ? 'mastra_xauusd_poc' : 'mastra_xauusd_poc_failed',
+      kind: args.outcome === 'success'
+        ? args.telemetryKind ?? 'mastra_xauusd_poc'
+        : args.telemetryKind === 'mastra_xauusd_shadow'
+          ? 'mastra_xauusd_shadow_failed'
+          : 'mastra_xauusd_poc_failed',
     });
   } catch (error) {
     mlog.error('Mastra run telemetry persistence failed', {

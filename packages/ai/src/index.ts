@@ -329,6 +329,13 @@ export { telemetryConfig, type TelemetryConfigOptions } from './telemetry';
 // the Vercel AI SDK. Override via `setLlmClient()` (e.g. in tests).
 export { getLlmClient, setLlmClient, VercelLlmClient } from './llm-client';
 export { replayPersistenceFailures } from './persistence-recovery';
+export {
+  consumeUIMessageStream,
+  type ParsedStreamResult,
+  type ParsedToolCall,
+  type ParsedStreamMetadata,
+  type AgentProgressSnapshot,
+} from './eval/parse-stream';
 export type { LlmClient, GenerateTextOpts, GenerateTextResult, StreamTextOpts, StreamTextResult } from './llm-client';
 
 export {

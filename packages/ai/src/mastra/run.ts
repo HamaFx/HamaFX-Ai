@@ -29,6 +29,8 @@ export interface RunXauusdMastraArgs {
   settings: XauusdMastraSettings;
   env: ResolveModelEnv;
   signal?: AbortSignal;
+  /** Marks background comparisons separately in durable telemetry. */
+  telemetryKind?: 'mastra_xauusd_poc' | 'mastra_xauusd_shadow';
 }
 
 export function resolveXauusdMastraModel(
@@ -90,6 +92,7 @@ async function executeXauusdMastraRun(args: RunXauusdMastraArgs) {
         startedAt,
         ...stats,
         outcome: 'success',
+        ...(args.telemetryKind ? { telemetryKind: args.telemetryKind } : {}),
       });
       return {
         result: { text },
@@ -122,6 +125,7 @@ async function executeXauusdMastraRun(args: RunXauusdMastraArgs) {
       startedAt,
       ...stats,
       outcome: 'success',
+      ...(args.telemetryKind ? { telemetryKind: args.telemetryKind } : {}),
     });
 
     return {
@@ -146,6 +150,7 @@ async function executeXauusdMastraRun(args: RunXauusdMastraArgs) {
       toolCalls: 0,
       steps: 0,
       outcome,
+      ...(args.telemetryKind ? { telemetryKind: args.telemetryKind } : {}),
       error,
     });
     throw error;

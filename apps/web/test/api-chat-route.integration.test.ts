@@ -9,6 +9,8 @@ const {
   mockWithRateLimit,
   mockMastraEnabled,
   mockRunMastraXauusdChat,
+  mockShadowEnabled,
+  mockAttachMastraShadow,
 } = vi.hoisted(() => ({
   mockEnqueueAnalysisJob: vi.fn(),
   mockGetThread: vi.fn(),
@@ -17,6 +19,8 @@ const {
   mockWithRateLimit: vi.fn(),
   mockMastraEnabled: vi.fn(),
   mockRunMastraXauusdChat: vi.fn(),
+  mockShadowEnabled: vi.fn(),
+  mockAttachMastraShadow: vi.fn((response: Response) => response),
 }));
 
 vi.mock('@sentry/nextjs', () => ({
@@ -52,6 +56,16 @@ vi.mock('@/lib/services/mastra-chat-routing', () => ({
     args.featureEnabled && /gold|xauusd/i.test(args.prompt) && !args.hasModelOverride
       ? { route: 'mastra', reason: 'enabled' }
       : { route: 'legacy', reason: args.featureEnabled ? 'not-xauusd' : 'disabled' },
+}));
+vi.mock('@/lib/services/mastra-shadow-routing', () => ({
+  isMastraXauusdShadowEnabled: mockShadowEnabled,
+  decideMastraXauusdShadow: (args: { prompt: string; featureEnabled: boolean; analysisMode: string; hasModelOverride: boolean; mastraAlreadyAttempted: boolean }) =>
+    args.featureEnabled && args.analysisMode === 'single' && !args.hasModelOverride && !args.mastraAlreadyAttempted && /gold|xauusd/i.test(args.prompt)
+      ? { enabled: true, reason: 'eligible' }
+      : { enabled: false, reason: args.featureEnabled ? 'not-xauusd' : 'disabled' },
+}));
+vi.mock('@/lib/services/mastra-shadow-stream', () => ({
+  attachMastraShadowToResponse: mockAttachMastraShadow,
 }));
 vi.mock('@/lib/services/mastra-chat', () => ({
   runMastraXauusdChat: mockRunMastraXauusdChat,
@@ -120,6 +134,7 @@ describe('POST /api/chat boundary', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockMastraEnabled.mockResolvedValue(false);
+    mockShadowEnabled.mockResolvedValue(false);
     mockWithRateLimit.mockResolvedValue({ allowed: true, count: 1, limit: 30 });
     mockGetThread.mockResolvedValue({ id: 'thread-1', userId: 'user-1' });
   });
@@ -182,6 +197,38 @@ describe('POST /api/chat boundary', () => {
     expect(response.status).toBe(200);
     expect(mockRunMastraXauusdChat).not.toHaveBeenCalled();
     expect(mockRunChat).toHaveBeenCalled();
+  });
+
+  it('attaches an opt-in Mastra shadow comparison without replacing the legacy response', async () => {
+    mockShadowEnabled.mockResolvedValue(true);
+    mockRunChat.mockResolvedValue({
+      toUIMessageStreamResponse: () => new Response('legacy-stream', { status: 200 }),
+    });
+
+    const response = await POST(request(body()), { params: Promise.resolve(undefined) });
+
+    expect(response.status).toBe(200);
+    expect(await response.text()).toBe('legacy-stream');
+    expect(mockAttachMastraShadow).toHaveBeenCalledWith(expect.any(Response), {
+      userId: 'user-1',
+      threadId: '11111111-1111-4111-8111-111111111111',
+      prompt: 'Analyze XAUUSD',
+    });
+    expect(mockRunMastraXauusdChat).not.toHaveBeenCalled();
+  });
+
+  it('does not shadow a request after Mastra was already attempted', async () => {
+    mockMastraEnabled.mockResolvedValue(true);
+    mockShadowEnabled.mockResolvedValue(true);
+    mockRunMastraXauusdChat.mockRejectedValue(new Error('provider unavailable'));
+    mockRunChat.mockResolvedValue({
+      toUIMessageStreamResponse: () => new Response('legacy-stream', { status: 200 }),
+    });
+
+    const response = await POST(request(body()), { params: Promise.resolve(undefined) });
+
+    expect(response.status).toBe(200);
+    expect(mockAttachMastraShadow).not.toHaveBeenCalled();
   });
 
   it('hands an authenticated single-mode turn to runChat with server-owned context, by default', async () => {

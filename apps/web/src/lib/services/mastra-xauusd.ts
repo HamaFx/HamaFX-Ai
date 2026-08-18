@@ -13,6 +13,7 @@ export interface RunMastraXauusdResearchInput {
   runId: string;
   prompt: string;
   signal?: AbortSignal;
+  telemetryKind?: 'mastra_xauusd_poc' | 'mastra_xauusd_shadow';
 }
 
 export async function runMastraXauusdResearch(input: RunMastraXauusdResearchInput) {
@@ -32,5 +33,6 @@ export async function runMastraXauusdResearch(input: RunMastraXauusdResearchInpu
     settings,
     env: getServerEnv(),
     ...(input.signal ? { signal: input.signal } : {}),
+    ...(input.telemetryKind ? { telemetryKind: input.telemetryKind } : {}),
   });
 }

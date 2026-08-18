@@ -72,6 +72,8 @@ export interface TelemetryInput {
     | 'multi_agent_turn'
     | 'mastra_xauusd_poc'
     | 'mastra_xauusd_poc_failed'
+    | 'mastra_xauusd_shadow'
+    | 'mastra_xauusd_shadow_failed'
     | 'turn_failed';
 }
 

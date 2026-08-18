@@ -18,6 +18,11 @@ import {
   isMastraXauusdChatEnabled,
 } from '@/lib/services/mastra-chat-routing';
 import {
+  decideMastraXauusdShadow,
+  isMastraXauusdShadowEnabled,
+} from '@/lib/services/mastra-shadow-routing';
+import { attachMastraShadowToResponse } from '@/lib/services/mastra-shadow-stream';
+import {
   AnalysisQueuedEventSchema,
   BudgetExceededError,
   ChatStreamEventSchema,
@@ -157,6 +162,8 @@ export const POST = withAuth<void>(async (req, { user }) => {
     // orchestrator auto-detects based on the user's message.
     const analysisMode = body.analysisMode ?? 'single';
     const userText = extractUserMessageText(last as UIMessage);
+    let mastraAttempted = false;
+    let shadowEnabledPromise: Promise<boolean> | null = null;
 
     // Gradual Mastra rollout. This gate is deliberately narrow: only
     // explicit single-mode, read-only XAUUSD requests are eligible, and an
@@ -178,7 +185,18 @@ export const POST = withAuth<void>(async (req, { user }) => {
       });
       metrics.increment('mastra_chat_route_total', { tags: { decision: decision.route, reason: decision.reason } });
 
+      if (decision.route === 'legacy') {
+        // Start the independent shadow-flag lookup while the legacy model runs.
+        // It is awaited only after the legacy response exists, so flag latency
+        // does not add a second model round-trip to the user request.
+        shadowEnabledPromise = isMastraXauusdShadowEnabled().catch((error) => {
+          log.warn({ err: String(error) }, 'Mastra shadow flag lookup failed; shadow disabled');
+          return false;
+        });
+      }
+
       if (decision.route === 'mastra') {
+        mastraAttempted = true;
         try {
           const run = await runMastraXauusdChat({
             userId: user.userId,
@@ -443,7 +461,27 @@ export const POST = withAuth<void>(async (req, { user }) => {
       ...(req.headers.get('x-request-id') ? { requestId: req.headers.get('x-request-id')! } : {}),
     });
 
-    return result.toUIMessageStreamResponse();
+    const legacyResponse = result.toUIMessageStreamResponse();
+    if (shadowEnabledPromise) {
+      const shadowDecision = decideMastraXauusdShadow({
+        prompt: userText,
+        featureEnabled: await shadowEnabledPromise,
+        analysisMode,
+        hasModelOverride: body.modelOverride != null,
+        mastraAlreadyAttempted: mastraAttempted,
+      });
+      if (shadowDecision.enabled) {
+        return attachMastraShadowToResponse(legacyResponse, {
+          userId: user.userId,
+          threadId: body.threadId,
+          prompt: userText,
+        });
+      }
+      metrics.increment('mastra_shadow_skipped_total', {
+        tags: { reason: shadowDecision.reason },
+      });
+    }
+    return legacyResponse;
   } catch (err) {
     if (err instanceof BudgetExceededError) {
       return errorResponse(

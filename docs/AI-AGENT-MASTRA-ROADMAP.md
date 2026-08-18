@@ -1261,3 +1261,51 @@ Covered by:
 - `apps/web/test/api-chat-route.integration.test.ts`
 
 The next rollout boundary is not a full replacement. It is internal/admin validation of this path, followed by shadow comparison and evaluation against the legacy agent before enabling broader traffic.
+
+## 29. Implemented opt-in shadow-comparison milestone
+
+The normal chat route now supports a separate, disabled-by-default shadow path for comparing the legacy response with Mastra without changing the user's response.
+
+Shadow execution requires the independent feature flag:
+
+```text
+mastra_xauusd_shadow
+```
+
+For local development, the equivalent opt-in is:
+
+```env
+ENABLE_MASTRA_SHADOW=true
+```
+
+The shadow path is eligible only for:
+
+- Single-mode requests
+- Read-only XAUUSD/gold prompts
+- Requests without explicit model overrides
+- Requests where Mastra was not already attempted
+
+When eligible, the route tees the legacy UI stream. The client receives the original response immediately while a bounded background task consumes a copy and runs Mastra with a 30-second timeout. The shadow task:
+
+- Uses the existing user-scoped BYOK resolver.
+- Uses the existing daily budget reservation and reconciliation.
+- Does not append user or assistant messages.
+- Uses separate durable telemetry kinds: `mastra_xauusd_shadow` and `mastra_xauusd_shadow_failed`.
+- Never changes the legacy response if its flag lookup, parser, provider, budget, or persistence path fails.
+- Uses the existing `waitUntil` integration so Vercel can finish the comparison after the response closes.
+
+Comparison telemetry intentionally stores aggregates rather than raw response text:
+
+- Legacy and Mastra character counts
+- Shared-token ratio bucket
+- Whether Mastra produced a verified report
+- Mastra bias and data quality
+- Shadow duration and failure/skip reason
+
+New metrics are:
+
+- `mastra_shadow_total`
+- `mastra_shadow_failed_total`
+- `mastra_shadow_skipped_total`
+
+The shadow flag remains off in production until an operator explicitly enables it. This milestone provides the safe measurement boundary needed before comparing quality, cost, latency, grounding, and failure rates at scale.
