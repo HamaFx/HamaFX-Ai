@@ -17,7 +17,7 @@ interface EvalRow {
   error?: string;
 }
 
-const REQUEST_TIMEOUT_MS = 80_000;
+const REQUEST_TIMEOUT_MS = 120_000;
 /** Stay under the 30/min chat rate limit while driving 30 prompts. */
 const BETWEEN_PROMPTS_DELAY_MS = 4_000;
 

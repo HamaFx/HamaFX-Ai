@@ -99,11 +99,33 @@ describe('Mastra BYOK runner', () => {
     });
   });
 
-  it('uses the same Kestrel resolver and technical tier', () => {
+  it('uses the same Kestrel resolver and technical tier (fast model, not the user chat model)', () => {
     const resolved = resolveXauusdMastraModel(settings, env);
 
     expect(resolved.model).toBe(model);
-    expect(mocks.resolveChatModel).toHaveBeenCalledWith(settings, env, 'technical');
+    // M6 — the Mastra report pipeline must NOT inherit the user's heavyweight
+    // chat model (e.g. mistral-large); it resolves the provider's fast
+    // technical tier instead, so the multi-step verified-report flow stays
+    // inside the 55s route budget.
+    expect(mocks.resolveChatModel).toHaveBeenCalledWith(
+      { aiApiKeys: settings.aiApiKeys, chatModel: null },
+      env,
+      'technical',
+    );
+  });
+
+  it('honors an explicit MASTRA_XAUUSD_MODEL override when set', () => {
+    process.env.MASTRA_XAUUSD_MODEL = 'mistral:mistral-small-latest';
+    try {
+      resolveXauusdMastraModel(settings, env);
+      expect(mocks.resolveChatModel).toHaveBeenCalledWith(
+        { aiApiKeys: settings.aiApiKeys, chatModel: 'mistral:mistral-small-latest' },
+        env,
+        'technical',
+      );
+    } finally {
+      delete process.env.MASTRA_XAUUSD_MODEL;
+    }
   });
 
   it('injects the resolved model and authenticated request context into Mastra', async () => {

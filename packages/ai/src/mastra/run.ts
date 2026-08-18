@@ -44,7 +44,20 @@ export function resolveXauusdMastraModel(
   // The same resolver used by production chat provides the user's encrypted
   // BYOK key, provider choice, circuit-breaker behavior, and model catalog
   // validation. Mastra receives only the resulting LanguageModel object.
-  return resolveChatModel(settings, env, 'technical');
+  //
+  // M6 fix — the verified-report pipeline is a structured, latency-sensitive
+  // multi-step generation. It intentionally does NOT honor the user's
+  // heavyweight chat model pick (e.g. mistral-large-latest): flagship
+  // reasoning models routinely blow past the 55s route budget for this flow
+  // (measured >120s locally). The provider's fast technical tier (e.g.
+  // mistral-small-latest, ~20s per verified report) is used instead.
+  // Operators can pin an exact model with MASTRA_XAUUSD_MODEL="provider:model".
+  const pinned = process.env.MASTRA_XAUUSD_MODEL;
+  const mastraSettings: XauusdMastraSettings = {
+    aiApiKeys: settings.aiApiKeys,
+    chatModel: pinned && pinned.length > 0 ? pinned : null,
+  };
+  return resolveChatModel(mastraSettings, env, 'technical');
 }
 
 function contextForRun(
