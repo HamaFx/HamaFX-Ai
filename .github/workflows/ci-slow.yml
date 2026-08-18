@@ -70,7 +70,7 @@ jobs:
         working-directory: ./apps/web
       - name: Upload blob report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-blob-shard-${{ matrix.shardIndex }}
           path: apps/web/blob-report/
@@ -78,14 +78,14 @@ jobs:
           retention-days: 30
       - name: Upload JUnit results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: junit-results-shard-${{ matrix.shardIndex }}
           path: apps/web/test-results/junit.xml
           retention-days: 30
       - name: Upload test artifacts
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-artifacts-shard-${{ matrix.shardIndex }}
           path: |
