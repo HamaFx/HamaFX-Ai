@@ -63,14 +63,14 @@ jobs:
 
       - name: Upload Web Trivy SARIF to GitHub Security
         if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4.37.3
         with:
           sarif_file: 'trivy-web.sarif'
           category: trivy-web
 
       - name: Upload Worker Trivy SARIF to GitHub Security
         if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4.37.3
         with:
           sarif_file: 'trivy-worker.sarif'
           category: trivy-worker
