@@ -18,8 +18,17 @@ interface EvalRow {
 }
 
 const REQUEST_TIMEOUT_MS = 120_000;
-/** Stay under the 30/min chat rate limit while driving 30 prompts. */
-const BETWEEN_PROMPTS_DELAY_MS = 4_000;
+/**
+ * Gap between prompts. Kept generous because each Mastra report makes
+ * several LLM calls (report + repair + optional legacy shadow), and free-tier
+ * provider keys (e.g. Mistral) trip their request rate limits when 30 prompts
+ * are fired back-to-back. 25s keeps us under typical free-tier RPM bounds.
+ */
+const BETWEEN_PROMPTS_DELAY_MS = 25_000;
+/** Retry a prompt up to this many times when the provider rate-limits us. */
+const MAX_RATE_LIMIT_RETRIES = 3;
+/** Wait this long before retrying a rate-limited prompt (first backoff). */
+const RATE_LIMIT_RETRY_DELAY_MS = 45_000;
 
 async function createThread(): Promise<string> {
   const csrf = getCsrfToken();
@@ -45,6 +54,19 @@ interface RunOneResult {
   totalMs: number;
   text: string;
   error?: string;
+}
+
+/** True when a result (HTTP status or stream error) is a provider rate limit. */
+function isRateLimit(result: RunOneResult): boolean {
+  if (!result.ok) {
+    const msg = result.error?.toLowerCase() ?? '';
+    return (
+      result.error?.startsWith('HTTP 429') === true ||
+      msg.includes('too many requests') ||
+      msg.includes('rate limit')
+    );
+  }
+  return false;
 }
 
 async function runOnePrompt(threadId: string, prompt: string): Promise<RunOneResult> {
@@ -205,8 +227,28 @@ export function AdminAiEval() {
 
       patchRow(index, { status: 'running' });
       try {
-        const threadId = await createThread();
-        const result = await runOnePrompt(threadId, prompt.prompt);
+        // Free-tier provider keys (e.g. Mistral) trip their rate limits when
+        // 30 multi-call prompts run back-to-back. Retry rate-limited prompts
+        // with a backoff so the run survives instead of failing row by row.
+        // Each attempt gets a fresh thread so a partially-persisted first
+        // attempt can never duplicate the user message.
+        let result: RunOneResult | null = null;
+        for (let attempt = 0; attempt <= MAX_RATE_LIMIT_RETRIES; attempt += 1) {
+          if (stopRef.current) break;
+          const threadId = await createThread();
+          const attemptResult = await runOnePrompt(threadId, prompt.prompt);
+          if (!isRateLimit(attemptResult) || attempt >= MAX_RATE_LIMIT_RETRIES) {
+            result = attemptResult;
+            break;
+          }
+          patchRow(index, {
+            error: `Rate limited — retrying in ${RATE_LIMIT_RETRY_DELAY_MS / 1000}s (attempt ${attempt + 1}/${MAX_RATE_LIMIT_RETRIES})…`,
+          });
+          await delay(RATE_LIMIT_RETRY_DELAY_MS * (attempt + 1));
+        }
+        if (!result) {
+          result = { ok: false, totalMs: 0, text: '', error: 'Run stopped before completion' };
+        }
         if (result.ok) {
           ok += 1;
           patchRow(index, { status: 'ok', totalMs: result.totalMs, chars: result.text.length });
