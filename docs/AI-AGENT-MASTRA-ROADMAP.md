@@ -1404,3 +1404,24 @@ The gate uses conservative defaults and can be tuned without code changes throug
 The offline suite uses MSW-recorded streams and no provider credentials. It now covers both passing and failing gate outcomes, environment threshold parsing, empty-run fail-closed behavior, grounding/safety assertions, latency, cost, and transport failures. The scheduled CI job runs this deterministic contract suite, while the optional isolated-staging job applies the same gate to real responses.
 
 The report schema remains versioned as `kestrel.eval-report.v1`, and the gate schema is `kestrel.eval-gate.v1`. This keeps dashboards and future CI tooling from parsing human-readable Markdown.
+
+## 36. Verified private deployment and expanded regression catalog
+
+The pushed milestone is deployed to the private Vercel production alias:
+
+- Deployment status: `Ready`
+- Commit: `f9f13a53`
+- Migration count: `81`
+- `ai_regression_cases` table: present
+- `mastra_xauusd_chat`: enabled
+- `mastra_xauusd_shadow`: enabled
+
+A separate `packages/ai/src/eval/regression-cases.json` catalog now contains 50 additional regression cases. The catalog covers research tools, macro evidence, stale/missing data, grounding, prompt injection, unsafe certainty, mutation confirmation, report follow-ups, agent modes, provider failure, cost awareness, and transport failures. A structural test enforces the count, uniqueness, and minimum coverage so the catalog can grow without becoming an unreviewed list.
+
+The configured production operator keys were checked with one-token provider pings without printing credentials:
+
+- Mistral: passed.
+- Vertex: configured but failed JSON parsing; its service-account environment value needs correction.
+- Other provider operator keys: not configured in production, so they require user BYOK credentials for live validation.
+
+The 50-case catalog is committed locally but still needs to be included in the next reviewed commit before CI or staging runs it.

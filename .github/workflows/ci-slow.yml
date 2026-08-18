@@ -143,7 +143,7 @@ jobs:
       # credentials. It validates the stream parser, assertion engine, strict
       # Full-mode terminal contract, and the vendor-neutral quality gate for
       # transport, grounding, safety, latency, and cost regressions.
-      - run: pnpm --filter @kestrel/ai test -- --run test/eval-offline.test.ts test/eval-quality-gate.test.ts
+      - run: pnpm --filter @kestrel/ai test -- --run test/eval-offline.test.ts test/eval-quality-gate.test.ts test/eval-regression-catalog.test.ts
 
   live-eval:
     name: AI Eval Harness (isolated staging)
