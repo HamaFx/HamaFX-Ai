@@ -127,9 +127,13 @@ export class VercelLlmClient implements LlmClient {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = (aiStreamText as any)(callArgs);
-    const sdk = result as { toDataStreamResponse: () => Response; text: Promise<string> };
+    // AI SDK v5's streamText returns a result with `toUIMessageStreamResponse`
+    // (the v4 `toDataStreamResponse` no longer exists on the result — calling
+    // it threw "sdk.toDataStreamResponse is not a function" and broke every
+    // legacy chat turn the moment the response was piped to the client).
+    const sdk = result as { toUIMessageStreamResponse: () => Response; text: Promise<string> };
     return {
-      toUIMessageStreamResponse: () => sdk.toDataStreamResponse() as Response,
+      toUIMessageStreamResponse: () => sdk.toUIMessageStreamResponse() as Response,
       text: sdk.text,
     };
   }

@@ -568,6 +568,20 @@
       "when": 1787087000001,
       "tag": "0081_ai_regression_cases",
       "breakpoints": true
+    },
+    {
+      "idx": 81,
+      "version": "7",
+      "when": 1787118445721,
+      "tag": "0082_fix_missing_tenant_triggers",
+      "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1787120157199,
+      "tag": "0083_guard_tenant_triggers",
+      "breakpoints": true
     }
   ]
 }
