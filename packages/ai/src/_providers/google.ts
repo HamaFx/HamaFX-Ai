@@ -47,6 +47,17 @@ export const GOOGLE = defineProvider({
       released: '2026-06',
     },
     {
+      modelId: 'gemini-3.5-flash-lite',
+      label: 'Gemini 3.5 Flash-Lite',
+      description: 'Fastest 3.5 — optimized for high-throughput agentic tasks.',
+      tier: 'lite',
+      inputPerMTokUsd: 0.30,
+      outputPerMTokUsd: 2.50,
+      contextTokens: 1_000_000,
+      capabilities: CAPS_FULL,
+      released: '2026-06',
+    },
+    {
       modelId: 'gemini-3.1-flash-lite',
       label: 'Gemini 3.1 Flash-Lite',
       description: 'Newest cheap/fast Gemini for high-volume turns.',
