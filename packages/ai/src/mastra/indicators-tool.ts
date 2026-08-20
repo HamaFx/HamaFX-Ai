@@ -1,14 +1,15 @@
-import { createTool } from '@mastra/core/tools';
 import { getCandlesWithMeta } from '@kestrel/data';
+import { createTool } from '@mastra/core/tools';
 
 import { buildIndicatorsEvidence } from './evidence-builders';
 import { executeMastraTool } from './telemetry';
-import { XauusdIndicatorsEvidenceSchema } from './types';
 import { XauusdIndicatorsInputSchema } from './tool-schemas';
+import { XauusdIndicatorsEvidenceSchema } from './types';
 
 export const xauusdIndicatorsTool = createTool({
   id: 'get-xauusd-indicators',
-  description: 'Compute XAUUSD indicators from one candle window and return recent values with evidence metadata.',
+  description:
+    'Compute XAUUSD indicators from one candle window and return recent values with evidence metadata.',
   inputSchema: XauusdIndicatorsInputSchema,
   outputSchema: XauusdIndicatorsEvidenceSchema,
   execute: async ({ symbol, timeframe, count, indicators }, context) =>

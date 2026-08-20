@@ -1,10 +1,10 @@
-import { createTool } from '@mastra/core/tools';
 import { getPriceWithMeta } from '@kestrel/data';
+import { createTool } from '@mastra/core/tools';
 
 import { buildPriceEvidence } from './evidence-builders';
 import { executeMastraTool } from './telemetry';
-import { XauusdPriceEvidenceSchema } from './types';
 import { XauusdPriceInputSchema } from './tool-schemas';
+import { XauusdPriceEvidenceSchema } from './types';
 
 export const xauusdPriceTool = createTool({
   id: 'get-xauusd-price',

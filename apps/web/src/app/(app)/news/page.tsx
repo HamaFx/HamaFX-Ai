@@ -17,8 +17,8 @@ import { SentimentSummary } from './_components/sentiment-summary';
 import { BookmarksProvider } from '@/components/news/bookmarks-context';
 
 export const metadata: Metadata = { title: 'News | Kestrel' };
-// ISR: revalidate every 5 minutes instead of forcing dynamic on every request.
-export const revalidate = 300;
+// News is user-scoped database content and must not be fetched during `next build`.
+export const dynamic = 'force-dynamic';
 
 export default async function NewsPage() {
   // Larger window now that the page can filter — gives the user real

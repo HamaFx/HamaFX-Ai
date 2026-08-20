@@ -19,12 +19,13 @@
 //
 // This command costs money (AI tokens) — it checks the budget guardrail.
 
-import type { BotCommand, BotResponse, BotContext } from '../types';
-import { runChat } from '../../agent';
-import type { ServerEnv } from '@kestrel/shared';
-import type { UIMessage } from 'ai';
-import { withRateLimit } from '@kestrel/db';
 import { createHash, randomUUID } from 'crypto';
+
+import { withRateLimit } from '@kestrel/db';
+import type { UIMessage } from 'ai';
+
+import { tryMastraBotMessage } from '../mastra';
+import type { BotCommand, BotContext, BotResponse } from '../types';
 
 export const analyzeCommand: BotCommand = {
   name: 'analyze',
@@ -51,25 +52,30 @@ export const analyzeCommand: BotCommand = {
     const userMessage: UIMessage = {
       id: randomUUID(),
       role: 'user',
-      parts: [{ type: 'text', text: `Please provide a full analysis of ${symbol}. Include technical, fundamental, and risk assessment.` }],
+      parts: [
+        {
+          type: 'text',
+          text: `Please provide a full analysis of ${symbol}. Include technical, fundamental, and risk assessment.`,
+        },
+      ],
     };
 
     try {
       // Use a deterministic thread ID for bot conversations per user+symbol
       const threadId = deterministicThreadId(ctx.userId, `analyze-${symbol}`);
 
-      const result = await runChat({
-        threadId,
+      const mastraText = await tryMastraBotMessage({
         userId: ctx.userId,
+        threadId,
         userMessage,
-        env: {} as ServerEnv, // The agent resolves env internally via getServerEnv
-        customInstructions: `The user requested a full analysis of ${symbol} via the Telegram bot. Provide a concise but comprehensive analysis suitable for a mobile chat interface. Use clear formatting.`,
+        prompt: `Please provide a full analysis of ${symbol}. Include technical, fundamental, and risk assessment.`,
+        system:
+          'You are Kestrel answering a Telegram market-analysis request. Use only trusted evidence, disclose missing data, use scenario language, never place trades, and keep the answer mobile-friendly.',
       });
-
-      const text = await result.text;
-
       return {
-        text: text || `Analysis of ${symbol} completed. Check the web UI for full details.`,
+        text:
+          mastraText ??
+          `Mastra could not complete the analysis of ${symbol}. Please try again in the web app.`,
       };
     } catch (err) {
       return {

@@ -159,9 +159,14 @@ export function getServerEnv(): ServerEnv {
   return _serverEnv;
 }
 
-// MED-05: Startup warning if AUTH_MODE=legacy is set in production
+// MED-05: Fail closed if legacy authentication reaches a production process or build.
+// A production artifact must never be created with authentication disabled.
 if (process.env.AUTH_MODE === 'legacy' && process.env.NODE_ENV === 'production') {
-  console.error('[SECURITY] AUTH_MODE=legacy is set in production! Authentication is disabled.');
+  throw new Error(
+    '[SECURITY] AUTH_MODE=legacy is forbidden in production. ' +
+      'Legacy auth mode bypasses all authentication and must only be used in development. ' +
+      'Unset AUTH_MODE or set it to "normal" for production deployments.',
+  );
 }
 
 // P2-5: Loud boot warning when AUTH_MODE=legacy is on in dev

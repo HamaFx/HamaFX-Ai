@@ -4,10 +4,10 @@ import { metrics } from '@kestrel/shared';
 import { createCategorizedLogger } from '@kestrel/shared/logger';
 
 import { assembleXauusdResearchPacket } from './research-packet-assemble';
-import { startResearchStage } from './research-packet-stages';
 import { fetchXauusdResearchData } from './research-packet-fetch';
-import { XAUUSD } from './types';
+import { startResearchStage } from './research-packet-stages';
 import type { XauusdResearchPacket } from './research-types';
+import { XAUUSD } from './types';
 
 const rlog = createCategorizedLogger('ai', {
   component: 'mastra-xauusd-research-packet',

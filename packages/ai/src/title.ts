@@ -23,12 +23,13 @@
 // See .kiro/specs/phase-1-completion/design.md §1 for the full contract.
 
 import type { ServerEnv } from '@kestrel/shared';
+import { createCategorizedLogger } from '@kestrel/shared/logger';
 import { generateText } from 'ai';
 
+import { runMastraText } from './mastra/text-runner';
 import { resolveModel } from './model';
-import { maybeGetToolContext } from './tool-context';
 import { telemetryConfig } from './telemetry';
-import { createCategorizedLogger } from '@kestrel/shared/logger';
+import { maybeGetToolContext } from './tool-context';
 
 export interface GenerateTitleArgs {
   threadId: string;
@@ -159,10 +160,42 @@ export async function generateTitle(args: GenerateTitleArgs): Promise<GenerateTi
 
   const startedAt = Date.now();
   try {
+    // Mastra owns the generation boundary when enabled. Keep the legacy
+    // generateText path below for gateway/string-model environments and as a
+    // compatibility fallback for callers that have not enabled Mastra.
+    const resolvedModel = resolveModel(args.titleModelId, env, ctx?.userId);
+    if (typeof resolvedModel !== 'string') {
+      const result = await runMastraText({
+        task: 'title',
+        model: resolvedModel,
+        system: SYSTEM_PROMPT,
+        prompt: userPrompt,
+        ...(ctx?.userId ? { userId: ctx.userId } : {}),
+        threadId: args.threadId,
+        ...(signal ? { signal } : {}),
+        maxOutputTokens: 80,
+      });
+      const cleaned = stripSurroundingQuotes(result.text.trim()).trim();
+      if (cleaned.length === 0) {
+        return {
+          title: deterministicFallbackTitle(firstUser),
+          source: 'fallback',
+          reason: 'empty',
+        };
+      }
+      return {
+        title: clipToCodepoints(cleaned),
+        source: 'llm',
+        inputTokens: result.inputTokens,
+        outputTokens: result.outputTokens,
+        latencyMs: Date.now() - startedAt,
+      };
+    }
+
     const generateArgs: Parameters<typeof generateText>[0] = {
       // Resolve the id either to a gateway-routed string or a direct provider
       // model instance, depending on which transport is configured.
-      model: resolveModel(args.titleModelId, env, ctx?.userId),
+      model: resolvedModel,
       system: SYSTEM_PROMPT,
       prompt: userPrompt,
       ...telemetryConfig({ functionId: 'chat.title' }),

@@ -34,15 +34,16 @@ import {
   type Symbol,
   type ThreadInsight,
 } from '@kestrel/shared';
+import { createCategorizedLogger } from '@kestrel/shared/logger';
 import { generateText, tool } from 'ai';
 import type { z } from 'zod';
-import { createCategorizedLogger } from '@kestrel/shared/logger';
 
+import { runMastraText } from '../mastra/text-runner';
 import { rememberThreadSynopsis } from '../memory/memory-index';
-import { resolveModel, derivePlannerModel } from '../model';
+import { derivePlannerModel, resolveModel } from '../model';
 import { listMessages } from '../persistence';
-import { maybeGetToolContext } from '../tool-context';
 import { telemetryConfig } from '../telemetry';
+import { maybeGetToolContext } from '../tool-context';
 
 const InputSchema = SummarizeThreadInputSchema;
 
@@ -105,14 +106,31 @@ export const summarizeThreadTool = tool({
       try {
         // Phase F — pick the same cheap model the planner uses so
         // summarisation costs track the chat-model choice.
-        const modelId =
-          derivePlannerModel(ctx.userSettings, env) ?? env.AI_DEFAULT_MODEL;
-        const { text } = await generateText({
-          model: resolveModel(modelId, env),
-          system: SYSTEM_PROMPT,
-          prompt: transcript,
-          ...telemetryConfig({ functionId: 'tool.summarize_thread' }),
-        });
+        const modelId = derivePlannerModel(ctx.userSettings, env) ?? env.AI_DEFAULT_MODEL;
+        const model = resolveModel(modelId, env);
+        const text =
+          typeof model !== 'string'
+            ? (
+                await runMastraText({
+                  task: 'thread-summarization',
+                  model,
+                  system: SYSTEM_PROMPT,
+                  prompt: transcript,
+                  userId: ctx.userId,
+                  threadId,
+                  ...(ctx.signal ? { signal: ctx.signal } : {}),
+                  maxOutputTokens: 700,
+                })
+              ).text
+            : (
+                await generateText({
+                  model,
+                  system: SYSTEM_PROMPT,
+                  prompt: transcript,
+                  ...telemetryConfig({ functionId: 'tool.summarize_thread' }),
+                  ...(ctx.signal ? { abortSignal: ctx.signal } : {}),
+                })
+              ).text;
         const parsed = parseModelJson(text);
         if (parsed) {
           synopsis = parsed.synopsis;

@@ -1,10 +1,10 @@
+import type { XauusdResearchPacket } from './research-types';
 import type {
   XauusdCandlesEvidence,
   XauusdIndicatorsEvidence,
-  XauusdPriceEvidence,
   XauusdMacroEvidence,
+  XauusdPriceEvidence,
 } from './types';
-import type { XauusdResearchPacket } from './research-types';
 
 /** Keep the synthesis prompt bounded while retaining the latest market context. */
 export const MODEL_CONTEXT_CANDLE_LIMIT = 12;
@@ -76,8 +76,6 @@ export function buildXauusdModelEvidenceContext(
   };
 }
 
-export function serializeXauusdModelEvidenceContext(
-  packet: XauusdResearchPacket,
-): string {
+export function serializeXauusdModelEvidenceContext(packet: XauusdResearchPacket): string {
   return JSON.stringify(buildXauusdModelEvidenceContext(packet));
 }

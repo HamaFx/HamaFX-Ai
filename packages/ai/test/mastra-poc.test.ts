@@ -2,13 +2,13 @@ import type { LanguageModel } from 'ai';
 import { describe, expect, it } from 'vitest';
 
 import {
-  XAUUSD,
-  XauusdRequestContextSchema,
   createEvidenceId,
   createXauusdMastraAgent,
   freshnessFromAge,
   qualityFromWarnings,
   requireXauusdUserContext,
+  XAUUSD,
+  XauusdRequestContextSchema,
 } from '../src/mastra';
 
 describe('Mastra XAUUSD proof of concept', () => {
@@ -32,15 +32,34 @@ describe('Mastra XAUUSD proof of concept', () => {
       'getXauusdPrice',
       'getXauusdCandles',
       'getXauusdIndicators',
+      'getXauusdMarketStructure',
+      'getXauusdSessionLevels',
+      'analyzeXauusdTechnical',
+      'getXauusdCorrelation',
+      'getXauusdIntermarket',
+      'forecastXauusdVolatility',
+      'getXauusdNews',
+      'getXauusdCalendar',
+      'getXauusdSocialSentiment',
+      'getXauusdFundamentalContext',
+      'getXauusdSeasonality',
+      'getXauusdCot',
+      'getXauusdIntermarketResonance',
+      'searchUntrustedWeb',
+      'searchUntrustedKnowledge',
     ]);
   });
 
   it('fails closed when a tool has no authenticated request context', () => {
     expect(() => requireXauusdUserContext({})).toThrow(/userId/);
-    expect(() => requireXauusdUserContext({ requestContext: { get: () => undefined } })).toThrow(/userId/);
-    expect(() => requireXauusdUserContext({
-      requestContext: { get: (key) => key === 'userId' ? 'user-1' : undefined },
-    })).toThrow(/runId/);
+    expect(() => requireXauusdUserContext({ requestContext: { get: () => undefined } })).toThrow(
+      /userId/,
+    );
+    expect(() =>
+      requireXauusdUserContext({
+        requestContext: { get: (key) => (key === 'userId' ? 'user-1' : undefined) },
+      }),
+    ).toThrow(/runId/);
   });
 
   it('creates scoped evidence IDs and classifies freshness', () => {

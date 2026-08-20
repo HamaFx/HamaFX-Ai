@@ -34,8 +34,13 @@ export const XauusdIndicatorsInputSchema = z.object({
   symbol: XauusdSymbolSchema.default(XAUUSD),
   timeframe: TimeframeSchema,
   count: z.number().int().min(20).max(MAX_CANDLE_OUTPUT).default(200),
-  indicators: z.array(z.object({
-    kind: IndicatorKindSchema,
-    params: IndicatorParamsSchema.default({}),
-  })).min(1).max(6),
+  indicators: z
+    .array(
+      z.object({
+        kind: IndicatorKindSchema,
+        params: IndicatorParamsSchema.default({}),
+      }),
+    )
+    .min(1)
+    .max(6),
 });

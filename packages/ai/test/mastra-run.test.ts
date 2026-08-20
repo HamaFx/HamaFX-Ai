@@ -1,18 +1,35 @@
 import type { LanguageModel } from 'ai';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mocks = vi.hoisted(() => ({
-  resolveChatModel: vi.fn(),
-  createXauusdMastraAgent: vi.fn(),
-  collectXauusdResearchPacket: vi.fn(),
-  requireVerifiedXauusdReport: vi.fn(),
-  beginMastraRun: vi.fn(),
-  finishMastraRun: vi.fn().mockResolvedValue(undefined),
-  getMastraGenerationStats: vi.fn(() => ({ inputTokens: 4, outputTokens: 6, toolCalls: 1, steps: 2 })),
-  mastraOutcomeForError: vi.fn(() => 'failed'),
-  getDiagnosticContext: vi.fn(() => ({ traceId: 'trace-1' })),
-  withDiagnostics: vi.fn(async (_userId: string, _threadId: string, fn: () => Promise<unknown>) => fn()),
-}));
+import {
+  resolveXauusdMastraModel,
+  runXauusdMastra,
+  runXauusdMastraConversation,
+} from '../src/mastra/run';
+
+const mocks = vi.hoisted(() => {
+  class FakeVerificationError extends Error {}
+  return {
+    resolveChatModel: vi.fn(),
+    createXauusdMastraAgent: vi.fn(),
+    collectXauusdResearchPacket: vi.fn(),
+    requireVerifiedXauusdReport: vi.fn(),
+    XauusdReportVerificationError: FakeVerificationError,
+    beginMastraRun: vi.fn(),
+    finishMastraRun: vi.fn().mockResolvedValue(undefined),
+    getMastraGenerationStats: vi.fn(() => ({
+      inputTokens: 4,
+      outputTokens: 6,
+      toolCalls: 1,
+      steps: 2,
+    })),
+    mastraOutcomeForError: vi.fn(() => 'failed'),
+    getDiagnosticContext: vi.fn(() => ({ traceId: 'trace-1' })),
+    withDiagnostics: vi.fn(async (_userId: string, _threadId: string, fn: () => Promise<unknown>) =>
+      fn(),
+    ),
+  };
+});
 
 vi.mock('../src/model', () => ({
   resolveChatModel: mocks.resolveChatModel,
@@ -25,6 +42,7 @@ vi.mock('../src/mastra/research-packet', () => ({
 }));
 vi.mock('../src/mastra/report-verifier', () => ({
   requireVerifiedXauusdReport: mocks.requireVerifiedXauusdReport,
+  XauusdReportVerificationError: mocks.XauusdReportVerificationError,
 }));
 vi.mock('../src/mastra/telemetry', () => ({
   beginMastraRun: mocks.beginMastraRun,
@@ -38,11 +56,6 @@ vi.mock('../src/diagnostics', () => ({
   getDiagnosticContext: mocks.getDiagnosticContext,
   withDiagnostics: mocks.withDiagnostics,
 }));
-
-import {
-  resolveXauusdMastraModel,
-  runXauusdMastra,
-} from '../src/mastra/run';
 
 const model = {} as LanguageModel;
 const settings = { aiApiKeys: null, chatModel: null };
@@ -78,8 +91,24 @@ describe('Mastra BYOK runner', () => {
       technicalSummary: 'Test technical summary',
       fundamentalSummary: 'Unavailable in POC',
       scenarios: [
-        { name: 'Bullish', direction: 'bullish', trigger: 'breakout', invalidation: 'below level', targets: [], risks: ['volatility'], evidenceIds: ['packet-1'] },
-        { name: 'Bearish', direction: 'bearish', trigger: 'breakdown', invalidation: 'above level', targets: [], risks: ['volatility'], evidenceIds: ['packet-1'] },
+        {
+          name: 'Bullish',
+          direction: 'bullish',
+          trigger: 'breakout',
+          invalidation: 'below level',
+          targets: [],
+          risks: ['volatility'],
+          evidenceIds: ['packet-1'],
+        },
+        {
+          name: 'Bearish',
+          direction: 'bearish',
+          trigger: 'breakdown',
+          invalidation: 'above level',
+          targets: [],
+          risks: ['volatility'],
+          evidenceIds: ['packet-1'],
+        },
       ],
       contradictions: [],
       missingData: [],
@@ -88,7 +117,9 @@ describe('Mastra BYOK runner', () => {
     });
     mocks.beginMastraRun.mockReset();
     mocks.finishMastraRun.mockReset().mockResolvedValue(undefined);
-    mocks.getMastraGenerationStats.mockReset().mockReturnValue({ inputTokens: 4, outputTokens: 6, toolCalls: 1, steps: 2 });
+    mocks.getMastraGenerationStats
+      .mockReset()
+      .mockReturnValue({ inputTokens: 4, outputTokens: 6, toolCalls: 1, steps: 2 });
     mocks.mastraOutcomeForError.mockReset().mockReturnValue('failed');
     mocks.getDiagnosticContext.mockReturnValue({ traceId: 'trace-1' });
     mocks.resolveChatModel.mockReturnValue({
@@ -128,6 +159,27 @@ describe('Mastra BYOK runner', () => {
     }
   });
 
+  it('forwards the caller modelOverride to the model resolver', async () => {
+    const generate = vi.fn().mockResolvedValue({ text: 'grounded result', object: {} });
+    mocks.createXauusdMastraAgent.mockReturnValue({ generate });
+
+    await runXauusdMastra({
+      prompt: 'Analyse gold',
+      userId: 'user-1',
+      threadId: 'thread-1',
+      runId: 'run-override',
+      settings,
+      env,
+      modelOverride: 'google:gemini-3.6-flash',
+    });
+
+    expect(mocks.resolveChatModel).toHaveBeenCalledWith(
+      { aiApiKeys: settings.aiApiKeys, chatModel: 'google:gemini-3.6-flash' },
+      env,
+      'technical',
+    );
+  });
+
   it('injects the resolved model and authenticated request context into Mastra', async () => {
     const generate = vi.fn().mockResolvedValue({ text: 'grounded result', object: {} });
     mocks.createXauusdMastraAgent.mockReturnValue({ generate });
@@ -157,17 +209,80 @@ describe('Mastra BYOK runner', () => {
         structuredOutput: expect.objectContaining({ schema: expect.anything() }),
       }),
     );
-    const options = generate.mock.calls[0]![1] as { requestContext: { get: (key: string) => unknown } };
+    const options = generate.mock.calls[0]![1] as {
+      requestContext: { get: (key: string) => unknown };
+    };
     expect(options.requestContext.get('userId')).toBe('user-1');
     expect(options.requestContext.get('threadId')).toBe('thread-1');
     expect(options.requestContext.get('runId')).toBe('run-1');
-    expect(mocks.finishMastraRun).toHaveBeenCalledWith(expect.objectContaining({
+    expect(mocks.finishMastraRun).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 'user-1',
+        threadId: 'thread-1',
+        runId: 'run-1',
+        model: 'google/gemini-2.5-flash',
+        outcome: 'success',
+      }),
+    );
+  });
+
+  it('runs conversational Single mode without structured report output', async () => {
+    const generate = vi
+      .fn()
+      .mockResolvedValue({ text: 'The current packet suggests a cautious range.' });
+    mocks.createXauusdMastraAgent.mockReturnValue({ generate });
+    const priorReport = { symbol: 'XAUUSD', bias: 'neutral' } as never;
+    const signal = new AbortController().signal;
+
+    const result = await runXauusdMastraConversation({
+      prompt: 'Explain the current gold context',
       userId: 'user-1',
       threadId: 'thread-1',
-      runId: 'run-1',
-      model: 'google/gemini-2.5-flash',
-      outcome: 'success',
-    }));
+      runId: 'conversation-1',
+      settings,
+      env,
+      signal,
+      priorReport,
+    });
+
+    expect(result).toMatchObject({
+      report: null,
+      modelId: 'google/gemini-2.5-flash',
+      providerId: 'google',
+    });
+    expect(generate).toHaveBeenCalledWith(
+      'Explain the current gold context',
+      expect.objectContaining({
+        toolChoice: 'auto',
+        activeTools: [
+          'getXauusdMarketStructure',
+          'getXauusdSessionLevels',
+          'analyzeXauusdTechnical',
+          'getXauusdCorrelation',
+          'getXauusdIntermarket',
+          'forecastXauusdVolatility',
+          'getXauusdNews',
+          'getXauusdCalendar',
+          'getXauusdSocialSentiment',
+          'getXauusdFundamentalContext',
+          'getXauusdSeasonality',
+          'getXauusdCot',
+          'getXauusdIntermarketResonance',
+          'searchUntrustedWeb',
+          'searchUntrustedKnowledge',
+        ],
+        maxSteps: 3,
+      }),
+    );
+    const options = generate.mock.calls[0]![1] as {
+      requestContext: { get: (key: string) => unknown };
+      structuredOutput?: unknown;
+      abortSignal?: AbortSignal;
+      activeTools?: string[];
+    };
+    expect(options.structuredOutput).toBeUndefined();
+    expect(options.abortSignal).toBe(signal);
+    expect(options.requestContext.get('priorReport')).toBe(priorReport);
   });
 
   it('preserves generation failures and records a failed terminal outcome', async () => {
@@ -176,20 +291,24 @@ describe('Mastra BYOK runner', () => {
       generate: vi.fn().mockRejectedValue(error),
     });
 
-    await expect(runXauusdMastra({
-      prompt: 'Analyse gold',
-      userId: 'user-1',
-      threadId: 'thread-1',
-      runId: 'run-2',
-      settings,
-      env,
-    })).rejects.toBe(error);
+    await expect(
+      runXauusdMastra({
+        prompt: 'Analyse gold',
+        userId: 'user-1',
+        threadId: 'thread-1',
+        runId: 'run-2',
+        settings,
+        env,
+      }),
+    ).rejects.toBe(error);
 
     expect(mocks.mastraOutcomeForError).toHaveBeenCalledWith(error, undefined);
-    expect(mocks.finishMastraRun).toHaveBeenCalledWith(expect.objectContaining({
-      runId: 'run-2',
-      outcome: 'failed',
-      error,
-    }));
+    expect(mocks.finishMastraRun).toHaveBeenCalledWith(
+      expect.objectContaining({
+        runId: 'run-2',
+        outcome: 'failed',
+        error,
+      }),
+    );
   });
 });

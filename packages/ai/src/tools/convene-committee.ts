@@ -14,25 +14,24 @@
  * limitations under the License.
  */
 
-import { logErrorContext } from '@kestrel/shared/logger';
 import {
   ConveneCommitteeInputSchema,
-  type ConveneCommitteeInput,
   type CommitteeVerdict,
+  type ConveneCommitteeInput,
   type ConveneCommitteeOutput,
 } from '@kestrel/shared';
-import { tool, generateText, stepCountIs } from 'ai';
+import { logErrorContext } from '@kestrel/shared/logger';
+import { generateText, stepCountIs, tool } from 'ai';
 import type { z } from 'zod';
-import type { ResolveModelEnv } from '../model';
 
-import { getToolContext, type ToolContext } from '../tool-context';
-import { resolveChatModel, getVertexGoogleSearchTool } from '../model';
+import { runMastraText } from '../mastra/text-runner';
+import { getVertexGoogleSearchTool, resolveChatModel, type ResolveModelEnv } from '../model';
 import { telemetryConfig } from '../telemetry';
-
+import { getToolContext, type ToolContext } from '../tool-context';
 import { analyzeFundamentalTool } from './analyze-fundamental';
 import { analyzeTechnicalTool } from './analyze-technical';
-import { getJournalStatsTool } from './get-journal-stats';
 import { computeRiskTool } from './compute-risk';
+import { getJournalStatsTool } from './get-journal-stats';
 
 const InputSchema = ConveneCommitteeInputSchema;
 
@@ -57,9 +56,12 @@ export const conveneCommitteeTool = tool({
     const atExec = analyzeTechnicalTool.execute;
     const jsExec = getJournalStatsTool.execute;
     const crExec = computeRiskTool.execute;
-    if (!afExec) throw new Error('analyze_fundamental tool is not registered — cannot convene committee');
-    if (!atExec) throw new Error('analyze_technical tool is not registered — cannot convene committee');
-    if (!jsExec) throw new Error('get_journal_stats tool is not registered — cannot convene committee');
+    if (!afExec)
+      throw new Error('analyze_fundamental tool is not registered — cannot convene committee');
+    if (!atExec)
+      throw new Error('analyze_technical tool is not registered — cannot convene committee');
+    if (!jsExec)
+      throw new Error('get_journal_stats tool is not registered — cannot convene committee');
     // Internal tool execution options used when the committee calls sub-tools directly.
     // We intentionally pass an empty messages array (never[] — assignable to any T[])
     // and a minimal toolCallId because these are internal calls, not user-facing tool
@@ -71,7 +73,20 @@ export const conveneCommitteeTool = tool({
       afExec({ symbol, horizonHours: 48 }, internalExecOpts),
       atExec({ symbol, timeframes: ['1d', '4h', '1h', '15m'] }, internalExecOpts),
       jsExec({ symbol }, internalExecOpts),
-      stop && crExec ? crExec({ symbol, side, entry, stop, target: target ?? undefined, accountUsd: 1000, riskPct: 1 }, internalExecOpts) : Promise.resolve(null),
+      stop && crExec
+        ? crExec(
+            {
+              symbol,
+              side,
+              entry,
+              stop,
+              target: target ?? undefined,
+              accountUsd: 1000,
+              riskPct: 1,
+            },
+            internalExecOpts,
+          )
+        : Promise.resolve(null),
       // ↑ crExec is intentionally lenient: risk computation is conditional on `stop`.
       // When stop is not provided, we pass null risk data and the Risk Manager
       // persona handles the missing information gracefully.
@@ -85,7 +100,13 @@ export const conveneCommitteeTool = tool({
     ]);
 
     // 3. Run the Moderator
-    const { grade, goNoGo, consensus } = await runModerator(input, economist, technician, riskManager, ctx);
+    const { grade, goNoGo, consensus } = await runModerator(
+      input,
+      economist,
+      technician,
+      riskManager,
+      ctx,
+    );
 
     return {
       symbol,
@@ -111,7 +132,11 @@ interface ModeratorResult {
   consensus: string;
 }
 
-async function runEconomist(input: ConveneCommitteeInput, data: unknown, ctx: ToolContext): Promise<CommitteeVerdict> {
+async function runEconomist(
+  input: ConveneCommitteeInput,
+  data: unknown,
+  ctx: ToolContext,
+): Promise<CommitteeVerdict> {
   const prompt = `You are The Economist on a trading committee. Evaluate this trade:
 Symbol: ${input.symbol}
 Side: ${input.side}
@@ -134,18 +159,28 @@ No markdown fences, no preamble.`;
 
   try {
     // Only pass tools if the vertex env is available.
-    const vertexEnv: Pick<ResolveModelEnv, 'GOOGLE_VERTEX_PROJECT' | 'GOOGLE_VERTEX_LOCATION' | 'GOOGLE_APPLICATION_CREDENTIALS_JSON' | 'GOOGLE_APPLICATION_CREDENTIALS'> = ctx.env;
-    const tools = ctx.env.GOOGLE_VERTEX_PROJECT ? { googleSearch: getVertexGoogleSearchTool(vertexEnv) } : undefined;
-    const { text, steps } = await generateText({
-      model: resolveChatModel(ctx.userSettings, ctx.env).model,
-      system: "You are an expert forex macroeconomic analyst. Always output raw JSON.",
+    const vertexEnv: Pick<
+      ResolveModelEnv,
+      | 'GOOGLE_VERTEX_PROJECT'
+      | 'GOOGLE_VERTEX_LOCATION'
+      | 'GOOGLE_APPLICATION_CREDENTIALS_JSON'
+      | 'GOOGLE_APPLICATION_CREDENTIALS'
+    > = ctx.env;
+    const tools = ctx.env.GOOGLE_VERTEX_PROJECT
+      ? { googleSearch: getVertexGoogleSearchTool(vertexEnv) }
+      : undefined;
+    const { text, steps } = await generateCommitteeText({
+      ctx,
+      system: 'You are an expert forex macroeconomic analyst. Always output raw JSON.',
       prompt,
-      ...telemetryConfig({ functionId: 'tool.convene_committee' }),
-      ...(ctx.signal ? { abortSignal: ctx.signal } : {}),
-      ...(tools ? { tools, stopWhen: stepCountIs(3) } : {}),
+      ...(tools ? { tools } : {}),
+      maxSteps: 3,
     });
 
-    const parsed = parseJsonOrThrow<Omit<CommitteeVerdict, 'persona' | 'sources'>>(text, 'economist');
+    const parsed = parseJsonOrThrow<Omit<CommitteeVerdict, 'persona' | 'sources'>>(
+      text,
+      'economist',
+    );
 
     // Extract citations from the tool calls if available
     const sources: string[] = [];
@@ -153,9 +188,9 @@ No markdown fences, no preamble.`;
       if (step.toolResults) {
         for (const res of step.toolResults) {
           if (res.toolName === 'googleSearch') {
-             // We just add a generic source tag since raw parsing of grounding results is complex.
-             // The frontend will render them if present.
-             sources.push('Google Search Grounding');
+            // We just add a generic source tag since raw parsing of grounding results is complex.
+            // The frontend will render them if present.
+            sources.push('Google Search Grounding');
           }
         }
       }
@@ -176,7 +211,11 @@ No markdown fences, no preamble.`;
   }
 }
 
-async function runTechnician(input: ConveneCommitteeInput, data: unknown, ctx: ToolContext): Promise<CommitteeVerdict> {
+async function runTechnician(
+  input: ConveneCommitteeInput,
+  data: unknown,
+  ctx: ToolContext,
+): Promise<CommitteeVerdict> {
   const prompt = `You are The Technician on a trading committee. Evaluate this trade:
 Symbol: ${input.symbol}
 Side: ${input.side}
@@ -197,12 +236,10 @@ Output ONLY a JSON object:
 No markdown fences, no preamble.`;
 
   try {
-    const { text } = await generateText({
-      model: resolveChatModel(ctx.userSettings, ctx.env).model,
-      system: "You are an expert forex technical analyst. Always output raw JSON.",
+    const { text } = await generateCommitteeText({
+      ctx,
+      system: 'You are an expert forex technical analyst. Always output raw JSON.',
       prompt,
-      ...telemetryConfig({ functionId: 'tool.convene_committee' }),
-      ...(ctx.signal ? { abortSignal: ctx.signal } : {}),
     });
     const parsed = parseJsonOrThrow<Omit<CommitteeVerdict, 'persona'>>(text, 'technician');
     return { persona: 'technician', ...parsed } as CommitteeVerdict;
@@ -212,7 +249,12 @@ No markdown fences, no preamble.`;
   }
 }
 
-async function runRiskManager(input: ConveneCommitteeInput, journalData: unknown, riskData: unknown, ctx: ToolContext): Promise<CommitteeVerdict> {
+async function runRiskManager(
+  input: ConveneCommitteeInput,
+  journalData: unknown,
+  riskData: unknown,
+  ctx: ToolContext,
+): Promise<CommitteeVerdict> {
   const prompt = `You are The Risk Manager on a trading committee. Evaluate this trade:
 Symbol: ${input.symbol}
 Side: ${input.side}
@@ -238,12 +280,10 @@ Output ONLY a JSON object:
 No markdown fences, no preamble.`;
 
   try {
-    const { text } = await generateText({
-      model: resolveChatModel(ctx.userSettings, ctx.env).model,
-      system: "You are an expert risk manager. Always output raw JSON.",
+    const { text } = await generateCommitteeText({
+      ctx,
+      system: 'You are an expert risk manager. Always output raw JSON.',
       prompt,
-      ...telemetryConfig({ functionId: 'tool.convene_committee' }),
-      ...(ctx.signal ? { abortSignal: ctx.signal } : {}),
     });
     const parsed = parseJsonOrThrow<Omit<CommitteeVerdict, 'persona'>>(text, 'risk_manager');
     return { persona: 'risk_manager', ...parsed } as CommitteeVerdict;
@@ -253,7 +293,13 @@ No markdown fences, no preamble.`;
   }
 }
 
-async function runModerator(input: ConveneCommitteeInput, e: CommitteeVerdict, t: CommitteeVerdict, r: CommitteeVerdict, ctx: ToolContext): Promise<ModeratorResult> {
+async function runModerator(
+  input: ConveneCommitteeInput,
+  e: CommitteeVerdict,
+  t: CommitteeVerdict,
+  r: CommitteeVerdict,
+  ctx: ToolContext,
+): Promise<ModeratorResult> {
   const prompt = `You are the Committee Moderator. You have received three reports for a ${input.side} trade on ${input.symbol} at ${input.entry}.
 
 Economist: ${e.verdict} (${e.confidence}/10) - ${e.recommendation}
@@ -270,28 +316,77 @@ Output ONLY a JSON object:
 No markdown fences, no preamble.`;
 
   try {
-    const { text } = await generateText({
-      model: resolveChatModel(ctx.userSettings, ctx.env).model,
-      system: "You are the head trader. Always output raw JSON.",
+    const { text } = await generateCommitteeText({
+      ctx,
+      system: 'You are the head trader. Always output raw JSON.',
       prompt,
-      ...telemetryConfig({ functionId: 'tool.convene_committee' }),
-      ...(ctx.signal ? { abortSignal: ctx.signal } : {}),
     });
     const parsed = parseJsonOrThrow<ModeratorResult>(text, 'moderator');
     return {
       grade: parsed.grade ?? 'C',
       goNoGo: parsed.goNoGo ?? 'caution',
-      consensus: parsed.consensus ?? 'The committee was unable to reach a firm consensus. Proceed with caution.',
+      consensus:
+        parsed.consensus ??
+        'The committee was unable to reach a firm consensus. Proceed with caution.',
     };
   } catch (err) {
     logErrorContext(err, 'committee/moderator_failed', {}, 'ai');
-    return { grade: 'C', goNoGo: 'caution', consensus: 'Moderator analysis failed. Proceed with caution.' };
+    return {
+      grade: 'C',
+      goNoGo: 'caution',
+      consensus: 'Moderator analysis failed. Proceed with caution.',
+    };
   }
 }
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+export function shouldUseMastraCommitteeText(tools?: Record<string, unknown>): boolean {
+  return !tools;
+}
+
+async function generateCommitteeText(args: {
+  ctx: ToolContext;
+  system: string;
+  prompt: string;
+  maxSteps?: number;
+  tools?: Record<string, unknown>;
+}): Promise<{ text: string; steps: Array<{ toolResults?: Array<{ toolName?: string }> }> }> {
+  const model = resolveChatModel(args.ctx.userSettings, args.ctx.env).model;
+  // Mastra text execution is safe for no-tool personas. When a persona
+  // requires provider-grounded tools (currently the Economist's Google
+  // Search), keep the existing tool-capable path instead of silently
+  // dropping that evidence. This is an explicit fail-closed parity boundary.
+  if (shouldUseMastraCommitteeText(args.tools)) {
+    const result = await runMastraText({
+      task: 'committee',
+      model,
+      system: args.system,
+      prompt: args.prompt,
+      userId: args.ctx.userId,
+      threadId: args.ctx.threadId,
+      ...(args.ctx.signal ? { signal: args.ctx.signal } : {}),
+      ...(args.maxSteps ? { maxOutputTokens: 2000 } : {}),
+    });
+    return { text: result.text, steps: [] };
+  }
+
+  const legacyArgs: Record<string, unknown> = {
+    model,
+    system: args.system,
+    prompt: args.prompt,
+    ...telemetryConfig({ functionId: 'tool.convene_committee' }),
+    ...(args.ctx.signal ? { abortSignal: args.ctx.signal } : {}),
+    ...(args.tools ? { tools: args.tools, stopWhen: stepCountIs(args.maxSteps ?? 3) } : {}),
+  };
+  const result = await generateText(legacyArgs as Parameters<typeof generateText>[0]);
+  return {
+    text: result.text,
+    steps: (result.steps ?? []) as Array<{ toolResults?: Array<{ toolName?: string }> }>,
+  };
+}
 
 /**
  * Parse JSON from LLM output, throwing on failure with the persona name
@@ -305,7 +400,11 @@ function parseJsonOrThrow<T>(text: string, persona: string): T {
 
 function parseJson<T>(text: string): T | null {
   try {
-    const cleaned = text.trim().replace(/^```json\s*/, '').replace(/```$/, '').trim();
+    const cleaned = text
+      .trim()
+      .replace(/^```json\s*/, '')
+      .replace(/```$/, '')
+      .trim();
     return JSON.parse(cleaned);
   } catch {
     return null;

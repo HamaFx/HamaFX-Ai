@@ -9,6 +9,10 @@ import type { PromptResult } from './runner';
 import { isEvalCaseOk } from './eval-metrics';
 
 export interface EvalQualityGateThresholds {
+  /** Minimum number of executed cases; prevents empty/small runs becoming release evidence. */
+  minCaseCount: number;
+  /** Minimum successfully transported cases required by the release gate. */
+  minSuccessfulCaseCount: number;
   minTransportPassRate: number;
   minOverallPassRate: number;
   minAssertionPassRate: number;
@@ -19,6 +23,8 @@ export interface EvalQualityGateThresholds {
 }
 
 export interface EvalQualityGateObserved {
+  caseCount: number;
+  successfulCaseCount: number;
   transportPassRate: number;
   overallPassRate: number;
   assertionPassRate: number;
@@ -37,6 +43,8 @@ export interface EvalQualityGateResult {
 }
 
 export const DEFAULT_EVAL_QUALITY_GATE_THRESHOLDS: EvalQualityGateThresholds = {
+  minCaseCount: 1,
+  minSuccessfulCaseCount: 1,
   minTransportPassRate: 1,
   minOverallPassRate: 0.95,
   minAssertionPassRate: 0.95,
@@ -51,10 +59,13 @@ export function evaluateEvalQualityGate(
   thresholds: EvalQualityGateThresholds = DEFAULT_EVAL_QUALITY_GATE_THRESHOLDS,
 ): EvalQualityGateResult {
   const total = results.length;
+  const successfulCaseCount = results.filter((result) => result.ok).length;
   const transportPassRate = rate(results, (result) => result.ok);
   const overallPassRate = rate(results, isEvalCaseOk);
   const assertionPassRate = rate(results, (result) => result.ok && (result.assertions?.length ?? 0) === 0);
   const observed: EvalQualityGateObserved = {
+    caseCount: total,
+    successfulCaseCount,
     transportPassRate,
     overallPassRate,
     assertionPassRate,
@@ -65,6 +76,12 @@ export function evaluateEvalQualityGate(
   };
 
   const failures: string[] = [];
+  if (total < thresholds.minCaseCount) {
+    failures.push(`case count ${total} is below ${thresholds.minCaseCount}`);
+  }
+  if (successfulCaseCount < thresholds.minSuccessfulCaseCount) {
+    failures.push(`successful case count ${successfulCaseCount} is below ${thresholds.minSuccessfulCaseCount}`);
+  }
   if (total === 0) failures.push('no evaluation cases were executed');
   if (observed.transportPassRate < thresholds.minTransportPassRate) {
     failures.push(`transport pass rate ${formatRate(observed.transportPassRate)} is below ${formatRate(thresholds.minTransportPassRate)}`);
@@ -95,6 +112,8 @@ export function thresholdsFromEnv(
   env: NodeJS.ProcessEnv = process.env,
 ): EvalQualityGateThresholds {
   return {
+    minCaseCount: readInteger(env.EVAL_MIN_CASES, DEFAULT_EVAL_QUALITY_GATE_THRESHOLDS.minCaseCount),
+    minSuccessfulCaseCount: readInteger(env.EVAL_MIN_SUCCESSFUL_CASES, DEFAULT_EVAL_QUALITY_GATE_THRESHOLDS.minSuccessfulCaseCount),
     minTransportPassRate: readRate(env.EVAL_MIN_TRANSPORT_PASS_RATE, DEFAULT_EVAL_QUALITY_GATE_THRESHOLDS.minTransportPassRate),
     minOverallPassRate: readRate(env.EVAL_MIN_OVERALL_PASS_RATE, DEFAULT_EVAL_QUALITY_GATE_THRESHOLDS.minOverallPassRate),
     minAssertionPassRate: readRate(env.EVAL_MIN_ASSERTION_PASS_RATE, DEFAULT_EVAL_QUALITY_GATE_THRESHOLDS.minAssertionPassRate),
@@ -119,6 +138,13 @@ function readRate(value: string | undefined, fallback: number): number {
   if (value === undefined) return fallback;
   const parsed = Number(value);
   if (!Number.isFinite(parsed) || parsed < 0 || parsed > 1) throw new Error(`invalid evaluation rate threshold: ${value}`);
+  return parsed;
+}
+
+function readInteger(value: string | undefined, fallback: number): number {
+  if (value === undefined || value.trim() === '') return fallback;
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 0) throw new Error(`invalid evaluation integer threshold: ${value}`);
   return parsed;
 }
 

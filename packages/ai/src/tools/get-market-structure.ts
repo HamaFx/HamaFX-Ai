@@ -57,33 +57,60 @@ declare module '@kestrel/shared' {
 
 const TAIL = 30;
 
+export interface MarketStructureComputationArgs {
+  symbol: z.infer<typeof SymbolSchema>;
+  tf: z.infer<typeof TimeframeSchema>;
+  count: number;
+  kinds?: z.infer<typeof StructureKindSchema>[];
+  lookback: number;
+  candles: import('@kestrel/shared').Candle[];
+}
+
+/** Pure projection shared by the legacy AI SDK tool and Mastra adapter. */
+export function computeMarketStructureOutput({
+  symbol,
+  tf,
+  kinds,
+  lookback,
+  candles,
+}: MarketStructureComputationArgs): GetMarketStructureOutput {
+  const r = computeStructure({
+    symbol,
+    tf,
+    candles,
+    ...(kinds ? { kinds } : {}),
+    swings: { lookback },
+  });
+
+  return {
+    symbol,
+    tf,
+    bars: r.bars,
+    ...(r.swings ? { swings: r.swings.slice(-TAIL) } : {}),
+    ...(r.events ? { events: r.events.slice(-TAIL) } : {}),
+    ...(r.fvg ? { fvg: r.fvg.filter((z) => !z.mitigated).slice(-TAIL) } : {}),
+    ...(r.orderBlocks
+      ? { orderBlocks: r.orderBlocks.filter((o) => !o.mitigated).slice(-TAIL) }
+      : {}),
+    ...(r.liquidity ? { liquidity: r.liquidity.slice(-TAIL) } : {}),
+    summary: summarize(r),
+  };
+}
+
 export const getMarketStructureTool = tool({
   description:
     'Detect SMC market structure on a (symbol, timeframe) window: swing pivots, break-of-structure / change-of-character events, fair value gaps, order blocks, and liquidity sweeps. Use when the user asks about trend bias, structural breaks, FVGs, OBs, or where stops likely got swept.',
   inputSchema: InputSchema,
   execute: async ({ symbol, tf, count, kinds, lookback }): Promise<GetMarketStructureOutput> => {
     const candles = await getCandles(symbol, tf, { count });
-    const r = computeStructure({
+    return computeMarketStructureOutput({
       symbol,
       tf,
-      candles,
+      count,
       ...(kinds ? { kinds } : {}),
-      swings: { lookback },
+      lookback,
+      candles,
     });
-
-    return {
-      symbol,
-      tf,
-      bars: r.bars,
-      ...(r.swings ? { swings: r.swings.slice(-TAIL) } : {}),
-      ...(r.events ? { events: r.events.slice(-TAIL) } : {}),
-      ...(r.fvg ? { fvg: r.fvg.filter((z) => !z.mitigated).slice(-TAIL) } : {}),
-      ...(r.orderBlocks
-        ? { orderBlocks: r.orderBlocks.filter((o) => !o.mitigated).slice(-TAIL) }
-        : {}),
-      ...(r.liquidity ? { liquidity: r.liquidity.slice(-TAIL) } : {}),
-      summary: summarize(r),
-    };
   },
 });
 

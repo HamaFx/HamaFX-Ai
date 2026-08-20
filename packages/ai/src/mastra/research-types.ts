@@ -1,3 +1,4 @@
+import { TimeframeSchema } from '@kestrel/shared';
 import { z } from 'zod';
 
 import {
@@ -5,10 +6,9 @@ import {
   XAUUSD,
   XauusdCandlesEvidenceSchema,
   XauusdIndicatorsEvidenceSchema,
-  XauusdPriceEvidenceSchema,
   XauusdMacroEvidenceSchema,
+  XauusdPriceEvidenceSchema,
 } from './types';
-import { TimeframeSchema } from '@kestrel/shared';
 
 export const XauusdResearchPacketSchema = z.object({
   packetId: z.string().min(1),

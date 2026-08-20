@@ -1,17 +1,14 @@
-import type { RequestContext } from '@mastra/core/request-context';
-import type { Agent } from '@mastra/core/agent';
 import { metrics } from '@kestrel/shared';
+import type { Agent } from '@mastra/core/agent';
+import type { RequestContext } from '@mastra/core/request-context';
 
 import { telemetryConfig } from '../telemetry';
-import type { MastraGenerationResultLike } from './stats';
-import {
-  requireVerifiedXauusdReport,
-  XauusdReportVerificationError,
-} from './report-verifier';
-import { XauusdResearchReportSchema, type XauusdResearchReport } from './report-types';
-import { patchTimeframeConflictDisclosure } from './report-repair';
-import type { XauusdResearchPacket } from './research-types';
 import { guardXauusdFollowupText } from './followup-safety';
+import { patchTimeframeConflictDisclosure } from './report-repair';
+import { XauusdResearchReportSchema, type XauusdResearchReport } from './report-types';
+import { requireVerifiedXauusdReport, XauusdReportVerificationError } from './report-verifier';
+import type { XauusdResearchPacket } from './research-types';
+import type { MastraGenerationResultLike } from './stats';
 import type { xauusdMastraTools } from './tools';
 import type { XauusdRequestContext } from './types';
 
@@ -69,7 +66,8 @@ export async function generateXauusdReport(
         'evidenceIds must be a non-empty array containing the cited evidence IDs.',
         'sources must be a non-empty array with evidenceId, source, and ISO dataAsOf for each source.',
         'Use the macro evidence for fundamentalSummary when it is present; if macro evidence is partial, explicitly name the missing categories.',
-        'numericClaims must contain every numeric market fact you state, with label, value, evidenceId, and tolerance.',
+        'numericClaims must contain only concrete market values you state: current price, indicator reading, or an observed candle high/low/open/close. Do not place years, counts, offsets, percentages, or arbitrary numbers there. Each entry needs label, value, and evidenceId; omit tolerance because it is optional and defaults to a small rounding window.',
+        'Scenario trigger, entryZone, targets, and invalidation are forward-looking projections, not observed facts. Put them only in the scenario fields, never in numericClaims, and anchor each scenario to the evidence it is derived from through scenario.evidenceIds.',
         'Include at least two scenarios, and every scenario must include trigger, invalidation, risks, and evidenceIds.',
         'List meaningful conflicts between timeframes or evidence in contradictions; do not leave contradictions empty when the packet shows conflicting signals.',
         'Return only the structured object; do not substitute prose for required arrays.',
@@ -102,6 +100,32 @@ function verificationFindings(error: unknown): readonly string[] | null {
       return findings;
     }
   }
+
+  // Mastra's structured-output handler rejects the object before our verifier
+  // runs and wraps the ZodError as `cause` (with `issues`). Treat those issues
+  // as repair findings so the repair loop can retry instead of failing closed
+  // on a single malformed or underspecified structured output.
+  const candidates = [
+    typeof error === 'object' && error !== null
+      ? (error as { issues?: unknown }).issues
+      : undefined,
+    typeof error === 'object' && error !== null && 'cause' in error
+      ? ((error as { cause?: unknown }).cause as { issues?: unknown } | null | undefined)?.issues
+      : undefined,
+  ];
+  for (const issues of candidates) {
+    if (!Array.isArray(issues)) continue;
+    const findings = issues
+      .filter(
+        (issue): issue is { path?: readonly (string | number)[]; message?: unknown } =>
+          typeof issue === 'object' && issue !== null,
+      )
+      .map((issue) => {
+        const path = issue.path?.join('.') || 'report';
+        return `${path}: ${String(issue.message ?? 'invalid')}`;
+      });
+    if (findings.length > 0) return findings;
+  }
   return null;
 }
 
@@ -120,13 +144,27 @@ export async function generateVerifiedXauusdReport(
   let findingsForRepair: readonly string[] = [];
 
   for (let repairAttempt = 0; repairAttempt <= REPORT_REPAIR_LIMIT; repairAttempt += 1) {
-    const result = await generateXauusdReport(
-      agent,
-      repairAttempt === 0 ? prompt : repairPrompt(prompt, findingsForRepair),
-      requestContext,
-      providerId,
-      signal,
-    );
+    let result: XauusdReportGenerationResult;
+    try {
+      result = await generateXauusdReport(
+        agent,
+        repairAttempt === 0 ? prompt : repairPrompt(prompt, findingsForRepair),
+        requestContext,
+        providerId,
+        signal,
+      );
+    } catch (error) {
+      // Structured-output validation can reject the object before the verifier
+      // runs (for example a missing second scenario). Retry it like a verifier
+      // finding instead of surfacing a raw SDK error.
+      const findings = verificationFindings(error);
+      if (!findings || repairAttempt >= REPORT_REPAIR_LIMIT) throw error;
+      findingsForRepair = findings;
+      metrics.increment('mastra_report_repair_total', {
+        tags: { result: 'requested' },
+      });
+      continue;
+    }
 
     try {
       const report = requireVerifiedXauusdReport(result.object, packet);

@@ -1,12 +1,14 @@
 import { metrics } from '@kestrel/shared';
 
 import {
-  XauusdResearchReportSchema,
-  type XauusdResearchReport,
-} from './report-types';
-import { addUnsupportedIds, availableEvidenceIds, verifyNumericClaims } from './report-grounding';
+  addUnsupportedIds,
+  availableEvidenceIds,
+  verifyNarrativeNumericClaims,
+  verifyNumericClaims,
+} from './report-grounding';
 import { verifyReportSafety } from './report-safety';
 import { verifyTemporalDisclosure } from './report-temporal';
+import { XauusdResearchReportSchema, type XauusdResearchReport } from './report-types';
 import type { XauusdResearchPacket } from './research-types';
 
 export interface XauusdReportVerification {
@@ -27,8 +29,14 @@ export class XauusdReportVerificationError extends Error {
 
 function verificationReason(findings: readonly string[]): string {
   if (findings.some((finding) => /numericClaims|evidence ID/.test(finding))) return 'grounding';
-  if (findings.some((finding) => /timestamp|stale|outdated|freshness/.test(finding))) return 'temporal';
-  if (findings.some((finding) => /scenario|confidence|blocked|missing-data|quality|timeframe/.test(finding))) return 'safety';
+  if (findings.some((finding) => /timestamp|stale|outdated|freshness/.test(finding)))
+    return 'temporal';
+  if (
+    findings.some((finding) =>
+      /scenario|confidence|blocked|missing-data|quality|timeframe/.test(finding),
+    )
+  )
+    return 'safety';
   return 'schema';
 }
 
@@ -49,7 +57,9 @@ export function verifyXauusdReport(
 ): XauusdReportVerification {
   const parsed = XauusdResearchReportSchema.safeParse(candidate);
   if (!parsed.success) {
-    const findings = parsed.error.issues.map((issue) => `${issue.path.join('.') || 'report'}: ${issue.message}`);
+    const findings = parsed.error.issues.map(
+      (issue) => `${issue.path.join('.') || 'report'}: ${issue.message}`,
+    );
     emitVerificationMetrics(false, findings);
     return { ok: false, report: null, findings };
   }
@@ -58,27 +68,24 @@ export function verifyXauusdReport(
   const findings: string[] = [];
   const available = availableEvidenceIds(packet);
   addUnsupportedIds(report.evidenceIds, available, findings, 'report.evidenceIds');
-  report.sources.forEach((source) => addUnsupportedIds(
-    [source.evidenceId],
-    available,
-    findings,
-    'report.sources',
-  ));
-  report.numericClaims.forEach((claim) => addUnsupportedIds(
-    [claim.evidenceId],
-    available,
-    findings,
-    'report.numericClaims',
-  ));
-  report.scenarios.forEach((scenario, index) => addUnsupportedIds(
-    scenario.evidenceIds,
-    available,
-    findings,
-    `report.scenarios[${index}].evidenceIds`,
-  ));
+  report.sources.forEach((source) =>
+    addUnsupportedIds([source.evidenceId], available, findings, 'report.sources'),
+  );
+  report.numericClaims.forEach((claim) =>
+    addUnsupportedIds([claim.evidenceId], available, findings, 'report.numericClaims'),
+  );
+  report.scenarios.forEach((scenario, index) =>
+    addUnsupportedIds(
+      scenario.evidenceIds,
+      available,
+      findings,
+      `report.scenarios[${index}].evidenceIds`,
+    ),
+  );
 
   verifyReportSafety(report, packet, findings);
   verifyNumericClaims(report, packet, findings);
+  verifyNarrativeNumericClaims(report, findings);
   verifyTemporalDisclosure(report, packet, findings);
 
   const ok = findings.length === 0;

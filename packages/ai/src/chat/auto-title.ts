@@ -20,13 +20,15 @@
 // stream because the response is already closed by the time we reach
 // this code.
 
+import type { UserSettingsRow } from '@kestrel/db/schema';
 import { pickAiEnv } from '@kestrel/shared';
 import { logErrorContext } from '@kestrel/shared/logger';
-import type { UserSettingsRow } from '@kestrel/db/schema';
-import type { RunChatArgs } from '../types';
+
+import { runMastraBackgroundText } from '../mastra';
 import { deriveTitleModel } from '../model';
 import { getThread, listMessages, recordTelemetry, updateThreadTitle } from '../persistence';
 import { generateTitle } from '../title';
+import type { RunChatArgs } from '../types';
 
 /**
  * Slow tail of `onFinish` (Phase 2 hardening §8). Runs the auto-title
@@ -51,17 +53,16 @@ export async function runAutoTitleBackground(args: {
     if (firstUser.length === 0 || firstAssistant.length === 0) return;
 
     const titleStartedAt = Date.now();
-    const titleModelId =
-      deriveTitleModel(userSettings, env) ?? env.AI_DEFAULT_MODEL;
-    const titleArgs: Parameters<typeof generateTitle>[0] = {
+    const titleModelId = deriveTitleModel(userSettings, env) ?? env.AI_DEFAULT_MODEL;
+    const titleResult = await runMastraTitle({
+      userId,
       threadId,
       firstUser,
       firstAssistant,
-      titleModelId,
+      userSettings,
       env: pickAiEnv(env),
-    };
-    if (signal) titleArgs.signal = signal;
-    const titleResult = await generateTitle(titleArgs);
+      signal,
+    });
     await updateThreadTitle(userId, threadId, titleResult.title, titleResult.source);
     const kind: 'title_generated' | 'title_skipped_budget' | 'title_failed' =
       titleResult.source === 'llm'
@@ -82,5 +83,45 @@ export async function runAutoTitleBackground(args: {
     });
   } catch (err) {
     logErrorContext(err, 'auto-title_background_failed', { threadId }, 'ai');
+  }
+}
+
+async function runMastraTitle(args: {
+  userId: string;
+  threadId: string;
+  firstUser: string;
+  firstAssistant: string;
+  userSettings: UserSettingsRow;
+  env: Parameters<typeof runMastraBackgroundText>[0]['env'];
+  signal: AbortSignal | null;
+}): Promise<Awaited<ReturnType<typeof generateTitle>>> {
+  try {
+    const result = await runMastraBackgroundText({
+      userId: args.userId,
+      threadId: args.threadId,
+      task: 'title',
+      prompt: `${args.firstUser}\n\n---\n\n${args.firstAssistant}`,
+      system:
+        'Return a concise 3–7 word title. No quotes, punctuation, greetings, or unsupported claims.',
+      settings: args.userSettings,
+      env: args.env,
+      ...(args.signal ? { signal: args.signal } : {}),
+    });
+    const cleaned = result.text
+      .trim()
+      .replace(/^['"`]|['"`]$/g, '')
+      .trim();
+    const title = Array.from(cleaned || args.firstUser)
+      .slice(0, 60)
+      .join('');
+    return {
+      title,
+      source: 'llm',
+      inputTokens: result.inputTokens,
+      outputTokens: result.outputTokens,
+      latencyMs: result.latencyMs,
+    };
+  } catch {
+    return { title: args.firstUser.trim().slice(0, 60), source: 'fallback', reason: 'error' };
   }
 }

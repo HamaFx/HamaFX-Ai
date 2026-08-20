@@ -1,121 +1,115 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
+import { POST } from '@/app/api/chat/route';
+
 const {
   mockEnqueueAnalysisJob,
   mockGetThread,
-  mockGetUserWithSettings,
-  mockRunChat,
   mockWithRateLimit,
-  mockMastraEnabled,
   mockRunMastraXauusdChat,
-  mockShadowEnabled,
-  mockAttachMastraShadow,
-  mockAttachLegacyShadow,
+  mockRunMastraCanonicalChatService,
+  mockRunMastraModeChat,
+  mockMastraCanonicalResponse,
+  mockMastraChatResponse,
+  mockMastraModeResponse,
 } = vi.hoisted(() => ({
   mockEnqueueAnalysisJob: vi.fn(),
   mockGetThread: vi.fn(),
-  mockGetUserWithSettings: vi.fn(),
-  mockRunChat: vi.fn(),
   mockWithRateLimit: vi.fn(),
-  mockMastraEnabled: vi.fn(),
   mockRunMastraXauusdChat: vi.fn(),
-  mockShadowEnabled: vi.fn(),
-  mockAttachMastraShadow: vi.fn((response: Response) => response),
-  mockAttachLegacyShadow: vi.fn((response: Response) => response),
+  mockRunMastraCanonicalChatService: vi.fn(),
+  mockRunMastraModeChat: vi.fn(),
+  mockMastraCanonicalResponse: vi.fn(() => new Response('canonical', { status: 200 })),
+  mockMastraChatResponse: vi.fn(() => new Response('xauusd', { status: 200 })),
+  mockMastraModeResponse: vi.fn(() => new Response('mode', { status: 200 })),
 }));
 
-vi.mock('@sentry/nextjs', () => ({
-  captureException: vi.fn(),
-}));
+vi.mock('@sentry/nextjs', () => ({ captureException: vi.fn() }));
 
 vi.mock('@/lib/api', () => ({
-  errorResponse: vi.fn((err: unknown) => Response.json({ error: { code: 'TEST_ERROR', message: String(err) } }, { status: 500 })),
+  errorResponse: vi.fn((error: unknown) =>
+    Response.json({ error: { code: 'TEST_ERROR', message: String(error) } }, { status: 500 }),
+  ),
   parseJsonBody: async (req: Request, schema: z.ZodTypeAny) => schema.parse(await req.json()),
-  withAuth: (handler: (req: Request, ctx: { user: { userId: string } }) => Promise<Response>) =>
-    (req: Request) => handler(req, { user: { userId: 'user-1' } }),
+  withAuth:
+    (handler: (req: Request, ctx: { user: { userId: string } }) => Promise<Response>) =>
+    (req: Request) =>
+      handler(req, { user: { userId: 'user-1' } }),
 }));
 
 vi.mock('@/lib/env', () => ({
   getServerEnv: () => ({
-    AI_DEFAULT_MODEL: 'google/gemini-2.5-flash',
+    AI_DEFAULT_MODEL: 'google/gemini-3.6-flash',
     MAX_DAILY_USD: 5,
     MAX_TOOL_ITERATIONS: 6,
   }),
 }));
 
 vi.mock('@/lib/logger', () => ({
-  createRequestLogger: () => ({
-    error: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-  }),
+  createRequestLogger: () => ({ error: vi.fn(), info: vi.fn(), warn: vi.fn() }),
 }));
 
 vi.mock('@/lib/services/mastra-chat-routing', () => ({
-  isMastraXauusdChatEnabled: mockMastraEnabled,
-  decideMastraXauusdChatRoute: (args: { prompt: string; featureEnabled: boolean; hasModelOverride?: boolean }) =>
-    args.featureEnabled && /gold|xauusd/i.test(args.prompt) && !args.hasModelOverride
-      ? { route: 'mastra', reason: 'enabled' }
-      : { route: 'legacy', reason: args.featureEnabled ? 'not-xauusd' : 'disabled' },
+  isMastraPromptUnsafe: (prompt: string) => /buy|sell|system:\s*ignore/i.test(prompt),
+  extractMastraSymbol: (prompt: string) => {
+    if (/xauusd|gold/i.test(prompt)) return 'XAUUSD';
+    if (/eurusd/i.test(prompt)) return 'EURUSD';
+    return null;
+  },
+  isMastraSymbolCandidate: () => true,
+  isMastraXauusdCandidate: (prompt: string) => /xauusd|gold/i.test(prompt),
+  isMastraXauusdFollowupCandidate: () => false,
+  mastraXauusdChatKind: () => 'research',
 }));
-vi.mock('@/lib/services/mastra-shadow-routing', () => ({
-  isMastraXauusdShadowEnabled: mockShadowEnabled,
-  decideMastraXauusdShadow: (args: { prompt: string; featureEnabled: boolean; analysisMode: string; hasModelOverride: boolean; mastraAlreadyAttempted: boolean }) =>
-    args.featureEnabled && args.analysisMode === 'single' && !args.hasModelOverride && !args.mastraAlreadyAttempted && /gold|xauusd/i.test(args.prompt)
-      ? { enabled: true, reason: 'eligible' }
-      : { enabled: false, reason: args.featureEnabled ? 'not-xauusd' : 'disabled' },
-}));
-vi.mock('@/lib/services/mastra-shadow-stream', () => ({
-  attachMastraShadowToResponse: mockAttachMastraShadow,
-  attachLegacyShadowToMastraResponse: mockAttachLegacyShadow,
-}));
+
 vi.mock('@/lib/services/mastra-chat', () => ({
   runMastraXauusdChat: mockRunMastraXauusdChat,
+}));
+vi.mock('@/lib/services/mastra-canonical-chat', () => ({
+  runMastraCanonicalChatService: mockRunMastraCanonicalChatService,
+}));
+vi.mock('@/lib/services/mastra-mode', () => ({
+  runMastraModeChat: mockRunMastraModeChat,
+}));
+vi.mock('@/lib/services/mastra-canonical-response', () => ({
+  mastraCanonicalResponse: mockMastraCanonicalResponse,
+}));
+vi.mock('@/lib/services/mastra-chat-response', () => ({
+  mastraChatResponse: mockMastraChatResponse,
+}));
+vi.mock('@/lib/services/mastra-mode-response', () => ({
+  mastraModeResponse: mockMastraModeResponse,
+}));
+vi.mock('@/lib/services/mastra-report-context', () => ({
+  extractLatestMastraReport: vi.fn(() => null),
+  mayReferToMastraReport: vi.fn(() => false),
 }));
 
 vi.mock('@/lib/services/api-boundary', () => ({
   AnalysisQueuedEventSchema: { parse: (value: unknown) => value },
-  BudgetExceededError: class BudgetExceededError extends Error {},
-  ChatStreamEventSchema: { safeParse: (value: unknown) => ({ success: true, data: value }) },
+  BudgetExceededError: class BudgetExceededError extends Error {
+    spent = 5;
+    max = 5;
+  },
   extractUserMessageText: (message: { parts?: Array<{ type?: string; text?: string }> }) =>
-    (message.parts ?? []).filter((part) => part.type === 'text').map((part) => part.text ?? '').join('\n'),
+    (message.parts ?? [])
+      .filter((part) => part.type === 'text')
+      .map((part) => part.text ?? '')
+      .join('\n'),
   getThread: mockGetThread,
-  listMessages: vi.fn(),
-  getUserWithSettings: mockGetUserWithSettings,
-  pickAiEnv: (env: unknown) => env,
-  ProgressTracker: class ProgressTracker {},
-  providerUnavailable: (message: string) => new Error(message),
-  resolveMode: (mode: string) => mode === 'auto' ? 'single' : mode,
-  runChat: mockRunChat,
-  runMultiAgentChat: vi.fn(),
+  listMessages: vi.fn().mockResolvedValue([]),
+  resolveMode: (mode: string) => (mode === 'auto' ? 'single' : mode),
   enqueueAnalysisJob: mockEnqueueAnalysisJob,
-  flushLangfuse: vi.fn().mockResolvedValue(undefined),
   traceIdStorage: { getStore: () => 'trace-route-1' },
-  withRateLimit: mockWithRateLimit,
-  metrics: { increment: vi.fn() },
   withDiagnostics: async (_userId: string, _threadId: string, fn: () => Promise<Response>) => fn(),
+  withRateLimit: mockWithRateLimit,
 }));
-
-import { POST } from '@/app/api/chat/route';
-
-const settings = {
-  aiApiKeys: null,
-  aiFallbackChain: [],
-  chatModel: null,
-  defaultSymbol: 'XAUUSD',
-  timezone: 'UTC',
-  language: 'en',
-  maxDailyUsd: 5,
-};
 
 function request(body: Record<string, unknown>): Request {
   return new Request('http://localhost/api/chat', {
     method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-request-id': 'request-route-1',
-    },
+    headers: { 'content-type': 'application/json', 'x-request-id': 'request-route-1' },
     body: JSON.stringify(body),
   });
 }
@@ -123,253 +117,193 @@ function request(body: Record<string, unknown>): Request {
 function body(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
     threadId: '11111111-1111-4111-8111-111111111111',
-    messages: [{
-      id: 'user-message-1',
-      role: 'user',
-      content: 'Analyze XAUUSD',
-      parts: [{ type: 'text', text: 'Analyze XAUUSD' }],
-    }],
+    messages: [
+      {
+        id: 'user-message-1',
+        role: 'user',
+        content: 'Analyze XAUUSD',
+        parts: [{ type: 'text', text: 'Analyze XAUUSD' }],
+      },
+    ],
     ...overrides,
   };
 }
 
-describe('POST /api/chat boundary', () => {
+describe('POST /api/chat Mastra boundary', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockMastraEnabled.mockResolvedValue(false);
-    mockShadowEnabled.mockResolvedValue(false);
     mockWithRateLimit.mockResolvedValue({ allowed: true, count: 1, limit: 30 });
     mockGetThread.mockResolvedValue({ id: 'thread-1', userId: 'user-1' });
-  });
-
-  it('routes an eligible XAUUSD turn to Mastra when the rollout flag is enabled', async () => {
-    mockMastraEnabled.mockResolvedValue(true);
-    mockRunMastraXauusdChat.mockResolvedValue({
-      runId: 'mastra-run-1',
-      modelId: 'mistral-small-latest',
-      providerId: 'mistral',
-      observedCost: 0.001,
-      packet: { packetId: 'packet-1', status: 'ready', dataQuality: 'partial' },
-      report: null,
-      result: { text: 'Grounded gold analysis' },
-    });
-
-    const response = await POST(request(body()), { params: Promise.resolve(undefined) });
-
-    expect(response.status).toBe(200);
-    expect(response.headers.get('content-type')).toContain('text/event-stream');
-    expect(await response.text()).toContain('Grounded gold analysis');
-    expect(mockRunMastraXauusdChat).toHaveBeenCalledWith(expect.objectContaining({
-      userId: 'user-1',
-      threadId: '11111111-1111-4111-8111-111111111111',
-      prompt: 'Analyze XAUUSD',
-    }));
-    expect(mockRunChat).not.toHaveBeenCalled();
-  });
-
-  it('gives the Mastra path a hard route timeout so a stalled provider falls back instead of hanging', async () => {
-    mockMastraEnabled.mockResolvedValue(true);
-    mockRunMastraXauusdChat.mockResolvedValue({
-      runId: 'mastra-run-1',
-      modelId: 'mistral-small-latest',
-      providerId: 'mistral',
-      observedCost: 0.001,
-      packet: { packetId: 'packet-1', status: 'ready', dataQuality: 'partial' },
-      report: null,
-      result: { text: 'Grounded gold analysis' },
-    });
-
-    await POST(request(body()), { params: Promise.resolve(undefined) });
-
-    const signal = mockRunMastraXauusdChat.mock.calls[0]?.[0]?.signal;
-    expect(signal).toBeInstanceOf(AbortSignal);
-    expect(signal?.aborted).toBe(false);
-  });
-
-  it('routes Auto-mode XAUUSD turns to Mastra so the default UI mode is reviewable', async () => {
-    mockMastraEnabled.mockResolvedValue(true);
-    mockRunMastraXauusdChat.mockResolvedValue({
-      runId: 'mastra-run-auto',
-      modelId: 'mistral-small-latest',
-      providerId: 'mistral',
-      observedCost: 0.001,
-      packet: { packetId: 'packet-auto', status: 'ready', dataQuality: 'complete' },
-      report: null,
-      result: { text: 'Auto Mastra analysis' },
-    });
-
-    const response = await POST(
-      request(body({ analysisMode: 'auto' })),
-      { params: Promise.resolve(undefined) },
-    );
-
-    expect(response.status).toBe(200);
-    expect(await response.text()).toContain('Auto Mastra analysis');
-    expect(mockRunMastraXauusdChat).toHaveBeenCalledWith(expect.objectContaining({
-      prompt: 'Analyze XAUUSD',
-    }));
-    expect(mockRunChat).not.toHaveBeenCalled();
-  });
-
-  it('runs a non-persisting legacy comparison when Mastra is user-facing', async () => {
-    mockMastraEnabled.mockResolvedValue(true);
-    mockShadowEnabled.mockResolvedValue(true);
-    mockRunMastraXauusdChat.mockResolvedValue({
-      runId: 'mastra-run-1',
-      modelId: 'mistral-small-latest',
-      providerId: 'mistral',
-      observedCost: 0.001,
-      packet: { packetId: 'packet-1', status: 'ready', dataQuality: 'partial' },
-      report: null,
-      result: { text: 'Grounded gold analysis' },
-    });
-
-    const response = await POST(request(body()), { params: Promise.resolve(undefined) });
-
-    expect(response.status).toBe(200);
-    expect(mockAttachLegacyShadow).toHaveBeenCalledWith(expect.any(Response), expect.objectContaining({
-      userId: 'user-1',
-      threadId: '11111111-1111-4111-8111-111111111111',
-      prompt: 'Analyze XAUUSD',
-      mastraText: 'Grounded gold analysis',
-    }));
-    expect(mockAttachMastraShadow).not.toHaveBeenCalled();
-  });
-
-  it('falls back to the legacy agent when Mastra fails', async () => {
-    mockMastraEnabled.mockResolvedValue(true);
-    mockRunMastraXauusdChat.mockRejectedValue(new Error('provider unavailable'));
-    mockRunChat.mockResolvedValue({
-      toUIMessageStreamResponse: () => new Response('legacy-stream', { status: 200 }),
-    });
-
-    const response = await POST(request(body()), { params: Promise.resolve(undefined) });
-
-    expect(response.status).toBe(200);
-    expect(await response.text()).toBe('legacy-stream');
-    expect(mockRunMastraXauusdChat).toHaveBeenCalled();
-    expect(mockRunChat).toHaveBeenCalled();
-  });
-
-  it('keeps non-XAUUSD turns on the legacy agent even when Mastra is enabled', async () => {
-    mockMastraEnabled.mockResolvedValue(true);
-    mockRunChat.mockResolvedValue({
-      toUIMessageStreamResponse: () => new Response('legacy-stream', { status: 200 }),
-    });
-
-    const response = await POST(request(body({
-      messages: [{
-        id: 'user-message-1',
-        role: 'user',
-        content: 'Analyse EURUSD',
-        parts: [{ type: 'text', text: 'Analyse EURUSD' }],
-      }],
-    })), { params: Promise.resolve(undefined) });
-
-    expect(response.status).toBe(200);
-    expect(mockRunMastraXauusdChat).not.toHaveBeenCalled();
-    expect(mockRunChat).toHaveBeenCalled();
-  });
-
-  it('attaches an opt-in Mastra shadow comparison without replacing the legacy response', async () => {
-    mockShadowEnabled.mockResolvedValue(true);
-    mockRunChat.mockResolvedValue({
-      toUIMessageStreamResponse: () => new Response('legacy-stream', { status: 200 }),
-    });
-
-    const response = await POST(request(body()), { params: Promise.resolve(undefined) });
-
-    expect(response.status).toBe(200);
-    expect(await response.text()).toBe('legacy-stream');
-    expect(mockAttachMastraShadow).toHaveBeenCalledWith(expect.any(Response), {
-      userId: 'user-1',
-      threadId: '11111111-1111-4111-8111-111111111111',
-      prompt: 'Analyze XAUUSD',
-    });
-    expect(mockRunMastraXauusdChat).not.toHaveBeenCalled();
-  });
-
-  it('does not shadow a request after Mastra was already attempted', async () => {
-    mockMastraEnabled.mockResolvedValue(true);
-    mockShadowEnabled.mockResolvedValue(true);
-    mockRunMastraXauusdChat.mockRejectedValue(new Error('provider unavailable'));
-    mockRunChat.mockResolvedValue({
-      toUIMessageStreamResponse: () => new Response('legacy-stream', { status: 200 }),
-    });
-
-    const response = await POST(request(body()), { params: Promise.resolve(undefined) });
-
-    expect(response.status).toBe(200);
-    expect(mockAttachMastraShadow).not.toHaveBeenCalled();
-  });
-
-  it('hands an authenticated single-mode turn to runChat with server-owned context, by default', async () => {
-    mockWithRateLimit.mockResolvedValue({ allowed: true, count: 1, limit: 30 });
-    mockGetThread.mockResolvedValue({ id: 'thread-1', userId: 'user-1' });
-    mockGetUserWithSettings.mockResolvedValue({ settings, user: { name: 'Ada', email: 'ada@example.com' } });
-    mockRunChat.mockResolvedValue({
-      toUIMessageStreamResponse: () => new Response('ui-stream', { status: 200 }),
-    });
-
-    const response = await POST(request(body()), { params: Promise.resolve(undefined) });
-
-    expect(response.status).toBe(200);
-    expect(await response.text()).toBe('ui-stream');
-    expect(mockGetThread).toHaveBeenCalledWith('user-1', '11111111-1111-4111-8111-111111111111');
-    expect(mockRunChat).toHaveBeenCalledWith(expect.objectContaining({
-      threadId: '11111111-1111-4111-8111-111111111111',
-      userId: 'user-1',
-      requestId: 'request-route-1',
-      userMessage: expect.objectContaining({ role: 'user' }),
-    }));
-  });
-
-  it('queues Full mode with authoritative-history semantics and trace correlation', async () => {
-    mockWithRateLimit.mockResolvedValue({ allowed: true, count: 1, limit: 30 });
-    mockGetThread.mockResolvedValue({ id: 'thread-1', userId: 'user-1' });
-    mockGetUserWithSettings.mockResolvedValue({ settings, user: { name: 'Ada', email: 'ada@example.com' } });
     mockEnqueueAnalysisJob.mockResolvedValue({ id: 'job-1' });
+    mockRunMastraXauusdChat.mockResolvedValue({
+      result: { text: 'xauusd result' },
+      runId: 'run-1',
+      modelId: 'google:gemini-3.6-flash',
+      providerId: 'google',
+      report: null,
+      packet: { status: 'ready', dataQuality: 'complete', packetId: 'packet-1' },
+      observedCost: 0.001,
+    });
+    mockRunMastraCanonicalChatService.mockResolvedValue({
+      text: 'canonical result',
+      runId: 'run-2',
+      messageId: 'message-2',
+    });
+    mockRunMastraModeChat.mockResolvedValue({
+      finalText: 'mode result',
+      mode: 'standard',
+      symbol: 'EURUSD',
+      runId: 'run-3',
+      packet: { packetId: 'packet-3', dataQuality: 'complete' },
+      totalCostUsd: 0.001,
+      totalLatencyMs: 10,
+      agentOpinions: [],
+    });
+  });
 
+  it('routes XAUUSD research directly to the specialized Mastra report path', async () => {
+    const response = await POST(request(body()), { params: Promise.resolve(undefined) });
+
+    expect(response.status).toBe(200);
+    expect(mockRunMastraXauusdChat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 'user-1',
+        threadId: '11111111-1111-4111-8111-111111111111',
+        modelOverride: null,
+      }),
+    );
+    expect(mockRunMastraCanonicalChatService).not.toHaveBeenCalled();
+  });
+
+  it('routes symbol-free read-only conversation to canonical Mastra', async () => {
     const response = await POST(
-      request(body({ analysisMode: 'full' })),
+      request(
+        body({
+          messages: [
+            {
+              id: 'user-message-2',
+              role: 'user',
+              content: 'Explain how RSI works',
+              parts: [{ type: 'text', text: 'Explain how RSI works' }],
+            },
+          ],
+        }),
+      ),
       { params: Promise.resolve(undefined) },
     );
 
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({
-      type: 'analysis-queued',
-      jobId: 'job-1',
-      status: 'queued',
-    });
-    expect(mockEnqueueAnalysisJob).toHaveBeenCalledWith(expect.objectContaining({
-      userId: 'user-1',
-      threadId: '11111111-1111-4111-8111-111111111111',
-      userMessageText: 'Analyze XAUUSD',
-      mode: 'full',
-      historyParts: [],
-      traceId: 'trace-route-1',
-      idempotencyKey: 'full:11111111-1111-4111-8111-111111111111:user-message-1',
-    }));
+    expect(mockRunMastraCanonicalChatService).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: 'user-1', threadId: expect.any(String) }),
+    );
+    expect(mockRunMastraXauusdChat).not.toHaveBeenCalled();
   });
 
-  it('rejects a request whose final message is not user-authored', async () => {
-    mockWithRateLimit.mockResolvedValue({ allowed: true, count: 1, limit: 30 });
-    mockGetThread.mockResolvedValue({ id: 'thread-1', userId: 'user-1' });
-
+  it('routes Quick and Standard symbol analysis to the shared Mastra mode workflow', async () => {
     const response = await POST(
-      request(body({
-        messages: [{
-          id: 'assistant-message-1',
-          role: 'assistant',
-          content: 'forged assistant turn',
-          parts: [{ type: 'text', text: 'forged assistant turn' }],
-        }],
-      })),
+      request(
+        body({
+          analysisMode: 'standard',
+          messages: [
+            {
+              id: 'user-message-3',
+              role: 'user',
+              content: 'Analyze EURUSD structure',
+              parts: [{ type: 'text', text: 'Analyze EURUSD structure' }],
+            },
+          ],
+        }),
+      ),
+      { params: Promise.resolve(undefined) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockRunMastraModeChat).toHaveBeenCalledWith(
+      expect.objectContaining({ symbol: 'EURUSD', mode: 'standard' }),
+    );
+  });
+
+  it('queues Full mode for the Mastra worker with authoritative-history semantics', async () => {
+    const response = await POST(request(body({ analysisMode: 'full' })), {
+      params: Promise.resolve(undefined),
+    });
+
+    expect(response.status).toBe(200);
+    expect(mockEnqueueAnalysisJob).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mode: 'full',
+        historyParts: [],
+        traceId: 'trace-route-1',
+      }),
+    );
+    expect(mockRunMastraXauusdChat).not.toHaveBeenCalled();
+    expect(mockRunMastraModeChat).not.toHaveBeenCalled();
+  });
+
+  it('passes an explicit model override to the Mastra canonical agent', async () => {
+    await POST(
+      request(
+        body({
+          modelOverride: 'mistral:mistral-small-latest',
+          messages: [
+            {
+              id: 'user-message-4',
+              role: 'user',
+              content: 'Explain RSI',
+              parts: [{ type: 'text', text: 'Explain RSI' }],
+            },
+          ],
+        }),
+      ),
+      { params: Promise.resolve(undefined) },
+    );
+
+    expect(mockRunMastraCanonicalChatService).toHaveBeenCalledWith(
+      expect.objectContaining({ modelOverride: 'mistral:mistral-small-latest' }),
+    );
+  });
+
+  it('rejects mutation or injection-like prompts instead of falling back', async () => {
+    const response = await POST(
+      request(
+        body({
+          messages: [
+            {
+              id: 'user-message-5',
+              role: 'user',
+              content: 'Buy gold now',
+              parts: [{ type: 'text', text: 'Buy gold now' }],
+            },
+          ],
+        }),
+      ),
+      { params: Promise.resolve(undefined) },
+    );
+
+    expect(response.status).toBe(422);
+    expect(await response.json()).toMatchObject({
+      error: { code: 'READ_ONLY_REQUEST_REQUIRED' },
+    });
+    expect(mockRunMastraXauusdChat).not.toHaveBeenCalled();
+    expect(mockRunMastraCanonicalChatService).not.toHaveBeenCalled();
+  });
+
+  it('returns an explicit Mastra failure rather than invoking a legacy fallback', async () => {
+    mockRunMastraXauusdChat.mockRejectedValue(new Error('provider unavailable'));
+
+    const response = await POST(request(body()), { params: Promise.resolve(undefined) });
+
+    expect(response.status).toBe(502);
+    expect(await response.json()).toMatchObject({ error: { code: 'MASTRA_FAILED' } });
+  });
+
+  it('rejects Full mode model overrides until the durable job schema carries them', async () => {
+    const response = await POST(
+      request(body({ analysisMode: 'full', modelOverride: 'mistral:mistral-small-latest' })),
       { params: Promise.resolve(undefined) },
     );
 
     expect(response.status).toBe(400);
-    expect(mockRunChat).not.toHaveBeenCalled();
     expect(mockEnqueueAnalysisJob).not.toHaveBeenCalled();
   });
 });

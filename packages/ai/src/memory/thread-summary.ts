@@ -38,16 +38,17 @@
 import { createHash } from 'node:crypto';
 
 import { schema } from '@kestrel/db';
-import { getDb } from '../db';
 import type { ServerEnv } from '@kestrel/shared';
 import { generateText } from 'ai';
 import { and, desc, eq } from 'drizzle-orm';
 
 import { dailySpendUsd } from '../cost';
+import { getDb } from '../db';
+import { runMastraText } from '../mastra/text-runner';
 import { resolveModel } from '../model';
-import { maybeGetToolContext } from '../tool-context';
-import { telemetryConfig } from '../telemetry';
 import { getThread, type DbMessage } from '../persistence';
+import { telemetryConfig } from '../telemetry';
+import { maybeGetToolContext } from '../tool-context';
 
 const KEEP_VERBATIM = 12;
 const SUMMARISE_AFTER = 30;
@@ -102,9 +103,7 @@ export async function compactThread(args: {
   const { threadId, userId, history, env } = args;
   const withoutPersistedSummaries = history.filter((message) => !isSummaryMessage(message.parts));
   const hasPersistedSummary = withoutPersistedSummaries.length !== history.length;
-  const persisted = hasPersistedSummary
-    ? await loadLatestSummary(userId, threadId)
-    : null;
+  const persisted = hasPersistedSummary ? await loadLatestSummary(userId, threadId) : null;
 
   if (withoutPersistedSummaries.length < SUMMARISE_AFTER) {
     return {
@@ -173,8 +172,11 @@ interface PersistedSummary {
   messageCount: number | undefined;
 }
 
-async function loadLatestSummary(userId: string, threadId: string): Promise<PersistedSummary | null> {
-  if (!await getThread(userId, threadId)) return null;
+async function loadLatestSummary(
+  userId: string,
+  threadId: string,
+): Promise<PersistedSummary | null> {
+  if (!(await getThread(userId, threadId))) return null;
   const rows = await getDb()
     .select()
     .from(schema.chatMessages)
@@ -188,8 +190,14 @@ async function loadLatestSummary(userId: string, threadId: string): Promise<Pers
   return null;
 }
 
-async function saveSummary(userId: string, threadId: string, body: string, digest: string, messageCount?: number): Promise<void> {
-  if (!await getThread(userId, threadId)) throw new Error(`thread not found: ${threadId}`);
+async function saveSummary(
+  userId: string,
+  threadId: string,
+  body: string,
+  digest: string,
+  messageCount?: number,
+): Promise<void> {
+  if (!(await getThread(userId, threadId))) throw new Error(`thread not found: ${threadId}`);
   await getDb()
     .insert(schema.chatMessages)
     .values({
@@ -211,7 +219,9 @@ function isSummaryMessage(parts: unknown): boolean {
   return readSummaryMeta(parts) !== null;
 }
 
-function readSummaryMeta(parts: unknown): { digest: string; messageCount: number | undefined } | null {
+function readSummaryMeta(
+  parts: unknown,
+): { digest: string; messageCount: number | undefined } | null {
   if (!Array.isArray(parts)) return null;
   for (const p of parts) {
     if (
@@ -261,15 +271,31 @@ async function generateSummary(
     .slice(0, 8_000);
 
   try {
-    const callArgs: Parameters<typeof generateText>[0] = {
-      model: resolveModel(compactionModelId, env, ctx?.userId),
-      system:
-        "You compress chat history into a 4-bullet system note for a trading copilot. Capture: (1) the symbol(s) under discussion, (2) the user's active question/setup, (3) any prior facts or numbers cited, (4) any open follow-up. No greetings, no filler.",
-      prompt: transcript,
-      ...telemetryConfig({ functionId: 'chat.compaction' }),
-    };
-    if (signal) callArgs.abortSignal = signal;
-    const { text } = await generateText(callArgs);
+    const model = resolveModel(compactionModelId, env, ctx?.userId);
+    const system =
+      "You compress chat history into a 4-bullet system note for a trading copilot. Capture: (1) the symbol(s) under discussion, (2) the user's active question/setup, (3) any prior facts or numbers cited, (4) any open follow-up. No greetings, no filler.";
+    const text =
+      typeof model !== 'string'
+        ? (
+            await runMastraText({
+              task: 'thread-compaction',
+              model,
+              system,
+              prompt: transcript,
+              ...(ctx?.userId ? { userId: ctx.userId } : {}),
+              ...(signal ? { signal } : {}),
+              maxOutputTokens: 600,
+            })
+          ).text
+        : (
+            await generateText({
+              model,
+              system,
+              prompt: transcript,
+              ...telemetryConfig({ functionId: 'chat.compaction' }),
+              ...(signal ? { abortSignal: signal } : {}),
+            })
+          ).text;
     const cleaned = text.trim();
     return cleaned.length > 0 ? cleaned : deterministicSummary(older);
   } catch {

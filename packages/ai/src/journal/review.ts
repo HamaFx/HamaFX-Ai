@@ -19,22 +19,21 @@
 // deterministic in format (markdown) and scoped to the entry + recent
 // journal stats so the model can compare this trade to the user's baseline.
 
-import { generateText } from 'ai';
-import type { JournalEntry, JournalStats, ServerEnv } from '@kestrel/shared';
 import type { UserSettingsRow } from '@kestrel/db/schema';
+import type { JournalEntry, JournalStats, ServerEnv } from '@kestrel/shared';
 import { createCategorizedLogger } from '@kestrel/shared/logger';
 
-import { computeStats } from './persistence';
-import { resolveChatModel } from '../model';
-import { telemetryConfig } from '../telemetry';
 import {
-  tryReserveBudget,
   applyBudgetDelta,
+  DEFAULT_MAX_DAILY_USD,
+  estimateCostUsd,
   reconcileBudgetReservation,
   releaseBudgetReservation,
-  estimateCostUsd,
-  DEFAULT_MAX_DAILY_USD,
+  tryReserveBudget,
 } from '../cost';
+import { runMastraText } from '../mastra/text-runner';
+import { resolveChatModel } from '../model';
+import { computeStats } from './persistence';
 
 export interface ReviewTradeArgs {
   userId: string;
@@ -130,19 +129,19 @@ export async function reviewTrade(args: ReviewTradeArgs): Promise<TradeReviewRes
   try {
     const stats = await computeStats(userId);
     const userPrompt = formatEntryForPrompt(entry, stats);
-    const callArgs: Parameters<typeof generateText>[0] = {
+    const result = await runMastraText({
+      task: 'journal-review',
       model,
       system: SYSTEM_PROMPT,
       prompt: userPrompt,
+      userId,
+      ...(signal ? { signal } : {}),
       maxOutputTokens: 800,
-      ...telemetryConfig({ functionId: 'journal.review' }),
-    };
-    if (signal) callArgs.abortSignal = signal;
-
-    const result = await generateText(callArgs);
+    });
+    const reviewText = result.text;
+    const inputTokens = result.inputTokens;
+    const outputTokens = result.outputTokens;
     const latencyMs = Date.now() - startedAt;
-    const inputTokens = result.usage?.inputTokens ?? 0;
-    const outputTokens = result.usage?.outputTokens ?? 0;
     const costUsd = estimateCostUsd(modelId, inputTokens, outputTokens);
 
     // Reconcile the budget reservation with actual cost. The ledger path is
@@ -156,7 +155,7 @@ export async function reviewTrade(args: ReviewTradeArgs): Promise<TradeReviewRes
     }
 
     return {
-      review: result.text.trim(),
+      review: reviewText.trim(),
       modelId,
       inputTokens,
       outputTokens,

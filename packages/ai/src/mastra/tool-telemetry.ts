@@ -1,11 +1,10 @@
-import type { ToolObserve } from '@mastra/core/tools';
-
 import { metrics } from '@kestrel/shared';
 import { createCategorizedLogger, logErrorContext } from '@kestrel/shared/logger';
+import type { ToolObserve } from '@mastra/core/tools';
 
 import { recordToolTelemetry } from '../persistence';
-import { requireXauusdUserContext } from './evidence';
 import { MASTRA_XAUUSD_AGENT_ID, MASTRA_XAUUSD_AGENT_VERSION } from './constants';
+import { requireXauusdUserContext } from './evidence';
 import { errorCodeForMastra, outputLength } from './stats';
 
 const mlog = createCategorizedLogger('ai', {
@@ -18,6 +17,7 @@ interface MastraToolContext {
   requestContext?: { get: (key: string) => unknown };
   abortSignal?: AbortSignal;
   observe?: ToolObserve;
+  toolCallId?: string;
 }
 
 /**
@@ -50,6 +50,9 @@ export async function executeMastraTool<T>(
         ms: durationMs,
         ok: true,
         outputChars: outputLength(output),
+        ...(context.toolCallId
+          ? { idempotencyKey: `mastra.tool:${runId}:${context.toolCallId}:success` }
+          : {}),
       }).catch((error: unknown) => {
         mlog.warn('Mastra tool telemetry persistence failed', {
           runId,
@@ -76,6 +79,9 @@ export async function executeMastraTool<T>(
         ms: durationMs,
         ok: false,
         errorCode,
+        ...(context.toolCallId
+          ? { idempotencyKey: `mastra.tool:${runId}:${context.toolCallId}:failed` }
+          : {}),
       }).catch((telemetryError: unknown) => {
         mlog.warn('Mastra failed-tool telemetry persistence failed', {
           runId,

@@ -22,8 +22,9 @@
 // amount and whether the reservation has been released, preventing
 // double-count underflows.
 
-import { createCategorizedLogger } from '@kestrel/shared/logger';
 import { metrics } from '@kestrel/shared';
+import { createCategorizedLogger } from '@kestrel/shared/logger';
+
 import {
   applyBudgetDelta,
   BudgetExceededError,
@@ -66,9 +67,23 @@ export async function reserveTurnBudget(args: {
   userId: string;
   estimateUsd?: number;
   maxDailyUsd: number;
+  correlation?: {
+    threadId?: string;
+    traceId?: string;
+    runId?: string;
+    jobId?: string;
+  };
 }): Promise<BudgetHandle> {
   const estimateUsd = args.estimateUsd ?? DEFAULT_TURN_ESTIMATE_USD;
-  const reservation = await tryReserveBudget(args.userId, estimateUsd, args.maxDailyUsd);
+  const reservation = args.correlation
+    ? await tryReserveBudget(
+        args.userId,
+        estimateUsd,
+        args.maxDailyUsd,
+        new Date(),
+        args.correlation,
+      )
+    : await tryReserveBudget(args.userId, estimateUsd, args.maxDailyUsd);
   if (!reservation.ok) {
     throw new BudgetExceededError(reservation.spent, reservation.max);
   }

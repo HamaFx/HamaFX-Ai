@@ -115,4 +115,5 @@ export function buildIndicatorsEvidence(
       candleCount: candles.length,
       stale: result.stale,
     },
-  });}
+  });
+}

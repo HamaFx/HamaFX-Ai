@@ -1,7 +1,9 @@
 import type { XauusdResearchReport } from './report-types';
 import type { XauusdResearchPacket } from './research-types';
 
-function latestNumeric(values: readonly (number | Record<string, number | null> | null)[]): number | null {
+function latestNumeric(
+  values: readonly (number | Record<string, number | null> | null)[],
+): number | null {
   for (let index = values.length - 1; index >= 0; index--) {
     const value = values[index];
     if (typeof value === 'number' && Number.isFinite(value)) return value;

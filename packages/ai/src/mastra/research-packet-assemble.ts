@@ -1,7 +1,7 @@
 import { buildPriceEvidence } from './evidence-builders';
 import { XAUUSD_RESEARCH_WINDOWS } from './research-config';
-import type { XauusdResearchFetchResult } from './research-packet-fetch';
 import { collectCandleEvidence } from './research-packet-candles';
+import type { XauusdResearchFetchResult } from './research-packet-fetch';
 import { collectIndicatorEvidence } from './research-packet-indicators';
 import { assembleXauusdMacroEvidence } from './research-packet-macro';
 import {
@@ -11,8 +11,8 @@ import {
   uniqueResearchValues,
   warningForResearchFailure,
 } from './research-packet-stages';
-import { XAUUSD } from './types';
 import { XauusdResearchPacketSchema, type XauusdResearchPacket } from './research-types';
+import { XAUUSD } from './types';
 
 export function assembleXauusdResearchPacket(
   packetId: string,
@@ -58,18 +58,20 @@ export function assembleXauusdResearchPacket(
   );
   const requiredTimeframes = XAUUSD_RESEARCH_WINDOWS.map(({ timeframe }) => timeframe);
   const missingRequiredTimeframe = requiredTimeframes.some(
-    (timeframe) => !candleResult.candles.some(
-      (evidence) => evidence.timeframe === timeframe && evidence.data.count > 0,
-    ) || !indicators.some((evidence) => evidence.timeframe === timeframe),
+    (timeframe) =>
+      !candleResult.candles.some(
+        (evidence) => evidence.timeframe === timeframe && evidence.data.count > 0,
+      ) || !indicators.some((evidence) => evidence.timeframe === timeframe),
   );
   const status = price && !missingRequiredTimeframe ? 'ready' : 'blocked';
-  const dataQuality = status === 'blocked'
-    ? 'degraded'
-    : missingData.length > 0
-      ? 'partial'
-      : warnings.length > 0
-        ? 'degraded'
-        : 'complete';
+  const dataQuality =
+    status === 'blocked'
+      ? 'degraded'
+      : missingData.length > 0
+        ? 'partial'
+        : warnings.length > 0
+          ? 'degraded'
+          : 'complete';
 
   completeResearchStage('packet', 'completed', {
     packetId,

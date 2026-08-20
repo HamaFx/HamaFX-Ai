@@ -346,4 +346,7 @@ The project keeps procedural documentation alongside a small static architecture
 | `docs/10-security.md` | Security practices & rationale |
 | `docs/INCIDENT-RESPONSE.md` | Incident runbook |
 | `docs/BILLING-WEBHOOK-SAFETY-GATE.md` | Operational safety procedure |
+| `docs/AI-AGENT-ARCHITECTURE.md` | Current AI and Mastra implementation boundary |
+| `docs/AI-AGENT-MASTRA-ROADMAP.md` | Active AI/Mastra migration plan and decision gates |
+| `docs/AI-AGENT-VALIDATION-LOG.md` | Dated AI/Mastra validation and deployment evidence |
 | `cleanup-audit.md` | Historical audit record |

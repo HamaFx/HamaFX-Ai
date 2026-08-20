@@ -20,10 +20,10 @@
 import { randomUUID } from 'node:crypto';
 
 import { schema } from '@kestrel/db';
-import { getDb } from '../db';
 import { createCategorizedLogger } from '@kestrel/shared/logger';
 
 import { estimateCostUsd } from '../cost';
+import { getDb } from '../db';
 import { getDiagnosticContext } from '../diagnostics/run-context';
 import { enqueuePersistenceFailure } from '../persistence-outbox';
 
@@ -74,6 +74,14 @@ export interface TelemetryInput {
     | 'mastra_xauusd_poc_failed'
     | 'mastra_xauusd_shadow'
     | 'mastra_xauusd_shadow_failed'
+    | 'mastra_mode'
+    | 'mastra_mode_failed'
+    | 'mastra_full_job'
+    | 'mastra_full_job_failed'
+    | 'mastra_worker_task'
+    | 'mastra_worker_task_failed'
+    | 'mastra_canonical_chat'
+    | 'mastra_canonical_chat_failed'
     | 'legacy_shadow'
     | 'legacy_shadow_failed'
     | 'turn_failed';

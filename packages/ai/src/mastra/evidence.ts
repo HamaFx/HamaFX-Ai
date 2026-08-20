@@ -16,9 +16,9 @@ export function qualityFromWarnings(warnings: readonly string[]): EvidenceQualit
   return warnings.length === 0 ? 'complete' : 'degraded';
 }
 
-export function requireXauusdUserContext(
-  context: { requestContext?: { get: (key: string) => unknown } },
-): { userId: string; runId: string; threadId?: string } {
+export function requireXauusdUserContext(context: {
+  requestContext?: { get: (key: string) => unknown };
+}): { userId: string; runId: string; threadId?: string } {
   const userId = context.requestContext?.get('userId');
   const runId = context.requestContext?.get('runId');
   const threadId = context.requestContext?.get('threadId');

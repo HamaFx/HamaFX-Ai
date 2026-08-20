@@ -18,10 +18,8 @@ export {
   assembleTrainingDataset,
   resolveEvaluationAnnotations,
   testProviderKey,
-  runMultiAgentChat,
   resolveMode,
   extractUserMessageText,
-  ProgressTracker,
   computeUsage,
   getDb,
   getSentimentService,
@@ -71,7 +69,6 @@ export {
   listMessages,
   forkThread,
 } from '@kestrel/ai/persistence';
-export { runChat } from '@kestrel/ai/agent';
 export type { FeedbackAnnotationInput, PromptResult } from '@kestrel/ai';
 export { BudgetExceededError } from '@kestrel/ai/cost';
 

@@ -1,7 +1,8 @@
-import type { XauusdResearchPacket } from './research-types';
 import type { XauusdResearchReport } from './report-types';
+import type { XauusdResearchPacket } from './research-types';
 
-const MARKET_NUMBER_CLAIM = /\b(?:xauusd|gold|price|support|resistance|invalidation|trigger|target|level|rsi|ema|atr|yield|dollar)\b[^.!?\n]{0,100}\b\d{1,6}(?:\.\d+)?\b/gi;
+const MARKET_NUMBER_CLAIM =
+  /\b(?:xauusd|gold|price|support|resistance|invalidation|trigger|target|level|rsi|ema|atr|yield|dollar)\b[^.!?\n]{0,100}\b\d{1,6}(?:\.\d+)?\b/gi;
 const NUMBER = /\b\d{1,6}(?:\.\d+)?\b/;
 
 /**

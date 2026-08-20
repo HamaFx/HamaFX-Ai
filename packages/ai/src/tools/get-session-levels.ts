@@ -56,6 +56,40 @@ const SESSIONS: readonly SessionWindow[] = [
   { session: 'ny', startHour: 12, endHour: 21 },
 ];
 
+export interface SessionLevelsComputationArgs {
+  symbol: GetSessionLevelsOutput['symbol'];
+  includePrior: boolean;
+  candles: Candle[];
+  nowMs?: number;
+}
+
+/** Pure session projection shared by the legacy AI SDK tool and Mastra adapter. */
+export function computeSessionLevels({
+  symbol,
+  includePrior,
+  candles,
+  nowMs = Date.now(),
+}: SessionLevelsComputationArgs): GetSessionLevelsOutput {
+  const startOfToday = startOfUtcDay(nowMs);
+
+  if (candles.length === 0) {
+    return {
+      symbol,
+      asOf: nowMs,
+      today: [],
+      prior: includePrior ? [] : null,
+      pipelinePending: true,
+    };
+  }
+
+  const today = SESSIONS.map((w) => sliceSession(candles, startOfToday, nowMs, w));
+  const prior = includePrior
+    ? SESSIONS.map((w) => sliceSession(candles, startOfToday - DAY_MS, nowMs, w))
+    : null;
+
+  return { symbol, asOf: nowMs, today, prior, pipelinePending: false };
+}
+
 export const getSessionLevelsTool = tool({
   description:
     "Compute today's (and optionally yesterday's) Asia / London / NY session OHLC levels for one symbol. Use when the user asks 'where did Asia top out', 'show the London open', 'NY range', or wants intraday session context. Returns per-session open / high / low / close + a `forming` flag when the session is still in progress.",
@@ -63,25 +97,7 @@ export const getSessionLevelsTool = tool({
   execute: async ({ symbol, includePrior }): Promise<GetSessionLevelsOutput> => {
     // 48h of 1H bars covers today + yesterday including the final NY close.
     const candles = await getCandles(symbol, '1h', { count: 60 });
-    const now = Date.now();
-    const startOfToday = startOfUtcDay(now);
-
-    if (candles.length === 0) {
-      return {
-        symbol,
-        asOf: now,
-        today: [],
-        prior: includePrior ? [] : null,
-        pipelinePending: true,
-      };
-    }
-
-    const today = SESSIONS.map((w) => sliceSession(candles, startOfToday, now, w));
-    const prior = includePrior
-      ? SESSIONS.map((w) => sliceSession(candles, startOfToday - DAY_MS, now, w))
-      : null;
-
-    return { symbol, asOf: now, today, prior, pipelinePending: false };
+    return computeSessionLevels({ symbol, includePrior, candles });
   },
 });
 

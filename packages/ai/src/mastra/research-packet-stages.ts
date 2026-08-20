@@ -1,5 +1,6 @@
-import { completeStep, recordStep } from '../diagnostics';
 import { logErrorContext } from '@kestrel/shared/logger';
+
+import { completeStep, recordStep } from '../diagnostics';
 
 export function startResearchStage(name: string, metadata: Record<string, unknown>): void {
   recordStep(`mastra_xauusd_research.${name}`, metadata);

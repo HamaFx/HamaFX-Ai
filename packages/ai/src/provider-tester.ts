@@ -20,12 +20,10 @@
 // Separated from model resolution so it can be unit-tested and imported
 // without pulling in all of model.ts.
 
-import { generateText } from 'ai';
 import type { ProviderId } from '@kestrel/shared/encryption';
+import { generateText } from 'ai';
+
 import { BYOK_PROVIDERS } from './byok-providers';
-import { extractRateLimits } from './rate-limits';
-import { noteLlmRateLimit } from './llm-throttle';
-import { telemetryConfig } from './telemetry';
 
 /**
  * Strip a verbose AI SDK error down to the user-facing sentence.
@@ -80,8 +78,7 @@ export async function testProviderKey(
       if (!process.env.GOOGLE_VERTEX_PROJECT && typeof obj.project_id !== 'string') {
         return {
           ok: false,
-          error:
-            'Set GOOGLE_VERTEX_PROJECT env or include project_id in the service-account JSON',
+          error: 'Set GOOGLE_VERTEX_PROJECT env or include project_id in the service-account JSON',
         };
       }
     } catch (err) {
@@ -96,16 +93,15 @@ export async function testProviderKey(
     const builder = spec.factory(apiKey);
     const modelId = spec.defaultModels.fundamental;
     const model = builder(modelId);
-    const result = await generateText({
+    const signal = AbortSignal.timeout(5_000);
+    await generateText({
       model,
+      system: 'Respond with a single short confirmation.',
       prompt: 'ping',
+      abortSignal: signal,
       maxOutputTokens: 1,
-      ...telemetryConfig({ functionId: 'provider.test' }),
-      abortSignal: AbortSignal.timeout(5_000),
     });
-    const rateLimit = extractRateLimits(result.response?.headers);
-    if (rateLimit) noteLlmRateLimit(providerId, rateLimit);
-    return { ok: true, rateLimit };
+    return { ok: true };
   } catch (err) {
     const message =
       err instanceof Error

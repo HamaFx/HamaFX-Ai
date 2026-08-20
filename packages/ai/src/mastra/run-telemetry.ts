@@ -1,6 +1,6 @@
 import { metrics } from '@kestrel/shared';
-import { flushMetrics } from '@kestrel/shared/metrics-export';
 import { createCategorizedLogger, logErrorContext } from '@kestrel/shared/logger';
+import { flushMetrics } from '@kestrel/shared/metrics-export';
 
 import { estimateCostUsd } from '../cost';
 import { completeStep, recordError, recordStep } from '../diagnostics';
@@ -28,7 +28,13 @@ export interface MastraRunObservation {
   steps: number;
   outcome: MastraRunOutcome;
   /** Identifies whether this run served a user or was a background shadow. */
-  telemetryKind?: 'mastra_xauusd_poc' | 'mastra_xauusd_shadow';
+  telemetryKind?:
+    | 'mastra_xauusd_poc'
+    | 'mastra_xauusd_shadow'
+    | 'mastra_mode'
+    | 'mastra_full_job'
+    | 'mastra_worker_task'
+    | 'mastra_canonical_chat';
   error?: unknown;
 }
 
@@ -114,11 +120,21 @@ export async function finishMastraRun(args: MastraRunObservation): Promise<void>
       outputTokens: args.outputTokens,
       toolCalls: args.toolCalls,
       ms: durationMs,
-      kind: args.outcome === 'success'
-        ? args.telemetryKind ?? 'mastra_xauusd_poc'
-        : args.telemetryKind === 'mastra_xauusd_shadow'
-          ? 'mastra_xauusd_shadow_failed'
-          : 'mastra_xauusd_poc_failed',
+      idempotencyKey: `mastra.run:${args.runId}:${args.outcome}`,
+      kind:
+        args.outcome === 'success'
+          ? (args.telemetryKind ?? 'mastra_xauusd_poc')
+          : args.telemetryKind === 'mastra_xauusd_shadow'
+            ? 'mastra_xauusd_shadow_failed'
+            : args.telemetryKind === 'mastra_mode'
+              ? 'mastra_mode_failed'
+              : args.telemetryKind === 'mastra_full_job'
+                ? 'mastra_full_job_failed'
+                : args.telemetryKind === 'mastra_worker_task'
+                  ? 'mastra_worker_task_failed'
+                  : args.telemetryKind === 'mastra_canonical_chat'
+                    ? 'mastra_canonical_chat_failed'
+                    : 'mastra_xauusd_poc_failed',
     });
   } catch (error) {
     mlog.error('Mastra run telemetry persistence failed', {

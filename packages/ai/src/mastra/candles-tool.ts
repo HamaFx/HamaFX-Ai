@@ -1,10 +1,10 @@
-import { createTool } from '@mastra/core/tools';
 import { getCandlesWithMeta } from '@kestrel/data';
+import { createTool } from '@mastra/core/tools';
 
 import { buildCandlesEvidence } from './evidence-builders';
 import { executeMastraTool } from './telemetry';
-import { XauusdCandlesEvidenceSchema } from './types';
 import { XauusdCandlesInputSchema } from './tool-schemas';
+import { XauusdCandlesEvidenceSchema } from './types';
 
 export const xauusdCandlesTool = createTool({
   id: 'get-xauusd-candles',

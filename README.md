@@ -454,6 +454,7 @@ See the [testing guide](docs/09-testing.md) for test patterns, database isolatio
 | Install without guessing              | [`pnpm setup`](#-quick-start) and [First-run setup](docs/13-first-run-setup.md)                            |
 | Run the complete Docker stack         | [Self-hosting guide](docs/11-self-hosting.md)                                                              |
 | Understand the system                 | [Architecture guide](docs/01-architecture.md) and [Architecture Explorer snapshot](docs/architecture-explorer.html) |
+| Understand the AI/Mastra design       | [AI architecture](docs/AI-AGENT-ARCHITECTURE.md), [roadmap](docs/AI-AGENT-MASTRA-ROADMAP.md), and [validation log](docs/AI-AGENT-VALIDATION-LOG.md) |
 | Understand AI tools and flows         | [AI tool source](packages/ai/src/tools/)                                                                   |
 | Understand security and secrets       | [Security guide](docs/10-security.md)                                                                      |
 | Run or write tests                    | [Testing guide](docs/09-testing.md)                                                                        |

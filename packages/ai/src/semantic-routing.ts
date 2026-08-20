@@ -29,10 +29,11 @@
 //   - In-memory LRU cache for identical messages (60s TTL)
 //   - Confidence threshold of 0.7 → borderline classifications use keyword fallback
 
-import { generateObject } from 'ai';
-import { z } from 'zod';
-import { resolveModel, type ResolveModelEnv } from './model';
 import { createCategorizedLogger } from '@kestrel/shared/logger';
+import { z } from 'zod';
+
+import { runMastraStructured } from './mastra/text-runner';
+import { resolveModel, type ResolveModelEnv } from './model';
 
 const semanticLog = createCategorizedLogger('ai', { component: 'semantic-routing' });
 
@@ -116,10 +117,7 @@ export async function classifyTurnLLM(
     // requires a LanguageModel instance. Fall back on string-return.
     if (typeof model === 'string') return null;
 
-    const result = await generateObject({
-      model,
-      schema: ClassificationSchema,
-      system: `Classify a forex trading question into exactly one domain. Respond with JSON only.
+    const classifierSystem = `Classify a forex trading question into exactly one domain. Respond with JSON only.
 
 DOMAINS:
 - fundamental: macro, Fed, CPI, NFP, geopolitics, yields, "why" questions
@@ -133,10 +131,15 @@ EXAMPLES:
 "What's the RSI on EURUSD 1h?" → technical, confidence=0.95
 "Summarize today's news" → summary, confidence=0.95
 "hi" → generic, confidence=0.95
-"Should I buy gold here with stop at 2620?" → technical, confidence=0.80`,
+"Should I buy gold here with stop at 2620?" → technical, confidence=0.80`;
+    const result = await runMastraStructured({
+      task: 'semantic-routing',
+      model,
+      system: classifierSystem,
       prompt: `Classify this question: "${userText}"`,
+      schema: ClassificationSchema,
+      signal: controller.signal,
       maxOutputTokens: 30,
-      abortSignal: controller.signal,
     });
 
     const classification: SemanticClassification = {

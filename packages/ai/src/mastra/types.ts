@@ -1,14 +1,13 @@
-import { z } from 'zod';
-
 import {
   CandleSchema,
+  EconomicEventSchema,
   IndicatorResultSchema,
+  NewsArticleSchema,
   SymbolSchema,
   TickSchema,
   TimeframeSchema,
-  NewsArticleSchema,
-  EconomicEventSchema,
 } from '@kestrel/shared';
+import { z } from 'zod';
 
 export const XAUUSD = 'XAUUSD' as const;
 
@@ -21,6 +20,8 @@ export const XauusdRequestContextSchema = z.object({
   researchPacket: z.unknown().optional(),
   /** Optional prior verified report used only to explain a follow-up. */
   priorReport: z.unknown().optional(),
+  /** User-scoped historical context; never current market evidence. */
+  memoryContext: z.string().optional(),
 });
 
 export type XauusdRequestContext = z.infer<typeof XauusdRequestContextSchema>;

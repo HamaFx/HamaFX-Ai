@@ -19,12 +19,13 @@
 //
 // This is the most expensive command (4-5 LLM calls). Rate limited aggressively.
 
-import type { BotCommand, BotResponse, BotContext } from '../types';
-import { runChat } from '../../agent';
-import type { ServerEnv } from '@kestrel/shared';
-import type { UIMessage } from 'ai';
 import { createHash, randomUUID } from 'crypto';
+
+import type { UIMessage } from 'ai';
+
 import { checkRateLimit } from '../../telegram/rate-limiter';
+import { tryMastraBotMessage } from '../mastra';
+import type { BotCommand, BotContext, BotResponse } from '../types';
 
 export const committeeCommand: BotCommand = {
   name: 'committee',
@@ -58,35 +59,32 @@ export const committeeCommand: BotCommand = {
     const userMessage: UIMessage = {
       id: randomUUID(),
       role: 'user',
-      parts: [{ type: 'text', text: `Run a full committee analysis of ${symbol}. Convene all specialist agents and return the consolidated verdict with grade.` }],
+      parts: [
+        {
+          type: 'text',
+          text: `Run a full committee analysis of ${symbol}. Convene all specialist agents and return the consolidated verdict with grade.`,
+        },
+      ],
     };
 
     try {
       const threadId = deterministicThreadId(ctx.userId, `committee-${symbol}`);
 
-      // 45s timeout for committee (it's 4-5 LLM calls in parallel)
-      const result = await Promise.race([
-        runChat({
-          threadId,
-          userId: ctx.userId,
-          userMessage,
-          env: {} as ServerEnv,
-          customInstructions: `The user requested a full multi-agent committee analysis of ${symbol} via the Telegram bot. Convene the committee with all specialist agents. Return a concise verdict suitable for mobile chat: grade (A-F), key consensus, risk warnings, and actionable summary.`,
-        }),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Committee timeout')), 45_000),
-        ),
-      ]);
-
-      const text = await result.text;
+      const text = await tryMastraBotMessage({
+        userId: ctx.userId,
+        threadId,
+        userMessage,
+        prompt: `Run a full committee analysis of ${symbol}. Include consensus, disagreement, risk warnings, and invalidation conditions.`,
+        system:
+          'You are Kestrel coordinating a read-only Mastra committee summary. Use only supplied evidence, do not invent current market facts, use scenario language, and never place trades or create mutations.',
+      });
 
       return {
-        text: text || `Committee analysis of ${symbol} completed. Check the web UI for full details.`,
+        text:
+          text ??
+          `Mastra could not complete the committee analysis of ${symbol}. Please try again in the web app.`,
       };
     } catch (err) {
-      if (err instanceof Error && err.message.includes('timeout')) {
-        return { text: '⏳ Committee analysis timed out (45s). The agents may still be processing — check the web UI for results.' };
-      }
       return {
         text: `Committee failed: ${err instanceof Error ? err.message : 'unknown error'}`,
       };

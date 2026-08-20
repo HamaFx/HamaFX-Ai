@@ -20,7 +20,6 @@
 // Every consumer of @kestrel/ai gets db + llmClient registered.
 import './services';
 
-export { runChat } from './agent';
 export { reserveTurnBudget, type BudgetHandle } from './budget-reservation';
 export { type RunChatArgs } from './types';
 export { toolRegistry, type ToolRegistry } from './tools';
@@ -96,7 +95,12 @@ export {
   backfillEmbeddings,
   countPendingEmbeddings,
 } from './news-persistence';
-export { upsertEvents, listFredEventsMissingActual, patchEventActual, parseFredEventId } from './calendar-persistence';
+export {
+  upsertEvents,
+  listFredEventsMissingActual,
+  patchEventActual,
+  parseFredEventId,
+} from './calendar-persistence';
 export {
   listThreads,
   getThread,
@@ -143,18 +147,9 @@ export {
   type EvaluationResult,
   type RuleReading,
 } from './alerts/evaluator';
-export {
-  specFromRule,
-  type AlertSpec,
-  type RuleReading as SpecRuleReading,
-} from './alerts/spec';
+export { specFromRule, type AlertSpec, type RuleReading as SpecRuleReading } from './alerts/spec';
 export { deliverAlert, sendDirectNotification, type DeliveryResult } from './alerts/delivery';
-export {
-  simulateAlert,
-  type SimCandle,
-  type SimFire,
-  type SimResult,
-} from './alerts/simulate';
+export { simulateAlert, type SimCandle, type SimFire, type SimResult } from './alerts/simulate';
 
 // Journal
 export {
@@ -169,11 +164,7 @@ export {
   type CreateJournalInput,
   type UpdateJournalInput,
 } from './journal/persistence';
-export {
-  reviewTrade,
-  type ReviewTradeArgs,
-  type TradeReviewResult,
-} from './journal/review';
+export { reviewTrade, type ReviewTradeArgs, type TradeReviewResult } from './journal/review';
 
 // Usage
 export {
@@ -219,11 +210,7 @@ export {
 } from './briefings/persistence';
 
 // Phase 3 — Sharable snapshots
-export {
-  signShareToken,
-  verifyShareToken,
-  type ShareTokenPayload,
-} from './share/sign';
+export { signShareToken, verifyShareToken, type ShareTokenPayload } from './share/sign';
 export {
   createSnapshot,
   getSnapshot,
@@ -253,7 +240,6 @@ export {
 } from './push/persistence';
 export { sendWebPush, type SendWebPushResult, type VapidEnv } from './push/send';
 
-
 // Phase 7a — domain routing + rolling thread summary
 export { routeTurn, type RoutingDecision, type RoutingDomain } from './routing';
 export { compactThread, type CompactResult } from './memory/thread-summary';
@@ -268,11 +254,7 @@ export {
   type MemoryKind,
   type MemoryRow,
 } from './memory/memory-index';
-export {
-  runMemoryQuery,
-  memoryRowToItem,
-  type RunMemoryQueryArgs,
-} from './rag';
+export { runMemoryQuery, memoryRowToItem, type RunMemoryQueryArgs } from './rag';
 
 // Phase 7c — planner, citation enforcement, tool catalogue
 export { runPlanner, type PlanResult, type PlannerEnv } from './planner';
@@ -336,7 +318,13 @@ export {
   type ParsedStreamMetadata,
   type AgentProgressSnapshot,
 } from './eval/parse-stream';
-export type { LlmClient, GenerateTextOpts, GenerateTextResult, StreamTextOpts, StreamTextResult } from './llm-client';
+export type {
+  LlmClient,
+  GenerateTextOpts,
+  GenerateTextResult,
+  StreamTextOpts,
+  StreamTextResult,
+} from './llm-client';
 
 export {
   reserveBudget,
@@ -351,13 +339,15 @@ export { noteLlmRateLimit, awaitLlmHeadroom } from './llm-throttle';
 export { withRetry, type RetryOptions } from './retry';
 
 // M4 — Model circuit breaker for repeated failures.
-export { recordModelSuccess, recordModelFailure, isCircuitOpen, _resetCircuits } from './model-circuit-breaker';
-
-// Multi-Agent Orchestration
 export {
-  runMultiAgentChat,
-  MultiAgentStrictFailureError,
-  type RunMultiAgentArgs,
+  recordModelSuccess,
+  recordModelFailure,
+  isCircuitOpen,
+  _resetCircuits,
+} from './model-circuit-breaker';
+
+// Mastra-owned mode selection and historical opinion persistence.
+export {
   selectAgents,
   autoDetectMode,
   resolveMode,
@@ -365,34 +355,12 @@ export {
   type ModeMeta,
   type AnalysisMode,
   type ResolvedMode,
-  type AgentName,
-  type AgentBias,
-  type AgentOpinion,
-  type SharedContext,
-  type MultiAgentResult,
-  type ProgressEvent,
-  type MultiAgentEnv,
-  type ModelTier,
-  AGENT_MODEL_TIER,
-  MODE_COST_ESTIMATE,
-  AGENT_TIMEOUTS,
-  buildSharedContext,
-  buildSharedSystemPrompt,
-  extractUserMessageText,
   saveAgentOpinions,
   listAgentOpinions,
   listMessageOpinions,
   type SaveOpinionsArgs,
-  ProgressTracker,
-  type AgentProgressPart,
-  progressToSSE,
-  BaseAgent,
-  TechnicalAgent,
-  FundamentalAgent,
-  RiskAgent,
-  SentimentAgent,
-  DecisionAgent,
 } from './multi-agent';
+export { extractUserMessageText } from './message-text';
 
 // F5 — Run Diagnostics with Secret Redaction
 export {

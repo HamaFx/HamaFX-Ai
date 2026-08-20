@@ -83,47 +83,62 @@ export const analyzeTechnicalTool = tool({
 // Per-timeframe orchestrator
 // ---------------------------------------------------------------------------
 
+export interface TechnicalReadingComputationArgs {
+  symbol: Symbol;
+  tf: Timeframe;
+  candles: Candle[];
+}
+
+/** Pure per-timeframe projection shared by the legacy tool and Mastra. */
+export function computeTechnicalReading({
+  symbol,
+  tf,
+  candles,
+}: TechnicalReadingComputationArgs): PerTimeframeReading | null {
+  if (candles.length === 0) return null;
+
+  const ema50 = computeIndicator({ symbol, tf, kind: 'ema', params: { period: 50 }, candles });
+  const ema200 = computeIndicator({ symbol, tf, kind: 'ema', params: { period: 200 }, candles });
+  const rsi = computeIndicator({ symbol, tf, kind: 'rsi', params: { period: 14 }, candles });
+  const macd = computeIndicator({
+    symbol,
+    tf,
+    kind: 'macd',
+    params: { fast: 12, slow: 26, signal: 9 },
+    candles,
+  });
+  const atr = computeIndicator({ symbol, tf, kind: 'atr', params: { period: 14 }, candles });
+  const pivots = computeIndicator({ symbol, tf, kind: 'pivots', params: {}, candles });
+
+  const structure = computeStructure({
+    symbol,
+    tf,
+    candles,
+    kinds: ['swings', 'bos_choch'],
+    swings: { lookback: 3 },
+  });
+
+  return projectReading({
+    symbol,
+    tf,
+    candles,
+    ema50,
+    ema200,
+    rsi,
+    macd,
+    atr,
+    pivots,
+    structure,
+  });
+}
+
 async function readOneTimeframe(
   symbol: Symbol,
   tf: Timeframe,
 ): Promise<PerTimeframeReading | null> {
   try {
     const candles = await getCandles(symbol, tf, { count: COUNT });
-    if (candles.length === 0) return null;
-
-    const ema50 = computeIndicator({ symbol, tf, kind: 'ema', params: { period: 50 }, candles });
-    const ema200 = computeIndicator({ symbol, tf, kind: 'ema', params: { period: 200 }, candles });
-    const rsi = computeIndicator({ symbol, tf, kind: 'rsi', params: { period: 14 }, candles });
-    const macd = computeIndicator({
-      symbol,
-      tf,
-      kind: 'macd',
-      params: { fast: 12, slow: 26, signal: 9 },
-      candles,
-    });
-    const atr = computeIndicator({ symbol, tf, kind: 'atr', params: { period: 14 }, candles });
-    const pivots = computeIndicator({ symbol, tf, kind: 'pivots', params: {}, candles });
-
-    const structure = computeStructure({
-      symbol,
-      tf,
-      candles,
-      kinds: ['swings', 'bos_choch'],
-      swings: { lookback: 3 },
-    });
-
-    return projectReading({
-      symbol,
-      tf,
-      candles,
-      ema50,
-      ema200,
-      rsi,
-      macd,
-      atr,
-      pivots,
-      structure,
-    });
+    return computeTechnicalReading({ symbol, tf, candles });
   } catch (err) {
     // Best-effort: surface the failure in the response, never bubble.
     tlog.warn(`${symbol} ${tf} failed`, { err: String(err) });
@@ -238,7 +253,7 @@ function lastFromObject(ind: IndicatorResult, key: string): number | null {
 // Templated summary
 // ---------------------------------------------------------------------------
 
-function deterministicSummary(args: {
+export function deterministicSummary(args: {
   symbol: Symbol;
   perTimeframe: PerTimeframeReading[];
   partial: boolean;

@@ -63,6 +63,8 @@ export const METRIC_NAMES = [
   'mastra_report_repair_total',
   'mastra_chat_route_total',
   'mastra_chat_fallback_total',
+  'mastra_mode_route_total',
+  'mastra_mode_fallback_total',
   'mastra_shadow_total',
   'mastra_shadow_failed_total',
   'mastra_shadow_skipped_total',

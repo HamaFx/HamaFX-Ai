@@ -33,14 +33,16 @@
 // independently of the model's tool-loop output.
 
 import { schema } from '@kestrel/db';
-import { getDb } from './db';
 import type { ServerEnv, UserPlanPart } from '@kestrel/shared';
 import { generateText, type UIMessage } from 'ai';
+import { z } from 'zod';
 
+import { getDb } from './db';
+import { runMastraStructured } from './mastra/text-runner';
 import { resolveModel } from './model';
-import { maybeGetToolContext } from './tool-context';
-import { telemetryConfig } from './telemetry';
 import type { RoutingDecision } from './routing';
+import { telemetryConfig } from './telemetry';
+import { maybeGetToolContext } from './tool-context';
 
 export type PlannerEnv = Pick<
   ServerEnv,
@@ -85,7 +87,7 @@ export interface PlanResult {
 }
 
 const SYSTEM_PROMPT =
-  "You produce a short JSON plan for a trading copilot turn. Output JSON ONLY: { \"steps\": [\"<sentence>\", ...], \"expectedTools\": [\"tool_name\", ...], \"rationale\": \"<one-line>\" }. 3-5 steps maximum. No greetings, no preamble, no markdown fences.";
+  'You produce a short JSON plan for a trading copilot turn. Output JSON ONLY: { "steps": ["<sentence>", ...], "expectedTools": ["tool_name", ...], "rationale": "<one-line>" }. 3-5 steps maximum. No greetings, no preamble, no markdown fences.';
 
 const FALLBACK_STEPS_BY_DOMAIN: Record<RoutingDecision['domain'], string[]> = {
   fundamental: [
@@ -111,7 +113,7 @@ const FALLBACK_STEPS_BY_DOMAIN: Record<RoutingDecision['domain'], string[]> = {
     'Surface the structured output via the chart-annotation flow.',
   ],
   generic: [
-    "Identify whether the user wants market data, journal action, or alerts.",
+    'Identify whether the user wants market data, journal action, or alerts.',
     'Pick the matching tool and execute.',
   ],
 };
@@ -184,15 +186,42 @@ export async function runPlanner(args: RunPlannerArgs): Promise<PlanResult> {
 
   try {
     const modelId = args.plannerModelId;
-    const callArgs: Parameters<typeof generateText>[0] = {
-      model: resolveModel(modelId, args.env, ctx?.userId),
-      system: SYSTEM_PROMPT,
-      prompt,
-      ...telemetryConfig({ functionId: 'chat.planner' }),
-    };
-    if (args.signal) callArgs.abortSignal = args.signal;
-    const { text, usage } = await generateText(callArgs);
+    const resolvedModel = resolveModel(modelId, args.env, ctx?.userId);
+    let text: string;
+    let inputTokens = 0;
+    let outputTokens = 0;
+    if (typeof resolvedModel !== 'string') {
+      const result = await runMastraStructured({
+        task: 'planner',
+        model: resolvedModel,
+        system: SYSTEM_PROMPT,
+        prompt,
+        schema: z.object({
+          steps: z.array(z.string()).min(1).max(5),
+          expectedTools: z.array(z.string()).max(20),
+          rationale: z.string().min(1).max(500),
+        }),
+        ...(args.signal ? { signal: args.signal } : {}),
+        maxOutputTokens: 500,
+      });
+      text = JSON.stringify(result.object);
+      inputTokens = result.inputTokens;
+      outputTokens = result.outputTokens;
+    } else {
+      const callArgs: Parameters<typeof generateText>[0] = {
+        model: resolvedModel,
+        system: SYSTEM_PROMPT,
+        prompt,
+        ...telemetryConfig({ functionId: 'chat.planner' }),
+      };
+      if (args.signal) callArgs.abortSignal = args.signal;
+      const result = await generateText(callArgs);
+      text = result.text;
+      inputTokens = result.usage?.inputTokens ?? 0;
+      outputTokens = result.usage?.outputTokens ?? 0;
+    }
 
+    const usage = { inputTokens, outputTokens };
     const parsed = parseModelJson(text);
     if (!parsed) {
       const fallback = deterministicPlan(args.routing, args.userMessage);

@@ -2,6 +2,8 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { runMastraXauusdChat } from '@/lib/services/mastra-chat';
+
 const mocks = vi.hoisted(() => ({
   getUserWithSettings: vi.fn(),
   reserveTurnBudget: vi.fn(),
@@ -10,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   estimateCostUsd: vi.fn(),
   getServerEnv: vi.fn(),
   runMastraXauusdResearch: vi.fn(),
+  runMastraXauusdConversation: vi.fn(),
 }));
 
 vi.mock('@kestrel/ai', () => ({
@@ -27,9 +30,8 @@ vi.mock('@/lib/env', () => ({
 }));
 vi.mock('@/lib/services/mastra-xauusd', () => ({
   runMastraXauusdResearch: mocks.runMastraXauusdResearch,
+  runMastraXauusdConversation: mocks.runMastraXauusdConversation,
 }));
-
-import { runMastraXauusdChat } from '@/lib/services/mastra-chat';
 
 const input = {
   userId: 'user-1',
@@ -53,8 +55,19 @@ describe('Mastra chat service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.getUserWithSettings.mockResolvedValue({ settings: { maxDailyUsd: 5 } });
-    mocks.getServerEnv.mockReturnValue({ AI_DEFAULT_MODEL: 'mistral-small-latest', MAX_DAILY_USD: 5 });
+    mocks.getServerEnv.mockReturnValue({
+      AI_DEFAULT_MODEL: 'mistral-small-latest',
+      MAX_DAILY_USD: 5,
+    });
     mocks.estimateCostUsd.mockReturnValue(0.002);
+    mocks.runMastraXauusdConversation.mockResolvedValue({
+      modelId: 'mistral-small-latest',
+      providerId: 'mistral',
+      stats: { inputTokens: 80, outputTokens: 40 },
+      result: { text: 'Conversational gold explanation' },
+      report: null,
+      packet: { packetId: 'packet-conversation', status: 'ready', dataQuality: 'partial' },
+    });
     mocks.runMastraXauusdResearch.mockResolvedValue({
       modelId: 'mistral-small-latest',
       providerId: 'mistral',
@@ -74,19 +87,39 @@ describe('Mastra chat service', () => {
     const result = await runMastraXauusdChat(input);
 
     expect(mocks.reserveTurnBudget).toHaveBeenCalledWith({ userId: 'user-1', maxDailyUsd: 5 });
-    expect(mocks.appendUserMessage).toHaveBeenCalledWith('user-1', input.threadId, input.userMessage);
+    expect(mocks.appendUserMessage).toHaveBeenCalledWith(
+      'user-1',
+      input.threadId,
+      input.userMessage,
+    );
     expect(mocks.appendAssistantMessage).toHaveBeenCalledWith(
       'user-1',
       input.threadId,
       expect.objectContaining({ role: 'assistant' }),
       { idempotencyKey: `mastra:${input.threadId}:user-message-1:assistant` },
     );
-    const assistant = mocks.appendAssistantMessage.mock.calls[0]?.[2] as { parts: Array<{ type: string; text?: string; data?: unknown }> };
+    const assistant = mocks.appendAssistantMessage.mock.calls[0]?.[2] as {
+      parts: Array<{ type: string; text?: string; data?: unknown }>;
+    };
     expect(assistant.parts[0]).toEqual({ type: 'text', text: 'grounded result' });
-    expect(assistant.parts[1]).toMatchObject({ type: 'data-multi-agent-meta', data: { agent: 'mastra-xauusd' } });
+    expect(assistant.parts[1]).toMatchObject({
+      type: 'data-multi-agent-meta',
+      data: { agent: 'mastra-xauusd' },
+    });
     expect(budget.reconcile).toHaveBeenCalledWith(0.002);
     expect(budget.release).not.toHaveBeenCalled();
     expect(result.runId).toEqual(expect.any(String));
+  });
+
+  it('selects the conversational runner for ordinary Single-mode prompts', async () => {
+    const budget = budgetHandle();
+    mocks.reserveTurnBudget.mockResolvedValue(budget);
+
+    const result = await runMastraXauusdChat({ ...input, kind: 'conversation' });
+
+    expect(result.result.text).toBe('Conversational gold explanation');
+    expect(mocks.runMastraXauusdConversation).toHaveBeenCalledOnce();
+    expect(mocks.runMastraXauusdResearch).not.toHaveBeenCalled();
   });
 
   it('releases the reservation when Mastra fails before producing a run', async () => {

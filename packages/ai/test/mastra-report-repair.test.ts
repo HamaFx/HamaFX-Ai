@@ -1,7 +1,11 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-
 import { metrics } from '@kestrel/shared';
 import type { RequestContext } from '@mastra/core/request-context';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { generateVerifiedXauusdReport } from '../src/mastra/report-generation';
+import { patchTimeframeConflictDisclosure } from '../src/mastra/report-repair';
+import { XauusdResearchPacketSchema } from '../src/mastra/research-types';
+import type { XauusdRequestContext } from '../src/mastra/types';
 
 const mocks = vi.hoisted(() => {
   class FakeVerificationError extends Error {
@@ -15,7 +19,11 @@ const mocks = vi.hoisted(() => {
 
   return {
     requireVerifiedXauusdReport: vi.fn(),
-    verifyXauusdReport: vi.fn((candidate: unknown) => ({ ok: true, report: candidate, findings: [] })),
+    verifyXauusdReport: vi.fn((candidate: unknown) => ({
+      ok: true,
+      report: candidate,
+      findings: [],
+    })),
     FakeVerificationError,
   };
 });
@@ -25,11 +33,6 @@ vi.mock('../src/mastra/report-verifier', () => ({
   verifyXauusdReport: mocks.verifyXauusdReport,
   XauusdReportVerificationError: mocks.FakeVerificationError,
 }));
-
-import { generateVerifiedXauusdReport } from '../src/mastra/report-generation';
-import { patchTimeframeConflictDisclosure } from '../src/mastra/report-repair';
-import { XauusdResearchPacketSchema } from '../src/mastra/research-types';
-import type { XauusdRequestContext } from '../src/mastra/types';
 
 const packet = {} as never;
 const requestContext = {} as RequestContext<XauusdRequestContext>;
@@ -75,6 +78,35 @@ describe('Mastra report repair', () => {
     expect(metrics.snapshot().counters['mastra_report_repair_total{result=requested}']).toBe(1);
   });
 
+  it('retries a structured-output validation failure before the verifier runs', async () => {
+    const structuredError = new Error('Structured output validation failed') as Error & {
+      cause?: unknown;
+    };
+    structuredError.cause = {
+      issues: [{ path: ['scenarios'], message: 'Array must contain at least 2 element(s)' }],
+    };
+
+    mocks.requireVerifiedXauusdReport.mockReturnValue(report);
+    const { agent, generate } = agentWithResults();
+    generate
+      .mockRejectedValueOnce(structuredError)
+      .mockResolvedValueOnce({ object: { corrected: true }, text: 'second' });
+
+    const result = await generateVerifiedXauusdReport(
+      agent,
+      'Analyse gold',
+      requestContext,
+      'mistral',
+      packet,
+    );
+
+    expect(result).toMatchObject({ report, attempts: 2 });
+    expect(generate).toHaveBeenCalledTimes(2);
+    expect(generate.mock.calls[1]?.[0]).toContain('scenarios');
+    expect(metrics.snapshot().counters['mastra_report_repair_total{result=requested}']).toBe(1);
+    expect(metrics.snapshot().counters['mastra_report_repair_total{result=passed}']).toBe(1);
+  });
+
   it('adds only the deterministic timeframe-conflict disclosure after repair exhaustion', () => {
     const asOf = '2026-08-18T12:00:00.000Z';
     const evidence = (evidenceId: string, timeframe: '1h' | '4h', fast: number, slow: number) => ({
@@ -90,8 +122,22 @@ describe('Mastra report repair', () => {
       warnings: [],
       data: {
         results: [
-          { symbol: 'XAUUSD' as const, tf: timeframe, kind: 'ema' as const, params: { period: 20 }, values: [fast], fetchedAt: Date.parse(asOf) },
-          { symbol: 'XAUUSD' as const, tf: timeframe, kind: 'ema' as const, params: { period: 50 }, values: [slow], fetchedAt: Date.parse(asOf) },
+          {
+            symbol: 'XAUUSD' as const,
+            tf: timeframe,
+            kind: 'ema' as const,
+            params: { period: 20 },
+            values: [fast],
+            fetchedAt: Date.parse(asOf),
+          },
+          {
+            symbol: 'XAUUSD' as const,
+            tf: timeframe,
+            kind: 'ema' as const,
+            params: { period: 50 },
+            values: [slow],
+            fetchedAt: Date.parse(asOf),
+          },
         ],
         candleCount: 50,
         stale: false,
@@ -113,23 +159,45 @@ describe('Mastra report repair', () => {
       warnings: [],
     });
     const candidate = {
-      symbol: 'XAUUSD', asOf, dataQuality: 'partial', bias: 'neutral', confidence: 0.5,
-      regime: 'mixed', bottomLine: 'Mixed.', technicalSummary: 'Mixed.', fundamentalSummary: 'Unavailable.',
+      symbol: 'XAUUSD',
+      asOf,
+      dataQuality: 'partial',
+      bias: 'neutral',
+      confidence: 0.5,
+      regime: 'mixed',
+      bottomLine: 'Mixed.',
+      technicalSummary: 'Mixed.',
+      fundamentalSummary: 'Unavailable.',
       scenarios: [
-        { name: 'Bullish', direction: 'bullish', trigger: 'breakout', invalidation: 'below', targets: [], risks: ['volatility'], evidenceIds: ['ind-1h'] },
-        { name: 'Bearish', direction: 'bearish', trigger: 'breakdown', invalidation: 'above', targets: [], risks: ['volatility'], evidenceIds: ['ind-4h'] },
+        {
+          name: 'Bullish',
+          direction: 'bullish',
+          trigger: 'breakout',
+          invalidation: 'below',
+          targets: [],
+          risks: ['volatility'],
+          evidenceIds: ['ind-1h'],
+        },
+        {
+          name: 'Bearish',
+          direction: 'bearish',
+          trigger: 'breakdown',
+          invalidation: 'above',
+          targets: [],
+          risks: ['volatility'],
+          evidenceIds: ['ind-4h'],
+        },
       ],
-      contradictions: [], missingData: ['Macro unavailable'],
+      contradictions: [],
+      missingData: ['Macro unavailable'],
       numericClaims: [{ label: 'EMA 20', value: 2, evidenceId: 'ind-1h', tolerance: 0.01 }],
       evidenceIds: ['ind-1h', 'ind-4h'],
       sources: [{ evidenceId: 'ind-1h', source: 'fixture', dataAsOf: asOf }],
     };
 
-    const patched = patchTimeframeConflictDisclosure(
-      candidate,
-      conflictPacket,
-      ['The report did not disclose a conflict between timeframe trend signals.'],
-    );
+    const patched = patchTimeframeConflictDisclosure(candidate, conflictPacket, [
+      'The report did not disclose a conflict between timeframe trend signals.',
+    ]);
 
     expect(patched?.contradictions).toContain(
       'Timeframe trend signals are mixed; higher and lower timeframes do not fully agree.',

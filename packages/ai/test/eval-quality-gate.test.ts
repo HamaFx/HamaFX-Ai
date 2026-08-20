@@ -8,6 +8,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  DEFAULT_EVAL_QUALITY_GATE_THRESHOLDS,
   evaluateEvalQualityGate,
   thresholdsFromEnv,
 } from '../src/eval/quality-gate';
@@ -39,6 +40,8 @@ describe('evaluation quality gate', () => {
       passed: true,
       failures: [],
       observed: {
+        caseCount: 1,
+        successfulCaseCount: 1,
         transportPassRate: 1,
         overallPassRate: 1,
         assertionPassRate: 1,
@@ -72,6 +75,8 @@ describe('evaluation quality gate', () => {
         }),
       ],
       {
+        minCaseCount: 1,
+        minSuccessfulCaseCount: 1,
         minTransportPassRate: 1,
         minOverallPassRate: 1,
         minAssertionPassRate: 1,
@@ -98,10 +103,26 @@ describe('evaluation quality gate', () => {
     const gate = evaluateEvalQualityGate([]);
     expect(gate.passed).toBe(false);
     expect(gate.failures).toContain('no evaluation cases were executed');
+    expect(gate.failures).toContain('case count 0 is below 1');
+    expect(gate.failures).toContain('successful case count 0 is below 1');
+  });
+
+  it('fails a run that is too small to be a release-quality sample', () => {
+    const gate = evaluateEvalQualityGate(
+      [result({ id: 'one' })],
+      { ...DEFAULT_EVAL_QUALITY_GATE_THRESHOLDS, minCaseCount: 5, minSuccessfulCaseCount: 3 },
+    );
+    expect(gate.passed).toBe(false);
+    expect(gate.failures).toEqual(expect.arrayContaining([
+      'case count 1 is below 5',
+      'successful case count 1 is below 3',
+    ]));
   });
 
   it('reads bounded thresholds from environment values', () => {
     expect(thresholdsFromEnv({
+      EVAL_MIN_CASES: '20',
+      EVAL_MIN_SUCCESSFUL_CASES: '18',
       EVAL_MIN_TRANSPORT_PASS_RATE: '0.99',
       EVAL_MIN_OVERALL_PASS_RATE: '0.8',
       EVAL_MIN_ASSERTION_PASS_RATE: '0.85',
@@ -110,6 +131,8 @@ describe('evaluation quality gate', () => {
       EVAL_MAX_AVG_TOTAL_MS: 'disabled',
       EVAL_MAX_AVG_COST_USD: '0.2',
     })).toEqual({
+      minCaseCount: 20,
+      minSuccessfulCaseCount: 18,
       minTransportPassRate: 0.99,
       minOverallPassRate: 0.8,
       minAssertionPassRate: 0.85,

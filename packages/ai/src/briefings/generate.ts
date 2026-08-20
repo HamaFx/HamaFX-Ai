@@ -29,8 +29,7 @@
 // Failures are logged and swallowed: the cron handler reports `processed`
 // vs total, never propagates a partial failure as a 500.
 
-import { schema } from '@kestrel/db';
-import { getDb } from '../db';
+import { getUserWithSettings, schema } from '@kestrel/db';
 import {
   type BriefingMessagePart,
   type EconomicEvent,
@@ -38,22 +37,16 @@ import {
   type Importance,
   type Symbol,
 } from '@kestrel/shared';
-import { generateText, type UIMessage } from 'ai';
-import { eq } from 'drizzle-orm';
 import { createCategorizedLogger } from '@kestrel/shared/logger';
+import type { UIMessage } from 'ai';
+import { eq } from 'drizzle-orm';
 
-import { dailySpendUsd } from '../cost';
+import { getDb } from '../db';
 import { computeStats } from '../journal/persistence';
+import { runMastraBackgroundText } from '../mastra';
 import { rememberBriefing } from '../memory/memory-index';
-import { resolveModel } from '../model';
 import { appendAssistantMessage } from '../persistence';
-import { telemetryConfig } from '../telemetry';
-
-import {
-  getOrCreateBriefingsThread,
-  recordEmitted,
-  wasEmitted,
-} from './persistence';
+import { getOrCreateBriefingsThread, recordEmitted, wasEmitted } from './persistence';
 
 export interface BriefingsEnv {
   AI_GATEWAY_API_KEY?: string | undefined;
@@ -90,11 +83,17 @@ function envFromProcess(): BriefingsEnv {
 // Pre / Post event briefings
 // ---------------------------------------------------------------------------
 
-export async function emitPreEvent(userId: string, eventId: string): Promise<{ emitted: boolean; reason?: string }> {
+export async function emitPreEvent(
+  userId: string,
+  eventId: string,
+): Promise<{ emitted: boolean; reason?: string }> {
   return emitEventBriefing(userId, eventId, 'pre');
 }
 
-export async function emitPostEvent(userId: string, eventId: string): Promise<{ emitted: boolean; reason?: string }> {
+export async function emitPostEvent(
+  userId: string,
+  eventId: string,
+): Promise<{ emitted: boolean; reason?: string }> {
   return emitEventBriefing(userId, eventId, 'post');
 }
 
@@ -111,8 +110,9 @@ async function emitEventBriefing(
   if (!event) return { emitted: false, reason: 'event_not_found' };
 
   const env = envFromProcess();
+  const thread = await getOrCreateBriefingsThread(userId);
 
-  const summary = await composeEventSummary(event, kind, env, userId);
+  const summary = await composeEventSummary(event, kind, env, userId, thread.id);
 
   // Phase 1 hardening §10 — refuse to burn the (eventId, kind) idempotency
   // slot on a stub. If the LLM and the deterministic fallback both
@@ -123,7 +123,6 @@ async function emitEventBriefing(
     return { emitted: false, reason: 'summary_too_short' };
   }
 
-  const thread = await getOrCreateBriefingsThread(userId);
   const part: BriefingMessagePart = {
     type: 'briefing',
     eventId,
@@ -134,17 +133,10 @@ async function emitEventBriefing(
   const ui = {
     id: crypto.randomUUID(),
     role: 'assistant' as const,
-    parts: [
-      { type: 'text' as const, text: summary },
-      part,
-    ],
+    parts: [{ type: 'text' as const, text: summary }, part],
   };
 
-  const { messageId } = await appendAssistantMessage(
-    userId,
-    thread.id,
-    ui as UIMessage,
-  );
+  const { messageId } = await appendAssistantMessage(userId, thread.id, ui as UIMessage);
   await recordEmitted(userId, eventId, kind, messageId);
 
   // Phase 7b — embed the briefing into the memory index so it's
@@ -155,9 +147,7 @@ async function emitEventBriefing(
     briefingKind: kind,
     occurredAtMs: event.date,
     userId,
-    ...(event.currency
-      ? { symbol: symbolFromCurrency(event.currency) }
-      : {}),
+    ...(event.currency ? { symbol: symbolFromCurrency(event.currency) } : {}),
   }).catch((err) => blog.warn('memory write failed', { err: String(err) }));
 
   return { emitted: true };
@@ -168,32 +158,25 @@ async function composeEventSummary(
   kind: 'pre' | 'post',
   env: BriefingsEnv,
   userId: string,
+  threadId: string,
 ): Promise<string> {
-  // Hard budget guard before any model call.
-  let llmAllowed = true;
   try {
-    const spent = await dailySpendUsd(userId);
-    if (spent >= env.MAX_DAILY_USD) llmAllowed = false;
-  } catch {
-    // If we can't compute spend, fall back to deterministic copy — never block.
-    llmAllowed = false;
-  }
-
-  if (!llmAllowed) return deterministicEventSummary(event, kind);
-
-  const prompt = buildEventPrompt(event, kind);
-  try {
-    const { text } = await generateText({
-      model: resolveModel(env.AI_DEFAULT_MODEL, env, userId),
+    const { settings } = await getUserWithSettings(userId);
+    if (!settings) return deterministicEventSummary(event, kind);
+    const result = await runMastraBackgroundText({
+      userId,
+      threadId,
+      task: 'briefing',
+      prompt: buildEventPrompt(event, kind),
       system:
-        'You are Kestrel writing a briefing for the single user. Be concise (max 6 short bullets). No greetings, no signoffs. Plain text, no markdown headings, no emoji.',
-      prompt,
-      ...telemetryConfig({ functionId: 'briefing.generate' }),
+        'You are Kestrel writing a concise economic-event briefing. Use only the supplied event facts. Do not invent market data, promise outcomes, or issue trade instructions. Return at most six short bullets.',
+      settings,
+      env,
     });
-    const cleaned = text.trim();
-    return cleaned.length > 0 ? cleaned : deterministicEventSummary(event, kind);
-  } catch (err) {
-    if (env.LOG_PROMPTS) blog.warn('LLM failed', { err: String(err) });
+    return result.text.length > 0 ? result.text : deterministicEventSummary(event, kind);
+  } catch (error) {
+    if (env.LOG_PROMPTS)
+      blog.warn('Mastra briefing failed; using deterministic fallback', { err: String(error) });
     return deterministicEventSummary(event, kind);
   }
 }
@@ -257,7 +240,9 @@ export function surpriseLabel(event: EconomicEvent): string {
 
 const WEEKLY_REVIEW_KEY = 'weekly_review';
 
-export async function emitWeeklyReview(userId: string): Promise<{ emitted: boolean; reason?: string }> {
+export async function emitWeeklyReview(
+  userId: string,
+): Promise<{ emitted: boolean; reason?: string }> {
   const env = envFromProcess();
   const thread = await getOrCreateBriefingsThread(userId);
 
@@ -285,11 +270,7 @@ export async function emitWeeklyReview(userId: string): Promise<{ emitted: boole
         } satisfies BriefingMessagePart,
       ],
     };
-    const { messageId } = await appendAssistantMessage(
-      userId,
-      thread.id,
-      ui as UIMessage,
-    );
+    const { messageId } = await appendAssistantMessage(userId, thread.id, ui as UIMessage);
     await recordEmitted(userId, weekKey, 'weekly_review', messageId);
     return { emitted: true };
   }
@@ -297,7 +278,7 @@ export async function emitWeeklyReview(userId: string): Promise<{ emitted: boole
   // The scoped `computeStats` result above already contains the weekly
   // review metrics. Do not issue a second unscoped journal query here.
 
-  const summary = await composeWeeklyReviewSummary(stats, env, userId);
+  const summary = await composeWeeklyReviewSummary(stats, env, userId, thread.id);
   // Phase 1 hardening §10 — same idempotency-protection as event briefings.
   if (summary.trim().length < 50) {
     return { emitted: false, reason: 'summary_too_short' };
@@ -315,11 +296,7 @@ export async function emitWeeklyReview(userId: string): Promise<{ emitted: boole
       } satisfies BriefingMessagePart,
     ],
   };
-  const { messageId } = await appendAssistantMessage(
-    userId,
-    thread.id,
-    ui as UIMessage,
-  );
+  const { messageId } = await appendAssistantMessage(userId, thread.id, ui as UIMessage);
   await recordEmitted(userId, weekKey, 'weekly_review', messageId);
 
   // Phase 7b — embed the weekly review for later memory recall.
@@ -338,30 +315,29 @@ async function composeWeeklyReviewSummary(
   stats: Awaited<ReturnType<typeof computeStats>>,
   env: BriefingsEnv,
   userId: string,
+  threadId: string,
 ): Promise<string> {
   const det = deterministicWeeklyReview(stats);
 
-  let llmAllowed = true;
   try {
-    const spent = await dailySpendUsd(userId);
-    if (spent >= env.MAX_DAILY_USD) llmAllowed = false;
-  } catch {
-    llmAllowed = false;
-  }
-  if (!llmAllowed) return det;
-
-  try {
-    const { text } = await generateText({
-      model: resolveModel(env.AI_DEFAULT_MODEL, env, userId),
+    const { settings } = await getUserWithSettings(userId);
+    if (!settings) return det;
+    const result = await runMastraBackgroundText({
+      userId,
+      threadId,
+      task: 'weekly_review',
+      prompt: `Stats:\n${det}\n\nWrite the weekly review.`,
       system:
-        'You are Kestrel writing the user\'s weekly trading review. Be concise (max 5 short bullets). No greetings or signoffs. Plain text.',
-      prompt: `Stats:\n${det}\n\nWrite the review.`,
-      ...telemetryConfig({ functionId: 'briefing.generate' }),
+        'You are Kestrel writing a concise weekly trading review. Use only the supplied deterministic statistics. Do not invent trades, prices, or performance. Return at most five short bullets.',
+      settings,
+      env,
     });
-    const cleaned = text.trim();
-    return cleaned.length > 0 ? cleaned : det;
-  } catch (err) {
-    if (env.LOG_PROMPTS) blog.warn('weekly LLM failed', { err: String(err) });
+    return result.text.length > 0 ? result.text : det;
+  } catch (error) {
+    if (env.LOG_PROMPTS)
+      blog.warn('Mastra weekly review failed; using deterministic fallback', {
+        err: String(error),
+      });
     return det;
   }
 }
@@ -411,7 +387,8 @@ export function isoWeekKey(d: Date): string {
   const firstThursday = new Date(Date.UTC(target.getUTCFullYear(), 0, 4));
   const firstDayNum = (firstThursday.getUTCDay() + 6) % 7;
   firstThursday.setUTCDate(firstThursday.getUTCDate() - firstDayNum + 3);
-  const week = 1 + Math.round((target.getTime() - firstThursday.getTime()) / (7 * 24 * 60 * 60 * 1000));
+  const week =
+    1 + Math.round((target.getTime() - firstThursday.getTime()) / (7 * 24 * 60 * 60 * 1000));
   return `${target.getUTCFullYear()}-W${week.toString().padStart(2, '0')}`;
 }
 

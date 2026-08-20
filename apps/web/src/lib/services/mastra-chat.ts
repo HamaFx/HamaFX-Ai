@@ -2,26 +2,29 @@
 
 import 'server-only';
 
-import type { UIMessage } from 'ai';
-import type { XauusdMastraRunResult, XauusdResearchReport } from '@kestrel/ai/mastra';
 import {
-  DEFAULT_MAX_DAILY_USD,
   appendAssistantMessage,
   appendUserMessage,
+  DEFAULT_MAX_DAILY_USD,
   estimateCostUsd,
   reserveTurnBudget,
 } from '@kestrel/ai';
+import type { XauusdMastraRunResult, XauusdResearchReport } from '@kestrel/ai/mastra';
 import { getUserWithSettings } from '@kestrel/db';
+import type { UIMessage } from 'ai';
 
 import { getServerEnv } from '@/lib/env';
 import { createMastraChatMeta } from '@/lib/mastra-chat-meta';
-import { runMastraXauusdResearch } from './mastra-xauusd';
+
+import { runMastraXauusdConversation, runMastraXauusdResearch } from './mastra-xauusd';
 
 export interface RunMastraXauusdChatInput {
   userId: string;
   threadId: string;
   userMessage: UIMessage;
   prompt: string;
+  modelOverride?: string | null;
+  kind?: 'research' | 'conversation';
   signal?: AbortSignal;
   followup?: boolean;
   priorReport?: XauusdResearchReport | null;
@@ -31,7 +34,9 @@ export interface RunMastraXauusdChatInput {
  * Execute one feature-flagged Mastra turn using the same persistence and daily
  * budget guardrails as the legacy agent. The caller owns fallback policy.
  */
-export async function runMastraXauusdChat(input: RunMastraXauusdChatInput): Promise<XauusdMastraRunResult & { runId: string; observedCost: number }> {
+export async function runMastraXauusdChat(
+  input: RunMastraXauusdChatInput,
+): Promise<XauusdMastraRunResult & { runId: string; observedCost: number }> {
   const { settings } = await getUserWithSettings(input.userId);
   if (!settings) {
     throw new Error('User settings not found. Please complete onboarding.');
@@ -52,11 +57,13 @@ export async function runMastraXauusdChat(input: RunMastraXauusdChatInput): Prom
     // a duplicate user message when Mastra fails after persistence.
     await appendUserMessage(input.userId, input.threadId, input.userMessage);
 
-    completedRun = await runMastraXauusdResearch({
+    const runResearch = input.kind !== 'conversation';
+    completedRun = await (runResearch ? runMastraXauusdResearch : runMastraXauusdConversation)({
       userId: input.userId,
       threadId: input.threadId,
       runId,
       prompt: input.prompt,
+      ...(input.modelOverride !== undefined ? { modelOverride: input.modelOverride } : {}),
       ...(input.signal ? { signal: input.signal } : {}),
       ...(input.followup ? { followup: true } : {}),
       ...(input.priorReport ? { priorReport: input.priorReport } : {}),
@@ -86,12 +93,9 @@ export async function runMastraXauusdChat(input: RunMastraXauusdChatInput): Prom
         { type: 'data-multi-agent-meta', data: meta } as UIMessage['parts'][number],
       ],
     };
-    await appendAssistantMessage(
-      input.userId,
-      input.threadId,
-      assistantMessage,
-      { idempotencyKey: `mastra:${input.threadId}:${input.userMessage.id}:assistant` },
-    );
+    await appendAssistantMessage(input.userId, input.threadId, assistantMessage, {
+      idempotencyKey: `mastra:${input.threadId}:${input.userMessage.id}:assistant`,
+    });
 
     await budget.reconcile(observedCost);
     return { ...completedRun, runId, observedCost };

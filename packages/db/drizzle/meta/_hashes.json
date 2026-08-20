@@ -323,6 +323,14 @@
     {
       "tag": "0081_ai_regression_cases",
       "hash": "c1a026b1539bfb394148d87dca886a81bb975f2d0b84fd32d1e50cc359ecc3bc"
+    },
+    {
+      "tag": "0082_fix_missing_tenant_triggers",
+      "hash": "a42b03e80246a424de6fe76a40210ff97ac7eae805418e9d7d2775909ee81d0f"
+    },
+    {
+      "tag": "0083_guard_tenant_triggers",
+      "hash": "21ae1d8c1f459e52cdac909a034c149a5a23d093a32cc43d3f07de199e1b2f68"
     }
   ]
 }

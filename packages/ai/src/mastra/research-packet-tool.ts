@@ -1,8 +1,8 @@
 import { createTool } from '@mastra/core/tools';
 
-import { executeMastraTool } from './telemetry';
 import { collectXauusdResearchPacket } from './research-packet';
 import { XauusdResearchPacketSchema } from './research-types';
+import { executeMastraTool } from './telemetry';
 import { XauusdResearchPacketInputSchema } from './tool-schemas';
 
 export const xauusdResearchPacketTool = createTool({

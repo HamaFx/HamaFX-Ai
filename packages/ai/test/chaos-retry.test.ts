@@ -65,7 +65,9 @@ describe('chaos: retry on transient failures', () => {
   it('exhausts all retry attempts and throws the last error', async () => {
     const err = Object.assign(new Error('persistent failure'), { statusCode: 502 });
     const fn = vi.fn().mockRejectedValue(err);
-    await expect(withRetry(fn, { maxAttempts: 3, ...BASE_OPTS })).rejects.toThrow('persistent failure');
+    await expect(withRetry(fn, { maxAttempts: 3, ...BASE_OPTS })).rejects.toThrow(
+      'persistent failure',
+    );
     expect(fn).toHaveBeenCalledTimes(3);
   });
 
@@ -102,18 +104,21 @@ describe('chaos: AbortSignal cancellation', () => {
     const ac = new AbortController();
     ac.abort();
     const fn = vi.fn().mockResolvedValue('never');
-    await expect(withRetry(fn, { maxAttempts: 3, signal: ac.signal, ...BASE_OPTS })).rejects.toThrow(
-      'Aborted',
-    );
+    await expect(
+      withRetry(fn, { maxAttempts: 3, signal: ac.signal, ...BASE_OPTS }),
+    ).rejects.toThrow('Aborted');
     expect(fn).not.toHaveBeenCalled();
   });
 
   it('aborts during retry backoff between attempts', async () => {
     const ac = new AbortController();
-    const err = Object.assign(new Error('transient'), { statusCode: 502 });
+    const err = Object.assign(new Error('transient'), {
+      statusCode: 502,
+      responseHeaders: { 'retry-after': '1' },
+    });
     const fn = vi.fn().mockRejectedValue(err);
 
-    // Use a delay that ensures we have time to abort during backoff.
+    // Use a server-advertised delay that ensures we have time to abort during backoff.
     // The first attempt fails immediately (baseDelayMs=0 for execution),
     // but we wrap so the sleep uses a longer delay.
     const promise = withRetry(fn, { maxAttempts: 3, signal: ac.signal, baseDelayMs: 200 });
@@ -127,10 +132,13 @@ describe('chaos: AbortSignal cancellation', () => {
 
   it('aborts before the next retry when signal fires during backoff', async () => {
     const ac = new AbortController();
-    const err = Object.assign(new Error('transient'), { statusCode: 503 });
+    const err = Object.assign(new Error('transient'), {
+      statusCode: 503,
+      responseHeaders: { 'retry-after': '1' },
+    });
     const fn = vi.fn().mockRejectedValue(err);
 
-    // Cancel during the sleep after the first attempt.
+    // Cancel during the server-advertised sleep after the first attempt.
     setTimeout(() => ac.abort(), 10);
     const promise = withRetry(fn, { maxAttempts: 3, signal: ac.signal, baseDelayMs: 200 });
 
@@ -147,9 +155,9 @@ describe('chaos: AbortSignal cancellation', () => {
     // Abort happens after all retries done.
     setTimeout(() => ac.abort(), 200);
 
-    await expect(withRetry(fn, { maxAttempts: 2, signal: ac.signal, ...BASE_OPTS })).rejects.toThrow(
-      'always fails',
-    );
+    await expect(
+      withRetry(fn, { maxAttempts: 2, signal: ac.signal, ...BASE_OPTS }),
+    ).rejects.toThrow('always fails');
     expect(fn).toHaveBeenCalledTimes(2);
   });
 });

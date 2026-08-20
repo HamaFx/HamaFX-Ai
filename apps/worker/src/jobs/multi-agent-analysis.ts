@@ -14,70 +14,70 @@
  * limitations under the License.
  */
 
-// U2 — Multi-agent analysis worker job.
-//
-// Polls the analysis_jobs table for status='pending' rows, claims the
-// oldest job with a FOR UPDATE SKIP LOCKED query, runs the multi-agent
-// pipeline, and updates the row with the result.
-//
-// This job runs on the worker VM inside the Docker container, using the
-// same @kestrel/ai import as the Vercel route handler. No new network
-// paths needed — communication is through the Postgres DB.
+// Durable full-analysis worker. Mastra owns the specialist workflow; Kestrel
+// owns queue claims, leases, retries, budgets, persistence, and idempotency.
 
-import { recoverStaleJobs as recoverStaleAnalysisJobs, claimNextPendingJob, schema } from '@kestrel/db';
-import { getDb, ProgressTracker, selectAgents } from '@kestrel/ai';
-import type { ProgressEvent } from '@kestrel/ai';
-import { eq, lt, and } from 'drizzle-orm';
+import {
+  appendAssistantMessage,
+  appendUserMessage,
+  DEFAULT_MAX_DAILY_USD,
+  getDb,
+  reserveTurnBudget,
+  withDiagnostics,
+  type BudgetHandle,
+} from '@kestrel/ai';
+import {
+  extractSymbolFromPrompt,
+  isSafeSymbolResearchPrompt,
+  runMastraMode,
+} from '@kestrel/ai/mastra';
+import {
+  claimNextPendingJob,
+  recoverStaleJobs as recoverStaleAnalysisJobs,
+  schema,
+} from '@kestrel/db';
 import { pickAiEnv } from '@kestrel/shared';
 import { traceIdStorage } from '@kestrel/shared/logger';
 import type { UIMessage } from 'ai';
+import { and, eq, lt } from 'drizzle-orm';
+
 import type { JobContext, JobResult } from './types.js';
-import type { AnalysisMode } from '@kestrel/ai';
 
-/** How many pending jobs to process per polling interval. */
 const MAX_JOBS_PER_RUN = 3;
-
-/** Maximum time a job can stay in 'running' before being considered stale. */
-const STALE_JOB_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+const STALE_JOB_TIMEOUT_MS = 5 * 60 * 1000;
 const MAX_ANALYSIS_ATTEMPTS = 3;
 
 export function isRetryableAnalysisError(error: unknown): boolean {
   const messages: string[] = [];
   let current: unknown = error;
   const seen = new Set<unknown>();
-
   while (current && !seen.has(current)) {
     seen.add(current);
     messages.push(current instanceof Error ? current.message : String(current));
     current = current instanceof Error ? current.cause : undefined;
   }
-
-  return /(?:timeout|timed?\s*out|aborted|network|fetch\s*failed|rate\s*limit|too\s*many\s*requests|temporar(?:y|ily)|connection|ECONNRESET|5\d\d)/i.test(messages.join(' '));
+  return /(?:timeout|timed?\s*out|aborted|network|fetch\s*failed|rate\s*limit|too\s*many\s*requests|temporar(?:y|ily)|connection|ECONNRESET|5\d\d)/i.test(
+    messages.join(' '),
+  );
 }
 
-function reconstructHistory(raw: unknown): UIMessage[] {
-  if (!Array.isArray(raw)) return [];
-
-  return raw.flatMap((entry) => {
-    if (typeof entry !== 'object' || entry === null) return [];
-    const row = entry as {
-      id?: unknown;
-      role?: unknown;
-      content?: unknown;
-      parts?: unknown;
-    };
-    if (row.role !== 'user' && row.role !== 'assistant' && row.role !== 'system') return [];
-
-    const parts = Array.isArray(row.parts) && row.parts.length > 0
-      ? row.parts
-      : [{ type: 'text', text: typeof row.content === 'string' ? row.content : '' }];
-
-    return [{
-      id: typeof row.id === 'string' ? row.id : crypto.randomUUID(),
-      role: row.role,
-      parts: parts as UIMessage['parts'],
-    } as UIMessage];
-  });
+function userMessageFromJob(job: {
+  userMessageText: string;
+  userMessageParts: unknown;
+}): UIMessage {
+  const storedParts = Array.isArray(job.userMessageParts) ? job.userMessageParts : [];
+  const hasTextPart = storedParts.some(
+    (part) =>
+      typeof part === 'object' && part !== null && (part as { type?: unknown }).type === 'text',
+  );
+  const parts = hasTextPart
+    ? storedParts
+    : [...storedParts, { type: 'text', text: job.userMessageText }];
+  return {
+    id: crypto.randomUUID(),
+    role: 'user',
+    parts: parts as UIMessage['parts'],
+  } as UIMessage;
 }
 
 export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult> {
@@ -85,25 +85,23 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
   let processed = 0;
 
   for (let i = 0; i < MAX_JOBS_PER_RUN; i++) {
-    // The database query layer owns FOR UPDATE SKIP LOCKED claim semantics
-    // so web/worker consumers cannot silently diverge.
-    const claimResult = await claimNextPendingJob();
-
-    if (!claimResult) {
+    const job = await claimNextPendingJob();
+    if (!job) {
       ctx.log.info('No pending analysis jobs — done.');
       break;
     }
 
-    const job = claimResult;
     const workerRunId = job.workerRunId;
     if (!workerRunId) {
       ctx.log.error('Claimed analysis job has no worker lease token', { jobId: job.id });
       continue;
     }
-    ctx.log.info('Claimed analysis job', { jobId: job.id, userId: job.userId, traceId: job.traceId });
+    ctx.log.info('Claimed Mastra analysis job', {
+      jobId: job.id,
+      userId: job.userId,
+      traceId: job.traceId,
+    });
 
-    // Refresh the lease while a long analysis is running. `updatedAt` is
-    // the existing lease timestamp, so no migration is required.
     const leaseHeartbeat = setInterval(() => {
       void db
         .update(schema.analysisJobs)
@@ -115,321 +113,216 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
             eq(schema.analysisJobs.workerRunId, workerRunId),
           ),
         )
-        .catch((err) => ctx.log.warn('Analysis job lease heartbeat failed', { err: String(err) }));
+        .catch((error) =>
+          ctx.log.warn('Analysis job lease heartbeat failed', { err: String(error) }),
+        );
     }, 30_000);
     leaseHeartbeat.unref();
 
-    // OBS-1: If the web request attached a diagnostic traceId, wrap the
-    // entire job processing in the traceId context so all log lines from
-    // this worker run carry the same traceId as the originating chat turn.
     const processJob = async () => {
-      const progressEvents: Array<Record<string, unknown>> = [];
-      let progressWrite = Promise.resolve();
-      let progressTracker: ProgressTracker | null = null;
+      let budget: BudgetHandle | null = null;
+      let modeResult: Awaited<ReturnType<typeof runMastraMode>> | null = null;
+      let observedCost = 0;
       try {
-        // Dynamically import the multi-agent orchestrator — the worker
-        // bundle includes @kestrel/ai (used by initLangfuse).
-        const {
-          runMultiAgentChat,
-          extractUserMessageText,
-          resolveMode,
-          getThread,
-          listMessages,
-          withDiagnostics,
-        } = await import('@kestrel/ai');
-        const { userSettings: userSettingsTable } = schema;
-
-      // Load user settings and identity for the same prompt context used by
-      // the synchronous web path.
-      const [[userSettings], [userRow]] = await Promise.all([
-        db
-          .select()
-          .from(userSettingsTable)
-          .where(eq(userSettingsTable.userId, job.userId)),
-        db
-          .select({ name: schema.users.name, email: schema.users.email })
-          .from(schema.users)
-          .where(eq(schema.users.id, job.userId)),
-      ]);
-
-      if (!userSettings) {
-        throw new Error(`User settings not found for userId=${job.userId}`);
-      }
-
-      // Reconstruct the user message from serialized parts. Older callers
-      // may provide only content, so preserve the stored text as a reliable
-      // fallback instead of silently sending an empty prompt to every agent.
-      const storedParts = Array.isArray(job.userMessageParts) ? job.userMessageParts : [];
-      const hasTextPart = storedParts.some(
-        (part) => typeof part === 'object' && part !== null && (part as { type?: unknown }).type === 'text',
-      );
-      const userMessageParts = hasTextPart
-        ? storedParts
-        : [...storedParts, { type: 'text', text: job.userMessageText }];
-      const userMessage: UIMessage = {
-        id: crypto.randomUUID(),
-        role: 'user',
-        parts: userMessageParts as UIMessage['parts'],
-      } as UIMessage;
-
-      const thread = await getThread(job.userId, job.threadId);
-      if (!thread) {
-        throw new Error(`Analysis job thread not found or not owned by user: ${job.threadId}`);
-      }
-      // Use authoritative persisted history rather than trusting the
-      // client-supplied snapshot stored on the queued job.
-      const persistedHistory = await listMessages(job.userId, job.threadId, 200);
-      const history = reconstructHistory(persistedHistory);
-
-      // Extract user text and resolve mode from the queued mode value.
-      // The route handler already resolved this to a non-'single' mode
-      // before queueing, so we use the stored mode to avoid re-detecting.
-      const userText = extractUserMessageText(userMessage);
-      // A queued job already carries the user's explicit mode. Never run
-      // auto-detection over an explicit full request: doing so can silently
-      // turn a queued full analysis into standard and start only two agents.
-      const queuedMode = (job.mode as AnalysisMode) ?? 'full';
-      const resolvedMode = queuedMode === 'full'
-        ? 'full'
-        : resolveMode(queuedMode, userText);
-
-      // Build progress snapshots in the same data-stream shape consumed by
-      // the browser transport. The orchestrator emits raw lifecycle events,
-      // while the polling client expects `data-agent-progress` snapshots.
-      // Full mode is strict: failed-agent progress remains visible until the
-      // terminal job status is observed; it is never replaced by a partial result.
-      const onProgress = (event: ProgressEvent) => {
-        if (event.type === 'specialists_start' && resolvedMode === 'full' && event.agents.length !== 4) {
-          throw new Error(`Full mode invariant violated: expected 4 specialists, received ${event.agents.length}`);
+        const [[userSettings]] = await Promise.all([
+          db.select().from(schema.userSettings).where(eq(schema.userSettings.userId, job.userId)),
+        ]);
+        if (!userSettings) {
+          throw new Error(`User settings not found for userId=${job.userId}`);
         }
-        if (event.type === 'specialists_start') {
-          // Create the tracker from the actual effective specialist list so
-          // retries never leave phantom agents stuck in `pending` state.
-          progressTracker = new ProgressTracker(resolvedMode, event.agents);
-        }
-        progressTracker ??= new ProgressTracker(resolvedMode, selectAgents(resolvedMode));
-        const publicEvent = event.type === 'agent_error'
-          ? { ...event, error: 'Required agent failed. Full analysis cannot continue.' }
-          : event.type === 'fusion_error'
-            ? { ...event, error: 'Decision agent failed. Full analysis cannot continue.' }
-            : event.type === 'analysis_error'
-              ? { ...event, error: 'Full analysis stopped. No partial answer was returned.' }
-              : event;
-        progressTracker.update(publicEvent);
-        const snapshot = progressTracker.buildPart() as unknown as Record<string, unknown>;
-        progressEvents.push(snapshot);
 
-        // Serialize progress writes. Without this chain, an earlier async
-        // update could finish after the final status update and overwrite the
-        // latest progress snapshot.
-        progressWrite = progressWrite.then(async () => {
-          try {
-            await db
-              .update(schema.analysisJobs)
-              .set({ progress: progressEvents, updatedAt: new Date() })
-              .where(
-                and(
-                  eq(schema.analysisJobs.id, job.id),
-                  eq(schema.analysisJobs.status, 'running'),
-                  eq(schema.analysisJobs.workerRunId, workerRunId),
-                ),
-              );
-          } catch (err) {
-            ctx.log.warn('Failed to update progress', { err: String(err) });
-          }
+        const userMessage = userMessageFromJob(job);
+        const userText = job.userMessageText;
+        const symbol = extractSymbolFromPrompt(userText, userSettings.defaultSymbol ?? 'XAUUSD');
+        if (!symbol || !isSafeSymbolResearchPrompt(userText)) {
+          throw new Error(
+            'Full analysis requires one supported symbol and a read-only research request.',
+          );
+        }
+
+        const env = pickAiEnv(process.env as unknown as Parameters<typeof pickAiEnv>[0]);
+        budget = await reserveTurnBudget({
+          userId: job.userId,
+          estimateUsd: 0.05,
+          maxDailyUsd: userSettings.maxDailyUsd ?? env.MAX_DAILY_USD ?? DEFAULT_MAX_DAILY_USD,
+          correlation: { threadId: job.threadId, runId: workerRunId },
         });
-      };
 
-      // Run the multi-agent pipeline. Uses the shared pickAiEnv helper
-      // so the worker always passes the same env shape as the web route.
-      const env = pickAiEnv(process.env as unknown as Parameters<typeof pickAiEnv>[0]);
+        await appendUserMessage(job.userId, job.threadId, userMessage, {
+          idempotencyKey: `analysis-job:${job.id}:user`,
+        });
 
-      const result = await withDiagnostics(job.userId, job.threadId, () => runMultiAgentChat({
-        threadId: job.threadId,
-        userId: job.userId,
-        userMessage,
-        history,
-        userSettings,
-        displayName: userRow?.name?.trim() || (userRow?.email ? userRow.email.split('@')[0] : null) || null,
-        ...(userSettings.customInstructions ? { customInstructions: userSettings.customInstructions } : {}),
-        env,
-        signal: ctx.signal ?? null,
-        analysisMode: resolvedMode,
-        idempotencyKey: `analysis-job:${job.id}`,
-        onProgress,
-      }), {
-        ...(job.traceId ? { traceId: job.traceId } : {}),
-        runId: workerRunId,
-        jobId: job.id,
-      });
-
-      // Ensure all progress snapshots have reached the database before the
-      // terminal status is written.
-      await progressWrite;
-
-      // Mark as complete.
-      const completedRows = await db
-        .update(schema.analysisJobs)
-        .set({
-          status: 'complete',
-          result: {
-            finalText: result.finalText,
-            agentOpinions: result.agentOpinions,
-            mode: result.mode,
-            totalCostUsd: result.totalCostUsd,
-            totalLatencyMs: result.totalLatencyMs,
-            messageId: result.messageId,
+        modeResult = await withDiagnostics(
+          job.userId,
+          job.threadId,
+          () =>
+            runMastraMode({
+              prompt: userText,
+              symbol,
+              userId: job.userId,
+              threadId: job.threadId,
+              runId: workerRunId,
+              mode: 'full',
+              settings: userSettings,
+              env,
+              signal: ctx.signal,
+              telemetryKind: 'mastra_full_job',
+            }),
+          {
+            ...(job.traceId ? { traceId: job.traceId } : {}),
+            runId: workerRunId,
+            jobId: job.id,
           },
-          progress: progressEvents,
-          completedAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .where(
-          and(
-            eq(schema.analysisJobs.id, job.id),
-            eq(schema.analysisJobs.status, 'running'),
-            eq(schema.analysisJobs.workerRunId, workerRunId),
-          ),
-        )
-        .returning({ id: schema.analysisJobs.id });
+        );
+        observedCost = modeResult.totalCostUsd;
 
-      if (completedRows.length !== 1) {
-        ctx.log.warn('Analysis job completion skipped because the lease was lost', {
-          jobId: job.id,
-          workerRunId: workerRunId,
-        });
-        return;
-      }
+        const assistant: UIMessage = {
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          parts: [
+            { type: 'text', text: modeResult.finalText },
+            {
+              type: 'data-multi-agent-meta',
+              data: {
+                engine: 'mastra',
+                mode: modeResult.mode,
+                symbol: modeResult.symbol,
+                packetId: modeResult.packet.packetId,
+                dataQuality: modeResult.packet.dataQuality,
+                totalCostUsd: modeResult.totalCostUsd,
+                totalLatencyMs: modeResult.totalLatencyMs,
+                agentOpinions: modeResult.agentOpinions,
+              },
+            } as UIMessage['parts'][number],
+          ],
+        };
+        const persistedAssistant = await appendAssistantMessage(
+          job.userId,
+          job.threadId,
+          assistant,
+          { idempotencyKey: `analysis-job:${job.id}:assistant` },
+        );
 
-      ctx.log.info('Analysis job completed', { jobId: job.id, workerRunId: workerRunId, costUsd: result.totalCostUsd, latencyMs: result.totalLatencyMs });
-      processed++;
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        const retryable = isRetryableAnalysisError(err) && job.attemptCount < MAX_ANALYSIS_ATTEMPTS;
-        const nextStatus = retryable ? 'pending' : 'failed';
-        const nextError = retryable
-          ? `Attempt ${job.attemptCount}/${MAX_ANALYSIS_ATTEMPTS} failed; retrying automatically.`
-          : msg;
+        const completedRows = await db
+          .update(schema.analysisJobs)
+          .set({
+            status: 'complete',
+            result: {
+              finalText: modeResult.finalText,
+              agentOpinions: modeResult.agentOpinions,
+              mode: modeResult.mode,
+              totalCostUsd: modeResult.totalCostUsd,
+              totalLatencyMs: modeResult.totalLatencyMs,
+              messageId: persistedAssistant.messageId,
+            },
+            progress: [],
+            completedAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(schema.analysisJobs.id, job.id),
+              eq(schema.analysisJobs.status, 'running'),
+              eq(schema.analysisJobs.workerRunId, workerRunId),
+            ),
+          )
+          .returning({ id: schema.analysisJobs.id });
 
-        // A failure can happen after all visible agents report done (for
-        // example during budget reconciliation or final persistence). Make
-        // that retry/terminal state explicit so the UI never leaves a
-        // successful committee verdict beside an incomplete job.
-        const failedProgressTracker = progressTracker as ProgressTracker | null;
-        const currentProgress = failedProgressTracker?.buildPart().data;
-        const needsRetryState = retryable && currentProgress?.status !== 'retrying';
-        const needsFailureState = !retryable && currentProgress?.status !== 'failed';
-        if (failedProgressTracker && (needsRetryState || needsFailureState)) {
-          failedProgressTracker.update(retryable
-            ? {
-                type: 'analysis_retry',
-                attempt: job.attemptCount,
-                maxAttempts: MAX_ANALYSIS_ATTEMPTS,
-                error: 'Full analysis encountered a temporary error and is being retried.',
-              }
-            : {
-                type: 'analysis_error',
-                stage: 'decision',
-                failedAgents: [],
-                error: 'Full analysis failed before a complete result was committed. No partial answer was returned.',
-              });
-          progressEvents.push(failedProgressTracker.buildPart() as unknown as Record<string, unknown>);
-          progressWrite = progressWrite.then(async () => {
-            try {
-              await db
-                .update(schema.analysisJobs)
-                .set({ progress: progressEvents, updatedAt: new Date() })
-                .where(
-                  and(
-                    eq(schema.analysisJobs.id, job.id),
-                    eq(schema.analysisJobs.status, 'running'),
-                    eq(schema.analysisJobs.workerRunId, workerRunId),
-                  ),
-                );
-            } catch (progressErr) {
-              ctx.log.warn('Failed to persist terminal failure progress', { err: String(progressErr) });
-            }
+        if (completedRows.length !== 1) {
+          ctx.log.warn('Mastra analysis completion skipped because the lease was lost', {
+            jobId: job.id,
+            workerRunId,
           });
+          return;
         }
 
-        ctx.log.error('Analysis job failed', {
+        await budget.reconcile(observedCost);
+        budget = null;
+        processed++;
+        ctx.log.info('Mastra Full analysis job completed', {
           jobId: job.id,
-          err: msg,
-          retryable,
-          attempt: job.attemptCount,
+          workerRunId,
+          symbol,
+          costUsd: observedCost,
+          latencyMs: modeResult.totalLatencyMs,
         });
-
-      await progressWrite;
-      const failedRows = await db
-        .update(schema.analysisJobs)
-        .set({
-          status: nextStatus,
-          error: nextStatus === 'failed'
-            ? 'Full analysis could not be completed. No partial answer was returned.'
-            : nextError,
-          completedAt: retryable ? null : new Date(),
-          startedAt: retryable ? null : job.startedAt,
-          workerRunId: retryable ? null : workerRunId,
-          updatedAt: new Date(),
-        })
-        .where(
-          and(
-            eq(schema.analysisJobs.id, job.id),
-            eq(schema.analysisJobs.status, 'running'),
-            eq(schema.analysisJobs.workerRunId, workerRunId),
-          ),
-        )
-        .returning({ id: schema.analysisJobs.id });
-
-      if (failedRows.length !== 1) {
-        ctx.log.warn('Analysis job failure update skipped because the lease was lost', {
-          jobId: job.id,
-          workerRunId: workerRunId,
-        });
-      }
-      processed++;
+      } catch (error) {
+        if (budget) {
+          if (modeResult) await budget.reconcile(observedCost);
+          else await budget.release();
+          budget = null;
+        }
+        throw error;
       }
     };
 
-    // OBS-1: Run job processing inside the traceId context when available.
     try {
-      if (job.traceId) {
-        await traceIdStorage.run(job.traceId, processJob);
-      } else {
-        await processJob();
+      try {
+        if (job.traceId) await traceIdStorage.run(job.traceId, processJob);
+        else await processJob();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        const retryable =
+          isRetryableAnalysisError(error) && job.attemptCount < MAX_ANALYSIS_ATTEMPTS;
+        const nextStatus = retryable ? 'pending' : 'failed';
+        ctx.log.error('Mastra analysis job failed', {
+          jobId: job.id,
+          err: message,
+          retryable,
+          attempt: job.attemptCount,
+        });
+        const failedRows = await db
+          .update(schema.analysisJobs)
+          .set({
+            status: nextStatus,
+            error: retryable
+              ? `Attempt ${job.attemptCount}/${MAX_ANALYSIS_ATTEMPTS} failed; retrying automatically.`
+              : 'Full Mastra analysis could not be completed. No partial answer was returned.',
+            completedAt: retryable ? null : new Date(),
+            startedAt: retryable ? null : job.startedAt,
+            workerRunId: retryable ? null : workerRunId,
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(schema.analysisJobs.id, job.id),
+              eq(schema.analysisJobs.status, 'running'),
+              eq(schema.analysisJobs.workerRunId, workerRunId),
+            ),
+          )
+          .returning({ id: schema.analysisJobs.id });
+        if (failedRows.length !== 1) {
+          ctx.log.warn('Mastra analysis failure update skipped because the lease was lost', {
+            jobId: job.id,
+            workerRunId,
+          });
+        }
+        processed++;
       }
     } finally {
       clearInterval(leaseHeartbeat);
     }
   }
 
-  // Requeue stale leases while attempts remain. Terminal writes are
-  // lease-token-conditional, so an old worker cannot resurrect a job after
-  // this cleanup changes it back to pending. Jobs that exhausted their
-  // bounded attempts become failed and remain visible to the client.
   const staleCutoff = new Date(Date.now() - STALE_JOB_TIMEOUT_MS);
   const staleRecovery = await recoverStaleAnalysisJobs(staleCutoff, MAX_ANALYSIS_ATTEMPTS);
   if (staleRecovery.requeued > 0 || staleRecovery.failed > 0) {
-    ctx.log.warn('Recovered stale analysis jobs', {
+    ctx.log.warn('Recovered stale Mastra analysis jobs', {
       requeued: staleRecovery.requeued,
       failed: staleRecovery.failed,
       maxAttempts: MAX_ANALYSIS_ATTEMPTS,
     });
   }
 
-  // Clean up old completed/failed jobs older than 7 days.
   const retentionCutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   try {
     await db
       .delete(schema.analysisJobs)
       .where(lt(schema.analysisJobs.completedAt, retentionCutoff));
-  } catch (err) {
-    ctx.log.warn('Analysis job retention cleanup failed', {
-      err: err instanceof Error ? err.message : String(err),
-    });
+  } catch (error) {
+    ctx.log.warn('Analysis job retention cleanup failed', { err: String(error) });
   }
 
   ctx.log.info('Analysis job poll complete', { processed });
-
   return { processed, note: `processed=${processed}` };
 }

@@ -37,19 +37,20 @@
 import { createHash } from 'node:crypto';
 
 import { schema } from '@kestrel/db';
-import { getDb } from '../db';
 import {
   AnalyzeChartImageInputSchema,
   AnalyzeChartImageOutputSchema,
   type AnalyzeChartImageOutput,
 } from '@kestrel/shared';
-import { generateText, tool, type ModelMessage } from 'ai';
+import { tool, type ModelMessage } from 'ai';
 import { and, desc, eq } from 'drizzle-orm';
 import type { z } from 'zod';
 
+import { getDb } from '../db';
+import { runMastraText } from '../mastra/text-runner';
 import { resolveModel, resolveVisionModel } from '../model';
-import { maybeGetToolContext, type ToolDb } from '../tool-context';
 import { telemetryConfig } from '../telemetry';
+import { maybeGetToolContext, type ToolDb } from '../tool-context';
 
 const InputSchema = AnalyzeChartImageInputSchema;
 
@@ -99,7 +100,10 @@ export const analyzeChartImageTool = tool({
   description:
     "Run a structured technical readout on the most recent chart screenshot the user attached this turn. Returns a typed observation: identified symbol/timeframe, trend, bias, labelled price levels, and an English observation paragraph. Use whenever the user attaches an image and asks anything chart-shaped. Returns observed='no image attached' if there's no image to analyse.",
   inputSchema: InputSchema,
-  execute: async (input: z.infer<typeof InputSchema>, _options): Promise<AnalyzeChartImageOutput> => {
+  execute: async (
+    input: z.infer<typeof InputSchema>,
+    _options,
+  ): Promise<AnalyzeChartImageOutput> => {
     const ctx = maybeGetToolContext();
     if (!ctx) return NO_CONTEXT;
     const { threadId, env } = ctx;
@@ -154,12 +158,18 @@ export const analyzeChartImageTool = tool({
           bareModelId: modelId.replace(/^.*\//, ''),
         };
       }
-      const { text } = await generateText({
-        model: vision.model,
-        system: SYSTEM_PROMPT,
-        messages,
-        ...telemetryConfig({ functionId: 'tool.analyze_chart_image' }),
-      });
+      const text = (
+        await runMastraText({
+          task: 'chart-image-analysis',
+          model: vision.model,
+          system: SYSTEM_PROMPT,
+          messages,
+          ...(ctx?.userId ? { userId: ctx.userId } : {}),
+          threadId,
+          ...(ctx?.signal ? { signal: ctx.signal } : {}),
+          maxOutputTokens: 1200,
+        })
+      ).text;
 
       // Try strict parse first; if the model returned plain text, build a
       // graceful no-overlay shape with the text in `observed`.
@@ -212,7 +222,7 @@ async function findLatestImagePart(threadId: string, db: ToolDb): Promise<ImageP
       'type' in (p as Record<string, unknown>) &&
       (p as { type: unknown }).type === 'file' &&
       typeof (p as { mediaType?: unknown }).mediaType === 'string' &&
-      ((p as { mediaType: string }).mediaType.startsWith('image/'))
+      (p as { mediaType: string }).mediaType.startsWith('image/')
     ) {
       return p as ImagePartShape;
     }
@@ -238,7 +248,11 @@ function asContentImagePart(part: ImagePartShape): { type: 'image'; image: strin
 
 function tryParseStructured(text: string): AnalyzeChartImageOutput | null {
   // Strip code fences and try to JSON-parse the first object literal.
-  const trimmed = text.trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+  const trimmed = text
+    .trim()
+    .replace(/^```(?:json)?/i, '')
+    .replace(/```$/, '')
+    .trim();
   let parsed: unknown;
   try {
     parsed = JSON.parse(trimmed);

@@ -1,7 +1,4 @@
-import {
-  fetchNews,
-  fetchUpcomingEvents,
-} from '@kestrel/data';
+import { fetchNews, fetchUpcomingEvents } from '@kestrel/data';
 import { fetchObservations, fetchResonanceInputs } from '@kestrel/data/providers/fred';
 import { EconomicEventSchema, NewsArticleSchema } from '@kestrel/shared';
 
@@ -48,7 +45,13 @@ export async function fetchXauusdMacroData(signal?: AbortSignal): Promise<Xauusd
       ...(signal ? { signal } : {}),
     }),
     fredKey
-      ? fetchObservations({ apiKey: fredKey, seriesId: 'DTWEXBGS', start, end, ...(signal ? { signal } : {}) })
+      ? fetchObservations({
+          apiKey: fredKey,
+          seriesId: 'DTWEXBGS',
+          start,
+          end,
+          ...(signal ? { signal } : {}),
+        })
       : Promise.reject(providerError('FRED_API_KEY is not configured')),
     fredKey
       ? fetchResonanceInputs({ apiKey: fredKey, start, end, ...(signal ? { signal } : {}) })
@@ -86,28 +89,43 @@ export function assembleXauusdMacroEvidence(
   const news = fetched.news.status === 'fulfilled' ? fetched.news.value : [];
   const events = fetched.events.status === 'fulfilled' ? fetched.events.value : [];
   const dollarIndex = fetched.dollarIndex.status === 'fulfilled' ? fetched.dollarIndex.value : [];
-  const resonance = fetched.resonance.status === 'fulfilled'
-    ? fetched.resonance.value
-    : { realYields: [], breakevenInflation: [] };
+  const resonance =
+    fetched.resonance.status === 'fulfilled'
+      ? fetched.resonance.value
+      : { realYields: [], breakevenInflation: [] };
 
   if (fetched.news.status === 'rejected') missingData.push('Gold-relevant news is unavailable.');
-  if (fetched.events.status === 'rejected') missingData.push('The economic calendar is unavailable.');
-  if (fetched.dollarIndex.status === 'rejected') missingData.push('Dollar-strength data is unavailable.');
-  if (fetched.resonance.status === 'rejected') missingData.push('US real-yield and inflation-expectation data is unavailable.');
+  if (fetched.events.status === 'rejected')
+    missingData.push('The economic calendar is unavailable.');
+  if (fetched.dollarIndex.status === 'rejected')
+    missingData.push('Dollar-strength data is unavailable.');
+  if (fetched.resonance.status === 'rejected')
+    missingData.push('US real-yield and inflation-expectation data is unavailable.');
 
   const parsedNews = news.map((item) => NewsArticleSchema.parse(item));
   const parsedEvents = events.map((item) => EconomicEventSchema.parse(item));
-  const allObservations = [...dollarIndex, ...resonance.realYields, ...resonance.breakevenInflation];
+  const allObservations = [
+    ...dollarIndex,
+    ...resonance.realYields,
+    ...resonance.breakevenInflation,
+  ];
   const hasAnyData = parsedNews.length > 0 || parsedEvents.length > 0 || allObservations.length > 0;
   if (!hasAnyData) {
     missingData.push('No macro evidence was returned by the configured providers.');
     return { evidence: null, missingData, warnings };
   }
 
-  if (missingData.length > 0) warnings.push('Macro context is partial because one or more providers were unavailable.');
+  if (missingData.length > 0)
+    warnings.push('Macro context is partial because one or more providers were unavailable.');
 
   const observations = allObservations.map((item) => item.date);
-  const dataAsOf = new Date(latestTimestamp(generatedAt, parsedNews, observations.map((date) => ({ date })))).toISOString();
+  const dataAsOf = new Date(
+    latestTimestamp(
+      generatedAt,
+      parsedNews,
+      observations.map((date) => ({ date })),
+    ),
+  ).toISOString();
   const evidence = XauusdMacroEvidenceSchema.parse({
     evidenceId: createEvidenceId('macro', XAUUSD),
     kind: 'macro',

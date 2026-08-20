@@ -11,8 +11,8 @@ import {
   startResearchStage,
   warningForResearchFailure,
 } from './research-packet-stages';
-import { XAUUSD } from './types';
 import type { XauusdResearchPacket } from './research-types';
+import { XAUUSD } from './types';
 
 export function collectIndicatorEvidence(
   packetId: string,
