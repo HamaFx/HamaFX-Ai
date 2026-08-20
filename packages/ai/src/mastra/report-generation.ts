@@ -43,7 +43,7 @@ export async function generateXauusdFollowup(
   };
 }
 
-const REPORT_REPAIR_LIMIT = 1;
+const REPORT_REPAIR_LIMIT = 2;
 
 export async function generateXauusdReport(
   agent: Agent<string, typeof xauusdMastraTools, undefined, XauusdRequestContext>,

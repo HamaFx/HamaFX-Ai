@@ -85,7 +85,7 @@ export function verifyXauusdReport(
 
   verifyReportSafety(report, packet, findings);
   verifyNumericClaims(report, packet, findings);
-  verifyNarrativeNumericClaims(report, findings);
+  verifyNarrativeNumericClaims(report, packet, findings);
   verifyTemporalDisclosure(report, packet, findings);
 
   const ok = findings.length === 0;

@@ -204,21 +204,23 @@ describe('Mastra report repair', () => {
     );
   });
 
-  it('stops after one repair and records exhaustion', async () => {
+  it('stops after the repair limit and records exhaustion', async () => {
     const error = new mocks.FakeVerificationError(['missing contradiction disclosure']);
     mocks.requireVerifiedXauusdReport.mockImplementation(() => {
       throw error;
     });
+    // REPORT_REPAIR_LIMIT is 2, so the loop runs initial + two repairs (3 calls).
     const { agent, generate } = agentWithResults(
       { object: { invalid: true }, text: 'first' },
       { object: { invalid: true }, text: 'second' },
+      { object: { invalid: true }, text: 'third' },
     );
 
     await expect(
       generateVerifiedXauusdReport(agent, 'Analyse gold', requestContext, 'mistral', packet),
     ).rejects.toBe(error);
 
-    expect(generate).toHaveBeenCalledTimes(2);
+    expect(generate).toHaveBeenCalledTimes(3);
     expect(metrics.snapshot().counters['mastra_report_repair_total{result=failed}']).toBe(1);
   });
 });

@@ -124,7 +124,7 @@ function isScenarioProjectionClaim(claim: { label: string }): boolean {
 }
 
 const STRUCTURAL_NUMERIC_PATTERN =
-  /(?:\b\d+(?:\s*[- ]?(?:minute|hour|day|week|year)s?)\b|\b\d+(?:m|h|d|w|y)\b|\b(?:ema|rsi|atr|bollinger(?:\s+bands)?|bb|macd)\s*\d+(?:\s*\/\s*\d+)*\b|\b\d+(?:\s*\/\s*\d+)+\s*(?:ema|sma|ma|macd)\b)/gi;
+  /(?:\b\d+(?:\s*[- ]?(?:minute|hour|day|week|year)s?)\b|\b\d+(?:m|h|d|w|y)\b|\b(?:ema|rsi|atr|bollinger(?:\s+bands)?|bb|macd)\s*\d+(?:\s*\/\s*\d+)*\b|\b\d+(?:\s*\/\s*\d+)+\s*(?:ema|sma|ma|macd)\b|\b\d+(?:\s*(?:-|and|&|,)\s*\d+)*\s*(?:period|bar|length|window|lookback)s?\b|\b(?:period|bar|length|window|lookback)\s*\d+\b|\b\d+\s*(?:-|\/)?\s*(?:period|bar|length|window|lookback)\s*(?:ema|sma|ma|macd|rsi)\b)/gi;
 const NARRATIVE_NUMBER_PATTERN = /[+-]?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?/g;
 
 type NarrativeField = readonly [name: string, text: string];
@@ -185,12 +185,21 @@ function narrativeNumbers(text: string): number[] {
  */
 export function verifyNarrativeNumericClaims(
   report: XauusdResearchReport,
+  packet: XauusdResearchPacket,
   findings: string[],
 ): void {
   const claims = report.numericClaims.map((claim) => ({
     value: claim.value,
     tolerance: claim.tolerance,
   }));
+  // A narrative number is grounded when it matches a formal numericClaim OR
+  // when it appears directly in the evidence packet (for example an indicator
+  // reading the model quotes in prose but did not duplicate into numericClaims).
+  // Requiring every quoted indicator value to be re-listed as a numericClaim
+  // made the lite models fail closed on values they had read correctly.
+  const evidenceValues = [
+    ...numericEvidenceValues(packet).values(),
+  ].flatMap((values) => values);
   const reported = new Set<string>();
 
   for (const [field, text] of narrativeFields(report)) {
@@ -198,7 +207,14 @@ export function verifyNarrativeNumericClaims(
       const key = `${field}:${value}`;
       if (reported.has(key)) continue;
       reported.add(key);
-      const supported = claims.some((claim) => Math.abs(claim.value - value) <= claim.tolerance);
+      const supported =
+        claims.some((claim) => Math.abs(claim.value - value) <= claim.tolerance) ||
+        evidenceValues.some(
+          // The evidence-value channel accepts legitimate integer rounding of
+          // indicator readings (e.g. quoting RSI as 60 when the packet has
+          // 60.42). Formal numericClaims still require the tight 0.01 window.
+          (evidenceValue) => Math.abs(evidenceValue - value) <= 0.5,
+        );
       if (!supported) {
         findings.push(
           `${field} contains unsupported numeric value ${value}; add it to numericClaims with supporting evidence.`,

@@ -178,6 +178,69 @@ describe('XAUUSD report verifier', () => {
     expect(result.findings).toEqual([]);
   });
 
+  it('accepts narrative numbers that appear directly in the evidence packet', () => {
+    // The model quotes the ask price (2345.2) in prose without promoting it to
+    // numericClaims. It is still grounded because the value is in the packet.
+    const result = verifyXauusdReport(
+      report({
+        technicalSummary: 'Gold traded near 2,345.2 on the bid side of the quote.',
+        numericClaims: [{ label: 'current mid price', value: 2_345.1, evidenceId }],
+      }),
+      packet(),
+    );
+
+    expect(result.ok).toBe(true);
+    expect(result.findings).toEqual([]);
+  });
+
+  it('accepts a rounded indicator reading quoted in narrative', () => {
+    // Packet RSI is 67.11; the model quotes "RSI near 67" in prose without a
+    // numericClaim. Integer rounding of a real evidence value is grounded.
+    const base = packet();
+    const withIndicator = XauusdResearchPacketSchema.parse({
+      ...base,
+      indicators: [
+        {
+          evidenceId: 'indicators-rsi',
+          kind: 'indicators',
+          symbol: 'XAUUSD',
+          timeframe: '1h',
+          source: 'fixture',
+          fetchedAt: asOf,
+          dataAsOf: asOf,
+          freshness: 'fresh',
+          quality: 'complete',
+          warnings: [],
+          data: {
+            candleCount: 50,
+            stale: false,
+            results: [
+              {
+                symbol: 'XAUUSD',
+                tf: '1h',
+                kind: 'rsi',
+                params: { period: 14 },
+                values: [67.11],
+                fetchedAt: Date.parse(asOf),
+              },
+            ],
+          },
+        },
+      ],
+    });
+
+    const result = verifyXauusdReport(
+      report({
+        technicalSummary: 'RSI is near 67 on the 1-hour chart.',
+        contradictions: [],
+      }),
+      withIndicator,
+    );
+
+    expect(result.ok).toBe(true);
+    expect(result.findings).toEqual([]);
+  });
+
   it('rejects unsupported numbers introduced in narrative fields', () => {
     const result = verifyXauusdReport(
       report({
