@@ -6,6 +6,8 @@ const mocks = vi.hoisted(() => ({
   beginMastraRun: vi.fn(),
   finishMastraRun: vi.fn().mockResolvedValue(undefined),
   failRisk: false,
+  /** Number of times a named specialist should throw a rate-limit error before succeeding. */
+  rateLimitFailures: 0,
 }));
 
 vi.mock('../src/model', () => ({ resolveChatModel: mocks.resolveChatModel }));
@@ -36,6 +38,11 @@ vi.mock('@mastra/core/agent', () => ({
 
     async generate(): Promise<unknown> {
       if (mocks.failRisk && this.id.includes('risk')) throw new Error('risk unavailable');
+      if (mocks.rateLimitFailures > 0 && !this.id.includes('decision')) {
+        mocks.rateLimitFailures -= 1;
+        const rateLimited = Object.assign(new Error('You exceeded your current quota'), { statusCode: 429 });
+        throw rateLimited;
+      }
       if (this.id.includes('decision')) {
         return { text: 'Synthesized read.', usage: { inputTokens: 20, outputTokens: 10 }, steps: [{}] };
       }
@@ -81,6 +88,8 @@ const env = { AI_DEFAULT_MODEL: 'google/gemini-3.6-flash' } as never;
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.failRisk = false;
+  mocks.rateLimitFailures = 0;
   mocks.resolveChatModel.mockReturnValue({
     model: {},
     modelId: 'google/gemini-3.6-flash',
@@ -149,5 +158,23 @@ describe('Mastra mode runner', () => {
       settings,
       env,
     })).rejects.toBeInstanceOf(MastraModeStrictFailureError);
+  });
+
+  it('retries a transient specialist rate-limit and completes Full', async () => {
+    // One specialist hits a momentary 429 quota error; the retry absorbs it.
+    mocks.rateLimitFailures = 1;
+    const result = await runMastraMode({
+      prompt: 'Run a full committee analysis of EURUSD',
+      symbol: 'EURUSD',
+      userId: 'user-1',
+      threadId: 'thread-1',
+      runId: 'run-full-retry',
+      mode: 'full',
+      settings,
+      env,
+    });
+
+    expect(result.finalText).toBe('Synthesized read.');
+    expect(result.agentOpinions).toHaveLength(4);
   });
 });

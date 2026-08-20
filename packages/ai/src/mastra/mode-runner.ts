@@ -6,6 +6,7 @@ import { z } from 'zod';
 
 import { estimateCostUsd } from '../cost';
 import { resolveChatModel, type ChatModelResolution } from '../model';
+import { withRetry } from '../retry';
 import { telemetryConfig } from '../telemetry';
 import type { ResolveModelEnv } from '../vertex-factory';
 import { loadMastraMemoryContext, serializeMastraMemoryContext } from './memory-context';
@@ -286,22 +287,34 @@ export async function runMastraMode(args: RunMastraModeArgs): Promise<MastraMode
             `kestrel-mastra-${name}`,
             specialistInstructions(name, packet, memoryContext),
           );
-          const result = await agent.generate(args.prompt, {
-            requestContext,
-            toolChoice: 'none',
-            maxSteps: 1,
-            structuredOutput: {
-              schema: OpinionSchema,
-              jsonPromptInjection: 'auto',
-              instructions:
-                'Return a complete opinion object. Keep numeric claims tied to packet evidence and mention packet quality when it is not complete.',
+          // Specialists run in parallel against the same provider; a transient
+          // rate-limit or upstream blip on any one of them must not sink the
+          // whole committee. Retry each specialist with backoff so short-lived
+          // provider pressure is absorbed instead of failing strict Full mode.
+          const result = await withRetry(
+            () =>
+              agent.generate(args.prompt, {
+                requestContext,
+                toolChoice: 'none',
+                maxSteps: 1,
+                structuredOutput: {
+                  schema: OpinionSchema,
+                  jsonPromptInjection: 'auto',
+                  instructions:
+                    'Return a complete opinion object. Keep numeric claims tied to packet evidence and mention packet quality when it is not complete.',
+                },
+                ...telemetryConfig({
+                  functionId: `mastra.mode.${name}`,
+                  metadata: { provider: resolution.providerId, symbol: packet.symbol },
+                }),
+                ...(args.signal ? { abortSignal: args.signal } : {}),
+              }),
+            {
+              maxAttempts: 2,
+              baseDelayMs: 2_000,
+              signal: args.signal ?? null,
             },
-            ...telemetryConfig({
-              functionId: `mastra.mode.${name}`,
-              metadata: { provider: resolution.providerId, symbol: packet.symbol },
-            }),
-            ...(args.signal ? { abortSignal: args.signal } : {}),
-          });
+          );
           const stats = getMastraGenerationStats(result);
           executionStats.push(stats);
           const parsed = OpinionSchema.parse(result.object);
