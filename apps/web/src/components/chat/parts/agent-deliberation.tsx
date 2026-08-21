@@ -4,20 +4,27 @@
 
 // Phase 1.1 — Cinematic Multi-Agent Committee Theater.
 //
-// Replaces the flat status pills with a "war room" deliberation surface:
+// Institutional "war room" deliberation surface:
 //
-//   Zone 1 — Agent ring:     circular avatar nodes that pulse while running,
-//                            check off as they complete.
-//   Zone 2 — Fusion:         converging connector lines feed a central fusion
-//                            node that intensifies as agents finish.
-//   Zone 3 — Verdict reveal: once every agent has settled (done/error), a
-//                            confidence meter + bias distribution + dissent
-//                            indicator is revealed with a spring entrance.
-//
-// The props interface is unchanged from the previous flat version so
-// `chat-screen.tsx` needs no edits.
+//   Zone 0 — Telemetry:      ASCII streaming status panel with live step progress.
+//   Zone 1 — Agent ring:     Circular avatar nodes with radar pulse animations,
+//                            active state indicators, and completed checkmarks.
+//   Zone 2 — Fusion:         Converging connector lines feed a central fusion node
+//                            that intensifies as agents finish.
+//   Zone 3 — Verdict reveal: Once every agent has settled, a confidence meter +
+//                            bias distribution + dissent indicator is revealed with spring physics.
 
-import { IconAlertCircle,  IconAlertTriangle,  IconRobot,  IconCpu,  IconCircleCheck,  IconNews,  IconShield,  IconTrendingUp,  IconTerminal2 } from '@tabler/icons-react';
+import {
+  IconAlertCircle,
+  IconAlertTriangle,
+  IconRobot,
+  IconCpu,
+  IconCircleCheck,
+  IconNews,
+  IconShield,
+  IconTrendingUp,
+  IconTerminal2,
+} from '@tabler/icons-react';
 import { AnimatePresence, m } from 'motion/react';
 import { useMemo, type ReactNode } from 'react';
 
@@ -29,12 +36,14 @@ interface AgentOpinion {
   confidence: number;
   reasoning: string;
 }
+
 interface AgentProgress {
   agentName: string;
   status: 'pending' | 'running' | 'done' | 'error';
   opinion?: AgentOpinion;
   error?: string;
 }
+
 interface AgentDeliberationProps {
   agents: AgentProgress[];
   mode: string;
@@ -44,20 +53,45 @@ interface AgentDeliberationProps {
 
 const AGENT_META: Record<
   string,
-  { icon: ReactNode; label: string; tokenClass: string; glowClass: string }
+  { icon: ReactNode; label: string; tokenClass: string; activeClass: string }
 > = {
-  technical: { icon: <IconTrendingUp className="size-4" />, label: 'Technical', tokenClass: 'text-bull', glowClass: 'shadow-none' },
-  fundamental: { icon: <IconNews className="size-4" />, label: 'Fundamental', tokenClass: 'text-info', glowClass: 'shadow-none' },
-  risk: { icon: <IconShield className="size-4" />, label: 'Risk', tokenClass: 'text-bear', glowClass: '' },
-  sentiment: { icon: <IconRobot className="size-4" />, label: 'Sentiment', tokenClass: 'text-warn', glowClass: '' },
-  decision: { icon: <IconCpu className="size-4" />, label: 'Decision', tokenClass: 'text-fg', glowClass: 'shadow-none' },
+  technical: {
+    icon: <IconTrendingUp className="size-4" />,
+    label: 'Technical',
+    tokenClass: 'text-bull',
+    activeClass: 'border-bull/40 bg-bull/10 shadow-[0_0_12px_rgba(34,197,94,0.2)]',
+  },
+  fundamental: {
+    icon: <IconNews className="size-4" />,
+    label: 'Fundamental',
+    tokenClass: 'text-info',
+    activeClass: 'border-info/40 bg-info/10 shadow-[0_0_12px_rgba(56,189,248,0.2)]',
+  },
+  risk: {
+    icon: <IconShield className="size-4" />,
+    label: 'Risk',
+    tokenClass: 'text-bear',
+    activeClass: 'border-bear/40 bg-bear/10 shadow-[0_0_12px_rgba(244,63,94,0.2)]',
+  },
+  sentiment: {
+    icon: <IconRobot className="size-4" />,
+    label: 'Sentiment',
+    tokenClass: 'text-warn',
+    activeClass: 'border-warn/40 bg-warn/10 shadow-[0_0_12px_rgba(234,179,8,0.2)]',
+  },
+  decision: {
+    icon: <IconCpu className="size-4" />,
+    label: 'Decision',
+    tokenClass: 'text-brand',
+    activeClass: 'border-brand/40 bg-brand/10 shadow-[0_0_12px_rgba(245,110,15,0.25)]',
+  },
 };
 
 const FALLBACK_META = {
   icon: <IconRobot className="size-4" />,
   label: 'Agent',
   tokenClass: 'text-fg-muted',
-  glowClass: '',
+  activeClass: 'border-border bg-bg-elev-2',
 } as const;
 
 const BIAS_TOKEN: Record<AgentOpinion['bias'], string> = {
@@ -72,6 +106,7 @@ export function AgentDeliberation({ agents, mode, status, error }: AgentDelibera
   const isRetrying = status === 'retrying';
   const allDone = agents.length > 0 && agents.every((a) => a.status === 'done' || a.status === 'error');
   const doneCount = agents.filter((a) => a.status === 'done').length;
+  const progressPct = agents.length > 0 ? Math.round((doneCount / agents.length) * 100) : 0;
 
   // Verdict math — only opinions that actually arrived count.
   const opinions = agents.filter((a) => a.opinion);
@@ -91,20 +126,38 @@ export function AgentDeliberation({ agents, mode, status, error }: AgentDelibera
     <div
       role="status"
       aria-live="polite"
-      className="border border-border bg-bg-elev-1 rounded-sm p-4 flex flex-col gap-4"
+      className="border border-border/80 bg-bg-elev-1 rounded-sm p-4 flex flex-col gap-4 shadow-sm"
     >
-      {/* Header */}
-      <div className="flex items-center gap-2 text-caption text-fg-subtle uppercase tracking-wider font-semibold">
-        <IconCpu className="size-3.5" />
-        <span>Multi-Agent {mode} mode</span>
+      {/* Header & Step Progress */}
+      <div className="flex items-center justify-between gap-2 border-b border-border/60 pb-3">
+        <div className="flex items-center gap-2 text-caption text-fg-subtle font-semibold uppercase tracking-wider">
+          <IconCpu className="size-3.5" />
+          <span>Multi-Agent {mode} mode</span>
+        </div>
+
+        {!allDone && (
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-mono text-fg-subtle tabular-nums">
+              {doneCount}/{agents.length} Synced
+            </span>
+            <div className="w-16 h-1.5 rounded-full bg-bg-elev-3 overflow-hidden">
+              <m.div
+                className="h-full bg-gradient-to-r from-brand to-bull rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${progressPct}%` }}
+                transition={{ duration: 0.3 }}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Zone 0 — ASCII terminal telemetry log (replaces generic loading) */}
+      {/* Zone 0 — ASCII terminal telemetry log */}
       {!allDone ? (
         <TelemetryLog agents={agents} />
       ) : null}
 
-      {/* Zone 1 — Agent ring */}
+      {/* Zone 1 — Agent node avatars */}
       <div className="flex flex-wrap items-start justify-center gap-3">
         {agents.map((a) => {
           const meta = AGENT_META[a.agentName] ?? FALLBACK_META;
@@ -125,9 +178,12 @@ export function AgentDeliberation({ agents, mode, status, error }: AgentDelibera
           >
             <ConnectorLines agents={agents} />
             <m.div
-              animate={{ scale: [1, 1.25, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-              className={cn('size-2 rounded-sm bg-fg shadow-none', doneCount >= 2 && 'size-2.5')}
+              animate={{ scale: [1, 1.3, 1] }}
+              transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+              className={cn(
+                'size-2.5 rounded-sm bg-brand shadow-[0_0_8px_rgba(245,110,15,0.4)]',
+                doneCount >= 2 && 'size-3 bg-bull shadow-[0_0_10px_rgba(34,197,94,0.4)]',
+              )}
             />
           </m.div>
         ) : null}
@@ -145,12 +201,12 @@ export function AgentDeliberation({ agents, mode, status, error }: AgentDelibera
         {allDone && !isFailed && !isRetrying ? (
           <m.div
             key="verdict"
-            initial={{ opacity: 0, scale: 0.9, y: 8 }}
+            initial={{ opacity: 0, scale: 0.95, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 24 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ type: 'spring', stiffness: 320, damping: 26 }}
             aria-label={`Committee verdict: ${dissent ? 'mixed' : opinions[0]?.opinion?.bias ?? 'neutral'}, ${avgConfidence}% confidence`}
-            className="border border-border bg-bg-elev-2 rounded-sm p-3 flex flex-col gap-3"
+            className="border border-border bg-bg-elev-2 rounded-sm p-3.5 flex flex-col gap-3 shadow-xs"
           >
             {/* Confidence meter */}
             <div className="flex flex-col gap-1.5">
@@ -163,16 +219,16 @@ export function AgentDeliberation({ agents, mode, status, error }: AgentDelibera
                   className={cn('h-full rounded-sm', confidenceTone)}
                   initial={{ width: 0 }}
                   animate={{ width: `${avgConfidence}%` }}
-                  transition={{ duration: 0.5, ease: 'easeOut' }}
+                  transition={{ duration: 0.6, ease: 'easeOut' }}
                 />
               </div>
             </div>
 
             {/* Bias distribution + dissent */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between gap-3 pt-1">
               <BiasDistribution counts={biasCounts} total={opinions.length} />
               {dissent ? (
-                <span className="ml-auto inline-flex items-center gap-1 text-caption text-warn font-semibold">
+                <span className="inline-flex items-center gap-1 text-caption text-warn font-semibold bg-warn/10 border border-warn/30 px-2 py-0.5 rounded-xs">
                   <IconAlertTriangle className="size-3.5" />
                   Mixed signals
                 </span>
@@ -181,19 +237,22 @@ export function AgentDeliberation({ agents, mode, status, error }: AgentDelibera
 
             {/* Expandable opinions */}
             {opinions.length > 0 ? (
-              <details>
+              <details className="group/details mt-1">
                 <summary className="cursor-pointer list-none text-body-sm text-fg-muted hover:text-fg select-none">
                   View agent opinions
                 </summary>
-                <div className="mt-2 flex flex-col gap-2">
+                <div className="mt-2 flex flex-col gap-2 border-t border-border/60 pt-2">
                   {opinions.map((a) => {
                     const meta = AGENT_META[a.agentName] ?? FALLBACK_META;
                     const op = a.opinion!;
                     return (
-                      <div key={a.agentName} className="border-l-2 border-border pl-3 py-1.5">
-                        <span className="text-fg text-body-sm font-semibold">{meta.label}</span>
-                        <span className={cn('ml-2 text-caption font-bold uppercase', BIAS_TOKEN[op.bias])}>{op.bias}</span>
-                        <span className="ml-1 text-fg-subtle text-caption tabular-nums">{Math.round(op.confidence * 100)}%</span>
+                      <div key={a.agentName} className="border-l-2 border-border/80 pl-3 py-1 bg-bg-elev-1/40 rounded-r-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="text-fg text-body-sm font-semibold">{meta.label}</span>
+                          <span className={cn('text-caption font-mono font-bold uppercase', BIAS_TOKEN[op.bias])}>
+                            {op.bias} · {Math.round(op.confidence * 100)}%
+                          </span>
+                        </div>
                         <p className="text-fg-muted text-xs mt-1 leading-[1.4]">{op.reasoning}</p>
                       </div>
                     );
@@ -208,7 +267,7 @@ export function AgentDeliberation({ agents, mode, status, error }: AgentDelibera
               .map((a) => {
                 const meta = AGENT_META[a.agentName] ?? FALLBACK_META;
                 return (
-                  <div key={`error-${a.agentName}`} className="text-danger text-xs flex items-center gap-1.5">
+                  <div key={`error-${a.agentName}`} className="text-danger text-xs flex items-center gap-1.5 bg-danger/10 p-2 rounded-xs border border-danger/30">
                     <IconAlertCircle className="size-3.5 shrink-0" />
                     <span>{meta.label} agent failed: {a.error}</span>
                   </div>
@@ -240,49 +299,50 @@ export function AgentDeliberation({ agents, mode, status, error }: AgentDelibera
   );
 }
 
-// ---------------------------------------------------------------------------
-// Agent avatar node
-// ---------------------------------------------------------------------------
-
 function AgentNode({
   agent,
   meta,
 }: {
   agent: AgentProgress;
-  meta: { icon: ReactNode; label: string; tokenClass: string; glowClass: string };
+  meta: { icon: ReactNode; label: string; tokenClass: string; activeClass: string };
 }) {
   const status = agent.status;
 
   return (
-    <div className="flex flex-col items-center gap-1">
+    <div className="flex flex-col items-center gap-1.5">
       <div className="relative">
-        {/* Rotating conic ring while running */}
-        {status === 'running' ? (
-          <span aria-hidden className="agent-ring-active absolute inset-0 rounded-sm" style={{ padding: 2 }} />
-        ) : null}
+        {/* Glowing live radar pulse while running */}
+        {status === 'running' && (
+          <span
+            aria-hidden="true"
+            className="absolute inset-0 rounded-sm animate-ping opacity-30 bg-brand pointer-events-none"
+          />
+        )}
         <m.div
           aria-label={`${meta.label} agent: ${status}`}
-          animate={status === 'running' ? { scale: [1, 1.05, 1] } : { scale: 1 }}
-          transition={status === 'running' ? { duration: 1.5, repeat: Infinity, ease: 'easeInOut' } : { type: 'spring', stiffness: 400, damping: 25 }}
+          animate={status === 'running' ? { scale: [1, 1.04, 1] } : { scale: 1 }}
+          transition={status === 'running' ? { duration: 1.4, repeat: Infinity, ease: 'easeInOut' } : { type: 'spring', stiffness: 400, damping: 25 }}
           className={cn(
-            'relative flex size-12 items-center justify-center rounded-sm',
-            status === 'pending' && 'bg-bg-elev-2 text-fg-subtle',
-            status === 'running' && 'bg-bg-elev-3 text-fg',
-            status === 'done' && 'bg-bg-elev-2',
-            status === 'error' && 'bg-danger/10 text-danger border border-danger/30',
+            'relative flex size-12 items-center justify-center rounded-sm transition-all border',
+            status === 'pending' && 'bg-bg-elev-2 text-fg-subtle border-border/60',
+            status === 'running' && cn('text-fg', meta.activeClass),
+            status === 'done' && 'bg-bg-elev-2 text-fg border-border/80 shadow-2xs',
+            status === 'error' && 'bg-danger/10 text-danger border-danger/40',
           )}
         >
-          <span className={cn(status !== 'error' && status !== 'pending' && meta.tokenClass)}>{meta.icon}</span>
+          <span className={cn(status !== 'error' && status !== 'pending' && meta.tokenClass)}>
+            {meta.icon}
+          </span>
 
-          {/* Status badges */}
+          {/* Status badge pill */}
           {status === 'done' ? (
-            <span className={cn('absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-sm bg-bg-elev-1', meta.tokenClass)}>
-              <IconCircleCheck className="size-4" />
+            <span className={cn('absolute -bottom-1 -right-1 flex size-4 items-center justify-center rounded-full bg-bg-elev-1 border border-border shadow-xs', meta.tokenClass)}>
+              <IconCircleCheck className="size-3.5" />
             </span>
           ) : null}
           {status === 'error' ? (
-            <span className="absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-sm bg-bg-elev-1 text-danger">
-              <IconAlertCircle className="size-4" />
+            <span className="absolute -bottom-1 -right-1 flex size-4 items-center justify-center rounded-full bg-bg-elev-1 border border-danger/40 text-danger shadow-xs">
+              <IconAlertCircle className="size-3.5" />
             </span>
           ) : null}
         </m.div>
@@ -291,12 +351,6 @@ function AgentNode({
     </div>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Connector lines — fan from each `done` agent column down to a central
-// point. Position-independent: x is derived from the agent index, so it
-// scales with however many agents are on screen.
-// ---------------------------------------------------------------------------
 
 function ConnectorLines({ agents }: { agents: AgentProgress[] }) {
   const n = agents.length;
@@ -326,16 +380,10 @@ function ConnectorLines({ agents }: { agents: AgentProgress[] }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// TelemetryLog — ASCII terminal-style streaming status panel.
-// Renders CLI branch lines with status tags and a blinking cursor.
-// ---------------------------------------------------------------------------
-
 function TelemetryLog({ agents }: { agents: AgentProgress[] }) {
   const lines = useMemo(() => {
     const result: Array<{ line: string; tone: string }> = [];
 
-    // Header
     result.push({ line: 'agent committee · session active', tone: 'text-fg-subtle' });
     result.push({ line: '', tone: '' });
 
@@ -373,7 +421,6 @@ function TelemetryLog({ agents }: { agents: AgentProgress[] }) {
       });
     }
 
-    // Fusion line
     const hasRunning = agents.some((a) => a.status === 'running');
     const doneCount = agents.filter((a) => a.status === 'done').length;
     if (hasRunning) {
@@ -410,7 +457,6 @@ function TelemetryLog({ agents }: { agents: AgentProgress[] }) {
             </div>
           );
         })}
-        {/* Blinking cursor — only shown while agents are actively running */}
         {agents.some((a) => a.status === 'running') ? (
           <span className="terminal-cursor text-fg-subtle">_</span>
         ) : null}
@@ -418,10 +464,6 @@ function TelemetryLog({ agents }: { agents: AgentProgress[] }) {
     </div>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Bias distribution — three mini bars (bullish / bearish / neutral).
-// ---------------------------------------------------------------------------
 
 function BiasDistribution({
   counts,

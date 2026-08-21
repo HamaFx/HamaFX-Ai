@@ -54,6 +54,7 @@ interface MessageListProps {
   onCopy?: (text: string) => void;
   onRegenerate?: (opts?: { modelOverride?: string }) => void;
   onEdit?: (messageId: string, newText: string) => void;
+  onFollowUpSelect?: (prompt: string) => void;
 }
 
 export const MessageList = memo(function MessageList({
@@ -66,6 +67,7 @@ export const MessageList = memo(function MessageList({
   onCopy,
   onRegenerate,
   onEdit,
+  onFollowUpSelect,
 }: MessageListProps) {
   const count = messages.length + (showTypingIndicator ? 1 : 0);
 
@@ -130,6 +132,8 @@ export const MessageList = memo(function MessageList({
         const m = messages[virtualRow.index];
         if (!m) return null;
 
+        const isLastAssistant = m.id === lastAssistantId;
+
         return (
           <div
             key={virtualRow.key}
@@ -147,13 +151,15 @@ export const MessageList = memo(function MessageList({
               threadId={threadId}
               message={m}
               isStreaming={isStreaming}
+              isLastAssistant={isLastAssistant}
               onCopy={onCopy}
               onRegenerate={
-                onRegenerate && m.id === lastAssistantId && !isStreaming
+                onRegenerate && isLastAssistant && !isStreaming
                   ? onRegenerate
                   : undefined
               }
               onEdit={onEdit}
+              onFollowUpSelect={onFollowUpSelect}
             />
             {isStreaming && m.role === 'assistant' && (
               <StreamingLiveRegion

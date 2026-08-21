@@ -65,6 +65,7 @@ import { Segmented } from '@/components/ui/segmented';
 import type { Timeframe } from '@kestrel/shared';
 import { ChatTopBar, type ThreadSummary, type AnalysisMode } from './chat-top-bar';
 import { Composer } from './composer';
+import { ComposerActionChips } from './composer-action-chips';
 import { MessageList } from './message-list';
 import { QuickPrompts } from './quick-prompts';
 import { AgentDeliberation } from './parts/agent-deliberation';
@@ -490,6 +491,10 @@ export function ChatScreen({
                   onCopy={handleCopy}
                   onRegenerate={handleRegenerate}
                   onEdit={handleEdit}
+                  onFollowUpSelect={(text) => {
+                    lastUserTextRef.current = text;
+                    void sendMessage({ text });
+                  }}
                 />
               )}
               <AnimatePresence>
@@ -554,7 +559,17 @@ export function ChatScreen({
             </AnimatePresence>
           </div>
 
-          <div className={cn('mx-auto w-full px-4', splitMode ? 'max-w-2xl xl:max-w-3xl' : 'max-w-2xl')}>
+          <div className={cn('mx-auto w-full px-4 flex flex-col', splitMode ? 'max-w-2xl xl:max-w-3xl' : 'max-w-2xl')}>
+            {!isEmpty && (
+              <ComposerActionChips
+                pinnedSymbol={pinnedSymbol}
+                disabled={isStreaming}
+                onSelect={(text) => {
+                  lastUserTextRef.current = text;
+                  void sendMessage({ text });
+                }}
+              />
+            )}
             <Composer
               onSubmit={(text, images) => {
                 lastUserTextRef.current = text;

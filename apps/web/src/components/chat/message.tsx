@@ -64,6 +64,7 @@ import { TextPart } from './parts/text';
 import { MessageFooter } from './_components/message-footer';
 import { MessageFeedback } from './_components/message-feedback';
 import { RegenModelPicker } from './_components/regen-model-picker';
+import { FollowUpSuggestions } from './_components/follow-up-suggestions';
 
 interface MessageProps {
   message: UIMessage;
@@ -72,6 +73,8 @@ interface MessageProps {
   onRegenerate?: (opts?: { modelOverride?: string }) => void;
   onEdit?: (messageId: string, newText: string) => void;
   isStreaming?: boolean;
+  isLastAssistant?: boolean;
+  onFollowUpSelect?: (prompt: string) => void;
 }
 
 /**
@@ -92,7 +95,16 @@ const REGEN_MENU_TRIGGER = 'regen-menu-trigger';
  */
 const REGEN_CLOSE_ALL = 'kestrel:close-regen-menus';
 
-function MessageImpl({ threadId, message, onCopy, onRegenerate, onEdit, isStreaming }: MessageProps) {
+function MessageImpl({
+  threadId,
+  message,
+  onCopy,
+  onRegenerate,
+  onEdit,
+  isStreaming,
+  isLastAssistant,
+  onFollowUpSelect,
+}: MessageProps) {
   const isUser = message.role === 'user';
   const isSystem = message.role === 'system';
   const prefersReducedMotion = useReducedMotion();
@@ -397,6 +409,15 @@ function MessageImpl({ threadId, message, onCopy, onRegenerate, onEdit, isStream
               ) : null}
             </div>
           ) : null}
+
+          {/* Smart AI Follow-Up Suggestions on the last assistant message */}
+          {!isUser && isLastAssistant && !isStreaming && onFollowUpSelect && (
+            <FollowUpSuggestions
+              message={message}
+              onSelect={onFollowUpSelect}
+              disabled={isStreaming}
+            />
+          )}
         </div>
       </div>
     </m.div>
@@ -410,6 +431,8 @@ export const Message = memo(MessageImpl, (prev, next) => {
   if (prev.onEdit !== next.onEdit) return false;
   if (prev.onCopy !== next.onCopy) return false;
   if (prev.isStreaming !== next.isStreaming) return false;
+  if (prev.isLastAssistant !== next.isLastAssistant) return false;
+  if (prev.onFollowUpSelect !== next.onFollowUpSelect) return false;
 
   // Compare parts array. Reference equality is valid here because the
   // AI SDK v5 returns new part objects on each stream tick, and the
