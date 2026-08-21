@@ -14,8 +14,12 @@
  * limitations under the License.
  */
 
-// Durable full-analysis worker. Mastra owns the specialist workflow; Kestrel
-// owns queue claims, leases, retries, budgets, persistence, and idempotency.
+// Durable full-analysis worker (Phase 3). The queue is Mastra workflow run
+// records: the web writes a pending `full-analysis` run snapshot, this job
+// claims it (status → running + lease token), executes the symbol-research
+// workflow under that exact runId, and writes the terminal status + shaped
+// result back into the same record. No analysis_jobs table; no heartbeat
+// hand-rolling — `touchFullAnalysisRun` bumps the run's `updatedAt` lease.
 
 import {
   appendAssistantMessage,
@@ -27,25 +31,34 @@ import {
   type BudgetHandle,
 } from '@kestrel/ai';
 import {
+  claimNextFullAnalysisRun,
+  completeFullAnalysisRun,
+  failFullAnalysisRun,
+  purgeOldFullAnalysisRuns,
+  recoverStaleFullAnalysisRuns,
+  requeueFullAnalysisRun,
+  touchFullAnalysisRun,
+  FULL_ANALYSIS_WORKFLOW_ID,
+  type FullAnalysisPayload,
+} from '@kestrel/ai/mastra';
+import {
   extractSymbolFromPrompt,
   isSafeSymbolResearchPrompt,
   runMastraMode,
 } from '@kestrel/ai/mastra';
-import {
-  claimNextPendingJob,
-  recoverStaleJobs as recoverStaleAnalysisJobs,
-  schema,
-} from '@kestrel/db';
+import { schema } from '@kestrel/db';
 import { pickAiEnv } from '@kestrel/shared';
 import { traceIdStorage } from '@kestrel/shared/logger';
 import type { UIMessage } from 'ai';
-import { and, eq, lt } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 import type { JobContext, JobResult } from './types.js';
 
 const MAX_JOBS_PER_RUN = 3;
 const STALE_JOB_TIMEOUT_MS = 5 * 60 * 1000;
 const MAX_ANALYSIS_ATTEMPTS = 3;
+const HEARTBEAT_MS = 30_000;
+const RETENTION_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
 export function isRetryableAnalysisError(error: unknown): boolean {
   const messages: string[] = [];
@@ -61,18 +74,15 @@ export function isRetryableAnalysisError(error: unknown): boolean {
   );
 }
 
-function userMessageFromJob(job: {
-  userMessageText: string;
-  userMessageParts: unknown;
-}): UIMessage {
-  const storedParts = Array.isArray(job.userMessageParts) ? job.userMessageParts : [];
+function userMessageFromPayload(payload: FullAnalysisPayload): UIMessage {
+  const storedParts = Array.isArray(payload.userMessageParts) ? payload.userMessageParts : [];
   const hasTextPart = storedParts.some(
     (part) =>
       typeof part === 'object' && part !== null && (part as { type?: unknown }).type === 'text',
   );
   const parts = hasTextPart
     ? storedParts
-    : [...storedParts, { type: 'text', text: job.userMessageText }];
+    : [...storedParts, { type: 'text', text: payload.userMessageText }];
   return {
     id: crypto.randomUUID(),
     role: 'user',
@@ -82,57 +92,45 @@ function userMessageFromJob(job: {
 
 export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult> {
   const db = getDb();
+  const workerRunId = `${process.env.HOSTNAME ?? 'worker'}-${crypto.randomUUID()}`;
   let processed = 0;
 
   for (let i = 0; i < MAX_JOBS_PER_RUN; i++) {
-    const job = await claimNextPendingJob();
-    if (!job) {
-      ctx.log.info('No pending analysis jobs — done.');
+    const claimed = await claimNextFullAnalysisRun(workerRunId);
+    if (!claimed) {
+      ctx.log.info('No pending full-analysis runs — done.');
       break;
     }
-
-    const workerRunId = job.workerRunId;
-    if (!workerRunId) {
-      ctx.log.error('Claimed analysis job has no worker lease token', { jobId: job.id });
-      continue;
-    }
-    ctx.log.info('Claimed Mastra analysis job', {
-      jobId: job.id,
-      userId: job.userId,
-      traceId: job.traceId,
+    const { runId, payload } = claimed;
+    ctx.log.info('Claimed full-analysis run', {
+      runId,
+      userId: payload.userId,
+      threadId: payload.threadId,
+      traceId: payload.traceId,
+      attempt: payload.attemptCount,
     });
 
     const leaseHeartbeat = setInterval(() => {
-      void db
-        .update(schema.analysisJobs)
-        .set({ updatedAt: new Date() })
-        .where(
-          and(
-            eq(schema.analysisJobs.id, job.id),
-            eq(schema.analysisJobs.status, 'running'),
-            eq(schema.analysisJobs.workerRunId, workerRunId),
-          ),
-        )
-        .catch((error) =>
-          ctx.log.warn('Analysis job lease heartbeat failed', { err: String(error) }),
-        );
-    }, 30_000);
+      void touchFullAnalysisRun(runId).catch((error) =>
+        ctx.log.warn('Full-analysis lease heartbeat failed', { err: String(error) }),
+      );
+    }, HEARTBEAT_MS);
     leaseHeartbeat.unref();
 
-    const processJob = async () => {
+    const processRun = async () => {
       let budget: BudgetHandle | null = null;
       let modeResult: Awaited<ReturnType<typeof runMastraMode>> | null = null;
       let observedCost = 0;
       try {
         const [[userSettings]] = await Promise.all([
-          db.select().from(schema.userSettings).where(eq(schema.userSettings.userId, job.userId)),
+          db.select().from(schema.userSettings).where(eq(schema.userSettings.userId, payload.userId)),
         ]);
         if (!userSettings) {
-          throw new Error(`User settings not found for userId=${job.userId}`);
+          throw new Error(`User settings not found for userId=${payload.userId}`);
         }
 
-        const userMessage = userMessageFromJob(job);
-        const userText = job.userMessageText;
+        const userMessage = userMessageFromPayload(payload);
+        const userText = payload.userMessageText;
         const symbol = extractSymbolFromPrompt(userText, userSettings.defaultSymbol ?? 'XAUUSD');
         if (!symbol || !isSafeSymbolResearchPrompt(userText)) {
           throw new Error(
@@ -142,36 +140,37 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
 
         const env = pickAiEnv(process.env as unknown as Parameters<typeof pickAiEnv>[0]);
         budget = await reserveTurnBudget({
-          userId: job.userId,
+          userId: payload.userId,
           estimateUsd: 0.05,
           maxDailyUsd: userSettings.maxDailyUsd ?? env.MAX_DAILY_USD ?? DEFAULT_MAX_DAILY_USD,
-          correlation: { threadId: job.threadId, runId: workerRunId },
+          correlation: { threadId: payload.threadId, runId },
         });
 
-        await appendUserMessage(job.userId, job.threadId, userMessage, {
-          idempotencyKey: `analysis-job:${job.id}:user`,
+        await appendUserMessage(payload.userId, payload.threadId, userMessage, {
+          idempotencyKey: `analysis-job:${runId}:user`,
         });
 
         modeResult = await withDiagnostics(
-          job.userId,
-          job.threadId,
+          payload.userId,
+          payload.threadId,
           () =>
             runMastraMode({
               prompt: userText,
               symbol,
-              userId: job.userId,
-              threadId: job.threadId,
-              runId: workerRunId,
+              userId: payload.userId,
+              threadId: payload.threadId,
+              runId,
               mode: 'full',
+              workflowId: FULL_ANALYSIS_WORKFLOW_ID,
               settings: userSettings,
               env,
               signal: ctx.signal,
               telemetryKind: 'mastra_full_job',
             }),
           {
-            ...(job.traceId ? { traceId: job.traceId } : {}),
-            runId: workerRunId,
-            jobId: job.id,
+            ...(payload.traceId ? { traceId: payload.traceId } : {}),
+            runId,
+            jobId: runId,
           },
         );
         observedCost = modeResult.totalCostUsd;
@@ -197,51 +196,26 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
           ],
         };
         const persistedAssistant = await appendAssistantMessage(
-          job.userId,
-          job.threadId,
+          payload.userId,
+          payload.threadId,
           assistant,
-          { idempotencyKey: `analysis-job:${job.id}:assistant` },
+          { idempotencyKey: `analysis-job:${runId}:assistant` },
         );
 
-        const completedRows = await db
-          .update(schema.analysisJobs)
-          .set({
-            status: 'complete',
-            result: {
-              finalText: modeResult.finalText,
-              agentOpinions: modeResult.agentOpinions,
-              mode: modeResult.mode,
-              totalCostUsd: modeResult.totalCostUsd,
-              totalLatencyMs: modeResult.totalLatencyMs,
-              messageId: persistedAssistant.messageId,
-            },
-            progress: [],
-            completedAt: new Date(),
-            updatedAt: new Date(),
-          })
-          .where(
-            and(
-              eq(schema.analysisJobs.id, job.id),
-              eq(schema.analysisJobs.status, 'running'),
-              eq(schema.analysisJobs.workerRunId, workerRunId),
-            ),
-          )
-          .returning({ id: schema.analysisJobs.id });
-
-        if (completedRows.length !== 1) {
-          ctx.log.warn('Mastra analysis completion skipped because the lease was lost', {
-            jobId: job.id,
-            workerRunId,
-          });
-          return;
-        }
+        await completeFullAnalysisRun(runId, {
+          finalText: modeResult.finalText,
+          agentOpinions: modeResult.agentOpinions,
+          mode: modeResult.mode,
+          totalCostUsd: modeResult.totalCostUsd,
+          totalLatencyMs: modeResult.totalLatencyMs,
+          messageId: persistedAssistant.messageId,
+        });
 
         await budget.reconcile(observedCost);
         budget = null;
         processed++;
-        ctx.log.info('Mastra Full analysis job completed', {
-          jobId: job.id,
-          workerRunId,
+        ctx.log.info('Full analysis job completed', {
+          runId,
           symbol,
           costUsd: observedCost,
           latencyMs: modeResult.totalLatencyMs,
@@ -258,44 +232,24 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
 
     try {
       try {
-        if (job.traceId) await traceIdStorage.run(job.traceId, processJob);
-        else await processJob();
+        if (payload.traceId) await traceIdStorage.run(payload.traceId, processRun);
+        else await processRun();
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        const retryable =
-          isRetryableAnalysisError(error) && job.attemptCount < MAX_ANALYSIS_ATTEMPTS;
-        const nextStatus = retryable ? 'pending' : 'failed';
-        ctx.log.error('Mastra analysis job failed', {
-          jobId: job.id,
+        const retryable = isRetryableAnalysisError(error) && payload.attemptCount < MAX_ANALYSIS_ATTEMPTS;
+        ctx.log.error('Full analysis job failed', {
+          runId,
           err: message,
           retryable,
-          attempt: job.attemptCount,
+          attempt: payload.attemptCount,
         });
-        const failedRows = await db
-          .update(schema.analysisJobs)
-          .set({
-            status: nextStatus,
-            error: retryable
-              ? `Attempt ${job.attemptCount}/${MAX_ANALYSIS_ATTEMPTS} failed; retrying automatically.`
-              : 'Full Mastra analysis could not be completed. No partial answer was returned.',
-            completedAt: retryable ? null : new Date(),
-            startedAt: retryable ? null : job.startedAt,
-            workerRunId: retryable ? null : workerRunId,
-            updatedAt: new Date(),
-          })
-          .where(
-            and(
-              eq(schema.analysisJobs.id, job.id),
-              eq(schema.analysisJobs.status, 'running'),
-              eq(schema.analysisJobs.workerRunId, workerRunId),
-            ),
-          )
-          .returning({ id: schema.analysisJobs.id });
-        if (failedRows.length !== 1) {
-          ctx.log.warn('Mastra analysis failure update skipped because the lease was lost', {
-            jobId: job.id,
-            workerRunId,
-          });
+        if (retryable) {
+          await requeueFullAnalysisRun(
+            runId,
+            `Attempt ${payload.attemptCount}/${MAX_ANALYSIS_ATTEMPTS} failed; retrying automatically.`,
+          );
+        } else {
+          await failFullAnalysisRun(runId, error);
         }
         processed++;
       }
@@ -305,24 +259,23 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
   }
 
   const staleCutoff = new Date(Date.now() - STALE_JOB_TIMEOUT_MS);
-  const staleRecovery = await recoverStaleAnalysisJobs(staleCutoff, MAX_ANALYSIS_ATTEMPTS);
+  const staleRecovery = await recoverStaleFullAnalysisRuns(staleCutoff, MAX_ANALYSIS_ATTEMPTS);
   if (staleRecovery.requeued > 0 || staleRecovery.failed > 0) {
-    ctx.log.warn('Recovered stale Mastra analysis jobs', {
+    ctx.log.warn('Recovered stale full-analysis runs', {
       requeued: staleRecovery.requeued,
       failed: staleRecovery.failed,
       maxAttempts: MAX_ANALYSIS_ATTEMPTS,
     });
   }
 
-  const retentionCutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const retentionCutoff = new Date(Date.now() - RETENTION_WINDOW_MS);
   try {
-    await db
-      .delete(schema.analysisJobs)
-      .where(lt(schema.analysisJobs.completedAt, retentionCutoff));
+    const purged = await purgeOldFullAnalysisRuns(retentionCutoff);
+    if (purged > 0) ctx.log.info('Purged old full-analysis runs', { purged });
   } catch (error) {
-    ctx.log.warn('Analysis job retention cleanup failed', { err: String(error) });
+    ctx.log.warn('Full-analysis run retention cleanup failed', { err: String(error) });
   }
 
-  ctx.log.info('Analysis job poll complete', { processed });
+  ctx.log.info('Full-analysis poll complete', { processed });
   return { processed, note: `processed=${processed}` };
 }

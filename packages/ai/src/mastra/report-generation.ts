@@ -1,12 +1,11 @@
-import { metrics } from '@kestrel/shared';
 import type { Agent } from '@mastra/core/agent';
+import type { AgentMemoryOption } from '@mastra/core/agent';
 import type { RequestContext } from '@mastra/core/request-context';
 
 import { telemetryConfig } from '../telemetry';
 import { guardXauusdFollowupText } from './followup-safety';
-import { patchTimeframeConflictDisclosure } from './report-repair';
 import { XauusdResearchReportSchema, type XauusdResearchReport } from './report-types';
-import { requireVerifiedXauusdReport, XauusdReportVerificationError } from './report-verifier';
+import { XauusdReportVerificationError } from './report-verifier';
 import type { XauusdResearchPacket } from './research-types';
 import type { MastraGenerationResultLike } from './stats';
 import type { xauusdMastraTools } from './tools';
@@ -23,11 +22,13 @@ export async function generateXauusdFollowup(
   report: XauusdResearchReport,
   packet: XauusdResearchPacket,
   signal?: AbortSignal,
+  memory?: AgentMemoryOption,
 ): Promise<MastraGenerationResultLike> {
   const result = await agent.generate(prompt, {
     requestContext,
     toolChoice: 'none',
     maxSteps: 1,
+    ...(memory ? { memory } : {}),
     ...telemetryConfig({
       functionId: 'mastra.xauusd.followup',
       metadata: { provider: providerId },
@@ -43,14 +44,13 @@ export async function generateXauusdFollowup(
   };
 }
 
-const REPORT_REPAIR_LIMIT = 2;
-
 export async function generateXauusdReport(
   agent: Agent<string, typeof xauusdMastraTools, undefined, XauusdRequestContext>,
   prompt: string,
   requestContext: RequestContext<XauusdRequestContext>,
   providerId: string,
   signal?: AbortSignal,
+  memory?: AgentMemoryOption,
 ) {
   return agent.generate(prompt, {
     requestContext,
@@ -58,6 +58,7 @@ export async function generateXauusdReport(
     // synthesis step from fetching a different snapshot or inventing a path.
     toolChoice: 'none',
     maxSteps: 1,
+    ...(memory ? { memory } : {}),
     structuredOutput: {
       schema: XauusdResearchReportSchema,
       jsonPromptInjection: 'auto',
@@ -81,7 +82,7 @@ export async function generateXauusdReport(
   });
 }
 
-function repairPrompt(prompt: string, findings: readonly string[]): string {
+export function repairPrompt(prompt: string, findings: readonly string[]): string {
   return [
     prompt,
     '',
@@ -92,7 +93,7 @@ function repairPrompt(prompt: string, findings: readonly string[]): string {
   ].join('\n');
 }
 
-function verificationFindings(error: unknown): readonly string[] | null {
+export function verificationFindings(error: unknown): readonly string[] | null {
   if (error instanceof XauusdReportVerificationError) return error.findings;
   if (typeof error === 'object' && error !== null && 'findings' in error) {
     const findings = (error as { findings?: unknown }).findings;
@@ -129,75 +130,4 @@ function verificationFindings(error: unknown): readonly string[] | null {
   return null;
 }
 
-export async function generateVerifiedXauusdReport(
-  agent: Agent<string, typeof xauusdMastraTools, undefined, XauusdRequestContext>,
-  prompt: string,
-  requestContext: RequestContext<XauusdRequestContext>,
-  providerId: string,
-  packet: XauusdResearchPacket,
-  signal?: AbortSignal,
-): Promise<{
-  result: XauusdReportGenerationResult;
-  report: XauusdResearchReport;
-  attempts: number;
-}> {
-  let findingsForRepair: readonly string[] = [];
 
-  for (let repairAttempt = 0; repairAttempt <= REPORT_REPAIR_LIMIT; repairAttempt += 1) {
-    let result: XauusdReportGenerationResult;
-    try {
-      result = await generateXauusdReport(
-        agent,
-        repairAttempt === 0 ? prompt : repairPrompt(prompt, findingsForRepair),
-        requestContext,
-        providerId,
-        signal,
-      );
-    } catch (error) {
-      // Structured-output validation can reject the object before the verifier
-      // runs (for example a missing second scenario). Retry it like a verifier
-      // finding instead of surfacing a raw SDK error.
-      const findings = verificationFindings(error);
-      if (!findings || repairAttempt >= REPORT_REPAIR_LIMIT) throw error;
-      findingsForRepair = findings;
-      metrics.increment('mastra_report_repair_total', {
-        tags: { result: 'requested' },
-      });
-      continue;
-    }
-
-    try {
-      const report = requireVerifiedXauusdReport(result.object, packet);
-      if (repairAttempt > 0) {
-        metrics.increment('mastra_report_repair_total', {
-          tags: { result: 'passed' },
-        });
-      }
-      return { result, report, attempts: repairAttempt + 1 };
-    } catch (error) {
-      const findings = verificationFindings(error);
-      if (!findings) throw error;
-      if (repairAttempt >= REPORT_REPAIR_LIMIT) {
-        const patched = patchTimeframeConflictDisclosure(result.object, packet, findings);
-        if (patched) {
-          metrics.increment('mastra_report_repair_total', {
-            tags: { result: 'patched' },
-          });
-          return { result, report: patched, attempts: repairAttempt + 1 };
-        }
-        if (repairAttempt > 0) {
-          metrics.increment('mastra_report_repair_total', {
-            tags: { result: 'failed' },
-          });
-        }
-        throw error;
-      }
-      findingsForRepair = findings;
-      metrics.increment('mastra_report_repair_total', {
-        tags: { result: 'requested' },
-      });
-    }
-  }
-
-  throw new Error('Mastra report repair loop ended unexpectedly');
-}

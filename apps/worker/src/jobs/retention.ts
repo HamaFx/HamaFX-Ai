@@ -35,7 +35,6 @@ export async function runRetention(ctx: JobContext): Promise<JobResult> {
     rateLimitsDeleted: result.rateLimitsDeleted,
     providerDailyQuotaDeleted: result.providerDailyQuotaDeleted,
     cronRunsDeleted: result.cronRunsDeleted,
-    analysisJobsDeleted: result.analysisJobsDeleted,
     outboxDeleted: result.outboxDeleted,
     budgetReservationsDeleted: result.budgetReservationsDeleted,
   });

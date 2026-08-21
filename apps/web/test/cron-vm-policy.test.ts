@@ -45,8 +45,9 @@ describe('cron VM operational policy', () => {
     expect(unit).toMatch(/ExecStart=\/opt\/kestrel\/scripts\/delete-tenant\.sh __system__(?:\n|$)/);
     expect(script).toContain('SAFETY CHECK PASSED');
     expect(script).toContain('chat_messages WHERE thread_id');
-    expect(script).toContain('analysis_jobs');
     expect(script).toContain('diagnostic_traces');
+    // Phase 3 — analysis_jobs was replaced by Mastra durable workflow runs.
+    expect(script).not.toContain('analysis_jobs');
     expect(script).not.toMatch(/FROM chat_messages[^\n]*\.user_id/);
     expect(script).not.toContain('SELECT COUNT(*) FROM chat_messages WHERE user_id');
     expect(script).not.toContain('DELETE FROM chat_messages WHERE user_id');
@@ -58,8 +59,9 @@ describe('cron VM operational policy', () => {
     expect(script).toContain("'chat_messages'::text");
     expect(script).toContain('JOIN chat_threads th ON th.id = t.thread_id');
     expect(script).not.toMatch(/FROM chat_messages t WHERE t\.user_id/);
-    expect(script).toContain('analysis_jobs');
     expect(script).toContain('diagnostic_traces');
+    // Phase 3 — analysis_jobs was replaced by Mastra durable workflow runs.
+    expect(script).not.toContain('analysis_jobs');
   });
 
   it('keeps heavy jobs in the Docker scheduler instead of restoring deleted timers', () => {

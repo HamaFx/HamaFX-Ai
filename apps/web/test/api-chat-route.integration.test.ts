@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { POST } from '@/app/api/chat/route';
 
 const {
-  mockEnqueueAnalysisJob,
+  mockEnqueueFullAnalysis,
   mockGetThread,
   mockWithRateLimit,
   mockRunMastraXauusdChat,
@@ -14,7 +14,7 @@ const {
   mockMastraChatResponse,
   mockMastraModeResponse,
 } = vi.hoisted(() => ({
-  mockEnqueueAnalysisJob: vi.fn(),
+  mockEnqueueFullAnalysis: vi.fn(),
   mockGetThread: vi.fn(),
   mockWithRateLimit: vi.fn(),
   mockRunMastraXauusdChat: vi.fn(),
@@ -100,7 +100,7 @@ vi.mock('@/lib/services/api-boundary', () => ({
   getThread: mockGetThread,
   listMessages: vi.fn().mockResolvedValue([]),
   resolveMode: (mode: string) => (mode === 'auto' ? 'single' : mode),
-  enqueueAnalysisJob: mockEnqueueAnalysisJob,
+  enqueueFullAnalysis: mockEnqueueFullAnalysis,
   traceIdStorage: { getStore: () => 'trace-route-1' },
   withDiagnostics: async (_userId: string, _threadId: string, fn: () => Promise<Response>) => fn(),
   withRateLimit: mockWithRateLimit,
@@ -134,7 +134,7 @@ describe('POST /api/chat Mastra boundary', () => {
     vi.clearAllMocks();
     mockWithRateLimit.mockResolvedValue({ allowed: true, count: 1, limit: 30 });
     mockGetThread.mockResolvedValue({ id: 'thread-1', userId: 'user-1' });
-    mockEnqueueAnalysisJob.mockResolvedValue({ id: 'job-1' });
+    mockEnqueueFullAnalysis.mockResolvedValue('run-1');
     mockRunMastraXauusdChat.mockResolvedValue({
       result: { text: 'xauusd result' },
       runId: 'run-1',
@@ -229,10 +229,11 @@ describe('POST /api/chat Mastra boundary', () => {
     });
 
     expect(response.status).toBe(200);
-    expect(mockEnqueueAnalysisJob).toHaveBeenCalledWith(
+    expect(mockEnqueueFullAnalysis).toHaveBeenCalledWith(
       expect.objectContaining({
-        mode: 'full',
-        historyParts: [],
+        userId: 'user-1',
+        threadId: '11111111-1111-4111-8111-111111111111',
+        idempotencyKey: expect.stringContaining('full:'),
         traceId: 'trace-route-1',
       }),
     );
@@ -304,6 +305,6 @@ describe('POST /api/chat Mastra boundary', () => {
     );
 
     expect(response.status).toBe(400);
-    expect(mockEnqueueAnalysisJob).not.toHaveBeenCalled();
+    expect(mockEnqueueFullAnalysis).not.toHaveBeenCalled();
   });
 });

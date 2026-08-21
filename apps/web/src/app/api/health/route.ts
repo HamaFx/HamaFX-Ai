@@ -19,10 +19,8 @@
 // the last 24 hours so the system-status card can detect stuck jobs.
 
 import { NextResponse } from 'next/server';
-import { withRateLimit } from '@/lib/services/api-boundary';
-import { getDb } from '@/lib/services/api-boundary';
+import { withRateLimit, getDb, getFullAnalysisQueueHealth, REQUIRED_HEALTH_ENV_VARS } from '@/lib/services/api-boundary';
 import { sql } from 'drizzle-orm';
-import { REQUIRED_HEALTH_ENV_VARS } from '@/lib/services/api-boundary';
 
 import { withAuth } from '@/lib/api';
 
@@ -94,29 +92,19 @@ async function checkCronRuns(): Promise<CheckResult & { recentRuns?: number; stu
 
 async function checkAnalysisJobs(): Promise<CheckResult & { pending?: number; stuckRunning?: number; stalePending?: number }> {
   try {
-    const db = getDb();
-    const [row] = await db.execute<{ pending: string; stuck_running: string; stale_pending: string }>(sql`
-      SELECT
-        COUNT(*) FILTER (WHERE status = 'pending')::text AS pending,
-        COUNT(*) FILTER (
-          WHERE status = 'running'
-          AND started_at < now() - INTERVAL '30 seconds'
-        )::text AS stuck_running,
-        COUNT(*) FILTER (
-          WHERE status = 'pending'
-          AND created_at < now() - INTERVAL '10 minutes'
-        )::text AS stale_pending
-      FROM analysis_jobs
-    `);
+    const health = await getFullAnalysisQueueHealth();
+    if (health.unavailable) {
+      return { ok: true, message: 'full-analysis queue unavailable (workflows domain not ready)' };
+    }
     return {
       ok: true,
-      pending: Number(row?.pending ?? 0),
-      stuckRunning: Number(row?.stuck_running ?? 0),
-      stalePending: Number(row?.stale_pending ?? 0),
+      pending: health.pending,
+      stuckRunning: health.stuckRunning,
+      stalePending: health.stalePending,
     };
   } catch {
-    // analysis_jobs table may not exist yet (pre-migration). Non-fatal.
-    return { ok: true, message: 'analysis_jobs unavailable (may need migration)' };
+    // Workflow storage may not be ready yet (first boot). Non-fatal.
+    return { ok: true, message: 'full-analysis queue unavailable (workflows domain not ready)' };
   }
 }
 

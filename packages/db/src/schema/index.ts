@@ -67,8 +67,6 @@ export * from './bot-links';
 export * from './provider-daily-quota';
 // Phase B — Billing (NOWPayments / crypto)
 export * from './billing';
-// U2 — Background multi-agent analysis jobs
-export * from './analysis-jobs';
 // Durable user feedback and reviewer annotations
 export * from './ai-feedback';
 // Privacy-safe Mastra versus legacy rollout comparisons

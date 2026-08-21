@@ -1,5 +1,6 @@
 import type { UserSettingsRow } from '@kestrel/db/schema';
 import { RequestContext } from '@mastra/core/request-context';
+import type { AgentMemoryOption } from '@mastra/core/agent';
 import type { LanguageModel } from 'ai';
 
 import { getDiagnosticContext, withDiagnostics } from '../diagnostics';
@@ -7,8 +8,14 @@ import { resolveChatModel, type ChatModelResolution } from '../model';
 import { telemetryConfig } from '../telemetry';
 import type { ResolveModelEnv } from '../vertex-factory';
 import { createXauusdMastraAgent } from './agent';
-import { loadMastraMemoryContext, serializeMastraMemoryContext } from './memory-context';
-import { generateVerifiedXauusdReport, generateXauusdFollowup } from './report-generation';
+import {
+  createKestrelMemory,
+  type CreateKestrelMemoryArgs,
+} from '../mastra-v2/memory';
+import { prepareKestrelMemory } from '../mastra-v2/context';
+import { getKestrelMastra } from '../mastra-v2/instance';
+import { createXauusdReportWorkflow } from '../mastra-v2/workflows/xauusd-report';
+import { generateXauusdFollowup } from './report-generation';
 import { blockedXauusdResearchText } from './report-text';
 import type { XauusdResearchReport } from './report-types';
 import { collectXauusdResearchPacket } from './research-packet';
@@ -69,10 +76,19 @@ export function resolveXauusdMastraModel(
   return resolveChatModel(mastraSettings, env, 'technical');
 }
 
+function baseContextForRun(args: RunXauusdMastraArgs): RequestContext<XauusdRequestContext> {
+  const values = { userId: args.userId, runId: args.runId, threadId: args.threadId };
+  XauusdRequestContextSchema.parse(values);
+  return new RequestContext<XauusdRequestContext>([
+    ['userId', args.userId],
+    ['runId', args.runId],
+    ['threadId', args.threadId],
+  ]);
+}
+
 function contextForRun(
   args: RunXauusdMastraArgs,
   researchPacket: XauusdResearchPacket,
-  memoryContext?: string,
 ): RequestContext<XauusdRequestContext> {
   const values = {
     userId: args.userId,
@@ -80,7 +96,6 @@ function contextForRun(
     threadId: args.threadId,
     researchPacket,
     ...(args.priorReport ? { priorReport: args.priorReport } : {}),
-    ...(memoryContext ? { memoryContext } : {}),
   };
   XauusdRequestContextSchema.parse(values);
   const entries: Array<
@@ -89,7 +104,6 @@ function contextForRun(
     | ['threadId', string]
     | ['researchPacket', XauusdResearchPacket]
     | ['priorReport', XauusdResearchReport]
-    | ['memoryContext', string]
   > = [
     ['userId', args.userId],
     ['runId', args.runId],
@@ -97,7 +111,6 @@ function contextForRun(
     ['researchPacket', researchPacket],
   ];
   if (args.priorReport) entries.push(['priorReport', args.priorReport]);
-  if (memoryContext) entries.push(['memoryContext', memoryContext]);
   return new RequestContext(entries);
 }
 
@@ -127,10 +140,122 @@ async function executeXauusdMastraRun(args: RunXauusdMastraArgs): Promise<Xauusd
       providerId: resolution.providerId,
     });
 
-    const packet = await collectXauusdResearchPacket(args.signal);
-    if (packet.status === 'blocked') {
-      const stats = blockedStats();
-      const text = blockedXauusdResearchText(packet);
+    const memory = createKestrelMemory({
+      settings: {
+        aiApiKeys: args.settings.aiApiKeys,
+        embeddingModel: args.settings.embeddingModel ?? null,
+      },
+      env: args.env,
+    } satisfies CreateKestrelMemoryArgs);
+    const prepared = await prepareKestrelMemory({
+      memory,
+      userId: args.userId,
+      threadId: args.threadId,
+      settings: {
+        chatModel: args.settings.chatModel ?? null,
+        embeddingModel: args.settings.embeddingModel ?? null,
+      },
+      backfill: true,
+    });
+    const agent = createXauusdMastraAgent({ model: resolution.model, memory });
+
+    // Follow-up answers explain a previously verified report; they keep the
+    // direct agent path (packet collected here for the follow-up context).
+    if (args.followup && args.priorReport) {
+      const packet = await collectXauusdResearchPacket(args.signal);
+      if (packet.status === 'blocked') {
+        const stats = blockedStats();
+        const text = blockedXauusdResearchText(packet);
+        await finishMastraRun({
+          userId: args.userId,
+          threadId: args.threadId,
+          runId: args.runId,
+          model: resolution.modelId,
+          providerId: resolution.providerId,
+          startedAt,
+          ...stats,
+          outcome: 'success',
+          ...(args.telemetryKind ? { telemetryKind: args.telemetryKind } : {}),
+        });
+        return {
+          result: { text },
+          report: null,
+          packet,
+          modelId: resolution.modelId,
+          providerId: resolution.providerId,
+          stats,
+        };
+      }
+      const requestContext = contextForRun(args, packet);
+      const result = await generateXauusdFollowup(
+        agent,
+        args.prompt,
+        requestContext,
+        resolution.providerId,
+        args.priorReport,
+        packet,
+        args.signal,
+        prepared.callOptions,
+      );
+      const stats = getMastraGenerationStats(result);
+      await finishMastraRun({
+        userId: args.userId,
+        threadId: args.threadId,
+        runId: args.runId,
+        model: resolution.modelId,
+        providerId: resolution.providerId,
+        startedAt,
+        ...stats,
+        outcome: 'success',
+        ...(args.telemetryKind ? { telemetryKind: args.telemetryKind } : {}),
+      });
+      return {
+        result,
+        report: null,
+        packet,
+        modelId: resolution.modelId,
+        providerId: resolution.providerId,
+        stats,
+      };
+    }
+
+    // Verified-report pipeline: the packet is collected inside the workflow
+    // (`collect-packet` step), and every generation/verification/repair attempt
+    // is an observable workflow step (run snapshots) instead of an opaque loop.
+    const workflow = createXauusdReportWorkflow({
+      agent,
+      callOptions: prepared.callOptions,
+      providerId: resolution.providerId,
+      ...(args.signal ? { signal: args.signal } : {}),
+      mastra: getKestrelMastra().instance,
+    });
+    const run = await workflow.createRun({ runId: args.runId, resourceId: args.userId });
+    const runResult = await run.start({
+      inputData: { prompt: args.prompt },
+      requestContext: baseContextForRun(args) as never,
+    });
+    if (runResult.status !== 'success') {
+      if (args.signal?.aborted) {
+        throw args.signal.reason ?? new DOMException('Aborted', 'AbortError');
+      }
+      throw (runResult.status === 'failed' && runResult.error
+        ? runResult.error
+        : new Error('Mastra XAUUSD report workflow failed'));
+    }
+    const output = runResult.result as {
+      status: 'ready' | 'blocked';
+      blockedText?: string;
+      report?: XauusdResearchReport | null;
+      result?: MastraGenerationResultLike;
+      packet: XauusdResearchPacket;
+      attempts?: number;
+      stats: MastraGenerationStats;
+    };
+    if (output.status === 'blocked' || !output.report) {
+      const stats = output.stats ?? blockedStats();
+      const text =
+        output.blockedText ??
+        blockedXauusdResearchText(output.packet);
       await finishMastraRun({
         userId: args.userId,
         threadId: args.threadId,
@@ -144,53 +269,16 @@ async function executeXauusdMastraRun(args: RunXauusdMastraArgs): Promise<Xauusd
       });
       return {
         result: { text },
-        report: null as XauusdResearchReport | null,
-        packet,
+        report: null,
+        packet: output.packet,
         modelId: resolution.modelId,
         providerId: resolution.providerId,
         stats,
       };
     }
-
-    const agent = createXauusdMastraAgent({ model: resolution.model });
-    const memoryContext = serializeMastraMemoryContext(
-      await loadMastraMemoryContext({
-        userId: args.userId,
-        threadId: args.threadId,
-        query: args.prompt,
-        settings: {
-          aiApiKeys: args.settings.aiApiKeys,
-          embeddingModel: args.settings.embeddingModel ?? null,
-        },
-        env: args.env,
-        ...(args.signal ? { signal: args.signal } : {}),
-      }),
-    );
-    const requestContext = contextForRun(args, packet, memoryContext);
-    const generated =
-      args.followup && args.priorReport
-        ? {
-            result: await generateXauusdFollowup(
-              agent,
-              args.prompt,
-              requestContext,
-              resolution.providerId,
-              args.priorReport,
-              packet,
-              args.signal,
-            ),
-            report: null,
-          }
-        : await generateVerifiedXauusdReport(
-            agent,
-            args.prompt,
-            requestContext,
-            resolution.providerId,
-            packet,
-            args.signal,
-          );
-    const { result, report } = generated;
-    const stats = getMastraGenerationStats(result);
+    const { report, packet } = output;
+    const result = output.result as MastraGenerationResultLike;
+    const stats = output.stats;
 
     await finishMastraRun({
       userId: args.userId,
@@ -273,23 +361,28 @@ async function executeXauusdMastraConversationRun(
       };
     }
 
-    const agent = createXauusdMastraAgent({ model: resolution.model });
-    const memoryContext = serializeMastraMemoryContext(
-      await loadMastraMemoryContext({
-        userId: args.userId,
-        threadId: args.threadId,
-        query: args.prompt,
-        settings: {
-          aiApiKeys: args.settings.aiApiKeys,
-          embeddingModel: args.settings.embeddingModel ?? null,
-        },
-        env: args.env,
-        ...(args.signal ? { signal: args.signal } : {}),
-      }),
-    );
-    const requestContext = contextForRun(args, packet, memoryContext);
+    const memory = createKestrelMemory({
+      settings: {
+        aiApiKeys: args.settings.aiApiKeys,
+        embeddingModel: args.settings.embeddingModel ?? null,
+      },
+      env: args.env,
+    } satisfies CreateKestrelMemoryArgs);
+    const prepared = await prepareKestrelMemory({
+      memory,
+      userId: args.userId,
+      threadId: args.threadId,
+      settings: {
+        chatModel: args.settings.chatModel ?? null,
+        embeddingModel: args.settings.embeddingModel ?? null,
+      },
+      backfill: true,
+    });
+    const agent = createXauusdMastraAgent({ model: resolution.model, memory });
+    const requestContext = contextForRun(args, packet);
     const result = await agent.generate(args.prompt, {
       requestContext,
+      memory: prepared.callOptions,
       toolChoice: 'auto',
       activeTools: [...xauusdMastraConversationToolNames],
       maxSteps: 3,

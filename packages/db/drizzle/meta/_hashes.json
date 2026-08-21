@@ -331,6 +331,10 @@
     {
       "tag": "0083_guard_tenant_triggers",
       "hash": "21ae1d8c1f459e52cdac909a034c149a5a23d093a32cc43d3f07de199e1b2f68"
+    },
+    {
+      "tag": "0084_drop_analysis_jobs",
+      "hash": "c2c2dd59aed7aeb605dce311c6e8cfedd15397d70ab8c56deb614a0d74bb9253"
     }
   ]
 }

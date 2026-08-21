@@ -49,7 +49,9 @@ import { LeverageGauge } from '@/components/ui/leverage-gauge';
 import {
   DEFAULT_LAYOUT,
   LAYOUT_STORAGE_KEY,
+  PRESET_LAYOUTS,
   WIDGET_LABELS,
+  type LayoutPresetName,
   type WidgetConfig,
   type WidgetType,
 } from './widget-types';
@@ -248,6 +250,38 @@ export function DashboardCanvas({ marginUsagePct = 0, marginDetail, ...props }: 
           </Button>
         </div>
         </div>
+
+        {/* Role Presets Bar when in Edit Mode */}
+        {editMode && (
+          <div className="flex flex-col gap-2 rounded-sm border border-brand-border/60 bg-bg-elev-1 p-3 animate-in fade-in duration-200">
+            <div className="flex items-center justify-between">
+              <span className="text-caption font-semibold uppercase tracking-wider text-fg-subtle">
+                Role Layout Presets
+              </span>
+              <span className="text-[11px] text-fg-subtle">
+                Click a preset to instantly restructure your workspace
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {(Object.keys(PRESET_LAYOUTS) as LayoutPresetName[]).map((key) => {
+                const preset = PRESET_LAYOUTS[key];
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => {
+                      persistLayout(preset.layout);
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-sm border border-border bg-bg-elev-2 px-3 py-1.5 text-xs font-medium text-fg transition-colors hover:border-brand hover:text-brand"
+                    title={preset.description}
+                  >
+                    <span>{preset.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* ASCII leverage gauge — summary row below header */}
         <div className="rounded-sm border border-border bg-bg-elev-1 px-4 py-3">

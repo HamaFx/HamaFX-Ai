@@ -25,29 +25,35 @@
 
 export const colors = {
   // surfaces (dark theme baseline)
-  bg: 'oklch(15% 0.02 260)',
-  bgElev1: 'oklch(18% 0.02 260)',
-  bgElev2: 'oklch(22% 0.02 260)',
-  bgElev3: 'oklch(25% 0.02 260)',
-  border: 'oklch(28% 0.02 260)',
-  divider: 'oklch(28% 0.01 260 / 0.6)',
-  overlay: 'oklch(8% 0.02 260 / 0.7)',
+  bg: '#0A0A0A',
+  bgElev1: '#141414',
+  bgElev2: '#1E1E1E',
+  bgElev3: '#2A2A2A',
+  border: '#262626',
+  divider: '#1E1E1E',
+  overlay: 'rgba(0, 0, 0, 0.80)',
 
   // text
-  fg: 'oklch(96% 0.01 260)',
-  fgMuted: 'oklch(72% 0.02 260)',
-  fgSubtle: 'oklch(70% 0.02 260)',
+  fg: '#F0F0F0',
+  fgMuted: '#808080',
+  fgSubtle: '#737373',
 
   // brand
-  brand: 'oklch(72% 0.16 78)',
-  brandFg: 'oklch(15% 0.02 260)',
+  brand: '#F56E0F',
+  brandFg: '#FFFFFF',
+  brandSoft: '#FF9A4D',
+  brandBorder: '#402A18',
 
-  // states
-  bull: 'oklch(72% 0.18 150)',
-  bear: 'oklch(67% 0.22 25)',
-  neutral: 'oklch(70% 0.02 260)',
-  warn: 'oklch(78% 0.16 80)',
-  info: 'oklch(72% 0.14 230)',
+  // market states (price/P&L only)
+  bull: '#22C55E',
+  bear: '#EF4444',
+  neutral: '#71717A',
+  warn: '#F59E0B',
+  info: '#3B82F6',
+
+  // system status
+  success: '#16A34A',
+  danger: '#DC2626',
 } as const;
 
 export type ColorToken = keyof typeof colors;

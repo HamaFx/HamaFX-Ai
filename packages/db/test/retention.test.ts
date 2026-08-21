@@ -41,12 +41,11 @@ describe('retention cleanup', () => {
       rateLimitRetentionHours: 1,
       providerDailyQuotaRetentionDays: 1,
       cronRunRetentionDays: 1,
-      analysisJobRetentionDays: 1,
       outboxRetentionDays: 1,
       budgetReservationRetentionDays: 1,
     });
 
-    expect(execute).toHaveBeenCalledTimes(9);
+    expect(execute).toHaveBeenCalledTimes(8);
     expect(result).toMatchObject({
       telemetryDeleted: 2,
       toolTelemetryDeleted: 2,
@@ -54,7 +53,6 @@ describe('retention cleanup', () => {
       rateLimitsDeleted: 2,
       providerDailyQuotaDeleted: 2,
       cronRunsDeleted: 2,
-      analysisJobsDeleted: 2,
       outboxDeleted: 2,
       budgetReservationsDeleted: 2,
     });
@@ -66,12 +64,12 @@ describe('retention cleanup', () => {
 
     await runRetentionCleanup({ telemetryRetentionDays: 1 });
 
-    expect(execute).toHaveBeenCalledTimes(9);
+    expect(execute).toHaveBeenCalledTimes(8);
   });
 
   it('vacuum analyzes only the bounded operational table list', async () => {
     await runVacuumAnalyze();
 
-    expect(execute).toHaveBeenCalledTimes(9);
+    expect(execute).toHaveBeenCalledTimes(8);
   });
 });

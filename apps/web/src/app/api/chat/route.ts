@@ -13,7 +13,7 @@ import { createRequestLogger } from '@/lib/logger';
 import {
   AnalysisQueuedEventSchema,
   BudgetExceededError,
-  enqueueAnalysisJob,
+  enqueueFullAnalysis,
   extractUserMessageText,
   getThread,
   listMessages,
@@ -160,10 +160,10 @@ export const POST = withAuth<void>(async (req, { user }) => {
   }
 
   try {
-    // Full mode remains durable: the web request queues the job and the worker
-    // executes the Mastra mode inside the existing lease/idempotency boundary.
-    // Explicit model overrides are not yet serializable on analysis_jobs, so
-    // reject them clearly instead of silently selecting another model.
+    // Full mode remains durable: the web request enqueues a Mastra workflow
+    // run (pending snapshot) and the worker claims it. Explicit model
+    // overrides are not yet serializable on the run payload, so reject them
+    // clearly instead of silently selecting another model.
     if (resolvedMode === 'full') {
       if (body.modelOverride != null) {
         return errorJson(
@@ -177,22 +177,19 @@ export const POST = withAuth<void>(async (req, { user }) => {
         user.userId,
         body.threadId,
         async () => {
-          const job = await enqueueAnalysisJob({
+          const runId = await enqueueFullAnalysis({
             userId: user.userId,
             threadId: body.threadId,
             userMessageText: userText,
             userMessageParts: userMessage.parts,
-            historyParts: [],
-            mode: 'full',
-            status: 'pending',
             idempotencyKey: `full:${body.threadId}:${last.id}`,
             traceId: traceIdStorage.getStore() ?? crypto.randomUUID(),
           });
-          if (!job) return errorJson('INTERNAL', 'Failed to queue analysis job', 500);
+          if (!runId) return errorJson('INTERNAL', 'Failed to queue analysis job', 500);
           return Response.json(
             AnalysisQueuedEventSchema.parse({
               type: 'analysis-queued',
-              jobId: job.id,
+              jobId: runId,
               status: 'queued',
             }),
           );

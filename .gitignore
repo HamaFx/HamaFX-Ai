@@ -59,6 +59,8 @@ packages/db/drizzle/meta/*
 
 # Kestrel local database and migration cache
 .kestrel/
+# Mastra CLI build artifacts (mastra dev/build output)
+.mastra/
 # Legacy HamaFX local data remains ignored while upgrades migrate it.
 .hamafx/
 

@@ -66,7 +66,6 @@ export type TraceExplorerSource =
   | 'turn'
   | 'tool'
   | 'agent'
-  | 'analysis-job'
   | 'budget'
   | 'outbox';
 
@@ -106,7 +105,7 @@ export async function listTraceExplorerEvents(
   const limit = boundedLimit(filters.limit);
   const db = getDb();
 
-  const [traces, turns, tools, jobs, budgets, outbox] = await Promise.all([
+  const [traces, turns, tools, budgets, outbox] = await Promise.all([
     filters.messageId || filters.runId || filters.jobId
       ? Promise.resolve([] as DiagnosticTraceRow[])
       : db
@@ -143,17 +142,6 @@ export async function listTraceExplorerEvents(
         ...(filters.messageId ? [eq(schema.chatToolTelemetry.messageId, filters.messageId)] : []),
       ]))
       .orderBy(desc(schema.chatToolTelemetry.createdAt))
-      .limit(limit),
-    db
-      .select()
-      .from(schema.analysisJobs)
-      .where(allMatch([
-        ...(filters.traceId ? [eq(schema.analysisJobs.traceId, filters.traceId)] : []),
-        ...(filters.runId ? [eq(schema.analysisJobs.workerRunId, filters.runId)] : []),
-        ...(filters.jobId ? [eq(schema.analysisJobs.id, filters.jobId)] : []),
-        ...(filters.threadId ? [eq(schema.analysisJobs.threadId, filters.threadId)] : []),
-      ]))
-      .orderBy(desc(schema.analysisJobs.updatedAt))
       .limit(limit),
     db
       .select()
@@ -279,43 +267,6 @@ export async function listTraceExplorerEvents(
         reasoning: row.reasoning,
       },
     })),
-    ...jobs.flatMap((row) => {
-      const jobEvent: TraceExplorerEvent = {
-        id: `job:${row.id}`,
-        source: 'analysis-job',
-        timestamp: row.updatedAt,
-        name: 'analysis.job',
-        status: row.status,
-        traceId: row.traceId,
-        runId: row.workerRunId,
-        jobId: row.id,
-        threadId: row.threadId,
-        messageId: null,
-        userId: row.userId,
-        durationMs: row.startedAt && row.completedAt ? row.completedAt.getTime() - row.startedAt.getTime() : null,
-        error: row.error,
-        metadata: { mode: row.mode, attemptCount: row.attemptCount, idempotencyKey: row.idempotencyKey },
-      };
-      const progressEvents: TraceExplorerEvent[] = Array.isArray(row.progress)
-        ? row.progress.map((progress, index) => ({
-            id: `job:${row.id}:progress:${index}`,
-            source: 'analysis-job' as const,
-            timestamp: row.updatedAt,
-            name: typeof progress.type === 'string' ? `progress:${progress.type}` : 'analysis.progress',
-            status: 'observed',
-            traceId: row.traceId,
-            runId: row.workerRunId,
-            jobId: row.id,
-            threadId: row.threadId,
-            messageId: null,
-            userId: row.userId,
-            durationMs: null,
-            error: null,
-            metadata: progress,
-          }))
-        : [];
-      return [jobEvent, ...progressEvents];
-    }),
     ...budgets.map((row) => ({
       id: `budget:${row.id}`,
       source: 'budget' as const,

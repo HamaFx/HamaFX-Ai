@@ -342,6 +342,50 @@ export function EntryForm({ onCreated }: EntryFormProps) {
         )}
       </div>
 
+      {/* Mindset & Trader Psychology Quick Selection */}
+      <div className="flex flex-col gap-2">
+        <label className="text-fg-subtle text-caption uppercase tracking-wide">
+          Trader Mindset / Execution Psychology
+        </label>
+        <div className="flex flex-wrap gap-1.5">
+          {[
+            { tag: 'Disciplined', label: 'Disciplined', tone: 'bull' as const },
+            { tag: 'Plan Followed', label: 'Plan Followed', tone: 'bull' as const },
+            { tag: 'FOMO', label: 'FOMO', tone: 'bear' as const },
+            { tag: 'Revenge Trade', label: 'Revenge Trade', tone: 'bear' as const },
+            { tag: 'Hesitant', label: 'Hesitant', tone: 'warn' as const },
+            { tag: 'Chased', label: 'Chased', tone: 'warn' as const },
+          ].map((p) => {
+            const isSelected = tags.includes(p.tag);
+            return (
+              <button
+                key={p.tag}
+                type="button"
+                onClick={() => {
+                  if (isSelected) {
+                    setTags(tags.filter((t) => t !== p.tag));
+                  } else {
+                    setTags([...tags, p.tag]);
+                  }
+                }}
+                className={cn(
+                  'inline-flex items-center gap-1 px-2.5 py-1 rounded-sm text-caption font-medium transition-all border select-none',
+                  isSelected
+                    ? p.tone === 'bull'
+                      ? 'bg-bull/20 text-bull border-bull/50'
+                      : p.tone === 'bear'
+                        ? 'bg-bear/20 text-bear border-bear/50'
+                        : 'bg-warn/20 text-warn border-warn/50'
+                    : 'bg-bg-elev-1 text-fg-subtle border-border hover:text-fg hover:border-fg-muted',
+                )}
+              >
+                <span>{p.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <TagInput
         value={tags}
         onChange={setTags}

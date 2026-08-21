@@ -63,7 +63,6 @@ log() { printf '%s [delete-tenant] %s\n' "$(date -u +%FT%TZ)" "$*"; }
 TENANT_TABLES=(
   "chat_tool_telemetry"
   "chat_telemetry"
-  "analysis_jobs"
   "diagnostic_traces"
   "agent_opinions"
   "memory_embeddings"

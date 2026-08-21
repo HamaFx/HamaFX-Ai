@@ -1,11 +1,10 @@
 import { metrics } from '@kestrel/shared';
-import type { RequestContext } from '@mastra/core/request-context';
+import { RequestContext } from '@mastra/core/request-context';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { generateVerifiedXauusdReport } from '../src/mastra/report-generation';
+import { createXauusdReportWorkflow } from '../src/mastra-v2/workflows/xauusd-report';
 import { patchTimeframeConflictDisclosure } from '../src/mastra/report-repair';
 import { XauusdResearchPacketSchema } from '../src/mastra/research-types';
-import type { XauusdRequestContext } from '../src/mastra/types';
 
 const mocks = vi.hoisted(() => {
   class FakeVerificationError extends Error {
@@ -13,6 +12,7 @@ const mocks = vi.hoisted(() => {
 
     constructor(findings: readonly string[]) {
       super('verification failed');
+      this.name = 'XauusdReportVerificationError';
       this.findings = findings;
     }
   }
@@ -24,6 +24,7 @@ const mocks = vi.hoisted(() => {
       report: candidate,
       findings: [],
     })),
+    collectXauusdResearchPacket: vi.fn(),
     FakeVerificationError,
   };
 });
@@ -33,10 +34,62 @@ vi.mock('../src/mastra/report-verifier', () => ({
   verifyXauusdReport: mocks.verifyXauusdReport,
   XauusdReportVerificationError: mocks.FakeVerificationError,
 }));
+vi.mock('../src/mastra/research-packet', () => ({
+  collectXauusdResearchPacket: mocks.collectXauusdResearchPacket,
+}));
 
-const packet = {} as never;
-const requestContext = {} as RequestContext<XauusdRequestContext>;
-const report = { symbol: 'XAUUSD', bias: 'neutral' };
+const packet = XauusdResearchPacketSchema.parse({
+  packetId: 'packet-1',
+  kind: 'research_packet',
+  symbol: 'XAUUSD',
+  generatedAt: new Date().toISOString(),
+  status: 'ready',
+  dataQuality: 'complete',
+  timeframes: ['1d', '4h', '1h', '15m'],
+  price: null,
+  candles: [],
+  indicators: [],
+  macro: null,
+  missingData: [],
+  warnings: [],
+});
+
+const report = {
+  symbol: 'XAUUSD',
+  asOf: new Date().toISOString(),
+  dataQuality: 'complete',
+  bias: 'neutral',
+  confidence: 0.5,
+  regime: 'range',
+  bottomLine: 'Test report',
+  technicalSummary: 'Test technical summary',
+  fundamentalSummary: 'Unavailable',
+  scenarios: [
+    {
+      name: 'Bullish',
+      direction: 'bullish',
+      trigger: 'breakout',
+      invalidation: 'below level',
+      targets: [],
+      risks: ['volatility'],
+      evidenceIds: ['packet-1'],
+    },
+    {
+      name: 'Bearish',
+      direction: 'bearish',
+      trigger: 'breakdown',
+      invalidation: 'above level',
+      targets: [],
+      risks: ['volatility'],
+      evidenceIds: ['packet-1'],
+    },
+  ],
+  contradictions: [],
+  missingData: [],
+  numericClaims: [{ label: 'Test claim', value: 1, evidenceId: 'packet-1' }],
+  evidenceIds: ['packet-1'],
+  sources: [{ evidenceId: 'packet-1', source: 'fixture', dataAsOf: new Date().toISOString() }],
+};
 
 function agentWithResults(...results: unknown[]) {
   const generate = vi.fn();
@@ -44,10 +97,51 @@ function agentWithResults(...results: unknown[]) {
   return { agent: { generate } as never, generate };
 }
 
-describe('Mastra report repair', () => {
+async function runWorkflow(generate: ReturnType<typeof vi.fn>, prompt = 'Analyse gold') {
+  const workflow = createXauusdReportWorkflow({
+    agent: { generate } as never,
+    callOptions: {} as never,
+    providerId: 'mistral',
+  });
+  const run = await workflow.createRun({ runId: 'run-repair' });
+  const result = await run.start({
+    inputData: { prompt },
+    requestContext: new RequestContext([
+      ['userId', 'user-1'],
+      ['runId', 'run-repair'],
+      ['threadId', 'thread-1'],
+    ]) as never,
+  });
+  return result as unknown as {
+    status: string;
+    result?: unknown;
+    error?: { name?: string; message?: string; findings?: readonly string[] };
+  };
+}
+
+describe('Mastra XAUUSD report workflow repair', () => {
   beforeEach(() => {
     mocks.requireVerifiedXauusdReport.mockReset();
+    mocks.collectXauusdResearchPacket.mockReset().mockResolvedValue(packet);
     metrics.reset();
+  });
+
+  it('verifies the first generation and completes without repair', async () => {
+    mocks.requireVerifiedXauusdReport.mockReturnValue(report);
+    const { generate } = agentWithResults({ object: { ok: true }, text: 'first' });
+
+    const result = await runWorkflow(generate);
+
+    expect(result.status).toBe('success');
+    const output = result.result as {
+      status: string;
+      report: unknown;
+      attempts: number;
+    };
+    expect(output.status).toBe('ready');
+    expect(output.report).toMatchObject(report);
+    expect(output.attempts).toBe(1);
+    expect(generate).toHaveBeenCalledTimes(1);
   });
 
   it('repairs once using verifier findings and returns the corrected report', async () => {
@@ -58,20 +152,18 @@ describe('Mastra report repair', () => {
         ]);
       })
       .mockReturnValue(report);
-    const { agent, generate } = agentWithResults(
+    const { generate } = agentWithResults(
       { object: { invalid: true }, text: 'first' },
       { object: { corrected: true }, text: 'second' },
     );
 
-    const result = await generateVerifiedXauusdReport(
-      agent,
-      'Analyse gold',
-      requestContext,
-      'mistral',
-      packet,
-    );
+    const result = await runWorkflow(generate);
 
-    expect(result).toMatchObject({ report, attempts: 2 });
+    expect(result.status).toBe('success');
+    const output = result.result as { status: string; report: unknown; attempts: number };
+    expect(output.status).toBe('ready');
+    expect(output.report).toMatchObject(report);
+    expect(output.attempts).toBe(2);
     expect(generate).toHaveBeenCalledTimes(2);
     expect(generate.mock.calls[1]?.[0]).toContain('conflict between timeframe trend signals');
     expect(metrics.snapshot().counters['mastra_report_repair_total{result=passed}']).toBe(1);
@@ -87,20 +179,18 @@ describe('Mastra report repair', () => {
     };
 
     mocks.requireVerifiedXauusdReport.mockReturnValue(report);
-    const { agent, generate } = agentWithResults();
+    const { generate } = agentWithResults();
     generate
       .mockRejectedValueOnce(structuredError)
       .mockResolvedValueOnce({ object: { corrected: true }, text: 'second' });
 
-    const result = await generateVerifiedXauusdReport(
-      agent,
-      'Analyse gold',
-      requestContext,
-      'mistral',
-      packet,
-    );
+    const result = await runWorkflow(generate);
 
-    expect(result).toMatchObject({ report, attempts: 2 });
+    expect(result.status).toBe('success');
+    const output = result.result as { status: string; report: unknown; attempts: number };
+    expect(output.status).toBe('ready');
+    expect(output.report).toMatchObject(report);
+    expect(output.attempts).toBe(2);
     expect(generate).toHaveBeenCalledTimes(2);
     expect(generate.mock.calls[1]?.[0]).toContain('scenarios');
     expect(metrics.snapshot().counters['mastra_report_repair_total{result=requested}']).toBe(1);
@@ -209,18 +299,19 @@ describe('Mastra report repair', () => {
     mocks.requireVerifiedXauusdReport.mockImplementation(() => {
       throw error;
     });
-    // REPORT_REPAIR_LIMIT is 2, so the loop runs initial + two repairs (3 calls).
-    const { agent, generate } = agentWithResults(
+    // REPORT_REPAIR_LIMIT is 2 repairs past the initial attempt → 3 generations.
+    const { generate } = agentWithResults(
       { object: { invalid: true }, text: 'first' },
       { object: { invalid: true }, text: 'second' },
       { object: { invalid: true }, text: 'third' },
     );
 
-    await expect(
-      generateVerifiedXauusdReport(agent, 'Analyse gold', requestContext, 'mistral', packet),
-    ).rejects.toBe(error);
+    const result = await runWorkflow(generate);
 
+    expect(result.status).toBe('failed');
     expect(generate).toHaveBeenCalledTimes(3);
+    expect(result.error).toMatchObject({ name: 'XauusdReportVerificationError' });
+    expect(result.error).toMatchObject({ findings: ['missing contradiction disclosure'] });
     expect(metrics.snapshot().counters['mastra_report_repair_total{result=failed}']).toBe(1);
   });
 });

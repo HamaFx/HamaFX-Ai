@@ -3,21 +3,30 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { runMultiAgentAnalysis } from '../src/jobs/multi-agent-analysis';
 
 const {
-  mockClaimNextPendingJob,
+  mockClaimNextFullAnalysisRun,
+  mockCompleteFullAnalysisRun,
+  mockFailFullAnalysisRun,
+  mockRequeueFullAnalysisRun,
+  mockTouchFullAnalysisRun,
+  mockRecoverStaleRuns,
+  mockPurgeOldRuns,
   mockRunMastraMode,
   mockReserveTurnBudget,
   mockAppendUserMessage,
   mockAppendAssistantMessage,
 } = vi.hoisted(() => ({
-  mockClaimNextPendingJob: vi.fn(),
+  mockClaimNextFullAnalysisRun: vi.fn(),
+  mockCompleteFullAnalysisRun: vi.fn(),
+  mockFailFullAnalysisRun: vi.fn(),
+  mockRequeueFullAnalysisRun: vi.fn(),
+  mockTouchFullAnalysisRun: vi.fn(),
+  mockRecoverStaleRuns: vi.fn(),
+  mockPurgeOldRuns: vi.fn(),
   mockRunMastraMode: vi.fn(),
   mockReserveTurnBudget: vi.fn(),
   mockAppendUserMessage: vi.fn(),
   mockAppendAssistantMessage: vi.fn(),
 }));
-
-const updatePayloads: Array<Record<string, unknown>> = [];
-let selectResultIndex = 0;
 
 const settingsRow = {
   userId: 'user-1',
@@ -30,63 +39,42 @@ const settingsRow = {
   maxDailyUsd: 5,
 };
 
-const job = {
-  id: 'job-1',
+const payload = {
+  kind: 'full-analysis' as const,
+  version: 1,
   userId: 'user-1',
   threadId: 'thread-1',
   userMessageText: 'Analyze XAUUSD technically',
   userMessageParts: [{ type: 'text', text: 'Analyze XAUUSD technically' }],
-  historyParts: [],
-  mode: 'full',
-  status: 'running',
-  workerRunId: 'worker-run-1',
+  idempotencyKey: 'full:thread-1:message-1',
   traceId: 'trace-worker-1',
   attemptCount: 1,
-  startedAt: new Date('2026-08-15T12:00:00.000Z'),
+  createdAt: '2026-08-15T12:00:00.000Z',
 };
 
-function thenableBuilder<T extends Record<string, unknown> = Record<string, unknown>>() {
-  const builder: Record<string, unknown> & { then?: unknown } = {};
-  builder.set = (payload: Record<string, unknown>) => {
-    updatePayloads.push(payload);
-    return builder;
-  };
-  builder.where = () => builder;
-  builder.returning = () => Promise.resolve([{ id: 'job-1' }]);
-  builder.then = (resolve: (value: undefined) => unknown, reject: (reason: unknown) => unknown) =>
-    Promise.resolve(undefined).then(resolve, reject);
-  return builder as T & PromiseLike<undefined>;
-}
+const claimed = { runId: 'run-1', payload };
 
 const mockDb = {
   select: () => ({
     from: () => ({
-      where: () => {
-        selectResultIndex++;
-        return Promise.resolve([settingsRow]);
-      },
+      where: () => Promise.resolve([settingsRow]),
     }),
   }),
-  update: () => thenableBuilder(),
-  delete: () => thenableBuilder(),
 };
 
 vi.mock('@kestrel/db', () => ({
-  claimNextPendingJob: mockClaimNextPendingJob,
-  recoverStaleJobs: vi.fn().mockResolvedValue({ requeued: 0, failed: 0 }),
-  schema: {
-    analysisJobs: {
-      id: 'analysisJobs.id',
-      status: 'analysisJobs.status',
-      workerRunId: 'analysisJobs.workerRunId',
-      updatedAt: 'analysisJobs.updatedAt',
-      completedAt: 'analysisJobs.completedAt',
-    },
-    userSettings: { userId: 'userSettings.userId' },
-  },
+  schema: { userSettings: { userId: 'userSettings.userId' } },
 }));
 
 vi.mock('@kestrel/ai/mastra', () => ({
+  claimNextFullAnalysisRun: mockClaimNextFullAnalysisRun,
+  completeFullAnalysisRun: mockCompleteFullAnalysisRun,
+  failFullAnalysisRun: mockFailFullAnalysisRun,
+  requeueFullAnalysisRun: mockRequeueFullAnalysisRun,
+  touchFullAnalysisRun: mockTouchFullAnalysisRun,
+  recoverStaleFullAnalysisRuns: mockRecoverStaleRuns,
+  purgeOldFullAnalysisRuns: mockPurgeOldRuns,
+  FULL_ANALYSIS_WORKFLOW_ID: 'full-analysis',
   extractSymbolFromPrompt: vi.fn(() => 'XAUUSD'),
   isSafeSymbolResearchPrompt: vi.fn(() => true),
   runMastraMode: mockRunMastraMode,
@@ -115,17 +103,15 @@ vi.mock('@kestrel/shared/logger', async (importOriginal) => {
 });
 
 vi.mock('drizzle-orm', () => ({
-  and: vi.fn(),
   eq: vi.fn(),
-  lt: vi.fn(),
 }));
 
 describe('runMultiAgentAnalysis Mastra durable boundary', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    updatePayloads.length = 0;
-    selectResultIndex = 0;
-    mockClaimNextPendingJob.mockResolvedValueOnce(job).mockResolvedValueOnce(null);
+    mockClaimNextFullAnalysisRun.mockResolvedValueOnce(claimed).mockResolvedValueOnce(null);
+    mockRecoverStaleRuns.mockResolvedValue({ requeued: 0, failed: 0 });
+    mockPurgeOldRuns.mockResolvedValue(0);
     mockReserveTurnBudget.mockResolvedValue({
       reconcile: vi.fn().mockResolvedValue(undefined),
       release: vi.fn().mockResolvedValue(undefined),
@@ -151,18 +137,20 @@ describe('runMultiAgentAnalysis Mastra durable boundary', () => {
     };
   }
 
-  it('claims a job and executes only the Mastra Full workflow', async () => {
+  it('claims a durable run and executes only the Mastra Full workflow', async () => {
     const ctx = context();
     const result = await runMultiAgentAnalysis(ctx);
 
     expect(result).toEqual({ processed: 1, note: 'processed=1' });
+    expect(mockClaimNextFullAnalysisRun).toHaveBeenCalled();
     expect(mockRunMastraMode).toHaveBeenCalledWith(
       expect.objectContaining({
         threadId: 'thread-1',
         userId: 'user-1',
-        runId: 'worker-run-1',
+        runId: 'run-1',
         mode: 'full',
         symbol: 'XAUUSD',
+        workflowId: 'full-analysis',
         telemetryKind: 'mastra_full_job',
       }),
     );
@@ -170,16 +158,14 @@ describe('runMultiAgentAnalysis Mastra durable boundary', () => {
       'user-1',
       'thread-1',
       expect.objectContaining({ role: 'user' }),
-      { idempotencyKey: 'analysis-job:job-1:user' },
+      { idempotencyKey: 'analysis-job:run-1:user' },
     );
-    expect(updatePayloads).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          status: 'complete',
-          result: expect.objectContaining({ finalText: 'Full Mastra analysis result' }),
-        }),
-      ]),
+    expect(mockCompleteFullAnalysisRun).toHaveBeenCalledWith(
+      'run-1',
+      expect.objectContaining({ finalText: 'Full Mastra analysis result' }),
     );
+    // The lease heartbeat interval is 30s — it never fires inside a fast test.
+    expect(mockTouchFullAnalysisRun).not.toHaveBeenCalled();
   });
 
   it('requeues a retryable Mastra provider timeout', async () => {
@@ -189,14 +175,12 @@ describe('runMultiAgentAnalysis Mastra durable boundary', () => {
     const result = await runMultiAgentAnalysis(ctx);
 
     expect(result).toEqual({ processed: 1, note: 'processed=1' });
-    expect(updatePayloads).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          status: 'pending',
-          error: expect.stringContaining('retrying automatically'),
-        }),
-      ]),
+    expect(mockRequeueFullAnalysisRun).toHaveBeenCalledWith(
+      'run-1',
+      expect.stringContaining('retrying automatically'),
     );
+    expect(mockCompleteFullAnalysisRun).not.toHaveBeenCalled();
+    expect(mockFailFullAnalysisRun).not.toHaveBeenCalled();
   });
 
   it('commits a terminal failure without a partial result for non-retryable errors', async () => {
@@ -206,14 +190,16 @@ describe('runMultiAgentAnalysis Mastra durable boundary', () => {
     const result = await runMultiAgentAnalysis(ctx);
 
     expect(result).toEqual({ processed: 1, note: 'processed=1' });
-    expect(updatePayloads).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          status: 'failed',
-          error: 'Full Mastra analysis could not be completed. No partial answer was returned.',
-        }),
-      ]),
-    );
-    expect(updatePayloads.some((payload) => 'result' in payload)).toBe(false);
+    expect(mockFailFullAnalysisRun).toHaveBeenCalledWith('run-1', expect.any(Error));
+    expect(mockCompleteFullAnalysisRun).not.toHaveBeenCalled();
+    expect(mockRequeueFullAnalysisRun).not.toHaveBeenCalled();
+  });
+
+  it('runs stale recovery and retention purge after the queue poll', async () => {
+    const ctx = context();
+    await runMultiAgentAnalysis(ctx);
+
+    expect(mockRecoverStaleRuns).toHaveBeenCalledWith(expect.any(Date), 3);
+    expect(mockPurgeOldRuns).toHaveBeenCalledWith(expect.any(Date));
   });
 });

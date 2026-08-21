@@ -7,9 +7,9 @@ import { computeHealthSloService } from '@/lib/services/admin-health';
 function createMockDb(scenario: 'healthy' | 'missing-live-ticks' | 'stale-tick' | 'silent' = 'healthy') {
   // The service always issues queries in the same order:
   // 1) DB probe, 2) live_ticks, 3) cron_runs, 4) chat_tool_telemetry,
-  // 5) chat_telemetry, 6) analysis_jobs, 7) operational recovery signals.
-  // We use a counter because
-  // Drizzle `sql` objects do not stringify to their SQL text reliably.
+  // 5) chat_telemetry, 6) full-analysis workflow runs (stale/stuck),
+  // 7) operational recovery signals. We use a counter because Drizzle `sql`
+  // objects do not stringify to their SQL text reliably.
   let callIndex = 0;
 
   return {

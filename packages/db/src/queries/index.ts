@@ -38,7 +38,6 @@ export * as news from './news-articles';
 export * as userSymbols from './user-symbols';
 export * as toolTelemetry from './tool-telemetry';
 export * as tenants from './tenants';
-export * as analysisJobs from './analysis-jobs';
 export * as diagnosticTraces from './diagnostic-traces';
 export * as featureFlags from './feature-flags';
 export * as cronRuns from './cron-runs';

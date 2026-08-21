@@ -28,7 +28,6 @@ export async function GET(req: Request): Promise<Response> {
       rateLimitsDeleted: result.rateLimitsDeleted,
       providerDailyQuotaDeleted: result.providerDailyQuotaDeleted,
       cronRunsDeleted: result.cronRunsDeleted,
-      analysisJobsDeleted: result.analysisJobsDeleted,
       outboxDeleted: result.outboxDeleted,
       budgetReservationsDeleted: result.budgetReservationsDeleted,
     });

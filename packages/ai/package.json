@@ -4,41 +4,142 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "exports": {
-    ".": {"types": "./dist/index.d.ts", "import": "./dist/index.js"},
-    "./agent": {"types": "./dist/agent.d.ts", "import": "./dist/agent.js"},
-    "./model": {"types": "./dist/model.d.ts", "import": "./dist/model.js"},
-    "./cost": {"types": "./dist/cost.d.ts", "import": "./dist/cost.js"},
-    "./persistence": {"types": "./dist/persistence.d.ts", "import": "./dist/persistence.js"},
-    "./tools": {"types": "./dist/tools/index.d.ts", "import": "./dist/tools/index.js"},
-    "./tools/market": {"types": "./dist/tools/market.d.ts", "import": "./dist/tools/market.js"},
-    "./tools/analysis": {"types": "./dist/tools/analysis.d.ts", "import": "./dist/tools/analysis.js"},
-    "./tools/journal": {"types": "./dist/tools/journal.d.ts", "import": "./dist/tools/journal.js"},
-    "./tools/system": {"types": "./dist/tools/system.d.ts", "import": "./dist/tools/system.js"},
-    "./tools/web": {"types": "./dist/tools/web.d.ts", "import": "./dist/tools/web.js"},
-    "./tools/registry": {"types": "./dist/tools/registry.d.ts", "import": "./dist/tools/registry.js"},
-    "./prompt": {"types": "./dist/prompt/system.d.ts", "import": "./dist/prompt/system.js"},
-    "./diagnostics": {"types": "./dist/diagnostics/index.d.ts", "import": "./dist/diagnostics/index.js"},
-    "./bot": {"types": "./dist/bot/index.d.ts", "import": "./dist/bot/index.js"},
-    "./multi-agent": {"types": "./dist/multi-agent/index.d.ts", "import": "./dist/multi-agent/index.js"},
-    "./portfolio": {"types": "./dist/portfolio.d.ts", "import": "./dist/portfolio.js"},
-    "./notifications": {"types": "./dist/notifications.d.ts", "import": "./dist/notifications.js"},
-    "./types": {"types": "./dist/types.d.ts", "import": "./dist/types.js"},
-    "./planner": {"types": "./dist/planner.d.ts", "import": "./dist/planner.js"},
-    "./verification": {"types": "./dist/verification.d.ts", "import": "./dist/verification.js"},
-    "./catalogue": {"types": "./dist/catalogue.d.ts", "import": "./dist/catalogue.js"},
-    "./byok-providers": {"types": "./dist/byok-providers.d.ts", "import": "./dist/byok-providers.js"},
-    "./memory": {"types": "./dist/memory/memory-index.d.ts", "import": "./dist/memory/memory-index.js"},
-    "./share": {"types": "./dist/share/persistence.d.ts", "import": "./dist/share/persistence.js"},
-    "./embeddings": {"types": "./dist/embeddings.d.ts", "import": "./dist/embeddings.js"},
-    "./title": {"types": "./dist/title.d.ts", "import": "./dist/title.js"},
-    "./rag": {"types": "./dist/rag.d.ts", "import": "./dist/rag.js"},
-    "./usage": {"types": "./dist/usage.d.ts", "import": "./dist/usage.js"},
-    "./instrumentation": {"types": "./dist/instrumentation.d.ts", "import": "./dist/instrumentation.js"},
-    "./eval/training-export": {"types": "./dist/eval/training-export.d.ts", "import": "./dist/eval/training-export.js"},
-    "./eval/runner": {"types": "./dist/eval/runner.d.ts", "import": "./dist/eval/runner.js"},
-    "./mastra": {"types": "./dist/mastra/index.d.ts", "import": "./dist/mastra/index.js"}
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./agent": {
+      "types": "./dist/agent.d.ts",
+      "import": "./dist/agent.js"
+    },
+    "./model": {
+      "types": "./dist/model.d.ts",
+      "import": "./dist/model.js"
+    },
+    "./cost": {
+      "types": "./dist/cost.d.ts",
+      "import": "./dist/cost.js"
+    },
+    "./persistence": {
+      "types": "./dist/persistence.d.ts",
+      "import": "./dist/persistence.js"
+    },
+    "./tools": {
+      "types": "./dist/tools/index.d.ts",
+      "import": "./dist/tools/index.js"
+    },
+    "./tools/market": {
+      "types": "./dist/tools/market.d.ts",
+      "import": "./dist/tools/market.js"
+    },
+    "./tools/analysis": {
+      "types": "./dist/tools/analysis.d.ts",
+      "import": "./dist/tools/analysis.js"
+    },
+    "./tools/journal": {
+      "types": "./dist/tools/journal.d.ts",
+      "import": "./dist/tools/journal.js"
+    },
+    "./tools/system": {
+      "types": "./dist/tools/system.d.ts",
+      "import": "./dist/tools/system.js"
+    },
+    "./tools/web": {
+      "types": "./dist/tools/web.d.ts",
+      "import": "./dist/tools/web.js"
+    },
+    "./tools/registry": {
+      "types": "./dist/tools/registry.d.ts",
+      "import": "./dist/tools/registry.js"
+    },
+    "./prompt": {
+      "types": "./dist/prompt/system.d.ts",
+      "import": "./dist/prompt/system.js"
+    },
+    "./diagnostics": {
+      "types": "./dist/diagnostics/index.d.ts",
+      "import": "./dist/diagnostics/index.js"
+    },
+    "./bot": {
+      "types": "./dist/bot/index.d.ts",
+      "import": "./dist/bot/index.js"
+    },
+    "./multi-agent": {
+      "types": "./dist/multi-agent/index.d.ts",
+      "import": "./dist/multi-agent/index.js"
+    },
+    "./portfolio": {
+      "types": "./dist/portfolio.d.ts",
+      "import": "./dist/portfolio.js"
+    },
+    "./notifications": {
+      "types": "./dist/notifications.d.ts",
+      "import": "./dist/notifications.js"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts",
+      "import": "./dist/types.js"
+    },
+    "./planner": {
+      "types": "./dist/planner.d.ts",
+      "import": "./dist/planner.js"
+    },
+    "./verification": {
+      "types": "./dist/verification.d.ts",
+      "import": "./dist/verification.js"
+    },
+    "./catalogue": {
+      "types": "./dist/catalogue.d.ts",
+      "import": "./dist/catalogue.js"
+    },
+    "./byok-providers": {
+      "types": "./dist/byok-providers.d.ts",
+      "import": "./dist/byok-providers.js"
+    },
+    "./memory": {
+      "types": "./dist/memory/memory-index.d.ts",
+      "import": "./dist/memory/memory-index.js"
+    },
+    "./share": {
+      "types": "./dist/share/persistence.d.ts",
+      "import": "./dist/share/persistence.js"
+    },
+    "./embeddings": {
+      "types": "./dist/embeddings.d.ts",
+      "import": "./dist/embeddings.js"
+    },
+    "./title": {
+      "types": "./dist/title.d.ts",
+      "import": "./dist/title.js"
+    },
+    "./rag": {
+      "types": "./dist/rag.d.ts",
+      "import": "./dist/rag.js"
+    },
+    "./usage": {
+      "types": "./dist/usage.d.ts",
+      "import": "./dist/usage.js"
+    },
+    "./instrumentation": {
+      "types": "./dist/instrumentation.d.ts",
+      "import": "./dist/instrumentation.js"
+    },
+    "./eval/training-export": {
+      "types": "./dist/eval/training-export.d.ts",
+      "import": "./dist/eval/training-export.js"
+    },
+    "./eval/runner": {
+      "types": "./dist/eval/runner.d.ts",
+      "import": "./dist/eval/runner.js"
+    },
+    "./mastra": {
+      "types": "./dist/mastra/index.d.ts",
+      "import": "./dist/mastra/index.js"
+    }
   },
   "scripts": {
     "lint": "eslint .",
@@ -47,6 +148,10 @@
     "build": "tsc -p tsconfig.build.json && node ../../scripts/rewrite-dist-imports.mjs dist",
     "prepublishOnly": "pnpm build",
     "eval": "tsx src/eval/runner.ts --cases",
+    "mastra:dev": "mastra dev",
+    "mastra:build": "mastra build",
+    "mastra:start": "mastra start",
+    "mastra:migrate": "mastra migrate",
     "clean": "rm -rf node_modules .turbo"
   },
   "dependencies": {
@@ -60,7 +165,11 @@
     "@kestrel/shared": "workspace:*",
     "@langfuse/client": "^5.5.3",
     "@langfuse/otel": "^5.5.3",
-    "@mastra/core": "^1.59.0",
+    "@mastra/core": "^1.60.0",
+    "@mastra/libsql": "^1.21.0",
+    "@mastra/memory": "^1.27.0",
+    "@mastra/pg": "^1.21.0",
+    "@mastra/server": "^1.60.0",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/sdk-node": "^0.221.0",
     "ai": "^5.0.0",
@@ -75,6 +184,7 @@
     "@types/react": "^19.0.0",
     "@types/web-push": "^3.6.4",
     "eslint": "^9.17.0",
+    "mastra": "^1.25.1",
     "msw": "^2.14.6",
     "tsx": "^4.22.4",
     "typescript": "^7.0.2",

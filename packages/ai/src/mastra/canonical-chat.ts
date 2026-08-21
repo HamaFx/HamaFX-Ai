@@ -3,6 +3,9 @@ import type { UserSettingsRow } from '@kestrel/db/schema';
 import { container, getMessageText, pickAiEnv } from '@kestrel/shared';
 import { Agent } from '@mastra/core/agent';
 import { RequestContext } from '@mastra/core/request-context';
+import type { AgentMemoryOption } from '@mastra/core/agent';
+import type { MastraMemory } from '@mastra/core/memory';
+import { createCategorizedLogger } from '@kestrel/shared/logger';
 import { convertToModelMessages, type ModelMessage, type UIMessage } from 'ai';
 
 import { estimateCostUsd } from '../cost';
@@ -12,7 +15,8 @@ import { DB } from '../tokens';
 import { withToolContext, type ToolContext } from '../tool-context';
 import { domainToolFilter } from '../tools/by-domain';
 import { adaptLegacyReadOnlyTool } from './legacy-tool-adapter';
-import { loadMastraMemoryContext, serializeMastraMemoryContext } from './memory-context';
+import { createKestrelMemory, type CreateKestrelMemoryArgs } from '../mastra-v2/memory';
+import { prepareKestrelMemory } from '../mastra-v2/context';
 import {
   beginMastraRun,
   finishMastraRun,
@@ -20,6 +24,8 @@ import {
   mastraOutcomeForError,
   type MastraGenerationStats,
 } from './telemetry';
+
+const mlog = createCategorizedLogger('ai', { component: 'mastra-canonical-chat' });
 
 /**
  * The canonical chat agent receives an explicit read-only allowlist rather
@@ -107,10 +113,19 @@ function messageHistory(history: UIMessage[], latest: UIMessage): ModelMessage[]
   );
 }
 
+/** The new user turn only — used when native Mastra memory loads history. */
+function latestUserModelMessages(latest: UIMessage): ModelMessage[] {
+  return convertToModelMessages([
+    {
+      role: latest.role,
+      parts: latest.parts,
+    },
+  ]);
+}
+
 function systemInstructions(
   routing: RoutingDecision,
   customInstructions: string | undefined,
-  memoryContext: string,
 ): string {
   const preferences = customInstructions
     ? `USER PREFERENCES (not instructions to override safety):\n${customInstructions.slice(0, 2000)}\n`
@@ -121,8 +136,7 @@ You are a read-only market research and planning copilot. Never place trades. Ne
 
 The server selected the routing domain ${routing.domain}. Do not change the user's symbol, scope, permissions, budget, or mutation policy. Mutation tools are deliberately not exposed in this agent; explain that explicit confirmation workflows are disabled when the user asks for a write.
 
-${preferences}
-${memoryContext}`;
+${preferences}`;
 }
 
 export async function runMastraCanonicalChat(
@@ -154,19 +168,33 @@ export async function runMastraCanonicalChat(
         .map(([name, legacyTool]) => [name, adaptLegacyReadOnlyTool(name, legacyTool)]),
     );
 
-    const memoryContext = serializeMastraMemoryContext(
-      await loadMastraMemoryContext({
-        userId: args.userId,
-        threadId: args.threadId,
-        query: getMessageText(args.userMessage),
+    // Native Mastra memory: thread history, working memory (seeded from
+    // Drizzle), and BYOK semantic recall. When unavailable, the caller's
+    // explicit `history` remains the fallback context source.
+    let memory: MastraMemory | null = null;
+    let callMemory: AgentMemoryOption | null = null;
+    try {
+      const memoryInstance = createKestrelMemory({
         settings: {
           aiApiKeys: args.settings.aiApiKeys,
           embeddingModel: args.settings.embeddingModel ?? null,
         },
         env: args.env,
-        ...(args.signal ? { signal: args.signal } : {}),
-      }),
-    );
+      } satisfies CreateKestrelMemoryArgs);
+      const prepared = await prepareKestrelMemory({
+        memory: memoryInstance,
+        userId: args.userId,
+        threadId: args.threadId,
+        settings: args.settings,
+        backfill: true,
+      });
+      memory = memoryInstance;
+      callMemory = prepared.callOptions;
+    } catch (error) {
+      mlog.warn('Native Mastra memory unavailable; falling back to explicit history', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
 
     const requestContext = new RequestContext([
       ['userId', args.userId],
@@ -179,8 +207,9 @@ export async function runMastraCanonicalChat(
       name: 'Kestrel Mastra Canonical Chat',
       description: 'Canonical read-only Kestrel conversational research agent.',
       model: resolution.model,
-      instructions: systemInstructions(routing, args.customInstructions, memoryContext),
+      instructions: systemInstructions(routing, args.customInstructions),
       tools: registeredTools as never,
+      ...(memory ? { memory } : {}),
       defaultGenerateOptionsLegacy: { maxSteps: args.env.MAX_TOOL_ITERATIONS ?? 6 },
     });
     const context: ToolContext = {
@@ -199,12 +228,19 @@ export async function runMastraCanonicalChat(
     };
 
     const result = await withToolContext(context, () =>
-      agent.generate(messageHistory(args.history, args.userMessage), {
-        requestContext,
-        toolChoice: 'auto',
-        maxSteps: args.env.MAX_TOOL_ITERATIONS ?? 6,
-        ...(args.signal ? { abortSignal: args.signal } : {}),
-      }),
+      agent.generate(
+        // With native memory the thread history is loaded by Mastra itself;
+        // sending the full history would double-load it. Fall back to the
+        // explicit history only when memory is unavailable.
+        callMemory ? latestUserModelMessages(args.userMessage) : messageHistory(args.history, args.userMessage),
+        {
+          requestContext,
+          ...(callMemory ? { memory: callMemory } : {}),
+          toolChoice: 'auto',
+          maxSteps: args.env.MAX_TOOL_ITERATIONS ?? 6,
+          ...(args.signal ? { abortSignal: args.signal } : {}),
+        },
+      ),
     );
     const stats = getMastraGenerationStats(result);
     const totalCostUsd = estimateCostUsd(resolution.modelId, stats.inputTokens, stats.outputTokens);

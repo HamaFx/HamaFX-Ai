@@ -14,6 +14,13 @@ import 'server-only';
 
 // AI agent and persistence APIs.
 export {
+  enqueueFullAnalysis,
+  getFullAnalysisQueueHealth,
+  getFullAnalysisRun,
+  fullAnalysisRunId,
+  type FullAnalysisRunView,
+} from '@kestrel/ai/mastra';
+export {
   BYOK_PROVIDERS,
   assembleTrainingDataset,
   resolveEvaluationAnnotations,
@@ -77,8 +84,6 @@ export { BudgetExceededError } from '@kestrel/ai/cost';
 export {
   withRateLimit,
   batchDeleteThreads,
-  enqueueAnalysisJob,
-  getAnalysisJob,
   getActiveUserIds,
   runRetentionCleanup,
   lazyPurgeExpiredTokens,

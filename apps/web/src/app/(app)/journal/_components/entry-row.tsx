@@ -182,14 +182,28 @@ export function EntryRow({
           {/* Tags Strip */}
           {entry.tags && entry.tags.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-1">
-              {entry.tags.map((t) => (
-                <span
-                  key={t}
-                  className="px-2 py-0.5 text-xs font-black uppercase tracking-wider rounded-sm bg-bg-elev-1 border border-border/20 text-fg"
-                >
-                  #{t}
-                </span>
-              ))}
+              {entry.tags.map((t) => {
+                const psychStyle = {
+                  Disciplined: 'bg-bull/15 text-bull border-bull/30 font-semibold',
+                  'Plan Followed': 'bg-bull/15 text-bull border-bull/30 font-semibold',
+                  FOMO: 'bg-bear/15 text-bear border-bear/30 font-semibold',
+                  'Revenge Trade': 'bg-bear/15 text-bear border-bear/30 font-semibold',
+                  Hesitant: 'bg-warn/15 text-warn border-warn/30 font-semibold',
+                  Chased: 'bg-warn/15 text-warn border-warn/30 font-semibold',
+                }[t];
+
+                return (
+                  <span
+                    key={t}
+                    className={cn(
+                      'px-2 py-0.5 text-xs rounded-sm border select-none',
+                      psychStyle ?? 'bg-bg-elev-1 border-border/40 text-fg-subtle font-mono',
+                    )}
+                  >
+                    #{t}
+                  </span>
+                );
+              })}
             </div>
           )}
 

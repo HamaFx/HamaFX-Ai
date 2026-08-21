@@ -85,7 +85,6 @@ TENANT_TABLES=(
   "rate_limits"
   "audit_logs"
   "user_settings"
-  "analysis_jobs"
   "diagnostic_traces"
 )
 

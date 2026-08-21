@@ -1,4 +1,4 @@
-import { IconCheck, IconChevronRight } from '@tabler/icons-react';
+import { IconBolt, IconBuildingBank, IconChartCandle, IconCheck, IconChevronRight, IconWaveSine } from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
 import type { TradingStyle } from './wizard-types';
 
@@ -10,10 +10,34 @@ interface WizardStepStyleProps {
 }
 
 const STYLES = [
-  { id: 'scalper' as const, title: '📊 Scalper', timeframe: '1m - 15m', desc: 'Capture fast-paced price action and micro-trends.' },
-  { id: 'day_trader' as const, title: '📈 Day Trader', timeframe: '5m - 1H', desc: 'Intraday execution with clean daily closes.' },
-  { id: 'swing' as const, title: '🔄 Swing Trader', timeframe: '1H - 4H', desc: 'Hold positions for days to capture large swings.' },
-  { id: 'position' as const, title: '🏛 Position Trader', timeframe: 'Daily+', desc: 'Macro trends, long-term fundamentals.' },
+  {
+    id: 'scalper' as const,
+    title: 'Scalper',
+    icon: IconBolt,
+    timeframe: '1m - 15m',
+    desc: 'Capture fast-paced price action and micro-trends.',
+  },
+  {
+    id: 'day_trader' as const,
+    title: 'Day Trader',
+    icon: IconChartCandle,
+    timeframe: '5m - 1H',
+    desc: 'Intraday execution with clean daily closes.',
+  },
+  {
+    id: 'swing' as const,
+    title: 'Swing Trader',
+    icon: IconWaveSine,
+    timeframe: '1H - 4H',
+    desc: 'Hold positions for days to capture large swings.',
+  },
+  {
+    id: 'position' as const,
+    title: 'Position Trader',
+    icon: IconBuildingBank,
+    timeframe: 'Daily+',
+    desc: 'Macro trends, long-term fundamentals.',
+  },
 ];
 
 export function WizardStepStyle({
@@ -31,6 +55,7 @@ export function WizardStepStyle({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {STYLES.map((style) => {
           const active = tradingStyle === style.id;
+          const Icon = style.icon;
           return (
             <button
               key={style.id}
@@ -39,12 +64,15 @@ export function WizardStepStyle({
               aria-pressed={active}
               className={`min-h-11 text-left rounded-sm border p-4 transition-all hover:bg-bg-elev-2 flex flex-col gap-1.5 cursor-pointer relative ${
                 active
-                  ? 'border-border bg-bg-elev-1 ring-1 ring-fg'
+                  ? 'border-brand bg-bg-elev-1 ring-1 ring-brand'
                   : 'border-border bg-bg-elev-1 hover:border-fg-muted'
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="font-semibold text-fg text-sm sm:text-base">{style.title}</span>
+                <span className="inline-flex items-center gap-2 font-semibold text-fg text-sm sm:text-base">
+                  <Icon className={active ? 'text-brand size-4' : 'text-fg-subtle size-4'} />
+                  <span>{style.title}</span>
+                </span>
                 <span className="text-xs font-mono font-medium px-2 py-0.5 rounded-sm bg-bg-elev-2 text-fg-subtle border border-border">
                   {style.timeframe}
                 </span>
@@ -53,7 +81,7 @@ export function WizardStepStyle({
                 {style.desc}
               </p>
               {active && (
-                <span className="absolute bottom-3 right-3 text-fg">
+                <span className="absolute bottom-3 right-3 text-brand">
                   <IconCheck className="size-4" />
                 </span>
               )}

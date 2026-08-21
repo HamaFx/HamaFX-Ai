@@ -9,13 +9,15 @@
 // computable). Links out to /journal for the full table.
 
 import Link from 'next/link';
-import {IconActivity, IconArrowUpRight, IconArrowDownRight} from '@tabler/icons-react';
-import type { JournalEntry } from '@kestrel/shared';
-import { priceDecimals } from '@kestrel/shared';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { IconActivity, IconArrowUpRight, IconArrowDownRight } from '@tabler/icons-react';
+import type { JournalEntry, Symbol as SymbolType, Tick } from '@kestrel/shared';
+import { priceDecimals, pipSize } from '@kestrel/shared';
 
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { formatRelative } from '@/lib/format';
+import { usePrices } from '@/hooks/use-prices';
 import { cn } from '@/lib/cn';
 
 interface OpenPositionsWidgetProps {
@@ -29,6 +31,13 @@ export function OpenPositionsWidget({
   limit = 5,
 }: OpenPositionsWidgetProps) {
   const open = entries.filter((e) => e.outcome === 'open').slice(0, limit);
+  const openSymbols = useMemo(
+    () => Array.from(new Set(open.map((e) => e.symbol))) as SymbolType[],
+    [open],
+  );
+  const tickQuery = usePrices(openSymbols);
+  const liveTicks = tickQuery.data ?? [];
+  const tickMap = new Map<string, Tick>(liveTicks.map((t) => [t.symbol, t]));
 
   return (
     <Card as="section" aria-label="Open positions">
@@ -61,46 +70,112 @@ export function OpenPositionsWidget({
       ) : (
         <ul className="flex flex-col">
           {open.map((e) => (
-            <li
+            <PositionRow
               key={e.id}
-              className="border-divider flex items-center justify-between gap-3 border-b py-2 last:border-0"
-            >
-              <div className="flex min-w-0 items-center gap-2">
-                <span
-                  className={cn(
-                    'inline-flex size-5 shrink-0 items-center justify-center rounded-sm',
-                    e.side === 'long'
-                      ? 'bg-bull/15 text-bull'
-                      : 'bg-bear/15 text-bear',
-                  )}
-                >
-                  {e.side === 'long' ? (
-                    <IconArrowUpRight className="size-3.5" />
-                  ) : (
-                    <IconArrowDownRight className="size-3.5" />
-                  )}
-                </span>
-                <div className="flex min-w-0 flex-col">
-                  <span className="text-fg text-body-sm font-semibold">
-                    {e.symbol}
-                  </span>
-                  <span className="text-fg-subtle text-caption tabular-nums">
-                    {e.entry !== null
-                      ? `Entry ${e.entry.toFixed(priceDecimals(e.symbol))}`
-                      : 'Entry —'}
-                    {e.stop !== null
-                      ? ` · SL ${e.stop.toFixed(priceDecimals(e.symbol))}`
-                      : ''}
-                  </span>
-                </div>
-              </div>
-              <span className="text-fg-subtle text-caption tabular-nums shrink-0">
-                {e.openedAt ? formatRelative(e.openedAt) : ''}
-              </span>
-            </li>
+              entry={e}
+              tick={tickMap.get(e.symbol)}
+            />
           ))}
         </ul>
       )}
     </Card>
+  );
+}
+
+function PositionRow({ entry, tick }: { entry: JournalEntry; tick?: Tick }) {
+  const decimals = priceDecimals(entry.symbol);
+  const curPrice = tick?.mid;
+
+  const [flash, setFlash] = useState<'bull' | 'bear' | null>(null);
+  const prevPriceRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (curPrice === undefined) return;
+    const prev = prevPriceRef.current;
+    prevPriceRef.current = curPrice;
+    if (prev === null || prev === curPrice) return;
+    setFlash(curPrice > prev ? 'bull' : 'bear');
+    const timer = setTimeout(() => setFlash(null), 600);
+    return () => clearTimeout(timer);
+  }, [curPrice]);
+
+  let floatingR: number | null = null;
+  let pipsDiff = 0;
+  if (curPrice && entry.entry) {
+    const diff = entry.side === 'long' ? curPrice - entry.entry : entry.entry - curPrice;
+    pipsDiff = diff / pipSize(entry.symbol);
+    if (entry.stop) {
+      const risk = entry.side === 'long' ? entry.entry - entry.stop : entry.stop - entry.entry;
+      if (risk > 0) floatingR = diff / risk;
+    }
+  }
+
+  const isProfitable = floatingR !== null ? floatingR >= 0 : pipsDiff >= 0;
+
+  return (
+    <li className="border-divider flex items-center justify-between gap-3 border-b py-2 last:border-0">
+      <div className="flex min-w-0 items-center gap-2">
+        <span
+          className={cn(
+            'inline-flex size-5 shrink-0 items-center justify-center rounded-sm',
+            entry.side === 'long' ? 'bg-bull/15 text-bull' : 'bg-bear/15 text-bear',
+          )}
+        >
+          {entry.side === 'long' ? (
+            <IconArrowUpRight className="size-3.5" />
+          ) : (
+            <IconArrowDownRight className="size-3.5" />
+          )}
+        </span>
+        <div className="flex min-w-0 flex-col">
+          <div className="flex items-center gap-1.5 font-mono">
+            <span className="text-fg text-body-sm font-semibold">{entry.symbol}</span>
+            {curPrice && (
+              <span
+                className={cn(
+                  'text-caption tabular-nums px-1 rounded-sm transition-colors duration-500',
+                  flash === 'bull' && 'bg-bull/20 text-bull',
+                  flash === 'bear' && 'bg-bear/20 text-bear',
+                  flash === null && 'text-fg-subtle',
+                )}
+              >
+                {curPrice.toFixed(decimals)}
+              </span>
+            )}
+          </div>
+          <span className="text-fg-subtle text-caption tabular-nums">
+            {entry.entry !== null ? `Entry ${entry.entry.toFixed(decimals)}` : 'Entry —'}
+            {entry.stop !== null ? ` · SL ${entry.stop.toFixed(decimals)}` : ''}
+          </span>
+        </div>
+      </div>
+
+      <div className="flex flex-col items-end shrink-0 font-mono">
+        {floatingR !== null ? (
+          <span
+            className={cn(
+              'text-xs font-bold tabular-nums',
+              isProfitable ? 'text-bull' : 'text-bear',
+            )}
+          >
+            {floatingR >= 0 ? '+' : ''}
+            {floatingR.toFixed(2)}R
+          </span>
+        ) : curPrice ? (
+          <span
+            className={cn(
+              'text-caption font-bold tabular-nums',
+              isProfitable ? 'text-bull' : 'text-bear',
+            )}
+          >
+            {pipsDiff >= 0 ? '+' : ''}
+            {pipsDiff.toFixed(1)}p
+          </span>
+        ) : null}
+        <span className="text-fg-subtle text-[10px] tabular-nums">
+          {entry.openedAt ? formatRelative(entry.openedAt) : ''}
+        </span>
+      </div>
+    </li>
   );
 }

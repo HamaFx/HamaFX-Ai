@@ -101,6 +101,7 @@ export function main() {
 
   writeFileSync(BUILD_ID_FILE, `${buildId}\n`, 'utf8');
   upsertEnvLine(ENV_FILE, ENV_KEY, buildId);
+  upsertEnvLine(ENV_FILE, 'AUTH_MODE', 'normal');
 
   // eslint-disable-next-line no-console
   console.log(`[set-build-id] ${ENV_KEY}=${buildId}`);

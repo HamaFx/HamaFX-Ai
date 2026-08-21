@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   resolveChatModel: vi.fn(),
+  resolveEmbeddingModel: vi.fn(() => 'openai/text-embedding-3-small'),
   collectSymbolResearchPacket: vi.fn(),
   beginMastraRun: vi.fn(),
   finishMastraRun: vi.fn().mockResolvedValue(undefined),
@@ -10,7 +11,10 @@ const mocks = vi.hoisted(() => ({
   rateLimitFailures: 0,
 }));
 
-vi.mock('../src/model', () => ({ resolveChatModel: mocks.resolveChatModel }));
+vi.mock('../src/model', () => ({
+  resolveChatModel: mocks.resolveChatModel,
+  resolveEmbeddingModel: mocks.resolveEmbeddingModel,
+}));
 vi.mock('../src/mastra/symbol-research', async () => {
   const actual = await vi.importActual<Record<string, unknown>>('../src/mastra/symbol-research');
   return { ...actual, collectSymbolResearchPacket: mocks.collectSymbolResearchPacket };
@@ -125,7 +129,12 @@ describe('Mastra mode runner', () => {
     expect(result).toMatchObject({ mode: 'quick', symbol: 'EURUSD', finalText: expect.stringContaining('EURUSD') });
     expect(result.agentOpinions).toHaveLength(1);
     expect(result.agentOpinions[0]?.agentName).toBe('technical');
-    expect(mocks.collectSymbolResearchPacket).toHaveBeenCalledWith('EURUSD', undefined);
+    // Packet collection now happens inside the workflow's collect-packet step,
+    // wired to the run's abort signal so cancellation propagates.
+    expect(mocks.collectSymbolResearchPacket).toHaveBeenCalledWith(
+      'EURUSD',
+      expect.any(AbortSignal),
+    );
   });
 
   it('runs Standard with technical/fundamental specialists and fusion', async () => {

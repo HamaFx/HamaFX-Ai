@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => {
   class FakeVerificationError extends Error {}
   return {
     resolveChatModel: vi.fn(),
+    resolveEmbeddingModel: vi.fn(() => 'openai/text-embedding-3-small'),
     createXauusdMastraAgent: vi.fn(),
     collectXauusdResearchPacket: vi.fn(),
     requireVerifiedXauusdReport: vi.fn(),
@@ -33,6 +34,7 @@ const mocks = vi.hoisted(() => {
 
 vi.mock('../src/model', () => ({
   resolveChatModel: mocks.resolveChatModel,
+  resolveEmbeddingModel: mocks.resolveEmbeddingModel,
 }));
 vi.mock('../src/mastra/agent', () => ({
   createXauusdMastraAgent: mocks.createXauusdMastraAgent,
@@ -112,6 +114,7 @@ describe('Mastra BYOK runner', () => {
       ],
       contradictions: [],
       missingData: [],
+      numericClaims: [{ label: 'Test claim', value: 1, evidenceId: 'packet-1' }],
       evidenceIds: ['packet-1'],
       sources: [{ evidenceId: 'packet-1', source: 'fixture', dataAsOf: new Date().toISOString() }],
     });
@@ -198,7 +201,10 @@ describe('Mastra BYOK runner', () => {
       providerId: 'google',
       stats: { inputTokens: 4, outputTokens: 6, toolCalls: 1, steps: 2 },
     });
-    expect(mocks.createXauusdMastraAgent).toHaveBeenCalledWith({ model });
+    // The agent now also receives the per-request native Memory instance.
+    expect(mocks.createXauusdMastraAgent).toHaveBeenCalledWith(
+      expect.objectContaining({ model }),
+    );
     expect(generate).toHaveBeenCalledWith(
       'Analyse gold',
       expect.objectContaining({
@@ -291,6 +297,8 @@ describe('Mastra BYOK runner', () => {
       generate: vi.fn().mockRejectedValue(error),
     });
 
+    // The failure surfaces through the workflow run: Mastra wraps step errors,
+    // so the rejected error preserves message/name but is not the same instance.
     await expect(
       runXauusdMastra({
         prompt: 'Analyse gold',
@@ -300,14 +308,19 @@ describe('Mastra BYOK runner', () => {
         settings,
         env,
       }),
-    ).rejects.toBe(error);
+    ).rejects.toMatchObject({ message: 'provider unavailable' });
 
-    expect(mocks.mastraOutcomeForError).toHaveBeenCalledWith(error, undefined);
+    // Mastra serializes step failures, so the surfaced error is a plain
+    // { message, name } object rather than the original Error instance.
+    expect(mocks.mastraOutcomeForError).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'provider unavailable' }),
+      undefined,
+    );
     expect(mocks.finishMastraRun).toHaveBeenCalledWith(
       expect.objectContaining({
         runId: 'run-2',
         outcome: 'failed',
-        error,
+        error: expect.objectContaining({ message: 'provider unavailable' }),
       }),
     );
   });

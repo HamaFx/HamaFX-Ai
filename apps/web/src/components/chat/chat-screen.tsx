@@ -60,6 +60,9 @@ import { useAutoScroll } from '@/hooks/use-auto-scroll';
 import { useThreadTitle } from '@/hooks/use-thread-title';
 import { createKestrelChatTransport, type AgentProgress } from '@/lib/chat-transport';
 
+import { TradingViewWidget } from '@/app/(app)/chart/[symbol]/_components/tradingview-widget';
+import { Segmented } from '@/components/ui/segmented';
+import type { Timeframe } from '@kestrel/shared';
 import { ChatTopBar, type ThreadSummary, type AnalysisMode } from './chat-top-bar';
 import { Composer } from './composer';
 import { MessageList } from './message-list';
@@ -130,6 +133,10 @@ export function ChatScreen({
 
   // Phase 1.5 — thread summary header state.
   const [summary, setSummary] = useState<{ synopsis: string; insights: Array<{ text: string; symbol?: string | null }> } | null>(null);
+
+  const [splitMode, setSplitMode] = useState(false);
+  const [splitTf, setSplitTf] = useState<Timeframe>('15m');
+  const activeChartSymbol = pinnedSymbol ?? 'XAUUSD';
 
   const onAgentProgressRef = useRef<(progress: AgentProgress | null) => void>(() => {});
   const singleTurnOverrideRef = useRef<'single' | null>(null);
@@ -406,142 +413,178 @@ export function ChatScreen({
         chatModel={chatModel}
         onChatModelChange={handleChatModelChange}
         modelSelectionPending={modelSelectionPending}
+        splitMode={splitMode}
+        onToggleSplitMode={() => setSplitMode((v) => !v)}
       />
 
-      <div ref={setScrollContainer} className="scrollbar-hide no-overscroll relative flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-2xl px-4 py-4">
-          {summary ? (
-            <div className="px-3 pt-2">
-              <ThreadSummaryHeader
-                synopsis={summary.synopsis}
-                insights={summary.insights}
-                onDismiss={() => setSummary(null)}
-              />
+      <div className="flex flex-1 min-h-0 w-full overflow-hidden">
+        {/* Left Split Pane: Live TradingView Pro Chart */}
+        {splitMode && (
+          <div className="hidden xl:flex xl:w-1/2 2xl:w-[54%] flex-col border-r border-border bg-bg h-full overflow-hidden shrink-0">
+            <div className="flex items-center justify-between px-3 py-1.5 border-b border-border/60 bg-bg-elev-1 text-xs">
+              <div className="flex items-center gap-2 font-mono">
+                <span className="font-bold text-fg tracking-tight">{activeChartSymbol}</span>
+                <span className="text-fg-subtle text-[11px]">TradingView</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Segmented
+                  size="sm"
+                  value={splitTf}
+                  options={[
+                    { value: '5m', label: '5m' },
+                    { value: '15m', label: '15m' },
+                    { value: '1h', label: '1h' },
+                    { value: '4h', label: '4h' },
+                    { value: '1d', label: '1D' },
+                  ]}
+                  onChange={(tf) => setSplitTf(tf as Timeframe)}
+                />
+              </div>
             </div>
-          ) : null}
-          {showAgentOpinions && agentProgress && (
-            <div className="px-3 py-2">
-              <AgentDeliberation
-                agents={agentProgress.agents}
-                mode={agentProgress.mode}
-                status={agentProgress.status}
-                error={agentProgress.error}
-              />
+            <div className="flex-1 w-full min-h-0 relative">
+              <TradingViewWidget symbol={activeChartSymbol} tf={splitTf} theme="dark" />
             </div>
-          )}
-          {isEmpty ? (
-            <EmptyChatState
-              pinnedSymbol={pinnedSymbol}
-              disabled={isStreaming}
-              onSelect={(text) => {
-                lastUserTextRef.current = text;
-                void sendMessage({ text });
-              }}
-            />
-          ) : (
-            <MessageList
-              threadId={threadId}
-              messages={messages}
-              isStreaming={isStreaming}
-              showTypingIndicator={status === 'submitted'}
-              scrollElement={scrollElement}
-              lastAssistantId={lastAssistantId}
-              onCopy={handleCopy}
-              onRegenerate={handleRegenerate}
-              onEdit={handleEdit}
-            />
-          )}
-          <AnimatePresence>
-            {error && !dismissedError ? (
-              <m.div
-                key="chat-error"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                role="alert"
-                className={cn(
-                  'bg-danger/10 text-danger border border-danger/30 mx-3 mb-2 flex items-center justify-between gap-2 rounded-sm p-3 text-xs',
-                )}
-              >
-                <span className="line-clamp-2 flex-1">{error.message}</span>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (lastUserTextRef.current) {
-                        void sendMessage({ text: lastUserTextRef.current });
-                      }
-                    }}
-                    aria-label="Retry"
-                    className="bg-danger/20 hover:bg-danger/30 border border-danger/30 inline-flex items-center gap-1 rounded-sm px-3 py-1.5 text-body-sm font-medium"
-                  >
-                    <IconArrowBackUp className="size-3.5" /> Retry
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDismissedError(true)}
-                    aria-label="Dismiss error"
-                    className="hover:bg-danger/10 text-danger/80 hover:text-danger inline-flex size-7 items-center justify-center rounded-sm transition-colors"
-                  >
-                    <IconX className="size-4" />
-                  </button>
+          </div>
+        )}
+
+        {/* Right Pane / Full Chat View */}
+        <div className="flex flex-col flex-1 min-w-0 h-full overflow-hidden relative">
+          <div ref={setScrollContainer} className="scrollbar-hide no-overscroll relative flex-1 overflow-y-auto">
+            <div className={cn('mx-auto py-4 px-4', splitMode ? 'w-full max-w-2xl xl:max-w-3xl' : 'max-w-2xl')}>
+              {summary ? (
+                <div className="px-3 pt-2">
+                  <ThreadSummaryHeader
+                    synopsis={summary.synopsis}
+                    insights={summary.insights}
+                    onDismiss={() => setSummary(null)}
+                  />
                 </div>
-              </m.div>
-            ) : null}
-          </AnimatePresence>
+              ) : null}
+              {showAgentOpinions && agentProgress && (
+                <div className="px-3 py-2">
+                  <AgentDeliberation
+                    agents={agentProgress.agents}
+                    mode={agentProgress.mode}
+                    status={agentProgress.status}
+                    error={agentProgress.error}
+                  />
+                </div>
+              )}
+              {isEmpty ? (
+                <EmptyChatState
+                  pinnedSymbol={pinnedSymbol}
+                  disabled={isStreaming}
+                  onSelect={(text) => {
+                    lastUserTextRef.current = text;
+                    void sendMessage({ text });
+                  }}
+                />
+              ) : (
+                <MessageList
+                  threadId={threadId}
+                  messages={messages}
+                  isStreaming={isStreaming}
+                  showTypingIndicator={status === 'submitted'}
+                  scrollElement={scrollElement}
+                  lastAssistantId={lastAssistantId}
+                  onCopy={handleCopy}
+                  onRegenerate={handleRegenerate}
+                  onEdit={handleEdit}
+                />
+              )}
+              <AnimatePresence>
+                {error && !dismissedError ? (
+                  <m.div
+                    key="chat-error"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    role="alert"
+                    className={cn(
+                      'bg-danger/10 text-danger border border-danger/30 mx-3 mb-2 flex items-center justify-between gap-2 rounded-sm p-3 text-xs',
+                    )}
+                  >
+                    <span className="line-clamp-2 flex-1">{error.message}</span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (lastUserTextRef.current) {
+                            void sendMessage({ text: lastUserTextRef.current });
+                          }
+                        }}
+                        aria-label="Retry"
+                        className="bg-danger/20 hover:bg-danger/30 border border-danger/30 inline-flex items-center gap-1 rounded-sm px-3 py-1.5 text-body-sm font-medium"
+                      >
+                        <IconArrowBackUp className="size-3.5" /> Retry
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDismissedError(true)}
+                        aria-label="Dismiss error"
+                        className="hover:bg-danger/10 text-danger/80 hover:text-danger inline-flex size-7 items-center justify-center rounded-sm transition-colors"
+                      >
+                        <IconX className="size-4" />
+                      </button>
+                    </div>
+                  </m.div>
+                ) : null}
+              </AnimatePresence>
+            </div>
+
+            <AnimatePresence>
+              {showScrollFab && (
+                <m.button
+                  key="scroll-fab"
+                  type="button"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  transition={{ duration: 0.2 }}
+                  onClick={scrollToBottom}
+                  aria-label="Scroll to latest"
+                  className="scroll-fab surface-elevated text-fg absolute left-1/2 z-30 inline-flex h-11 -translate-x-1/2 items-center gap-1.5 rounded-sm px-4 text-body-sm font-medium transition-all"
+                  style={{ bottom: 'calc(env(safe-area-inset-bottom) + 96px)' }}
+                >
+                  <IconArrowDown className="size-3.5" />
+                  Latest
+                </m.button>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <div className={cn('mx-auto w-full px-4', splitMode ? 'max-w-2xl xl:max-w-3xl' : 'max-w-2xl')}>
+            <Composer
+              onSubmit={(text, images) => {
+                lastUserTextRef.current = text;
+                if (analysisMode !== 'single' && images.length > 0) {
+                  toast('Image analysis runs in single-agent mode. Switching to single-agent for this turn.');
+                  singleTurnOverrideRef.current = 'single';
+                }
+                if (images.length === 0) {
+                  void sendMessage({ text });
+                } else {
+                  void sendMessage({
+                    text,
+                    files: images.map((img) => ({
+                      type: 'file' as const,
+                      mediaType: img.mediaType,
+                      url: img.url,
+                      filename: img.name,
+                    })),
+                  });
+                }
+              }}
+              onStop={() => {
+                stop();
+              }}
+              isStreaming={isStreaming}
+              disabled={isStreaming || modelSelectionPending}
+              placeholder={pinnedSymbol ? `Ask about ${pinnedSymbol}…` : 'Ask about XAU, EUR, GBP…'}
+            />
+          </div>
         </div>
-
-        <AnimatePresence>
-          {showScrollFab && (
-            <m.button
-              key="scroll-fab"
-              type="button"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={{ duration: 0.2 }}
-              onClick={scrollToBottom}
-              aria-label="Scroll to latest"
-              className="scroll-fab surface-elevated text-fg absolute left-1/2 z-30 inline-flex h-11 -translate-x-1/2 items-center gap-1.5 rounded-sm px-4 text-body-sm font-medium transition-all"
-              style={{ bottom: 'calc(env(safe-area-inset-bottom) + 96px)' }}
-            >
-              <IconArrowDown className="size-3.5" />
-              Latest
-            </m.button>
-          )}
-        </AnimatePresence>
-      </div>
-
-      <div className="mx-auto w-full max-w-2xl">
-          <Composer
-            onSubmit={(text, images) => {
-              lastUserTextRef.current = text;
-              if (analysisMode !== 'single' && images.length > 0) {
-                toast('Image analysis runs in single-agent mode. Switching to single-agent for this turn.');
-                singleTurnOverrideRef.current = 'single';
-              }
-              if (images.length === 0) {
-                void sendMessage({ text });
-              } else {
-                void sendMessage({
-                  text,
-                  files: images.map((img) => ({
-                    type: 'file' as const,
-                    mediaType: img.mediaType,
-                    url: img.url,
-                    filename: img.name,
-                  })),
-                });
-              }
-            }}
-          onStop={() => {
-            stop();
-          }}
-          isStreaming={isStreaming}
-          disabled={isStreaming || modelSelectionPending}
-          placeholder={pinnedSymbol ? `Ask about ${pinnedSymbol}…` : 'Ask about XAU, EUR, GBP…'}
-        />
       </div>
 
       {confirmEl}

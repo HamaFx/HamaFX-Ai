@@ -27,7 +27,7 @@
 // doesn't open" intermittent bug caused by stacked drawer instances.
 
 import type { Symbol } from '@kestrel/shared';
-import {IconLoader2, IconMessages, IconDotsCircleHorizontal, IconPlus, IconBolt, IconTrash, IconCheck, IconFileDownload, IconAdjustmentsHorizontal, IconChevronDown} from '@tabler/icons-react';
+import {IconLoader2, IconMessages, IconDotsCircleHorizontal, IconPlus, IconBolt, IconTrash, IconCheck, IconFileDownload, IconAdjustmentsHorizontal, IconChevronDown, IconLayoutColumns} from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
@@ -79,6 +79,8 @@ interface ChatTopBarProps {
   chatModel?: string | null;
   onChatModelChange?: (modelId: string) => void;
   modelSelectionPending?: boolean;
+  splitMode?: boolean;
+  onToggleSplitMode?: () => void;
 }
 
 export function ChatTopBar({
@@ -92,6 +94,8 @@ export function ChatTopBar({
   chatModel = null,
   onChatModelChange,
   modelSelectionPending = false,
+  splitMode = false,
+  onToggleSplitMode,
 }: ChatTopBarProps) {
   const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -282,6 +286,26 @@ export function ChatTopBar({
               </div>
             ) : null}
           </div>
+        )}
+
+        {/* Desktop Split Terminal Toggle */}
+        {onToggleSplitMode && (
+          <Tooltip label={splitMode ? 'Single View' : 'Split Terminal (Chart + AI)'} side="bottom">
+            <button
+              type="button"
+              onClick={onToggleSplitMode}
+              aria-label="Toggle split chart"
+              className={cn(
+                'hidden xl:inline-flex items-center gap-1.5 rounded-sm px-2.5 py-1.5 text-caption font-medium transition-colors shrink-0',
+                splitMode
+                  ? 'bg-brand/15 text-brand border border-brand/40'
+                  : 'text-fg-muted hover:text-fg hover:bg-bg-elev-2 border border-transparent',
+              )}
+            >
+              <IconLayoutColumns className="size-3.5" aria-hidden="true" />
+              <span>{splitMode ? 'Split: ON' : 'Split'}</span>
+            </button>
+          </Tooltip>
         )}
 
         <Tooltip label="New chat" side="bottom">

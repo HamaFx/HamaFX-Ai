@@ -4,7 +4,7 @@
 //
 // Polling endpoint for background multi-agent analysis jobs.
 
-import { getAnalysisJob } from '@/lib/services/api-boundary';
+import { getFullAnalysisRun } from '@/lib/services/api-boundary';
 import { withAuth } from '@/lib/api';
 
 export const runtime = 'nodejs';
@@ -20,7 +20,7 @@ export const GET = withAuth<{ jobId: string }>(async (req, ctx) => {
     return Response.json({ error: { code: 'VALIDATION', message: 'Invalid jobId' } }, { status: 400 });
   }
 
-  const job = await getAnalysisJob(ctx.user.userId, jobId);
+  const job = await getFullAnalysisRun(ctx.user.userId, jobId);
 
   if (!job) {
     return Response.json({ error: { code: 'NOT_FOUND', message: 'Job not found' } }, { status: 404 });
@@ -36,7 +36,7 @@ export const GET = withAuth<{ jobId: string }>(async (req, ctx) => {
     error: job.status === 'failed'
       ? 'Full analysis could not be completed. No partial answer was returned.'
       : null,
-    createdAt: job.createdAt?.toISOString(),
-    completedAt: job.completedAt?.toISOString() ?? null,
+    createdAt: typeof job.createdAt === 'string' ? job.createdAt : job.createdAt ? new Date(job.createdAt).toISOString() : undefined,
+    completedAt: typeof job.completedAt === 'string' ? job.completedAt : job.completedAt ? new Date(job.completedAt).toISOString() : null,
   });
 });

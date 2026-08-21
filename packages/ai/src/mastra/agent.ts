@@ -1,6 +1,7 @@
 import { createCategorizedLogger } from '@kestrel/shared/logger';
 import { Agent } from '@mastra/core/agent';
 import { RequestContext } from '@mastra/core/request-context';
+import type { MastraMemory } from '@mastra/core/memory';
 import type { LanguageModel } from 'ai';
 
 import {
@@ -52,8 +53,7 @@ function instructionsForRequest({
 }): string {
   const packet = requestContext.get('researchPacket');
   const priorReport = requestContext.get('priorReport');
-  const memoryContext = requestContext.get('memoryContext');
-  if (packet === undefined && priorReport === undefined && memoryContext === undefined) {
+  if (packet === undefined && priorReport === undefined) {
     return XAUUSD_RESEARCH_INSTRUCTIONS;
   }
   const serializedContext = serializeXauusdModelEvidenceContext(packet as XauusdResearchPacket);
@@ -69,13 +69,13 @@ function instructionsForRequest({
       : '\n\nPreviously verified report for follow-up context (not current market evidence):\n' +
         JSON.stringify(priorReport) +
         '\n\nFor this follow-up, explain the saved report without introducing new unsupported numbers or current market facts. If the user asks for a new price or current conclusion, say that a fresh analysis is required.';
-  const memorySection =
-    typeof memoryContext === 'string' && memoryContext.length > 0 ? `\n\n${memoryContext}` : '';
-  return `${XAUUSD_RESEARCH_INSTRUCTIONS}\n\nTrusted server-collected research context (compact model view; deterministic verification uses the full packet):\n${serializedContext}${priorReportContext}${memorySection}`;
+  return `${XAUUSD_RESEARCH_INSTRUCTIONS}\n\nTrusted server-collected research context (compact model view; deterministic verification uses the full packet):\n${serializedContext}${priorReportContext}`;
 }
 
 export interface XauusdMastraAgentOptions {
   model: LanguageModel;
+  /** Phase 1 — native Mastra memory (thread history, working memory, recall). */
+  memory?: MastraMemory;
 }
 
 export interface RunXauusdMastraProofArgs extends XauusdMastraAgentOptions {
@@ -87,6 +87,7 @@ export interface RunXauusdMastraProofArgs extends XauusdMastraAgentOptions {
 
 export function createXauusdMastraAgent({
   model,
+  memory,
 }: XauusdMastraAgentOptions): Agent<
   string,
   typeof xauusdMastraTools,
@@ -101,6 +102,7 @@ export function createXauusdMastraAgent({
     instructions: instructionsForRequest,
     tools: xauusdMastraTools,
     requestContextSchema: XauusdRequestContextSchema,
+    ...(memory ? { memory } : {}),
     defaultGenerateOptionsLegacy: {
       maxSteps: 6,
     },

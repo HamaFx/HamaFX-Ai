@@ -114,7 +114,7 @@ export const JOBS: Record<JobName, JobRegistration> = {
   'multi-agent-analysis': {
     name: 'multi-agent-analysis',
     run: runMultiAgentAnalysis,
-    description: 'U2 — Polls analysis_jobs table every 3s, runs multi-agent full-mode analysis for queued jobs.',
+    description: 'U2 — Claims Mastra durable full-analysis workflow runs (replacing analysis_jobs), executes the Full committee, writes terminal results back into the run records.',
     // Uses setTimeout-based scheduling, not cron.
     schedule: null,
   },

@@ -145,15 +145,6 @@ export {
   type OrganizationRow,
 } from './queries/tenants';
 export {
-  enqueueAnalysisJob,
-  claimNextPendingJob,
-  getAnalysisJob,
-  recoverStaleJobs,
-  failStaleJobs,
-  purgeOldJobs,
-  type AnalysisJobRow,
-} from './queries/analysis-jobs';
-export {
   listDiagnosticTraces,
   getDiagnosticTrace,
   listTraceExplorerEvents,

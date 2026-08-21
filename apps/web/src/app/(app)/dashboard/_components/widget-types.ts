@@ -74,3 +74,53 @@ export const WIDGET_LABELS: Record<WidgetType, string> = {
   'news-pulse': 'News pulse',
   stats: 'Stats',
 };
+
+export type LayoutPresetName = 'default' | 'day_trader' | 'macro' | 'risk';
+
+export const PRESET_LAYOUTS: Record<
+  LayoutPresetName,
+  { name: string; description: string; layout: WidgetConfig[] }
+> = {
+  default: {
+    name: 'Full Overview',
+    description: 'All widgets in balanced narrative order',
+    layout: DEFAULT_LAYOUT,
+  },
+  day_trader: {
+    name: 'Day Trader',
+    description: 'Watchlist, open positions, alerts, and calendar up front',
+    layout: [
+      { id: 'w-dt-1', type: 'watchlist', span: 2, order: 0 },
+      { id: 'w-dt-2', type: 'open-positions', span: 2, order: 1 },
+      { id: 'w-dt-3', type: 'alerts', span: 1, order: 2 },
+      { id: 'w-dt-4', type: 'calendar', span: 1, order: 3 },
+      { id: 'w-dt-5', type: 'news-pulse', span: 1, order: 4 },
+      { id: 'w-dt-6', type: 'stats', span: 1, order: 5 },
+      { id: 'w-dt-7', type: 'today-glance', span: 2, order: 6 },
+    ],
+  },
+  macro: {
+    name: 'Macro & News',
+    description: 'Economic calendar, tagged headlines, and AI daily briefing',
+    layout: [
+      { id: 'w-mc-1', type: 'calendar', span: 2, order: 0 },
+      { id: 'w-mc-2', type: 'news-pulse', span: 2, order: 1 },
+      { id: 'w-mc-3', type: 'briefing', span: 2, order: 2 },
+      { id: 'w-mc-4', type: 'watchlist', span: 1, order: 3 },
+      { id: 'w-mc-5', type: 'today-glance', span: 1, order: 4 },
+      { id: 'w-mc-6', type: 'pnl-heatmap', span: 2, order: 5 },
+    ],
+  },
+  risk: {
+    name: 'Performance & Risk',
+    description: 'Equity curves, P&L heatmap, stats, and open risk',
+    layout: [
+      { id: 'w-rk-1', type: 'equity-curve', span: 2, order: 0 },
+      { id: 'w-rk-2', type: 'pnl-heatmap', span: 2, order: 1 },
+      { id: 'w-rk-3', type: 'stats', span: 2, order: 2 },
+      { id: 'w-rk-4', type: 'open-positions', span: 1, order: 3 },
+      { id: 'w-rk-5', type: 'today-glance', span: 1, order: 4 },
+      { id: 'w-rk-6', type: 'briefing', span: 2, order: 5 },
+    ],
+  },
+};

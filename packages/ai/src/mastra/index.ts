@@ -32,6 +32,24 @@ export {
   type RunMastraModeArgs,
 } from './mode-runner';
 export {
+  claimNextFullAnalysisRun,
+  completeFullAnalysisRun,
+  enqueueFullAnalysis,
+  failFullAnalysisRun,
+  fullAnalysisRunId,
+  getFullAnalysisQueueHealth,
+  getFullAnalysisRun,
+  purgeOldFullAnalysisRuns,
+  recoverStaleFullAnalysisRuns,
+  requeueFullAnalysisRun,
+  touchFullAnalysisRun,
+  FULL_ANALYSIS_WORKFLOW_ID,
+  type FullAnalysisClaim,
+  type FullAnalysisEnqueueInput,
+  type FullAnalysisPayload,
+  type FullAnalysisRunView,
+} from '../mastra-v2/workflows/full-analysis';
+export {
   createXauusdMastraAgent,
   runXauusdMastraProof,
   type RunXauusdMastraProofArgs,

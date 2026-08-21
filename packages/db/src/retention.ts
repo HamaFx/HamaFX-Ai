@@ -35,7 +35,6 @@ const DEFAULT_RETENTION: Required<RetentionConfig> = {
   rateLimitRetentionHours: 2,
   providerDailyQuotaRetentionDays: 3,
   cronRunRetentionDays: 30,
-  analysisJobRetentionDays: 7,
   outboxRetentionDays: 30,
   budgetReservationRetentionDays: 90,
 };
@@ -51,8 +50,6 @@ export interface RetentionConfig {
   providerDailyQuotaRetentionDays?: number;
   /** Retention window in days for cron_runs. */
   cronRunRetentionDays?: number;
-  /** Retention window in days for terminal analysis_jobs. */
-  analysisJobRetentionDays?: number;
   /** Retention window in days for completed/dead persistence outbox rows. */
   outboxRetentionDays?: number;
   /** Retention window in days for terminal budget reservation ledger rows. */
@@ -66,7 +63,6 @@ export interface RetentionResult {
   rateLimitsDeleted: number;
   providerDailyQuotaDeleted: number;
   cronRunsDeleted: number;
-  analysisJobsDeleted: number;
   outboxDeleted: number;
   budgetReservationsDeleted: number;
   note: string;
@@ -97,7 +93,6 @@ export function getRetentionConfigFromEnv(): Required<RetentionConfig> {
     rateLimitRetentionHours: boundedHours(Number(process.env.RATE_LIMIT_RETENTION_HOURS), DEFAULT_RETENTION.rateLimitRetentionHours),
     providerDailyQuotaRetentionDays: envDays('PROVIDER_DAILY_QUOTA_RETENTION_DAYS', DEFAULT_RETENTION.providerDailyQuotaRetentionDays),
     cronRunRetentionDays: envDays('CRON_RUN_RETENTION_DAYS', DEFAULT_RETENTION.cronRunRetentionDays),
-    analysisJobRetentionDays: envDays('ANALYSIS_JOB_RETENTION_DAYS', DEFAULT_RETENTION.analysisJobRetentionDays),
     outboxRetentionDays: envDays('PERSISTENCE_OUTBOX_RETENTION_DAYS', DEFAULT_RETENTION.outboxRetentionDays),
     budgetReservationRetentionDays: envDays('BUDGET_RESERVATION_RETENTION_DAYS', DEFAULT_RETENTION.budgetReservationRetentionDays),
   };
@@ -169,7 +164,6 @@ export async function runRetentionCleanup(
     rateLimitRetentionHours: boundedHours(config.rateLimitRetentionHours, DEFAULT_RETENTION.rateLimitRetentionHours),
     providerDailyQuotaRetentionDays: boundedDays(config.providerDailyQuotaRetentionDays, DEFAULT_RETENTION.providerDailyQuotaRetentionDays),
     cronRunRetentionDays: boundedDays(config.cronRunRetentionDays, DEFAULT_RETENTION.cronRunRetentionDays),
-    analysisJobRetentionDays: boundedDays(config.analysisJobRetentionDays, DEFAULT_RETENTION.analysisJobRetentionDays),
     outboxRetentionDays: boundedDays(config.outboxRetentionDays, DEFAULT_RETENTION.outboxRetentionDays),
     budgetReservationRetentionDays: boundedDays(config.budgetReservationRetentionDays, DEFAULT_RETENTION.budgetReservationRetentionDays),
   };
@@ -179,7 +173,6 @@ export async function runRetentionCleanup(
   const rateLimitCutoff = isoCutoff(now, retention.rateLimitRetentionHours * 60 * 60 * 1_000);
   const providerQuotaCutoff = isoCutoff(now, retention.providerDailyQuotaRetentionDays * 24 * 60 * 60 * 1_000).slice(0, 10);
   const cronCutoff = isoCutoff(now, retention.cronRunRetentionDays * 24 * 60 * 60 * 1_000);
-  const analysisCutoff = isoCutoff(now, retention.analysisJobRetentionDays * 24 * 60 * 60 * 1_000);
   const outboxCutoff = isoCutoff(now, retention.outboxRetentionDays * 24 * 60 * 60 * 1_000);
   const budgetCutoff = isoCutoff(now, retention.budgetReservationRetentionDays * 24 * 60 * 60 * 1_000);
 
@@ -189,11 +182,6 @@ export async function runRetentionCleanup(
   const rateLimitsDeleted = await deleteBatched(db, 'rate_limits', 'window_start', rateLimitCutoff);
   const providerDailyQuotaDeleted = await deleteBatched(db, 'provider_daily_quota', 'day', providerQuotaCutoff);
   const cronRunsDeleted = await deleteBatched(db, 'cron_runs', 'started_at', cronCutoff);
-  const analysisJobsDeleted = await deleteBatchedWhere(
-    db,
-    'analysis_jobs',
-    `status IN ('complete', 'failed') AND completed_at IS NOT NULL AND completed_at < '${analysisCutoff}'`,
-  );
   const outboxDeleted = await deleteBatchedWhere(
     db,
     'persistence_outbox',
@@ -212,7 +200,6 @@ export async function runRetentionCleanup(
     rateLimitsDeleted,
     providerDailyQuotaDeleted,
     cronRunsDeleted,
-    analysisJobsDeleted,
     outboxDeleted,
     budgetReservationsDeleted,
   };
@@ -233,7 +220,6 @@ export async function runVacuumAnalyze(): Promise<void> {
     'provider_daily_quota',
     'diagnostic_traces',
     'persistence_outbox',
-    'analysis_jobs',
     'ai_budget_reservations',
     'chat_messages',
   ];

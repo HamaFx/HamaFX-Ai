@@ -5,7 +5,8 @@
 // Computes real-time service level indicators from existing telemetry
 // tables. No new data collection — everything is derived from tables
 // already populated: chat_telemetry, chat_tool_telemetry, cron_runs,
-// live_ticks, and analysis_jobs.
+// live_ticks, and the Mastra `full-analysis` workflow run records
+// (mastra_workflow_snapshot) that replaced analysis_jobs in Phase 3.
 
 import { sql } from 'drizzle-orm';
 
@@ -514,9 +515,9 @@ async function queryOperationalAggregate(
   try {
     const result = await db.execute(sql`
       SELECT
-        (SELECT COUNT(*) FROM analysis_jobs WHERE mode = 'full' AND created_at >= ${since})::text AS full_total,
-        (SELECT COUNT(*) FROM analysis_jobs WHERE mode = 'full' AND created_at >= ${since} AND status = 'complete')::text AS full_completed,
-        (SELECT COUNT(*) FROM analysis_jobs WHERE mode = 'full' AND created_at >= ${since} AND status = 'failed')::text AS full_failed,
+        (SELECT COUNT(*) FROM mastra_workflow_snapshot WHERE workflow_name = 'full-analysis' AND "createdAt" >= ${since})::text AS full_total,
+        (SELECT COUNT(*) FROM mastra_workflow_snapshot WHERE workflow_name = 'full-analysis' AND "createdAt" >= ${since} AND snapshot ->> 'status' = 'success')::text AS full_completed,
+        (SELECT COUNT(*) FROM mastra_workflow_snapshot WHERE workflow_name = 'full-analysis' AND "createdAt" >= ${since} AND snapshot ->> 'status' = 'failed')::text AS full_failed,
         (SELECT COUNT(*) FROM chat_telemetry WHERE kind IN ('multi_specialist_sentiment', 'multi_specialist_sentiment_failed') AND created_at >= ${since})::text AS sentiment_total,
         (SELECT COUNT(*) FROM chat_telemetry WHERE kind = 'multi_specialist_sentiment' AND created_at >= ${since})::text AS sentiment_succeeded,
         (SELECT COUNT(*) FROM persistence_outbox WHERE created_at >= ${since} AND status IN ('completed', 'dead'))::text AS outbox_terminal,
@@ -578,19 +579,24 @@ async function queryAnalysisAggregate(
   since: string,
 ): Promise<AnalysisAggregate | null> {
   try {
+    // Phase 3: analysis_jobs was replaced by Mastra durable workflow runs.
+    // Stale pending (>10 min unclaimed) signals the worker is not claiming;
+    // stuck running (>30 s without a lease heartbeat) signals a dead worker.
     const result = await db.execute(sql`
       SELECT
         COUNT(*) FILTER (
-          WHERE status = 'pending'
-          AND created_at >= ${since}
-          AND created_at < NOW() - INTERVAL '10 minutes'
+          WHERE workflow_name = 'full-analysis'
+          AND snapshot ->> 'status' = 'pending'
+          AND "createdAt" >= ${since}
+          AND "createdAt" < NOW() - INTERVAL '10 minutes'
         )::text AS stale,
         COUNT(*) FILTER (
-          WHERE status = 'running'
-          AND created_at >= ${since}
-          AND started_at < NOW() - INTERVAL '30 seconds'
+          WHERE workflow_name = 'full-analysis'
+          AND snapshot ->> 'status' = 'running'
+          AND "createdAt" >= ${since}
+          AND "updatedAt" < NOW() - INTERVAL '30 seconds'
         )::text AS stuck
-      FROM analysis_jobs
+      FROM mastra_workflow_snapshot
     `);
     const rows = extractRows(result);
     const row = rows[0] as { stale: string; stuck: string } | undefined;

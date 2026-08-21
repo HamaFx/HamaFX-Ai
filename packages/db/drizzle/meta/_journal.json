@@ -582,6 +582,13 @@
       "when": 1787120157199,
       "tag": "0083_guard_tenant_triggers",
       "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
+      "when": 1787280068549,
+      "tag": "0084_drop_analysis_jobs",
+      "breakpoints": true
     }
   ]
 }
