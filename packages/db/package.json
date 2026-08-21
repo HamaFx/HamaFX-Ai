@@ -36,7 +36,7 @@
     "clean": "rm -rf node_modules .turbo dist",
     "migrate:gen": "drizzle-kit generate",
     "migrate:gen:custom": "drizzle-kit generate --custom",
-    "migrate:apply": "node scripts/install-extensions.mjs && drizzle-kit migrate",
+    "migrate:apply": "node scripts/install-extensions.mjs && node scripts/migrate-apply.mjs",
     "migrate:status": "node scripts/migrate-status.mjs",
     "migrate:reconcile": "node scripts/migration-reconcile.mjs",
     "migrate:rotate-encryption": "node scripts/rotate-encryption-secret.mjs",
