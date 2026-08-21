@@ -2,20 +2,26 @@
 
 'use client';
 
-// Phase 1.6 — IconCalendar widget.
+// Phase 1.6 — Calendar widget.
 //
 // Next 3 high-impact economic events with live countdowns. Uses the
-// shared `useNow` provider so all tickers stay in sync without each
+// shared `useTime` provider so all tickers stay in sync without each
 // widget spawning its own interval.
+//
+// Enhanced with:
+// - 1-Click "Ask AI Copilot" pre-event gameplan prompt
+// - Automatic background synchronization via React Query
 
 import Link from 'next/link';
-import { IconCalendar } from '@tabler/icons-react';
+import { useQuery } from '@tanstack/react-query';
+import { IconBolt, IconCalendar } from '@tabler/icons-react';
 import type { EconomicEvent } from '@kestrel/shared';
 
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useTime } from '@/components/providers/time-provider';
 import { formatCountdown } from '@/lib/datetime';
+import { apiFetch } from '@/lib/api-client';
 import { cn } from '@/lib/cn';
 
 interface CalendarWidgetProps {
@@ -23,11 +29,27 @@ interface CalendarWidgetProps {
   limit?: number;
 }
 
-export function CalendarWidget({ events, limit = 3 }: CalendarWidgetProps) {
+export function CalendarWidget({ events: initialEvents, limit = 3 }: CalendarWidgetProps) {
   const { now } = useTime();
 
-  // IconFilter to upcoming high/medium importance, sort ascending, cap.
-  const upcoming = events
+  // Background sync every 60 seconds
+  const { data: syncedEvents } = useQuery({
+    queryKey: ['dashboard-calendar-events'],
+    queryFn: async () => {
+      const res = await apiFetch<{ items?: EconomicEvent[]; events?: EconomicEvent[] }>(
+        '/api/calendar?limit=10',
+      );
+      return res.items ?? res.events ?? [];
+    },
+    initialData: initialEvents as EconomicEvent[],
+    staleTime: 60_000,
+    refetchInterval: 60_000,
+  });
+
+  const activeList = syncedEvents ?? initialEvents;
+
+  // Filter to upcoming high/medium importance, sort ascending, cap.
+  const upcoming = activeList
     .filter((e) => e.date > now)
     .sort((a, b) => a.date - b.date)
     .slice(0, limit);
@@ -63,10 +85,15 @@ export function CalendarWidget({ events, limit = 3 }: CalendarWidgetProps) {
                 : e.importance === 'medium'
                   ? 'bg-warn/15 text-warn'
                   : 'bg-fg-muted/15 text-fg-muted';
+
+            const aiPrompt = encodeURIComponent(
+              `Provide a pre-event volatility and risk gameplan for ${e.title} (${e.currency ?? e.country}). What are key price levels and historical reactions?`,
+            );
+
             return (
               <li
                 key={e.id}
-                className="border-divider flex items-center justify-between gap-3 border-b py-2 last:border-0"
+                className="border-divider flex items-center justify-between gap-2 border-b py-2 last:border-0 group"
               >
                 <div className="flex min-w-0 flex-col">
                   <span className="text-fg text-body-sm font-semibold truncate">
@@ -85,14 +112,27 @@ export function CalendarWidget({ events, limit = 3 }: CalendarWidgetProps) {
                     · {formatCountdown(e.date - now)}
                   </span>
                 </div>
-                <span
-                  className={cn(
-                    'text-caption font-bold px-1.5 py-0.5 rounded-sm shrink-0',
-                    importanceTone,
-                  )}
-                >
-                  {e.currency ?? e.country}
-                </span>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span
+                    className={cn(
+                      'text-caption font-bold px-1.5 py-0.5 rounded-sm',
+                      importanceTone,
+                    )}
+                  >
+                    {e.currency ?? e.country}
+                  </span>
+
+                  {/* 1-Click Ask AI Copilot */}
+                  <Link
+                    href={`/chat?prompt=${aiPrompt}`}
+                    className="text-fg-subtle hover:text-brand hover:bg-brand/10 rounded-sm p-1 transition-colors"
+                    title={`Get AI event gameplan for ${e.title}`}
+                    aria-label={`Get AI event gameplan for ${e.title}`}
+                  >
+                    <IconBolt className="size-3.5 text-brand" />
+                  </Link>
+                </div>
               </li>
             );
           })}
@@ -101,4 +141,3 @@ export function CalendarWidget({ events, limit = 3 }: CalendarWidgetProps) {
     </Card>
   );
 }
-

@@ -7,10 +7,19 @@
 // Lists journal entries with `outcome === 'open'`. Each row shows the
 // symbol, side, entry, stop, target, and the current R-multiple (when
 // computable). Links out to /journal for the full table.
+//
+// Enhanced with:
+// - 1-Click "Ask AI Copilot" position management & trailing stop review
+// - Live-tick flashing and floating R tracking
 
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { IconActivity, IconArrowUpRight, IconArrowDownRight } from '@tabler/icons-react';
+import {
+  IconActivity,
+  IconArrowUpRight,
+  IconArrowDownRight,
+  IconBolt,
+} from '@tabler/icons-react';
 import type { JournalEntry, Symbol as SymbolType, Tick } from '@kestrel/shared';
 import { priceDecimals, pipSize } from '@kestrel/shared';
 
@@ -112,8 +121,12 @@ function PositionRow({ entry, tick }: { entry: JournalEntry; tick?: Tick }) {
 
   const isProfitable = floatingR !== null ? floatingR >= 0 : pipsDiff >= 0;
 
+  const aiPrompt = encodeURIComponent(
+    `Review risk, trailing stop placement, and exit targets for my open ${entry.symbol} ${entry.side.toUpperCase()} position entered at ${entry.entry}${entry.stop ? `, stop ${entry.stop}` : ''}${curPrice ? `, current price ${curPrice}` : ''}.`,
+  );
+
   return (
-    <li className="border-divider flex items-center justify-between gap-3 border-b py-2 last:border-0">
+    <li className="border-divider flex items-center justify-between gap-2 border-b py-2 last:border-0 group">
       <div className="flex min-w-0 items-center gap-2">
         <span
           className={cn(
@@ -150,31 +163,43 @@ function PositionRow({ entry, tick }: { entry: JournalEntry; tick?: Tick }) {
         </div>
       </div>
 
-      <div className="flex flex-col items-end shrink-0 font-mono">
-        {floatingR !== null ? (
-          <span
-            className={cn(
-              'text-xs font-bold tabular-nums',
-              isProfitable ? 'text-bull' : 'text-bear',
-            )}
-          >
-            {floatingR >= 0 ? '+' : ''}
-            {floatingR.toFixed(2)}R
+      <div className="flex items-center gap-2 shrink-0">
+        <div className="flex flex-col items-end font-mono">
+          {floatingR !== null ? (
+            <span
+              className={cn(
+                'text-xs font-bold tabular-nums',
+                isProfitable ? 'text-bull' : 'text-bear',
+              )}
+            >
+              {floatingR >= 0 ? '+' : ''}
+              {floatingR.toFixed(2)}R
+            </span>
+          ) : curPrice ? (
+            <span
+              className={cn(
+                'text-caption font-bold tabular-nums',
+                isProfitable ? 'text-bull' : 'text-bear',
+              )}
+            >
+              {pipsDiff >= 0 ? '+' : ''}
+              {pipsDiff.toFixed(1)}p
+            </span>
+          ) : null}
+          <span className="text-fg-subtle text-[10px] tabular-nums">
+            {entry.openedAt ? formatRelative(entry.openedAt) : ''}
           </span>
-        ) : curPrice ? (
-          <span
-            className={cn(
-              'text-caption font-bold tabular-nums',
-              isProfitable ? 'text-bull' : 'text-bear',
-            )}
-          >
-            {pipsDiff >= 0 ? '+' : ''}
-            {pipsDiff.toFixed(1)}p
-          </span>
-        ) : null}
-        <span className="text-fg-subtle text-[10px] tabular-nums">
-          {entry.openedAt ? formatRelative(entry.openedAt) : ''}
-        </span>
+        </div>
+
+        {/* 1-Click Ask AI Copilot */}
+        <Link
+          href={`/chat?prompt=${aiPrompt}`}
+          className="text-fg-subtle hover:text-brand hover:bg-brand/10 rounded-sm p-1 transition-colors"
+          title={`Ask AI Copilot to review ${entry.symbol} position`}
+          aria-label={`Ask AI Copilot to review ${entry.symbol} position`}
+        >
+          <IconBolt className="size-3.5 text-brand" />
+        </Link>
       </div>
     </li>
   );

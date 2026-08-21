@@ -46,6 +46,8 @@ import type {
 import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/components/ui/confirm-drawer';
 import { LeverageGauge } from '@/components/ui/leverage-gauge';
+import { PreSessionChecklistDrawer } from './pre-session-checklist-drawer';
+import { QuickLogTradeDrawer } from './quick-log-trade-drawer';
 import {
   DEFAULT_LAYOUT,
   LAYOUT_STORAGE_KEY,
@@ -150,7 +152,7 @@ export function DashboardCanvas({ marginUsagePct = 0, marginDetail, ...props }: 
         additions.push({
           id: `w-${t}-${Math.random().toString(36).slice(2, 8)}`,
           type: t,
-          span: t === 'today-glance' || t === 'briefing' || t === 'pnl-heatmap' ? 2 : 1,
+          span: t === 'today-glance' || t === 'briefing' || t === 'pnl-heatmap' ? 3 : 1,
           order: pruned.length + additions.length,
         });
       }
@@ -186,9 +188,11 @@ export function DashboardCanvas({ marginUsagePct = 0, marginDetail, ...props }: 
 
   function toggleSpan(id: string) {
     persistLayout(
-      safeLayout.map((w) =>
-        w.id === id ? { ...w, span: w.span === 1 ? 2 : 1 } : w,
-      ),
+      safeLayout.map((w) => {
+        if (w.id !== id) return w;
+        const nextSpan: 1 | 2 | 3 = w.span === 1 ? 2 : w.span === 2 ? 3 : 1;
+        return { ...w, span: nextSpan };
+      }),
     );
   }
 
@@ -214,41 +218,45 @@ export function DashboardCanvas({ marginUsagePct = 0, marginDetail, ...props }: 
     <div className="flex flex-col gap-4">
       {/* Header / controls */}
       <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between gap-2">
-          <h1 className="text-fg text-xl font-bold tracking-tight">Dashboard</h1>
-          <div className="flex items-center gap-2">
-          {editMode && hidden.length > 0 ? (
-            <AddWidgetMenu
-              hidden={hidden}
-              onAdd={(type) => {
-                persistLayout([
-                  ...safeLayout,
-                  {
-                    id: `w-${type}-${Math.random().toString(36).slice(2, 8)}`,
-                    type,
-                    span: 1,
-                    order: safeLayout.length,
-                  },
-                ]);
-              }}
-            />
-          ) : null}
-          {editMode ? (
-            <Button variant="ghost" size="sm" onClick={handleReset}>
-              <IconRotate className="size-4" />
-              Reset
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-fg text-xl font-bold tracking-tight">Dashboard</h1>
+            <PreSessionChecklistDrawer />
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <QuickLogTradeDrawer />
+            {editMode && hidden.length > 0 ? (
+              <AddWidgetMenu
+                hidden={hidden}
+                onAdd={(type) => {
+                  persistLayout([
+                    ...safeLayout,
+                    {
+                      id: `w-${type}-${Math.random().toString(36).slice(2, 8)}`,
+                      type,
+                      span: 1,
+                      order: safeLayout.length,
+                    },
+                  ]);
+                }}
+              />
+            ) : null}
+            {editMode ? (
+              <Button variant="ghost" size="sm" onClick={handleReset}>
+                <IconRotate className="size-4" />
+                Reset
+              </Button>
+            ) : null}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setEditMode((v) => !v)}
+              aria-pressed={editMode}
+            >
+              <IconAdjustmentsHorizontal className="size-4" />
+              {editMode ? 'Done' : 'Customize'}
             </Button>
-          ) : null}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setEditMode((v) => !v)}
-            aria-pressed={editMode}
-          >
-            <IconAdjustmentsHorizontal className="size-4" />
-            {editMode ? 'Done' : 'Customize'}
-          </Button>
-        </div>
+          </div>
         </div>
 
         {/* Role Presets Bar when in Edit Mode */}
@@ -384,7 +392,9 @@ function SortableWidget({
       ref={setNodeRef}
       style={style}
       className={cn(
-        widget.span === 2 && 'md:col-span-2',
+        widget.span === 3 && 'col-span-1 md:col-span-2 lg:col-span-3',
+        widget.span === 2 && 'col-span-1 md:col-span-2 lg:col-span-2',
+        widget.span === 1 && 'col-span-1',
         editMode && 'rounded-sm ring-1 ring-border',
       )}
     >
@@ -402,20 +412,21 @@ function SortableWidget({
           <span className="text-fg-subtle text-caption uppercase tracking-wider">
             {WIDGET_LABELS[widget.type]}
           </span>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <button
               type="button"
               aria-label={`Toggle span for ${WIDGET_LABELS[widget.type]}`}
               onClick={onToggleSpan}
-              className="text-fg-subtle hover:text-fg text-caption"
+              className="text-fg-subtle hover:text-fg text-[11px] font-mono px-1.5 py-0.5 rounded-xs bg-bg-elev-2 border border-border/80"
+              title={`Current span: ${widget.span}/3 columns (click to cycle)`}
             >
-              {widget.span === 1 ? '⊞' : '⊟'}
+              {widget.span}/3 col
             </button>
             <button
               type="button"
               aria-label={`Remove ${WIDGET_LABELS[widget.type]}`}
               onClick={onRemove}
-              className="text-fg-subtle hover:text-danger"
+              className="text-fg-subtle hover:text-danger p-0.5"
             >
               <IconX className="size-3.5" />
             </button>
