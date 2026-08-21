@@ -31,12 +31,20 @@ if (!databaseUrl) {
   );
 }
 
+const ca = process.env.SUPABASE_CA_CERT?.replace(/\\n/g, '\n').trim();
+const ssl = ca
+  ? { ca, rejectUnauthorized: true }
+  : process.env.DB_DISABLE_SSL === 'true'
+    ? false
+    : { rejectUnauthorized: false };
+
 export default defineConfig({
   schema: './src/schema/index.ts',
   out: './drizzle',
   dialect: 'postgresql',
   dbCredentials: {
     url: databaseUrl ?? 'postgres://placeholder@localhost:5432/placeholder',
+    ssl,
   },
   strict: true,
   verbose: true,
