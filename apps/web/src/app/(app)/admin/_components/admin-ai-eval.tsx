@@ -20,7 +20,7 @@ interface EvalRow {
 const REQUEST_TIMEOUT_MS = 120_000;
 /**
  * Gap between prompts. Kept generous because each Mastra report makes
- * several LLM calls (report + repair + optional legacy shadow), and free-tier
+ * several LLM calls (report + repair), and free-tier
  * provider keys (e.g. Mistral) trip their request rate limits when 30 prompts
  * are fired back-to-back. 25s keeps us under typical free-tier RPM bounds.
  */
@@ -286,7 +286,7 @@ export function AdminAiEval() {
   return (
     <SettingsSection
       title="AI Eval — XAUUSD comparison run"
-      description={`Runs ${AI_EVAL_PROMPTS.length} read-only gold prompts through the normal chat route from your session. Each eligible prompt produces a Mastra report and a legacy shadow comparison for Admin → AI Compare. This uses Mistral tokens and takes roughly 10–20 minutes.`}
+      description={`Runs ${AI_EVAL_PROMPTS.length} read-only gold prompts through the normal chat route from your session. Each eligible prompt produces a Mastra verified report. This uses provider tokens and takes roughly 10–20 minutes.`}
     >
       <div className="flex flex-wrap items-center gap-2">
         <Button type="button" onClick={() => void run()} disabled={running} variant={running ? 'secondary' : 'primary'} size="sm">

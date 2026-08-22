@@ -72,8 +72,6 @@ export interface TelemetryInput {
     | 'multi_agent_turn'
     | 'mastra_xauusd_poc'
     | 'mastra_xauusd_poc_failed'
-    | 'mastra_xauusd_shadow'
-    | 'mastra_xauusd_shadow_failed'
     | 'mastra_mode'
     | 'mastra_mode_failed'
     | 'mastra_full_job'
@@ -82,8 +80,6 @@ export interface TelemetryInput {
     | 'mastra_worker_task_failed'
     | 'mastra_canonical_chat'
     | 'mastra_canonical_chat_failed'
-    | 'legacy_shadow'
-    | 'legacy_shadow_failed'
     | 'turn_failed';
 }
 

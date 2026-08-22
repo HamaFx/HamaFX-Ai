@@ -127,8 +127,6 @@ export {
   deleteMessageFeedback,
   listFeedbackForReview,
   reviewMessageFeedback,
-  listAiShadowComparisons,
-  summarizeAiShadowComparisons,
   listAiRegressionCases,
   updateAiRegressionCaseStatus,
   listReviewedTrainingPairs,

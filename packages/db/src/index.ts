@@ -292,15 +292,6 @@ export {
   type ReviewMessageFeedbackInput,
 } from './queries/ai-feedback';
 export {
-  listAiShadowComparisons,
-  recordAiShadowComparison,
-  summarizeAiShadowComparisons,
-  type AiShadowComparisonRow,
-  type AiShadowComparisonSummary,
-  type ListAiShadowComparisonsOptions,
-  type RecordAiShadowComparisonInput,
-} from './queries/ai-shadow-comparisons';
-export {
   listAiRegressionCases,
   syncAiRegressionCase,
   updateAiRegressionCaseStatus,

@@ -48,8 +48,8 @@ export interface RunXauusdMastraArgs {
   /** Explicit user model override; operator pin is used when absent. */
   modelOverride?: string | null;
   signal?: AbortSignal;
-  /** Marks background comparisons separately in durable telemetry. */
-  telemetryKind?: 'mastra_xauusd_poc' | 'mastra_xauusd_shadow';
+  /** Telemetry kind for the run. */
+  telemetryKind?: 'mastra_xauusd_poc';
   /** When set, answer using the latest verified report instead of creating a new report. */
   followup?: boolean;
   priorReport?: XauusdResearchReport | null;

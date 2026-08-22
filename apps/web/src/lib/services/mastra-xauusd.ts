@@ -21,7 +21,7 @@ export interface RunMastraXauusdResearchInput {
   prompt: string;
   modelOverride?: string | null;
   signal?: AbortSignal;
-  telemetryKind?: 'mastra_xauusd_poc' | 'mastra_xauusd_shadow';
+  telemetryKind?: 'mastra_xauusd_poc';
   followup?: boolean;
   priorReport?: XauusdResearchReport | null;
 }

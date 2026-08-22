@@ -29,8 +29,6 @@ export {
   type ThreadState,
   type ThreadStateHandler,
 } from './thread-state';
-export { buildSystemPrompt, type LiveSnapshot } from './prompt/system';
-export { buildLiveSnapshot } from './context';
 export * from './wait-until';
 export * from './telegram/webhook';
 export {
@@ -249,7 +247,7 @@ export {
 export { runMemoryQuery, memoryRowToItem, type RunMemoryQueryArgs } from './rag';
 
 // Phase 7c — citation enforcement, tool catalogue
-export { enforceCitations } from './verification';
+
 export {
   buildTrainingRecords,
   buildDatasetManifest,
@@ -295,12 +293,6 @@ export { getDb } from './db';
 // Langfuse / OpenTelemetry instrumentation
 export { initLangfuse, flushLangfuse, shutdownLangfuse } from './instrumentation';
 export { telemetryConfig, type TelemetryConfigOptions } from './telemetry';
-
-// PF-07 — LlmClient abstraction
-//
-// The default `getLlmClient()` returns a `VercelLlmClient` that wraps
-// the Vercel AI SDK. Override via `setLlmClient()` (e.g. in tests).
-export { getLlmClient, setLlmClient, VercelLlmClient } from './llm-client';
 export { replayPersistenceFailures } from './persistence-recovery';
 export {
   consumeUIMessageStream,
@@ -309,13 +301,6 @@ export {
   type ParsedStreamMetadata,
   type AgentProgressSnapshot,
 } from './eval/parse-stream';
-export type {
-  LlmClient,
-  GenerateTextOpts,
-  GenerateTextResult,
-  StreamTextOpts,
-  StreamTextResult,
-} from './llm-client';
 
 export {
   reserveBudget,

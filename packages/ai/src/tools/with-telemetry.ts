@@ -67,8 +67,6 @@ const DEFAULT_TOOL_TIMEOUT_MS = 25_000;
 const TOOL_TIMEOUT_OVERRIDES: Record<string, number> = {
   // Vision model analysis can take longer.
   analyze_chart_image: 45_000,
-  // Committee runs 4 LLM calls — needs extra headroom.
-  convene_committee: 60_000,
   // Historical backtests can be slow.
   replay_setup: 40_000,
   // Fast tools can be stricter.

@@ -24,7 +24,6 @@ import {
   IconSettingsBolt,
   IconMessageReport,
   IconDatabase,
-  IconChartDots,
   IconBug,
   IconFlask,
 } from '@tabler/icons-react';
@@ -119,11 +118,6 @@ const AdminDatasetReview = dynamic(
   { loading: TabFallback },
 ) as ComponentType;
 
-const AdminAiShadow = dynamic(
-  () => import('./_components/admin-ai-shadow').then((m) => m.AdminAiShadow),
-  { loading: TabFallback },
-) as ComponentType;
-
 const AdminRegressionCases = dynamic(
   () => import('./_components/admin-regression-cases').then((m) => m.AdminRegressionCases),
   { loading: TabFallback },
@@ -151,7 +145,6 @@ const TABS = [
   { id: 'audit', label: 'Audit', icon: IconHistory, Component: AdminAuditTable },
   { id: 'feedback', label: 'Feedback', icon: IconMessageReport, Component: AdminFeedbackReview },
   { id: 'datasets', label: 'Datasets', icon: IconDatabase, Component: AdminDatasetReview },
-  { id: 'ai-shadow', label: 'AI Compare', icon: IconChartDots, Component: AdminAiShadow },
   { id: 'regressions', label: 'Regressions', icon: IconBug, Component: AdminRegressionCases },
   { id: 'ai-eval', label: 'AI Eval', icon: IconFlask, Component: AdminAiEval },
   { id: 'mastra-runs', label: 'Mastra Runs', icon: IconStethoscope, Component: AdminMastraRuns },

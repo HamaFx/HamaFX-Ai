@@ -69,8 +69,6 @@ export * from './provider-daily-quota';
 export * from './billing';
 // Durable user feedback and reviewer annotations
 export * from './ai-feedback';
-// Privacy-safe Mastra versus legacy rollout comparisons
-export * from './ai-shadow-comparisons';
 export * from './ai-regression-cases';
 // Governed evaluation dataset registry
 export * from './eval-datasets';

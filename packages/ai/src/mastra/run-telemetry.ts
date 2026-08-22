@@ -29,10 +29,9 @@ export interface MastraRunObservation {
   toolCalls: number;
   steps: number;
   outcome: MastraRunOutcome;
-  /** Identifies whether this run served a user or was a background shadow. */
+  /** Identifies the run type for telemetry breakdown. */
   telemetryKind?:
     | 'mastra_xauusd_poc'
-    | 'mastra_xauusd_shadow'
     | 'mastra_mode'
     | 'mastra_full_job'
     | 'mastra_worker_task'
@@ -126,17 +125,15 @@ export async function finishMastraRun(args: MastraRunObservation): Promise<void>
       kind:
         args.outcome === 'success'
           ? (args.telemetryKind ?? 'mastra_xauusd_poc')
-          : args.telemetryKind === 'mastra_xauusd_shadow'
-            ? 'mastra_xauusd_shadow_failed'
-            : args.telemetryKind === 'mastra_mode'
-              ? 'mastra_mode_failed'
-              : args.telemetryKind === 'mastra_full_job'
-                ? 'mastra_full_job_failed'
-                : args.telemetryKind === 'mastra_worker_task'
-                  ? 'mastra_worker_task_failed'
-                  : args.telemetryKind === 'mastra_canonical_chat'
-                    ? 'mastra_canonical_chat_failed'
-                    : 'mastra_xauusd_poc_failed',
+          : args.telemetryKind === 'mastra_mode'
+            ? 'mastra_mode_failed'
+            : args.telemetryKind === 'mastra_full_job'
+              ? 'mastra_full_job_failed'
+              : args.telemetryKind === 'mastra_worker_task'
+                ? 'mastra_worker_task_failed'
+                : args.telemetryKind === 'mastra_canonical_chat'
+                  ? 'mastra_canonical_chat_failed'
+                  : 'mastra_xauusd_poc_failed',
     });
   } catch (error) {
     mlog.error('Mastra run telemetry persistence failed', {

@@ -26,7 +26,6 @@ const ALWAYS_TOOLS: ReadonlySet<string> = new Set([
   'get_price',
   'set_alert',
   'log_journal',
-  'summarize_thread',
   'search_knowledge',
 ]);
 
@@ -38,7 +37,6 @@ const DOMAIN_TOOLS: Record<Exclude<RoutingDomain, 'generic'>, ReadonlySet<string
     'get_cot',
     'get_journal_stats',
     'get_social_sentiment',
-    'summarize_thread',
   ]),
   vision: new Set([
     ...ALWAYS_TOOLS,

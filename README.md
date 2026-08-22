@@ -248,17 +248,17 @@ The agent routes work to typed tools instead of relying on free-form model guess
 | **Technical analysis**            | `analyze_technical`, `annotate_chart`, `forecast_volatility`, `replay_setup`                                                                        |
 | **Macro and cross-market**        | `get_news`, `get_calendar`, `get_cot`, `get_correlation`, `get_intermarket`, `get_intermarket_resonance`, `get_seasonality`, `get_social_sentiment`, `web_search` |
 | **Risk and verification**         | `compute_risk`, `compute_position_health`, `verify_call`, `get_portfolio_snapshot`                                                                  |
-| **Journal and memory**            | `log_journal`, `get_journal_stats`, `search_knowledge`, `summarize_thread`                                                                          |
+| **Journal and memory**            | `log_journal`, `get_journal_stats`, `search_knowledge`                                                                                              |
 | **Actions and sharing**           | `set_alert`, `share_snapshot`                                                                                                                       |
-| **Research modes and operations** | `analyze_fundamental`, `analyze_chart_image`, `convene_committee`, `get_system_diagnostics`, `run_system_action`                                    |
+| **Research modes and operations** | `analyze_fundamental`, `analyze_chart_image`, `get_system_diagnostics`, `run_system_action`                                    |
 
 The exact catalogue is maintained in [`packages/ai/src/tools/`](packages/ai/src/tools/).
 
 </details>
 
-### Use multi-agent deliberation when a question deserves it
+### Multi-agent deliberation through Mastra workflows
 
-The committee can run specialist perspectives in parallel:
+The symbol-research workflow runs specialist perspectives in parallel:
 
 ```mermaid
 flowchart LR
