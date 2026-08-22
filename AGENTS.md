@@ -344,6 +344,7 @@ The project keeps procedural documentation alongside a small static architecture
 | Doc | Description |
 |-----|-------------|
 | `docs/13-first-run-setup.md` | Step-by-step setup instructions |
+| `docs/14-nextjs-16-architecture-guide.md` | Next.js 16 & React 19 architecture guide, best practices & gap analysis |
 | `docs/11-self-hosting.md` | Docker/self-hosting guide |
 | `docs/08-deployment.md` | Deploy procedures |
 | `docs/09-testing.md` | Test conventions & patterns |

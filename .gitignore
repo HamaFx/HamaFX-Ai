@@ -79,3 +79,7 @@ loadtest/node_modules/
 
 # local E2E shard runner output
 artifacts/
+
+# teamwork temporary subagent runs
+.agents/*
+!.agents/skills/
