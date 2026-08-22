@@ -41,6 +41,7 @@ import { m } from 'motion/react';
 import {
   CitationWarningPartSchema,
   FallbackPartSchema,
+  MutationDraftPayloadSchema,
   StreamToolPartSchema,
   UserPlanPartSchema,
   VerifyWarningPartSchema,
@@ -58,6 +59,7 @@ import { MAX_TEXT_CHARS } from './composer-helpers';
 import { CitationWarningPartView } from './parts/citation-warning';
 import { FallbackPartView } from './parts/fallback';
 import { ChatToolPart, type ToolPartState } from './parts/registry';
+import { MutationConfirmationCard } from './parts/mutation-confirmation';
 import { PlanPart } from './parts/plan';
 import { MastraReportPart } from './parts/mastra-report';
 import { TextPart } from './parts/text';
@@ -469,6 +471,13 @@ function renderPart(
   // at the message level above).
   if (part.type === 'data-multi-agent-meta' && 'data' in part) {
     return <MastraReportPart key={idx} data={(part as { data?: unknown }).data} />;
+  }
+  if (part.type === 'data-mutation-confirmation' && 'data' in part) {
+    const parsed = MutationDraftPayloadSchema.safeParse((part as { data?: unknown }).data);
+    if (!parsed.success) {
+      return <FallbackPartView key={idx} part={malformedFallback('mutation confirmation')} />;
+    }
+    return <MutationConfirmationCard key={idx} payload={parsed.data} />;
   }
   if (part.type === 'data-citation-warning') {
     const parsed = CitationWarningPartSchema.safeParse(part);

@@ -689,33 +689,11 @@ function hasAnyTool(calledTools: Set<string>, supportedTools: ReadonlySet<string
   return false;
 }
 
-// Global variants for counting claims (the single-match regexes above are
-// only used for pass/fail detection).
-const INSTRUMENT_PRICE_CLAIM_GLOBAL = /\b(?:xauusd|gold|eurusd|gbpusd|usdjpy|btcusdt)\b[^.!?\n]{0,100}\b(?:\d{1,5}\.\d{2,5}|0\.\d{3,6})\b/gi;
-const EVENT_CLAIM_GLOBAL = /\b(?:cpi|nfp|fomc|ecb|boe|federal reserve|rate decision|central bank)\b/gi;
-
-/**
- * Phase C citation oracle. Every detected numeric or event claim must be
- * backed by an appropriate tool call; unsupported claims pull the score
- * toward zero. A response with no detectable claims scores 1.0.
- */
-export function computeCitationScore(text: string, toolCalls: ParsedToolCall[]): number {
-  const calledTools = new Set(toolCalls.map((t) => t.name));
-  const numericClaims = countMatches(text, INSTRUMENT_PRICE_CLAIM_GLOBAL);
-  const eventClaims = countMatches(text, EVENT_CLAIM_GLOBAL);
-  const totalClaims = numericClaims + eventClaims;
-  if (totalClaims === 0) return 1;
-
-  const numericSupported = hasAnyTool(calledTools, NUMERIC_SUPPORT_TOOLS) ? numericClaims : 0;
-  const eventSupported = hasAnyTool(calledTools, EVENT_SUPPORT_TOOLS) ? eventClaims : 0;
-  return (numericSupported + eventSupported) / totalClaims;
-}
-
-function countMatches(text: string, regex: RegExp): number {
-  const matches = text.match(regex);
-  return matches ? matches.length : 0;
-}
-
+// Citation oracle lives in the pure module so the Mastra custom scorers can
+// reuse it without pulling this runner (fs, crypto, network client) into the
+// web bundle. Re-exported here for backward compatibility.
+import { computeCitationScore } from './citation-oracle';
+export { computeCitationScore };
 // --- report writing --------------------------------------------------------
 
 interface WriteReportArgs {

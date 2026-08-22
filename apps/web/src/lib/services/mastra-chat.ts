@@ -16,6 +16,7 @@ import type { UIMessage } from 'ai';
 import { getServerEnv } from '@/lib/env';
 import { createMastraChatMeta } from '@/lib/mastra-chat-meta';
 
+import { maybeGenerateThreadTitle } from './mastra-thread-title';
 import { runMastraXauusdConversation, runMastraXauusdResearch } from './mastra-xauusd';
 
 export interface RunMastraXauusdChatInput {
@@ -95,6 +96,13 @@ export async function runMastraXauusdChat(
     };
     await appendAssistantMessage(input.userId, input.threadId, assistantMessage, {
       idempotencyKey: `mastra:${input.threadId}:${input.userMessage.id}:assistant`,
+    });
+
+    void maybeGenerateThreadTitle({
+      userId: input.userId,
+      threadId: input.threadId,
+      firstUser: input.prompt,
+      firstAssistant: completedRun.result.text,
     });
 
     await budget.reconcile(observedCost);

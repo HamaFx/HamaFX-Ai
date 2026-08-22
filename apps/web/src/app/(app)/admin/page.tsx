@@ -134,6 +134,11 @@ const AdminAiEval = dynamic(
   { loading: TabFallback },
 ) as ComponentType;
 
+const AdminMastraRuns = dynamic(
+  () => import('./_components/admin-mastra-runs').then((m) => m.AdminMastraRuns),
+  { loading: TabFallback },
+) as ComponentType;
+
 const TABS = [
   { id: 'health', label: 'Health', icon: IconHeartbeat, Component: AdminSystemHealth },
   { id: 'onboarding', label: 'Onboarding', icon: IconRefresh, Component: AdminOnboardingControl },
@@ -149,6 +154,7 @@ const TABS = [
   { id: 'ai-shadow', label: 'AI Compare', icon: IconChartDots, Component: AdminAiShadow },
   { id: 'regressions', label: 'Regressions', icon: IconBug, Component: AdminRegressionCases },
   { id: 'ai-eval', label: 'AI Eval', icon: IconFlask, Component: AdminAiEval },
+  { id: 'mastra-runs', label: 'Mastra Runs', icon: IconStethoscope, Component: AdminMastraRuns },
   { id: 'devtools', label: 'Dev Tools', icon: IconSettingsBolt, Component: AdminDevTools },
 ] as const;
 

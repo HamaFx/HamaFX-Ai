@@ -6,8 +6,12 @@ import type { LanguageModel } from 'ai';
 import { getDiagnosticContext, withDiagnostics } from '../diagnostics';
 import { resolveChatModel, type ChatModelResolution } from '../model';
 import { telemetryConfig } from '../telemetry';
+import { logWorkflowEnd, logWorkflowError, logWorkflowStart } from '../mastra-v2/logger';
+import { runTracingOptions } from '../mastra-v2/telemetry';
 import type { ResolveModelEnv } from '../vertex-factory';
 import { createXauusdMastraAgent } from './agent';
+import { buildConversationGuardrails } from '../mastra-v2/guardrails';
+import { buildConversationScorers } from '../mastra-v2/evals/scorers';
 import {
   createKestrelMemory,
   type CreateKestrelMemoryArgs,
@@ -157,7 +161,20 @@ async function executeXauusdMastraRun(args: RunXauusdMastraArgs): Promise<Xauusd
       },
       backfill: true,
     });
-    const agent = createXauusdMastraAgent({ model: resolution.model, memory });
+    const { processors: guardrails } = buildConversationGuardrails(
+      { aiApiKeys: args.settings.aiApiKeys, chatModel: args.settings.chatModel },
+      args.env,
+    );
+    const { entries: conversationScorers } = buildConversationScorers(
+      { aiApiKeys: args.settings.aiApiKeys, chatModel: args.settings.chatModel },
+      args.env,
+    );
+    const agent = createXauusdMastraAgent({
+      model: resolution.model,
+      memory,
+      inputProcessors: guardrails,
+      scorers: conversationScorers,
+    });
 
     // Follow-up answers explain a previously verified report; they keep the
     // direct agent path (packet collected here for the follow-up context).
@@ -230,11 +247,36 @@ async function executeXauusdMastraRun(args: RunXauusdMastraArgs): Promise<Xauusd
       mastra: getKestrelMastra().instance,
     });
     const run = await workflow.createRun({ runId: args.runId, resourceId: args.userId });
+    logWorkflowStart({
+      runId: args.runId,
+      workflowId: 'xauusd-report',
+      stepId: 'report',
+      message: 'XAUUSD report workflow run started',
+      meta: { model: resolution.modelId },
+    });
     const runResult = await run.start({
       inputData: { prompt: args.prompt },
       requestContext: baseContextForRun(args) as never,
+      tracingOptions: runTracingOptions({
+        runId: args.runId,
+        userId: args.userId,
+        threadId: args.threadId,
+        kind: args.telemetryKind ?? 'mastra_xauusd_poc',
+        tags: ['xauusd-report'],
+      }),
     });
     if (runResult.status !== 'success') {
+      logWorkflowError({
+        runId: args.runId,
+        workflowId: 'xauusd-report',
+        stepId: 'report',
+        startedAt,
+        message: 'XAUUSD report workflow run failed',
+        error:
+          runResult.status === 'failed' && runResult.error
+            ? runResult.error
+            : new Error(`XAUUSD report workflow ended with ${runResult.status}`),
+      });
       if (args.signal?.aborted) {
         throw args.signal.reason ?? new DOMException('Aborted', 'AbortError');
       }
@@ -242,6 +284,13 @@ async function executeXauusdMastraRun(args: RunXauusdMastraArgs): Promise<Xauusd
         ? runResult.error
         : new Error('Mastra XAUUSD report workflow failed'));
     }
+    logWorkflowEnd({
+      runId: args.runId,
+      workflowId: 'xauusd-report',
+      stepId: 'report',
+      startedAt,
+      message: 'XAUUSD report workflow run completed',
+    });
     const output = runResult.result as {
       status: 'ready' | 'blocked';
       blockedText?: string;
@@ -378,7 +427,20 @@ async function executeXauusdMastraConversationRun(
       },
       backfill: true,
     });
-    const agent = createXauusdMastraAgent({ model: resolution.model, memory });
+    const { processors: guardrails } = buildConversationGuardrails(
+      { aiApiKeys: args.settings.aiApiKeys, chatModel: args.settings.chatModel },
+      args.env,
+    );
+    const { entries: conversationScorers } = buildConversationScorers(
+      { aiApiKeys: args.settings.aiApiKeys, chatModel: args.settings.chatModel },
+      args.env,
+    );
+    const agent = createXauusdMastraAgent({
+      model: resolution.model,
+      memory,
+      inputProcessors: guardrails,
+      scorers: conversationScorers,
+    });
     const requestContext = contextForRun(args, packet);
     const result = await agent.generate(args.prompt, {
       requestContext,
@@ -391,6 +453,13 @@ async function executeXauusdMastraConversationRun(
         metadata: { provider: resolution.providerId },
       }),
       ...(args.signal ? { abortSignal: args.signal } : {}),
+      tracingOptions: runTracingOptions({
+        runId: args.runId,
+        userId: args.userId,
+        threadId: args.threadId,
+        kind: args.telemetryKind ?? 'mastra_xauusd_poc',
+        tags: ['xauusd-conversation'],
+      }),
     });
     const stats = getMastraGenerationStats(result);
 
@@ -451,6 +520,182 @@ export function runXauusdMastraConversation(
     () => executeXauusdMastraConversationRun(args),
     { runId: args.runId, deferCompletion: false },
   );
+}
+
+/**
+ * Token-streaming variant of the XAUUSD conversation. Yields provider
+ * chunks as they arrive; resolves final text, usage, and tool names after
+ * the stream is fully consumed.
+ */
+export interface XauusdMastraConversationStream {
+  text: AsyncIterable<string>;
+  completion: Promise<{
+    result: MastraGenerationResultLike;
+    packet: XauusdResearchPacket;
+    modelId: string;
+    providerId: string;
+    stats: MastraGenerationStats;
+  }>;
+}
+
+export async function runXauusdMastraConversationStream(
+  args: RunXauusdMastraArgs,
+): Promise<XauusdMastraConversationStream> {
+  const startedAt = Date.now();
+  let resolution: ChatModelResolution | null = null;
+
+  const runner = async () => {
+    resolution = resolveXauusdMastraModel(args.settings, args.env, args.modelOverride);
+    beginMastraRun({
+      runId: args.runId,
+      threadId: args.threadId,
+      model: resolution.modelId,
+      providerId: resolution.providerId,
+    });
+
+    const packet = await collectXauusdResearchPacket(args.signal);
+    if (packet.status === 'blocked') {
+      const stats = blockedStats();
+      const result: MastraGenerationResultLike = {
+        text: blockedXauusdResearchText(packet),
+      };
+      await finishMastraRun({
+        userId: args.userId,
+        threadId: args.threadId,
+        runId: args.runId,
+        model: resolution.modelId,
+        providerId: resolution.providerId,
+        startedAt,
+        ...stats,
+        outcome: 'success',
+        ...(args.telemetryKind ? { telemetryKind: args.telemetryKind } : {}),
+      });
+      return {
+        text: (async function* () {
+          yield result.text;
+        })(),
+        completion: Promise.resolve({
+          result,
+          packet,
+          modelId: resolution.modelId,
+          providerId: resolution.providerId,
+          stats,
+        }),
+      };
+    }
+
+    const memory = createKestrelMemory({
+      settings: {
+        aiApiKeys: args.settings.aiApiKeys,
+        embeddingModel: args.settings.embeddingModel ?? null,
+      },
+      env: args.env,
+    } satisfies CreateKestrelMemoryArgs);
+    const prepared = await prepareKestrelMemory({
+      memory,
+      userId: args.userId,
+      threadId: args.threadId,
+      settings: {
+        chatModel: args.settings.chatModel ?? null,
+        embeddingModel: args.settings.embeddingModel ?? null,
+      },
+      backfill: true,
+    });
+    const { processors: guardrails } = buildConversationGuardrails(
+      { aiApiKeys: args.settings.aiApiKeys, chatModel: args.settings.chatModel },
+      args.env,
+    );
+    const { entries: conversationScorers } = buildConversationScorers(
+      { aiApiKeys: args.settings.aiApiKeys, chatModel: args.settings.chatModel },
+      args.env,
+    );
+    const agent = createXauusdMastraAgent({
+      model: resolution.model,
+      memory,
+      inputProcessors: guardrails,
+      scorers: conversationScorers,
+    });
+    const requestContext = contextForRun(args, packet);
+    const output = await agent.stream(args.prompt, {
+      requestContext,
+      memory: prepared.callOptions,
+      toolChoice: 'auto',
+      activeTools: [...xauusdMastraConversationToolNames],
+      maxSteps: 3,
+      ...telemetryConfig({
+        functionId: 'mastra.xauusd.conversation',
+        metadata: { provider: resolution.providerId },
+      }),
+      ...(args.signal ? { abortSignal: args.signal } : {}),
+      tracingOptions: runTracingOptions({
+        runId: args.runId,
+        userId: args.userId,
+        threadId: args.threadId,
+        kind: args.telemetryKind ?? 'mastra_xauusd_poc',
+        tags: ['xauusd-conversation'],
+      }),
+    });
+
+    async function* textIter(): AsyncIterable<string> {
+      try {
+        for await (const chunk of output.textStream) {
+          if (args.signal?.aborted) {
+            throw args.signal.reason ?? new DOMException('Aborted', 'AbortError');
+          }
+          yield chunk;
+        }
+      } catch (error) {
+        await finishMastraRun({
+          userId: args.userId,
+          threadId: args.threadId,
+          runId: args.runId,
+          model: resolution?.modelId ?? 'unresolved',
+          providerId: resolution?.providerId ?? 'unresolved',
+          startedAt,
+          inputTokens: 0,
+          outputTokens: 0,
+          toolCalls: 0,
+          steps: 0,
+          outcome: mastraOutcomeForError(error, args.signal),
+          ...(args.telemetryKind ? { telemetryKind: args.telemetryKind } : {}),
+          error,
+        });
+        throw error;
+      }
+    }
+
+    const completion = (async () => {
+      const full = await output.getFullOutput();
+      const stats = getMastraGenerationStats(full);
+      const result: MastraGenerationResultLike = { text: full.text, totalUsage: full.totalUsage };
+      await finishMastraRun({
+        userId: args.userId,
+        threadId: args.threadId,
+        runId: args.runId,
+        model: resolution.modelId,
+        providerId: resolution.providerId,
+        startedAt,
+        ...stats,
+        outcome: 'success',
+        ...(args.telemetryKind ? { telemetryKind: args.telemetryKind } : {}),
+      });
+      return {
+        result,
+        packet,
+        modelId: resolution.modelId,
+        providerId: resolution.providerId,
+        stats,
+      };
+    })();
+
+    return { text: textIter(), completion };
+  };
+
+  if (getDiagnosticContext()) return runner();
+  return withDiagnostics(args.userId, args.threadId, runner, {
+    runId: args.runId,
+    deferCompletion: false,
+  });
 }
 
 /**

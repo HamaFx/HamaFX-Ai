@@ -27,12 +27,12 @@ async function loadCatalog(): Promise<RegressionCase[]> {
 }
 
 describe('offline regression catalog', () => {
-  it('contains exactly 50 unique, runnable case definitions', async () => {
+  it('contains exactly 55 unique, runnable case definitions', async () => {
     const cases = await loadCatalog();
     const ids = cases.map((item) => item.id);
 
-    expect(cases).toHaveLength(50);
-    expect(new Set(ids).size).toBe(50);
+    expect(cases).toHaveLength(55);
+    expect(new Set(ids).size).toBe(55);
     for (const item of cases) {
       expect(typeof item.id).toBe('string');
       expect(typeof item.prompt).toBe('string');

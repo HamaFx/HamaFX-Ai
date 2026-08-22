@@ -8,7 +8,9 @@ const {
   mockGetThread,
   mockWithRateLimit,
   mockRunMastraXauusdChat,
+  mockRunMastraCanonicalChatStreamService,
   mockRunMastraCanonicalChatService,
+  mockRunMastraXauusdConversationStreamChat,
   mockRunMastraModeChat,
   mockMastraCanonicalResponse,
   mockMastraChatResponse,
@@ -18,7 +20,9 @@ const {
   mockGetThread: vi.fn(),
   mockWithRateLimit: vi.fn(),
   mockRunMastraXauusdChat: vi.fn(),
+  mockRunMastraCanonicalChatStreamService: vi.fn(() => new Response('canonical', { status: 200 })),
   mockRunMastraCanonicalChatService: vi.fn(),
+  mockRunMastraXauusdConversationStreamChat: vi.fn(() => new Response('xauusd-stream', { status: 200 })),
   mockRunMastraModeChat: vi.fn(),
   mockMastraCanonicalResponse: vi.fn(() => new Response('canonical', { status: 200 })),
   mockMastraChatResponse: vi.fn(() => new Response('xauusd', { status: 200 })),
@@ -48,6 +52,7 @@ vi.mock('@/lib/env', () => ({
 
 vi.mock('@/lib/logger', () => ({
   createRequestLogger: () => ({ error: vi.fn(), info: vi.fn(), warn: vi.fn() }),
+  createCategorizedLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
 }));
 
 vi.mock('@/lib/services/mastra-chat-routing', () => ({
@@ -68,6 +73,12 @@ vi.mock('@/lib/services/mastra-chat', () => ({
 }));
 vi.mock('@/lib/services/mastra-canonical-chat', () => ({
   runMastraCanonicalChatService: mockRunMastraCanonicalChatService,
+}));
+vi.mock('@/lib/services/mastra-canonical-chat-stream', () => ({
+  runMastraCanonicalChatStreamService: mockRunMastraCanonicalChatStreamService,
+}));
+vi.mock('@/lib/services/mastra-chat-stream', () => ({
+  runMastraXauusdConversationStreamChat: mockRunMastraXauusdConversationStreamChat,
 }));
 vi.mock('@/lib/services/mastra-mode', () => ({
   runMastraModeChat: mockRunMastraModeChat,
@@ -193,10 +204,11 @@ describe('POST /api/chat Mastra boundary', () => {
     );
 
     expect(response.status).toBe(200);
-    expect(mockRunMastraCanonicalChatService).toHaveBeenCalledWith(
+    expect(mockRunMastraCanonicalChatStreamService).toHaveBeenCalledWith(
       expect.objectContaining({ userId: 'user-1', threadId: expect.any(String) }),
     );
     expect(mockRunMastraXauusdChat).not.toHaveBeenCalled();
+    expect(mockRunMastraCanonicalChatService).not.toHaveBeenCalled();
   });
 
   it('routes Quick and Standard symbol analysis to the shared Mastra mode workflow', async () => {
@@ -259,7 +271,7 @@ describe('POST /api/chat Mastra boundary', () => {
       { params: Promise.resolve(undefined) },
     );
 
-    expect(mockRunMastraCanonicalChatService).toHaveBeenCalledWith(
+    expect(mockRunMastraCanonicalChatStreamService).toHaveBeenCalledWith(
       expect.objectContaining({ modelOverride: 'mistral:mistral-small-latest' }),
     );
   });
@@ -286,6 +298,7 @@ describe('POST /api/chat Mastra boundary', () => {
       error: { code: 'READ_ONLY_REQUEST_REQUIRED' },
     });
     expect(mockRunMastraXauusdChat).not.toHaveBeenCalled();
+    expect(mockRunMastraCanonicalChatStreamService).not.toHaveBeenCalled();
     expect(mockRunMastraCanonicalChatService).not.toHaveBeenCalled();
   });
 

@@ -12,10 +12,6 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./agent": {
-      "types": "./dist/agent.d.ts",
-      "import": "./dist/agent.js"
-    },
     "./model": {
       "types": "./dist/model.d.ts",
       "import": "./dist/model.js"
@@ -68,10 +64,6 @@
       "types": "./dist/bot/index.d.ts",
       "import": "./dist/bot/index.js"
     },
-    "./multi-agent": {
-      "types": "./dist/multi-agent/index.d.ts",
-      "import": "./dist/multi-agent/index.js"
-    },
     "./portfolio": {
       "types": "./dist/portfolio.d.ts",
       "import": "./dist/portfolio.js"
@@ -83,10 +75,6 @@
     "./types": {
       "types": "./dist/types.d.ts",
       "import": "./dist/types.js"
-    },
-    "./planner": {
-      "types": "./dist/planner.d.ts",
-      "import": "./dist/planner.js"
     },
     "./verification": {
       "types": "./dist/verification.d.ts",
@@ -111,10 +99,6 @@
     "./embeddings": {
       "types": "./dist/embeddings.d.ts",
       "import": "./dist/embeddings.js"
-    },
-    "./title": {
-      "types": "./dist/title.d.ts",
-      "import": "./dist/title.js"
     },
     "./rag": {
       "types": "./dist/rag.d.ts",
@@ -149,6 +133,7 @@
     "prepublishOnly": "pnpm build",
     "eval": "tsx src/eval/runner.ts --cases",
     "mastra:dev": "mastra dev",
+    "mastra:studio": "node --conditions=react-server dist/mastra-v2/studio-server.js",
     "mastra:build": "mastra build",
     "mastra:start": "mastra start",
     "mastra:migrate": "mastra migrate",
@@ -166,8 +151,11 @@
     "@langfuse/client": "^5.5.3",
     "@langfuse/otel": "^5.5.3",
     "@mastra/core": "^1.60.0",
+    "@mastra/evals": "^1.9.0",
+    "@mastra/langfuse": "1.5.0",
     "@mastra/libsql": "^1.21.0",
     "@mastra/memory": "^1.27.0",
+    "@mastra/observability": "1.17.1",
     "@mastra/pg": "^1.21.0",
     "@mastra/server": "^1.60.0",
     "@opentelemetry/api": "^1.9.0",
@@ -184,7 +172,7 @@
     "@types/react": "^19.0.0",
     "@types/web-push": "^3.6.4",
     "eslint": "^9.17.0",
-    "mastra": "^1.25.1",
+    "mastra": "^1.26.0",
     "msw": "^2.14.6",
     "tsx": "^4.22.4",
     "typescript": "^7.0.2",

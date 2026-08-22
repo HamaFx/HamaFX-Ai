@@ -5,7 +5,7 @@
 
 ## Project Identity
 
-**Kestrel** is an open-source, multi-tenant, chat-driven AI trading copilot for **gold, forex, and crypto**: **XAUUSD** (primary), a canonical forex catalog, and supported Binance crypto pairs. It runs as a Next.js 16 PWA with a persistent Node.js worker daemon. The AI agent uses Vercel AI SDK v5 with 33 registered tools, domain-based model routing, and multi-agent committee deliberation.
+**Kestrel** is an open-source, multi-tenant, chat-driven AI trading copilot for **gold, forex, and crypto**: **XAUUSD** (primary), a canonical forex catalog, and supported Binance crypto pairs. It runs as a Next.js 16 PWA with a persistent Node.js worker daemon. The AI agent runs on Mastra (agents + durable workflows) over the Vercel AI SDK model transport, with 31 read-only tool definitions, domain-based model routing, and verified-report workflows.
 
 - **License**: Apache-2.0
 - **Status**: In production on Vercel + GCE VM. Phases 0–9 shipped (incl. multi-tenant v2.0). UX Upgrade Plan Phases A/B/C/D/E shipped.
@@ -31,10 +31,14 @@
 | DB | Postgres (Supabase) + pgvector. Drizzle ORM (50 tables across 35 schema definition files) |
 | Local DB | PGlite (embedded Postgres, zero setup) |
 | Charts | TradingView lightweight-charts v5 |
-| Tests | Vitest (228 test files). Playwright E2E (16 spec files). |
+| Tests | Vitest (233 test files). Playwright E2E (16 spec files). |
 | Lint | ESLint flat config in `packages/config/eslint` |
 | TypeScript | Strict mode with `noUncheckedIndexedAccess`; the web app currently opts out of `exactOptionalPropertyTypes` for compatibility |
-| AI Tools | 33 registered tool definitions in `packages/ai/src/tools/` |
+| AI Tools | 31 registered tool definitions in `packages/ai/src/tools/` (read-only; mutations run through the gated Mastra confirmation workflows) |
+| Semantic routing | Default on (`AI_SEMANTIC_ROUTING_ENABLED=false` to disable); LLM classification with keyword fallback |
+| Guardrails | UnicodeNormalizer + PromptInjectionDetector on all agents incl. text-runner (extraction/routing) |
+| Custom scorers | Grounding + citation scorers always-on (deterministic, no LLM judge); prebuilt scorers sampled (5% conversation, 10% research) |
+| Advisory lock | Postgres advisory lock on full-analysis claim path for multi-worker safety |
 | Architecture snapshot | `docs/architecture-explorer.html` + `docs/architecture-explorer.json` — static reference artifacts |
 | Request proxy | 190 lines. Handles auth, CSRF, CSP, request-id |
 
@@ -136,7 +140,7 @@ Kestrel/
 │   ├── web/              # Next.js 16 PWA (frontend + API routes)
 │   └── worker/           # Node.js daemon (SignalR consumer, tick processing, job runner)
 ├── packages/
-│   ├── ai/               # AI agent core — chat, 33 registered tools, routing, memory, persistence
+│   ├── ai/               # AI agent core — Mastra agents/workflows, 31 read-only tools, routing, memory, persistence
 │   ├── data/             # Market data adapters — price, candles, news, failover, caching
 │   ├── db/               # Drizzle schema (50 tables across 35 files) + Postgres/PGlite client
 │   ├── indicators/       # Technical indicators — SMA, EMA, RSI, MACD, SMC structure
@@ -157,7 +161,7 @@ Kestrel/
 ```
 Browser (PWA)
     │
-    ├── /api/chat ──▶ runChat() ──▶ streamText + 33 registered tools
+    ├── /api/chat ──▶ Mastra-owned chat (canonical agent / mode workflows / XAUUSD agent / mutation drafts)
     │                    │
     │                    ├── routeTurn() ──▶ pick model (fundamental/technical/summary/vision)
     │                    ├── runPlanner() ──▶ plan-then-act pre-step

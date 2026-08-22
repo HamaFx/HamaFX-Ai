@@ -13,6 +13,7 @@ import { getUserWithSettings } from '@kestrel/db';
 import type { UIMessage } from 'ai';
 
 import { getServerEnv } from '@/lib/env';
+import { maybeGenerateThreadTitle } from '@/lib/services/mastra-thread-title';
 
 export interface RunMastraModeChatInput {
   userId: string;
@@ -80,6 +81,12 @@ export async function runMastraModeChat(
     };
     const persisted = await appendAssistantMessage(input.userId, input.threadId, assistantMessage, {
       idempotencyKey: `mastra-mode:${input.threadId}:${input.userMessage.id}:assistant`,
+    });
+    void maybeGenerateThreadTitle({
+      userId: input.userId,
+      threadId: input.threadId,
+      firstUser: input.prompt,
+      firstAssistant: result.finalText,
     });
     const observedCost = result.totalCostUsd;
     await budget.reconcile(observedCost);

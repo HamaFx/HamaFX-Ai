@@ -30,6 +30,7 @@ import type { WorkflowRunState } from '@mastra/core/workflows';
 import type { WorkflowsStorage } from '@mastra/core/storage';
 import { createCategorizedLogger } from '@kestrel/shared/logger';
 
+import { tryWorkflowClaimLock } from '../advisory-lock';
 import { getKestrelMastra } from '../instance';
 
 const flog = createCategorizedLogger('ai', { component: 'mastra-full-analysis' });
@@ -215,6 +216,21 @@ export async function claimNextFullAnalysisRun(
   const store = await workflowsStore();
   if (!store) return null;
 
+  // Acquire a Postgres advisory lock so concurrent workers don't both
+  // claim the same pending run. Best-effort: on PGlite or failure,
+ // falls back to the read-verify-write pattern below.
+  const releaseLock = await tryWorkflowClaimLock(FULL_ANALYSIS_WORKFLOW_ID);
+  try {
+    return await claimNextFullAnalysisRunInner(workerRunId, store);
+  } finally {
+    releaseLock();
+  }
+}
+
+async function claimNextFullAnalysisRunInner(
+  workerRunId: string,
+  store: WorkflowsStorage,
+): Promise<FullAnalysisClaim | null> {
   const { runs } = await store.listWorkflowRuns({
     workflowName: FULL_ANALYSIS_WORKFLOW_ID,
     status: 'pending',

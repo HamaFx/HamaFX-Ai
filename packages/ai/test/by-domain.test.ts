@@ -33,7 +33,8 @@ describe('domainToolFilter', () => {
     expect(tools.get_news).toBeDefined();
     expect(tools.get_calendar).toBeDefined();
     expect(tools.get_journal_stats).toBeDefined();
-    expect(tools.summarize_thread).toBeDefined();
+    // summarize_thread was removed in Phase 9 (legacy committee plane).
+    expect(tools.summarize_thread).toBeUndefined();
     expect(tools.get_candles).toBeUndefined();
   });
 

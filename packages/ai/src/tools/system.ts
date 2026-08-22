@@ -23,7 +23,6 @@ import { runSystemActionTool } from './run-system-action';
 import { getPortfolioSnapshotTool } from './get-portfolio-snapshot';
 import { getSocialSentimentTool } from './get-social-sentiment';
 import { verifyCallTool } from './verify-call';
-import { conveneCommitteeTool } from './convene-committee';
 import { replaySetupTool } from './replay-setup';
 import { toolRegistry } from './registry';
 
@@ -33,7 +32,6 @@ const systemTools = [
   ['get_portfolio_snapshot', getPortfolioSnapshotTool],
   ['get_social_sentiment', getSocialSentimentTool],
   ['verify_call', verifyCallTool],
-  ['convene_committee', conveneCommitteeTool],
   ['replay_setup', replaySetupTool],
 ] as const;
 

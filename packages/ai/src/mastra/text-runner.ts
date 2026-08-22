@@ -1,9 +1,45 @@
 import { Agent } from '@mastra/core/agent';
 import { RequestContext } from '@mastra/core/request-context';
+import { PromptInjectionDetector, UnicodeNormalizer, type InputProcessorOrWorkflow } from '@mastra/core/processors';
 import type { LanguageModel, ModelMessage } from 'ai';
 import type { z } from 'zod';
 
+import { runTracingOptions } from '../mastra-v2/telemetry';
 import { getMastraGenerationStats } from './telemetry';
+
+/** Shared Unicode normalizer applied to every text-runner agent. */
+const NORMALIZER = new UnicodeNormalizer({
+  stripControlChars: true,
+  preserveEmojis: true,
+  collapseWhitespace: true,
+  trim: true,
+});
+
+/**
+ * Build input processors for the text-runner. The UnicodeNormalizer is
+ * always applied. When a model is available, a PromptInjectionDetector with
+ * the `block` strategy is added so injection attempts in extraction/routing
+ * prompts are rejected before reaching the model — defense-in-depth on top
+ * of the route-level regex gate.
+ */
+function buildInputProcessors(model?: LanguageModel): InputProcessorOrWorkflow[] {
+  if (!model) return [NORMALIZER];
+  try {
+    const detector = new PromptInjectionDetector({
+      model: model as never,
+      threshold: 0.7,
+      strategy: 'block',
+      detectionTypes: ['injection', 'jailbreak', 'system-override'],
+      lastMessageOnly: true,
+      includeScores: false,
+    });
+    return [NORMALIZER, detector];
+  } catch {
+    // Detector construction can fail on edge-case model shapes; degrade
+    // to normalizer-only rather than blocking the extraction call.
+    return [NORMALIZER];
+  }
+}
 
 export interface MastraTextRunArgs {
   task: string;
@@ -52,6 +88,7 @@ export async function runMastraText(args: MastraTextRunArgs): Promise<MastraText
     description: 'Bounded Kestrel generation executed through Mastra.',
     model: args.model,
     instructions: args.system,
+    inputProcessors: buildInputProcessors(args.model),
     ...(args.tools ? { tools: args.tools } : {}),
   } as never;
   const agent = new Agent(agentOptions);
@@ -62,6 +99,17 @@ export async function runMastraText(args: MastraTextRunArgs): Promise<MastraText
     maxSteps: args.tools ? 4 : 1,
     ...(args.maxOutputTokens ? { maxOutputTokens: args.maxOutputTokens } : {}),
     ...(args.signal ? { abortSignal: args.signal } : {}),
+    ...(args.runId && args.userId && args.threadId
+      ? {
+          tracingOptions: runTracingOptions({
+            runId: args.runId,
+            userId: args.userId,
+            threadId: args.threadId,
+            kind: args.task,
+            tags: ['text-runner'],
+          }),
+        }
+      : {}),
   });
   const stats = getMastraGenerationStats(result);
   return {
@@ -86,6 +134,7 @@ export async function runMastraStructured<TOutput>(
     description: 'Bounded structured Kestrel generation executed through Mastra.',
     model: args.model,
     instructions: args.system,
+    inputProcessors: buildInputProcessors(args.model),
   });
   const result = await agent.generate(args.prompt, {
     requestContext,
@@ -97,6 +146,17 @@ export async function runMastraStructured<TOutput>(
     },
     ...(args.maxOutputTokens ? { maxOutputTokens: args.maxOutputTokens } : {}),
     ...(args.signal ? { abortSignal: args.signal } : {}),
+    ...(args.runId && args.userId && args.threadId
+      ? {
+          tracingOptions: runTracingOptions({
+            runId: args.runId,
+            userId: args.userId,
+            threadId: args.threadId,
+            kind: args.task,
+            tags: ['text-runner'],
+          }),
+        }
+      : {}),
   });
   const stats = getMastraGenerationStats(result);
   return {

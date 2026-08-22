@@ -32,6 +32,10 @@ vi.mock('@/lib/services/mastra-xauusd', () => ({
   runMastraXauusdResearch: mocks.runMastraXauusdResearch,
   runMastraXauusdConversation: mocks.runMastraXauusdConversation,
 }));
+// Best-effort title generation is fire-and-forget and not under test here.
+vi.mock('@/lib/services/mastra-thread-title', () => ({
+  maybeGenerateThreadTitle: vi.fn(async () => {}),
+}));
 
 const input = {
   userId: 'user-1',

@@ -19,10 +19,12 @@
 import { Mastra } from '@mastra/core';
 import type { IMastraLogger } from '@mastra/core/logger';
 import type { MastraCompositeStore } from '@mastra/core/storage';
+import type { ObservabilityEntrypoint } from '@mastra/core/observability';
 import { createCategorizedLogger } from '@kestrel/shared/logger';
 
 import { MastraPinoLogger } from './logger';
 import { createMastraStorage, initializeMastraStorage, type MastraStorageKind } from './storage';
+import { createMastraObservability } from './telemetry';
 
 const ilog = createCategorizedLogger('ai', { component: 'mastra-instance' });
 
@@ -34,6 +36,12 @@ export interface KestrelMastraOptions {
   storage?: MastraCompositeStore;
   /** Override logger (tests may pass a silent adapter). */
   logger?: IMastraLogger | false;
+  /**
+   * Override observability (tests may inject a no-op or a custom entrypoint).
+   * Defaults to a Langfuse-backed `Observability` when `LANGFUSE_*` env vars
+   * are configured, otherwise Mastra's built-in no-op.
+   */
+  observability?: ObservabilityEntrypoint | false;
   /**
    * Run Mastra's internal workers (scheduler, event processing) inside this
    * process. The web app must keep this false so scheduled workflows never
@@ -79,18 +87,30 @@ export function createKestrelMastra(options: KestrelMastraOptions = {}): Kestrel
   });
 
   const logger = options.logger === undefined ? new MastraPinoLogger() : options.logger;
-  // The web app must never run Mastra's internal workers; the standalone
-  // server process enables them explicitly via `runWorkers: true`.
+  // Observability: Langfuse-backed when configured (Phase 8), otherwise the
+  // built-in no-op. Tests may pass `false` to keep instances hermetic.
+  const observability =
+    options.observability === false
+      ? undefined
+      : (options.observability ?? createMastraObservability(env));
+  const baseConfig: {
+    storage: MastraCompositeStore;
+    logger: IMastraLogger | false;
+    server: { port: number; host: string };
+    environment: string;
+    observability?: unknown;
+    workers?: false;
+  } = {
+    storage: storageResult.storage,
+    logger,
+    server,
+    environment: env.NODE_ENV ?? 'development',
+  };
+  if (observability !== undefined) baseConfig['observability'] = observability;
   const instance =
     options.runWorkers === true
-      ? new Mastra({ storage: storageResult.storage, logger, server, environment: env.NODE_ENV ?? 'development' })
-      : new Mastra({
-          storage: storageResult.storage,
-          logger,
-          server,
-          environment: env.NODE_ENV ?? 'development',
-          workers: false,
-        });
+      ? new Mastra(baseConfig as never)
+      : new Mastra({ ...baseConfig, workers: false } as never);
 
   return { instance, storageKind: storageResult.kind };
 }

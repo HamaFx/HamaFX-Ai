@@ -4,6 +4,11 @@
 // authentication, persistence, budgets, and the UI transport; Mastra owns
 // agent selection, workflows, tool loops, structured research, and synthesis.
 
+import {
+  classifyMutationRequest,
+  isMastraMutationEnabled,
+  MutationExtractionError,
+} from '@kestrel/ai/mastra';
 import type { UIMessage } from 'ai';
 import { z } from 'zod';
 
@@ -22,9 +27,12 @@ import {
   withDiagnostics,
   withRateLimit,
 } from '@/lib/services/api-boundary';
+import { startMutationDraft } from '@/lib/services/mastra-mutation-draft';
 import { runMastraCanonicalChatService } from '@/lib/services/mastra-canonical-chat';
+import { runMastraCanonicalChatStreamService } from '@/lib/services/mastra-canonical-chat-stream';
 import { mastraCanonicalResponse } from '@/lib/services/mastra-canonical-response';
 import { runMastraXauusdChat } from '@/lib/services/mastra-chat';
+import { runMastraXauusdConversationStreamChat } from '@/lib/services/mastra-chat-stream';
 import { mastraChatResponse } from '@/lib/services/mastra-chat-response';
 import {
   extractMastraSymbol,
@@ -149,8 +157,34 @@ export const POST = withAuth<void>(async (req, { user }) => {
   const resolvedMode = resolveMode(analysisMode, userText);
 
   // Mutations and injection-like requests are intentionally rejected rather
-  // than handed to an old fallback. Mutation workflows remain a separate,
-  // explicitly confirmed capability and are not part of chat research.
+  // than handed to an old fallback. When the operator enables the mutation
+  // capability, a clearly-mutation prompt is routed to the confirmation
+  // workflow instead: classify → extract (fast model) → draft → suspend with
+  // a single-use token. Nothing is written until the user confirms.
+  if (isMastraMutationEnabled()) {
+    const mutationKind = classifyMutationRequest(userText);
+    if (mutationKind !== null) {
+      try {
+        const draft = await startMutationDraft({
+          userId: user.userId,
+          threadId: body.threadId,
+          userText,
+          kind: mutationKind,
+        });
+        return Response.json(draft);
+      } catch (error) {
+        if (error instanceof MutationExtractionError) {
+          return errorJson('MUTATION_EXTRACTION_FAILED', error.message, 422);
+        }
+        log.error(
+          { err: String(error), threadId: body.threadId, mutation: mutationKind },
+          'Mutation draft failed',
+        );
+        return errorJson('MUTATION_DRAFT_FAILED', 'Could not prepare this mutation for confirmation.', 502);
+      }
+    }
+  }
+
   if (!isReadOnlySafePrompt(userText)) {
     return errorJson(
       'READ_ONLY_REQUEST_REQUIRED',
@@ -206,16 +240,32 @@ export const POST = withAuth<void>(async (req, { user }) => {
     // Deep XAUUSD analysis and verified-report follow-ups retain their
     // specialized packet/report verifier. This path is always preferred over
     // generic chat when the request is clearly about XAUUSD.
+    //
+    // Verified reports (kind === 'research') stay buffered until verification
+    // completes. Ordinary XAUUSD conversation (kind === 'conversation') streams
+    // provider tokens immediately.
     if (
       (symbol === 'XAUUSD' && (isMastraXauusdCandidate(userText) || hasReportFollowup)) ||
       (resolvedMode === 'single' && symbol === 'XAUUSD' && priorReport !== null)
     ) {
+      const kind = mastraXauusdChatKind(userText, priorReport !== null);
+      if (kind === 'conversation') {
+        return runMastraXauusdConversationStreamChat({
+          userId: user.userId,
+          threadId: body.threadId,
+          userMessage,
+          prompt: userText,
+          modelOverride: body.modelOverride ?? null,
+          signal,
+          ...(priorReport ? { priorReport } : {}),
+        });
+      }
       const run = await runMastraXauusdChat({
         userId: user.userId,
         threadId: body.threadId,
         userMessage,
         prompt: userText,
-        kind: mastraXauusdChatKind(userText, priorReport !== null),
+        kind,
         modelOverride: body.modelOverride ?? null,
         signal,
         ...(priorReport ? { followup: true, priorReport } : {}),
@@ -258,9 +308,9 @@ export const POST = withAuth<void>(async (req, { user }) => {
       return mastraModeResponse(run);
     }
 
-    // Ordinary symbol-free conversation is handled by the canonical Mastra
-    // agent, which owns the reviewed read-only Kestrel tool allowlist.
-    const run = await runMastraCanonicalChatService({
+    // Ordinary symbol-free conversation is handled by the streaming canonical
+    // Mastra agent, which owns the reviewed read-only Kestrel tool allowlist.
+    return runMastraCanonicalChatStreamService({
       userId: user.userId,
       threadId: body.threadId,
       userMessage,
@@ -268,7 +318,6 @@ export const POST = withAuth<void>(async (req, { user }) => {
       ...(customInstructions ? { customInstructions } : {}),
       signal,
     });
-    return mastraCanonicalResponse(run);
   } catch (error) {
     if (error instanceof BudgetExceededError) {
       return errorJson(

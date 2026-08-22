@@ -21,7 +21,6 @@
 import './services';
 
 export { reserveTurnBudget, type BudgetHandle } from './budget-reservation';
-export { type RunChatArgs } from './types';
 export { toolRegistry, type ToolRegistry } from './tools';
 export {
   getThreadStateHandler,
@@ -80,12 +79,6 @@ export {
   DEFAULT_MAX_DAILY_USD,
   BudgetExceededError,
 } from './cost';
-export {
-  generateTitle,
-  deterministicFallbackTitle,
-  type GenerateTitleArgs,
-  type GenerateTitleResult,
-} from './title';
 export { embedTexts, type EmbedTextsArgs, type EmbedResult } from './embeddings';
 export {
   upsertArticles,
@@ -241,8 +234,7 @@ export {
 export { sendWebPush, type SendWebPushResult, type VapidEnv } from './push/send';
 
 // Phase 7a — domain routing + rolling thread summary
-export { routeTurn, type RoutingDecision, type RoutingDomain } from './routing';
-export { compactThread, type CompactResult } from './memory/thread-summary';
+export { resolveSemanticRoutingConfig, routeTurn, type RoutingDecision, type RoutingDomain } from './routing';
 
 // Phase 7b — memory index
 export {
@@ -256,8 +248,7 @@ export {
 } from './memory/memory-index';
 export { runMemoryQuery, memoryRowToItem, type RunMemoryQueryArgs } from './rag';
 
-// Phase 7c — planner, citation enforcement, tool catalogue
-export { runPlanner, type PlanResult, type PlannerEnv } from './planner';
+// Phase 7c — citation enforcement, tool catalogue
 export { enforceCitations } from './verification';
 export {
   buildTrainingRecords,

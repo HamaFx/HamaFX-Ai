@@ -32,6 +32,7 @@ import {
 } from '@kestrel/ai';
 import {
   claimNextFullAnalysisRun,
+  maybeGenerateThreadTitle,
   completeFullAnalysisRun,
   failFullAnalysisRun,
   purgeOldFullAnalysisRuns,
@@ -201,6 +202,14 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
           assistant,
           { idempotencyKey: `analysis-job:${runId}:assistant` },
         );
+
+        void maybeGenerateThreadTitle({
+          userId: payload.userId,
+          threadId: payload.threadId,
+          firstUser: userText,
+          firstAssistant: modeResult.finalText,
+          env,
+        });
 
         await completeFullAnalysisRun(runId, {
           finalText: modeResult.finalText,

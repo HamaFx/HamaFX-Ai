@@ -36,11 +36,41 @@
 // so /settings/usage can break down spend per domain.
 
 import type { UIMessage } from 'ai';
+import type { UserSettingsRow } from '@kestrel/db/schema';
+import { derivePlannerModel } from './model';
 import type { ResolveModelEnv } from './model';
 import { classifyTurnLLM } from './semantic-routing';
 import { createCategorizedLogger } from '@kestrel/shared/logger';
 
 const routingLog = createCategorizedLogger('ai', { component: 'routing' });
+
+/**
+ * Semantic routing is on by default. Set AI_SEMANTIC_ROUTING_ENABLED=false
+ * to disable the LLM classification call and fall back to keyword-only
+ * routing (zero additional cost per turn).
+ */
+const SEMANTIC_ROUTING_ENABLED =
+  (process.env.AI_SEMANTIC_ROUTING_ENABLED ?? 'true') !== 'false';
+
+/**
+ * Build the semantic routing config for `routeTurn()` when enabled and a
+ * planner model can be resolved from the user's BYOK settings. Returns
+ * null when disabled or no model is available, so `routeTurn()` degrades
+ * to keyword scoring.
+ *
+ * This helper lets callers pass `...resolveSemanticRoutingConfig(...)`
+ * into `routeTurn()` without branching on env vars.
+ */
+export function resolveSemanticRoutingConfig(
+  userSettings: Pick<UserSettingsRow, 'aiApiKeys' | 'chatModel'>,
+  env: ResolveModelEnv,
+  signal?: AbortSignal | null,
+): RouteTurnOptions['semanticRouting'] | null {
+  if (!SEMANTIC_ROUTING_ENABLED) return null;
+  const modelId = derivePlannerModel(userSettings, env);
+  if (!modelId) return null;
+  return { modelId, env, ...(signal ? { signal } : {}) };
+}
 
 // P2-1 — Keyword patterns externalized to routing-keywords.ts.
 // Keep the config auditable and tunable without modifying domain logic.

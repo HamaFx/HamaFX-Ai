@@ -25,7 +25,6 @@ import { getCalendarTool } from './get-calendar';
 import { setAlertTool } from './set-alert';
 import { searchKnowledgeTool } from './search-knowledge';
 import { shareSnapshotTool } from './share-snapshot';
-import { summarizeThreadTool } from './summarize-thread';
 import { toolRegistry } from './registry';
 
 const journalTools = [
@@ -36,7 +35,6 @@ const journalTools = [
   ['set_alert', setAlertTool],
   ['search_knowledge', searchKnowledgeTool],
   ['share_snapshot', shareSnapshotTool],
-  ['summarize_thread', summarizeThreadTool],
 ] as const;
 
 for (const [name, tool] of journalTools) {

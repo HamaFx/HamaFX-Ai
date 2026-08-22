@@ -78,6 +78,7 @@ vi.mock('@kestrel/ai/mastra', () => ({
   extractSymbolFromPrompt: vi.fn(() => 'XAUUSD'),
   isSafeSymbolResearchPrompt: vi.fn(() => true),
   runMastraMode: mockRunMastraMode,
+  maybeGenerateThreadTitle: vi.fn(async () => {}),
 }));
 
 vi.mock('@kestrel/ai', () => ({

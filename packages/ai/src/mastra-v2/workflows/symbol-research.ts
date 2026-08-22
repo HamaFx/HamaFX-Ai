@@ -22,7 +22,9 @@
 import type { Mastra } from '@mastra/core';
 import { Agent } from '@mastra/core/agent';
 import type { AgentMemoryOption } from '@mastra/core/agent';
+import type { InputProcessorOrWorkflow } from '@mastra/core/processors';
 import type { MastraMemory } from '@mastra/core/memory';
+import type { MastraScorer } from '@mastra/core/evals';
 import { RequestContext } from '@mastra/core/request-context';
 import { Workflow, createStep } from '@mastra/core/workflows';
 import type { LanguageModel } from 'ai';
@@ -180,6 +182,10 @@ export interface SymbolResearchWorkflowDeps {
   signal?: AbortSignal;
   /** Shared Mastra instance for run-snapshot persistence (optional; in-memory when absent). */
   mastra?: Mastra;
+  /** Phase 5 — input processors (Unicode normalizer + prompt-injection detector). */
+  inputProcessors?: Array<InputProcessorOrWorkflow>;
+  /** Phase 6 — sampled live scorers for research agents (from `buildResearchScorers`). */
+  scorers?: Record<string, { scorer: MastraScorer<string, any, any, any>; sampling?: { type: 'ratio'; rate: number } }>;
 }
 
 function specialistInstructions(
@@ -228,6 +234,8 @@ function createAgent(
   id: string,
   instructions: string,
   memory?: MastraMemory,
+  inputProcessors?: Array<InputProcessorOrWorkflow>,
+  scorers?: Record<string, { scorer: MastraScorer<string, any, any, any>; sampling?: { type: 'ratio'; rate: number } }>,
 ) {
   return new Agent({
     id,
@@ -236,7 +244,9 @@ function createAgent(
     model,
     instructions,
     requestContextSchema: REQUEST_CONTEXT_SCHEMA,
+    ...(inputProcessors && inputProcessors.length > 0 ? { inputProcessors } : {}),
     ...(memory ? { memory } : {}),
+    ...(scorers && Object.keys(scorers).length > 0 ? { scorers } : {}),
   });
 }
 
@@ -330,6 +340,8 @@ export function createSymbolResearchWorkflow(
             `kestrel-mastra-${name}`,
             specialistInstructions(name, inputData.packet),
             deps.memory,
+            deps.inputProcessors,
+            deps.scorers,
           );
           const result = await agent.generate(inputData.prompt, {
             requestContext: contextWithPacket(requestContext as RequestContext<ModeRequestContext>, inputData.packet),
@@ -453,6 +465,8 @@ export function createSymbolResearchWorkflow(
           'kestrel-mastra-decision',
           fusionInstructions(packet, opinions),
           deps.memory,
+          deps.inputProcessors,
+          deps.scorers,
         );
         const fusionResult = await fusionAgent.generate(prompt, {
           requestContext: contextWithPacket(requestContext as RequestContext<ModeRequestContext>, packet),

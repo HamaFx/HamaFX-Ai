@@ -431,6 +431,13 @@ export async function main(): Promise<void> {
   // Silently skipped when LANGFUSE_* env vars are not set.
   initLangfuse({ service: 'worker' });
 
+  // Eagerly initialize Mastra storage schema so the first workflow run
+  // doesn't pay the one-time DDL cost. Non-fatal: lazy init retries.
+  const { initializeKestrelMastra } = await import('@kestrel/ai/mastra');
+  await initializeKestrelMastra().catch((err: unknown) => {
+    log.warn('Mastra storage init failed (non-fatal; lazy init will retry)', { err: String(err) });
+  });
+
   console.log(
     [
       '██╗  ██╗███████╗███████╗████████╗██████╗ ███████╗██╗',
@@ -505,6 +512,12 @@ export async function main(): Promise<void> {
     });
     onShutdown(() => flushSentry(2_000));
     onShutdown(() => shutdownLangfuse());
+    // Flush Mastra observability exporters (Langfuse traces) before exit
+    // so in-flight spans are not lost on process termination.
+    onShutdown(async () => {
+      const { flushMastraObservability, getKestrelMastra } = await import('@kestrel/ai/mastra');
+      await flushMastraObservability(getKestrelMastra().instance).catch(() => {});
+    });
   } catch (err) {
     // STAB-03: Clean up worker resources if post-startup initialisation
     // fails. Without this, internal timers (heartbeat, flush, batch)

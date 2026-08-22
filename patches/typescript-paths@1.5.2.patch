@@ -1,0 +1,136 @@
+diff --git a/lib/esm/index.js b/lib/esm/index.js
+index 453ed92882f87ac9f85ac6eda3934f13ca5bed9c..2c1acb32f0d9f35da46ac2867e3772c14b6af1d1 100644
+--- a/lib/esm/index.js
++++ b/lib/esm/index.js
+@@ -2,6 +2,12 @@ import path from 'path';
+ import ts from 'typescript';
+ import fs from 'fs';
+ import Module, { builtinModules } from 'module';
++const tsSys = ts.sys || {
++  fileExists: (filePath) => fs.existsSync(filePath),
++  getCurrentDirectory: () => process.cwd(),
++  readFile: (filePath) => fs.readFileSync(filePath, 'utf-8'),
++};
++
+ 
+ let LogLevel = /*#__PURE__*/function (LogLevel) {
+   LogLevel[LogLevel["None"] = 0] = "None";
+@@ -107,8 +113,14 @@ function createLogger({
+ function getTsConfig({
+   tsConfigPath,
+   log = createLogger(),
+-  host = ts.sys
++  host = tsSys
+ }) {
++  // TypeScript 7 removed ts.readConfigFile (and friends); degrade gracefully
++  // (alias resolution disabled) instead of crashing the Mastra CLI bundler.
++  if (typeof ts.readConfigFile !== "function") {
++    log(LogLevel.Warn, "typescript-paths: TypeScript 7+ detected; path alias resolution disabled.");
++    return undefined;
++  }
+   const {
+     error,
+     config
+@@ -305,17 +317,19 @@ function createHandler({
+   falllback
+ } = {}) {
+   if (!tsConfigPath) {
+-    if (searchPath && searchPath instanceof Array) {
+-      tsConfigPath = searchPath.map(p => ts.findConfigFile(p, ts.sys.fileExists)).filter(v => Boolean(v));
+-    } else {
+-      tsConfigPath = ts.findConfigFile(searchPath || ts.sys.getCurrentDirectory(), ts.sys.fileExists) || [];
++    if (typeof ts.findConfigFile === "function") {
++      if (searchPath && searchPath instanceof Array) {
++        tsConfigPath = searchPath.map(p => ts.findConfigFile(p, tsSys.fileExists)).filter(v => Boolean(v));
++      } else {
++        tsConfigPath = ts.findConfigFile(searchPath || tsSys.getCurrentDirectory(), tsSys.fileExists) || [];
++      }
+     }
+   }
+   const host = {
+-    ...ts.sys,
++    ...tsSys,
+     fileExists(filename) {
+       if (filename.endsWith(ts.Extension.Dts)) return false;
+-      return ts.sys.fileExists(filename);
++      return tsSys.fileExists(filename);
+     }
+   };
+   const services = [];
+@@ -395,7 +409,7 @@ function createHandler({
+       }
+       const config = typeof configPayloadOrPath === "string" ? getTsConfig({
+         tsConfigPath: configPayloadOrPath,
+-        host: ts.sys,
++        host: tsSys,
+         log
+       }) : configPayloadOrPath;
+       if (!config) {
+diff --git a/lib/index.js b/lib/index.js
+index e57165dcdc3dd02fa73ad4ad8975ab4ca96ddd05..7dc84f58fddffee3ff9482658919575c00e252eb 100644
+--- a/lib/index.js
++++ b/lib/index.js
+@@ -4,6 +4,12 @@ var path = require('path');
+ var ts = require('typescript');
+ var fs = require('fs');
+ var Module = require('module');
++const tsSys = ts.sys || {
++  fileExists: (filePath) => fs.existsSync(filePath),
++  getCurrentDirectory: () => process.cwd(),
++  readFile: (filePath) => fs.readFileSync(filePath, 'utf-8'),
++};
++
+ 
+ let LogLevel = /*#__PURE__*/function (LogLevel) {
+   LogLevel[LogLevel["None"] = 0] = "None";
+@@ -109,8 +115,14 @@ function createLogger({
+ function getTsConfig({
+   tsConfigPath,
+   log = createLogger(),
+-  host = ts.sys
++  host = tsSys
+ }) {
++  // TypeScript 7 removed ts.readConfigFile (and friends); degrade gracefully
++  // (alias resolution disabled) instead of crashing the Mastra CLI bundler.
++  if (typeof ts.readConfigFile !== "function") {
++    log(LogLevel.Warn, "typescript-paths: TypeScript 7+ detected; path alias resolution disabled.");
++    return undefined;
++  }
+   const {
+     error,
+     config
+@@ -307,17 +319,19 @@ function createHandler({
+   falllback
+ } = {}) {
+   if (!tsConfigPath) {
+-    if (searchPath && searchPath instanceof Array) {
+-      tsConfigPath = searchPath.map(p => ts.findConfigFile(p, ts.sys.fileExists)).filter(v => Boolean(v));
+-    } else {
+-      tsConfigPath = ts.findConfigFile(searchPath || ts.sys.getCurrentDirectory(), ts.sys.fileExists) || [];
++    if (typeof ts.findConfigFile === "function") {
++      if (searchPath && searchPath instanceof Array) {
++        tsConfigPath = searchPath.map(p => ts.findConfigFile(p, tsSys.fileExists)).filter(v => Boolean(v));
++      } else {
++        tsConfigPath = ts.findConfigFile(searchPath || tsSys.getCurrentDirectory(), tsSys.fileExists) || [];
++      }
+     }
+   }
+   const host = {
+-    ...ts.sys,
++    ...tsSys,
+     fileExists(filename) {
+       if (filename.endsWith(ts.Extension.Dts)) return false;
+-      return ts.sys.fileExists(filename);
++      return tsSys.fileExists(filename);
+     }
+   };
+   const services = [];
+@@ -397,7 +411,7 @@ function createHandler({
+       }
+       const config = typeof configPayloadOrPath === "string" ? getTsConfig({
+         tsConfigPath: configPayloadOrPath,
+-        host: ts.sys,
++        host: tsSys,
+         log
+       }) : configPayloadOrPath;
+       if (!config) {

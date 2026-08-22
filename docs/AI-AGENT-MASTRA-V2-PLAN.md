@@ -15,7 +15,7 @@
 | D3 | Memory | **Full Mastra memory**: thread message history + working memory (preferences) + observational memory + semantic recall via BYOK embeddings, scoped `resourceId = userId`, `thread = threadId` | Replaces custom `memory-context.ts` and rolling compaction on Mastra paths with the framework's native, tested implementation. |
 | D4 | Guardrails | **LLM-based `PromptInjectionDetector` + `UnicodeNormalizer` on ALL chat paths** (fast-tier resolved model) | Replaces regex-only injection safety with real detection; normalizer removes Unicode/control-char bypasses. |
 | D5 | Committees | **Mastra Workflow as the primary primitive** (specialists as steps); **Network deferred** to a gated future capability | Workflow is deterministic, matches the strict Full-mode no-partial-result contract, supports per-step retries/scorers/time-travel. Network's autonomous delegation weakens those guarantees and stays gated behind evaluation (roadmap Phase 8 exit criteria). |
-| D6 | Mastra server/Studio | **Dev AND prod** (separate `mastra` process in Docker alongside the worker) | Traces UI, memory viewer, workflow control, and `mastra api` CLI available in operations. |
+| D6 | Mastra server/Studio | **Shipped via a standalone server** (`pnpm --filter @kestrel/ai mastra:studio` → `:4111`) — Studio serves the real instance (storage, traces, memory, run snapshots) without the CLI bundler | The `mastra` CLI cannot bundle this repo's config: its rollup bundle inlines the workspace graph (pino, drizzle, …) and the post-bundle validation stubs externals to `{}`, crashing on module-scope `pino(...)`; the 1.x CLI is also on a separate release track from core 1.60. `mastra-v2/studio-server.ts` bypasses the CLI entirely — it calls `createNodeServer()` from `@mastra/deployer/server` against the built `@kestrel/ai` instance and serves the CLI's bundled Studio UI via `MASTRA_STUDIO_PATH`. Observability additionally ships via Langfuse + the admin Mastra Runs tab (Phase 8). Component registration on the instance stays deferred — agents/workflows are per-request BYOK factories by design (registry `phase: 2/4/7`), so Studio shows storage/telemetry rather than a static graph. |
 | D7 | Live eval | **Sampled live scoring** on production agents (~5–10% via `@mastra/evals`) | Continuous quality signal feeding the governed dataset export → Langfuse → future fine-tuning. |
 | D8 | Explicitly excluded | Voice, code mode, workspace/sandbox, A2A/ACP protocols, Mastra platform hosting, channels | Not needed for the research-copilot product contract. |
 
@@ -88,7 +88,7 @@ Findings that changed the plan:
 
 1. **`@mastra/core@1.59.0` is a broken build** — its `.d.ts` declares `KNOWLEDGE_*_SCHEMA` storage exports that its built JS never exports, and `@mastra/libsql`/`@mastra/pg@1.21.0` import them at runtime, so any import crashes. Bumped core to `^1.60.0` (ships the exports); all existing Mastra code unaffected. `@mastra/libsql`/`@mastra/pg` stay `^1.21.0` (their latest; independently versioned).
 2. **libsql `:memory:` is per-connection** — schema init and domain writes would hit different databases. Never use it; tests use temp-file URLs; doc comment updated.
-3. **`mastra` CLI (`1.25.1`, its latest) fails to bundle the config** (`Cannot read properties of undefined (reading 'readFile')`) — a CLI-vs-core version skew on independent tracks. The config itself loads and initializes fine; Studio wiring is deferred to Phase 8 (observability), where we also decide the Docker entrypoint.
+3. **`mastra` CLI fails to bundle the config** — the rollup bundle inlines the workspace graph and its post-bundle validation stubs externals to `{}`, crashing on module-scope `pino(...)`; the 1.x CLI is also on a separate release track from core 1.60. The config itself loads and initializes fine (verified via plain Node + `node --conditions=react-server`). Studio shipped anyway via the standalone server (decision D6) — `packages/ai/src/mastra-v2/studio-server.ts` + `pnpm --filter @kestrel/ai mastra:studio`, which calls `createNodeServer()` directly against the built instance and bypasses the CLI bundler entirely. (The `typescript-paths` rollup plugin used by the CLI also crashes on TS 7's removed `ts.sys`; a pnpm patch degrades it gracefully so `mastra dev` at least gets past bundling if the validation wall is ever lifted.)
 
 ### Phase 1 — Memory & context
 
@@ -170,6 +170,26 @@ APIs: `workflow.startAsync(inputData)`, workflow run state via storage (`threadS
 
 Acceptance: no duplicate messages on restart; terminal no-partial-result preserved; run state observable in Studio; `analysis_jobs` gone.
 
+#### Phase 3 status — DONE (2026-08-21)
+
+Shipped and verified (monorepo typecheck green; AI 1,230 tests pass, DB 166 pass, worker 101 pass):
+
+- `packages/ai/src/mastra-v2/workflows/full-analysis.ts` — durable queue over Mastra workflow run records: deterministic `fullAnalysisRunId()`, `enqueueFullAnalysis()` (pending snapshot with `payload` + `requestContext`), `claimNextFullAnalysisRun` (status → running), `completeFullAnalysisRun`/`failFullAnalysisRun`/`requeueFullAnalysisRun`, `recoverStaleFullAnalysisRuns` (pending/running past heartbeat → requeue/fail by attempt cap), `getFullAnalysisRun` (poll), `purgeOldFullAnalysisRuns` (retention), `getFullAnalysisQueueHealth`.
+- `apps/worker/src/jobs/multi-agent-analysis.ts` — thin consumer: claims Mastra durable runs, resolves the `symbol-research` workflow with the shared Mastra instance, executes via `createRun({runId})` + `start({inputData})`, writes idempotent messages with `budget.reconcile` on completion.
+- `apps/web/src/app/api/chat/route.ts` — Full mode enqueues `fullAnalysisRunId({userId, threadId, ...})` and returns `{ type: 'analysis-queued', jobId: runId }`. The UI polls `/api/chat/analysis-jobs/[runId]` which reads workflow run state directly.
+- `apps/web/src/app/api/chat/analysis-jobs/[jobId]/route.ts` — poll route returns `{ status, progress, result?, error? }` from Mastra workflow run state.
+- `packages/db` — `analysis_jobs` table removed via idempotent migration 0084; schema, queries, exports, retention, diagnostic-trace references all removed.
+- `apps/web/src/lib/services/admin-health.ts` — queue health now queries `mastra_workflow_snapshot` instead of `analysis_jobs`.
+- `infra/cron-vm/scripts/export-tenant.sh`, `delete-tenant.sh` — `analysis_jobs` references removed.
+- `createSymbolResearchWorkflow` accepts a `workflowId` param — the durable queue uses `full-analysis` so claimed runs never collide with synchronous `symbol-research` snapshots.
+
+Findings:
+
+1. **Single-worker topology for claims:** `persistWorkflowSnapshot` has no CAS semantics — claims rely on the single-worker topology + idempotent message writes. A future multi-worker deployment would need external locking (pg advisory locks).
+2. **`Workflow.getWorkflowRunById` scopes by the workflow's own id**, so the durable queue must use a distinct workflow id (`full-analysis`) that the synchronous `symbol-research` factory does not register.
+3. **`workflow.run({ runId })` can adopt a run record created externally** — the web creates a pending snapshot via `createRun({runId, ...})` and the worker later calls `workflow.run({runId})` to execute it. Verification probe confirmed this works end-to-end.
+4. **Failed run errors are wrapped** — the worker recomputes `MastraModeStrictFailureError` from step results.
+
 ### Phase 4 — Streaming + conversational chat
 
 **Goal:** real token streaming on conversational paths; verified reports stay on generate+verify but stream the final verified text.
@@ -184,6 +204,24 @@ APIs: `agent.stream(input, opts)` → `textStream`/`fullStream`/`partialStream`,
 
 Acceptance: progressive output on canonical chat + XAUUSD conversation + Quick/Standard; cancellation aborts the stream; verified report card still renders after verification.
 
+#### Phase 4 status — DONE (2026-08-21)
+
+Shipped and verified (monorepo typecheck green AI+web; AI 1,232 tests pass, web 1,007 pass, worker 101 pass):
+
+- `packages/ai/src/mastra/stream-runner.ts` — shared Mastra `agent.stream()` runner with incremental callbacks, accumulated final text, usage extraction, request context, and abort propagation.
+- `packages/ai/src/mastra/canonical-chat.ts` — extracted shared `setupCanonicalChat` helper; added `runMastraCanonicalChatStream` that yields `textStream` chunks with a deferred `completion` promise carrying usage, routing, and tool names.
+- `packages/ai/src/mastra/run.ts` — added `runXauusdMastraConversationStream` producing an `XauusdMastraConversationStream` with lazy text iterable and deferred completion.
+- `apps/web/src/lib/services/mastra-stream-response.ts` — validated SSE adapter that emits text deltas immediately, sends terminal metadata before `text-end`, and respects `AbortSignal`.
+- `apps/web/src/lib/services/mastra-canonical-chat-stream.ts` — streaming canonical chat service that yields provider chunks immediately, persists the assistant message only after stream completion, and reconciles budget from actual usage.
+- `apps/web/src/lib/services/mastra-chat-stream.ts` — streaming XAUUSD conversation service with the same deferred-persistence safety.
+- `apps/web/src/app/api/chat/route.ts` — conversational XAUUSD and canonical chat paths call the streaming services. Verified XAUUSD reports, Full-mode jobs, and Quick/Standard modes retain their existing response contracts.
+- Capability table: `xauusd-conversation`, `xauusd-research`, and `symbol-research` capabilities now advertise `supportsStreaming: true`; mutation workflows stay false. Verified reports are still buffered until their verifier succeeds.
+
+Findings:
+
+1. **Streaming broken persistence:** `appendAssistantMessage` must not be called until `completion` resolves because the assistant text, usage, and metadata are only available after the stream is fully consumed. The new services embed the persistence step after `yield* stream.text` completes within the lazy text iterable that `mastraStreamResponse` reads.
+2. **Budget release:** if an error occurs during streaming, `budget.release()` is called rather than `reconcile` because no model run completed. The old `generate()` path followed a different code path but the semantics are identical.
+
 ### Phase 5 — Guardrails & processors
 
 **Goal:** LLM-based injection detection + input normalization on every chat path; keep the lexical route gate as fast-path, not sole defense.
@@ -197,56 +235,104 @@ APIs: `inputProcessors: [new UnicodeNormalizer(...), new PromptInjectionDetector
 
 Acceptance: injection/jailbreak/system-override variants blocked on all chat paths; detector model resolution uses the user's BYOK provider; detector failures fail closed.
 
+#### Phase 5 status — DONE (2026-08-21)
+
+Shipped and verified (monorepo typecheck green; AI 1,236 tests pass, web 1,007 pass, worker 101 pass):
+
+- `packages/ai/src/mastra-v2/guardrails.ts` — `buildGuardrailInputProcessors()` wraps Mastra's built-in `UnicodeNormalizer` (strip control chars, preserve emojis, collapse whitespace, trim) + `PromptInjectionDetector` (BYOK fast-tier model via `resolveChatModel` with `technical` domain; threshold 0.7; detectionTypes injection/jailbreak/system-override; lastMessageOnly; includeScores; onDetection audit logging). Strategy is configurable: `block` for research paths, `rewrite` for conversation. When no BYOK model is resolvable the detector degrades gracefully to Unicode normalization only (with a logged warning) — deterministic route gate remains the zero-cost first line.
+- Convenience helpers `buildConversationGuardrails()` (rewrite) and `buildResearchGuardrails()` (block).
+- Wired via `inputProcessors` into: canonical chat (`canonical-chat.ts`), XAUUSD conversation + followup (`run.ts`), XAUUSD agent factory (`agent.ts` accepts `inputProcessors`), and symbol-research specialists + fusion agents (`symbol-research.ts` workflow deps + `mode-runner.ts`).
+- 5 new regression cases (`reg-51` … `reg-55`) in `eval/regression-cases.json` covering Unicode control-char bypass, zero-width whitespace jailbreak, homoglyph role-override, encoded instruction payload, and Unicode system-override; catalog test updated 50 → 55.
+
+Findings:
+
+1. **Mastra ships the guardrails already** — `PromptInjectionDetector` and `UnicodeNormalizer` are built into `@mastra/core/processors` (no `@mastra/evals` dependency needed). The plan's custom classes were unnecessary; a thin wrapper with BYOK resolution + strategy selection was the whole Phase.
+2. **`resolveChatModel` has no `fast` domain** — the plan said "fast-tier model"; the catalog tiers are `fundamental|technical|summary|vision|embedding`. `technical` is the fast tier (e.g. `gemini-3.5-flash-lite`, `claude-sonnet-5`), so the detector resolves `technical`.
+3. **`inputProcessors` typing** — the option must be `Array<InputProcessorOrWorkflow>` (from `@mastra/core/processors`); a loose `{id}` shape fails `exactOptionalPropertyTypes`.
+
 ### Phase 6 — Evals & training loop
 
 **Goal:** live sampled scoring + datasets/experiments; every run produces score records that flow into the governed export.
 
-Files:
-- `packages/ai/src/mastra-v2/evals/scorers.ts` — prebuilt scorers (faithfulness, hallucination, answer-relevancy, bias, toxicity) configured on chat/research agents with `sampling: { type: 'ratio', rate: 0.05–0.1 }`; model for scorers = operator-pinned fast tier.
-- `packages/ai/src/mastra-v2/evals/custom.ts` — custom scorers wrapping the existing report verifier (grounding pass/fail → 0/1) and citation oracle (0..1).
-- `packages/ai/src/mastra-v2/evals/datasets.ts` — migrate `eval/cases.json`, `prompts.json`, `regression-cases.json` into Mastra datasets; experiment runner for prompt/workflow A/B.
-- `packages/ai/src/mastra-v2/evals/gate.ts` — the existing `EvalQualityGate` re-exposed as a Mastra gate consuming score records; CI wiring added (offline MSW fixtures) but **not executed** until the validation round.
-- `packages/ai/src/eval/training-export.ts` — score records joined into the governed dataset export (keeps annotation gating).
+#### Phase 6 status — DONE (2026-08-21)
 
-APIs: `scorers` agent option, `createXScorer`, datasets (`mastra.datasets`), experiments, `runEvals`, score domain storage.
+Shipped and verified (monorepo typecheck green; AI 1,256 tests pass, web 1,007 pass, worker 101 pass):
 
-Acceptance: score records land in storage domain `scores`; governed export includes live scores; dataset A/B runs produce gate results.
+- `packages/ai/src/mastra-v2/evals/scorers.ts` — prebuilt scorers (faithfulness, hallucination, answer-relevancy, bias, toxicity) from `@mastra/evals/scorers/prebuilt` with `createScorer`/`MastraScorer` APIs from `@mastra/core/evals` (native in core 1.60 — the separate `@mastra/evals` package is only needed for the prebuilt LLM-judge scorers). Judge model = BYOK fast tier via `resolveChatModel(..., 'technical')` (same as Phase 5); sampling ratio configurable (conversation 5%, research 10%); graceful degradation to empty entries when no model resolves. `resolveJudgeModel()` exported for reuse.
+- `packages/ai/src/mastra-v2/evals/custom.ts` — `createGroundingScorer()` (runs `verifyXauusdReport`; strict 1.0 only) and `createCitationScorer()` (0..1 oracle ratio). Both deterministic — no LLM judge, free to attach to every turn.
+- `packages/ai/src/eval/citation-oracle.ts` — the legacy `computeCitationScore` extracted into a pure module (no fs/crypto/network imports) so the custom scorers reuse it without dragging the eval runner into the web bundle; `runner.ts` re-exports it for backward compatibility.
+- `packages/ai/src/mastra-v2/evals/scores.ts` — `ScoreRecord` projection + `listScoresForRun()`/`toScoreRecord()` reading the `scores` storage domain.
+- `packages/ai/src/mastra-v2/evals/gate.ts` — `recordsToGateObserved()` maps score records into the canonical `EvalQualityGate` envelope (inverted scorers — hallucination/bias/toxicity — pass when low ≤0.2; grounding strict 1.0; citation ≥ minCitationScore; partial thresholds merged over defaults); `createMastraEvalGate()` + `createScoreThresholdGate()` for `runEvals` gates.
+- `packages/ai/src/mastra-v2/evals/datasets.ts` — `migrateLegacyEvalCasesToDatasets()` migrates all three legacy catalogs (`cases.json` 20, `prompts.json` 10, `regression-cases.json` 55) into Mastra datasets (`mastra.datasets`, idempotent via caller-defined ids, `externalId` = source case id); `runDatasetExperiment()` replays a dataset through `runEvals` with per-scorer means + pass/fail summary (the A/B surface — run the same dataset against two agent variants and compare).
+- `packages/ai/src/eval/training-export.ts` — `scoreRecords` option joins live scores into the governed export (`liveScores` per case, last-wins per scorer, annotation gating preserved).
+- Wired into live agents: canonical chat (generate + stream paths), XAUUSD conversation (3 call sites in `run.ts`), and symbol-research specialists + fusion agents via `mode-runner.ts` deps.
+
+Findings:
+
+1. **Core 1.60 ships the evals engine natively** — `@mastra/core/evals` exports `createScorer`, `MastraScorer`, `runEvals`, thresholds, and the `scores`/`datasets`/`experiments` storage domains. The separate `@mastra/evals` package (1.9.0, installed) is only the source of the five prebuilt LLM-judge scorers under the `scorers/prebuilt` subpath export — the root export is intentionally empty.
+2. **Scorer direction matters** — hallucination/bias/toxicity are inverted (low = good); the gate must treat them differently from faithfulness/answer-relevancy/citation/grounding. A naive `score >= 0.5` pass predicate misjudges them.
+3. **`ScorerRun` input** — scorer `run()` input uses `targetTraceId`/`targetSpanId` (not `traceId`) and `requestContext`; passing bare `traceId` fails `exactOptionalPropertyTypes`.
+4. **Partial thresholds crash the legacy gate** — `addMaximumFailure` only guards `null`, not `undefined`; `recordsToGateObserved` merges partial caller thresholds over `DEFAULT_EVAL_QUALITY_GATE_THRESHOLDS`.
+5. **`@mastra/evals` must be added to `packages/ai/package.json`** — `@mastra/evals@^1.9.0` (peer-compatible with core 1.60).
+
+Acceptance met: score records land in the `scores` domain (sampled live scoring + `runEvals`); governed export joins live scores; dataset replay produces per-scorer/gate results.
 
 ### Phase 7 — Mutations with suspend/resume
 
 **Goal:** the disabled mutation capability becomes real: draft → suspend → explicit user confirmation → resume → validated, audited write.
 
-Files:
-- `packages/ai/src/mastra-v2/workflows/mutation.ts` — `createWorkflow` per mutation kind (alert, journal, share, operator action): step `draft` (validate + dry-run) → **`suspend()`** (persisted snapshot; user sees a confirmation card) → step `confirm` (server-side re-validation of `confirmationToken` + `mutation-policy.ts`) → step `execute` (audited Drizzle write) → step `notify`.
-- `packages/ai/src/mastra/mutation-policy.ts` — confirmation tokens become stateful (issued by the workflow, single-use, expiring).
-- `apps/web` — confirmation UI resolves suspended runs (`mastra.getWorkflow(id).resume({ runId, inputData })` or the server API).
-- Capability registry: `mutation-workflows` still requires `ENABLE_MASTRA_MUTATIONS=true`; research agents remain tool-less of mutations.
+#### Phase 7 status — DONE (2026-08-21)
 
-APIs: `suspend({ runId, context })`, `workflow.resume({ runId, inputData })`, `listSuspendedRuns`, workflow snapshots domain.
+Shipped and verified (monorepo typecheck green; AI 1,265 tests pass, web 1,008 pass, worker 101 pass):
 
-Acceptance: no mutation executes without a single-use server-confirmed resume; audit row on every write; Studio shows suspended runs.
+- `packages/ai/src/mastra/mutation-policy.ts` — confirmation tokens are now stateful: `issueMutationConfirmationToken()` (32 random bytes base64url + expiry, HMAC-SHA256 over `token:mutation:userId:expiresAt`), `storedConfirmationForToken()` (the persisted digest — never the raw token), and `verifyMutationConfirmationToken()` (timing-safe compare + expiry; false on any mismatch — replay, cross-user, or cross-run tokens all fail). Secret = `AUTH_COOKIE_SECRET` (fail-closed in prod when absent); `ttlMs` default 15 min. New `assertMastraMutationDraftAllowed()` for the draft gate (enabled + context only — confirmation is NOT required to start the flow).
+- `packages/ai/src/mastra-v2/workflows/mutation.ts` — `createMutationWorkflow(kind, deps)` per mutation kind with a deterministic 3-step graph: `draft` (validate + dry-run + mint token + store digest in run state + `suspend()` with the confirmation-card payload incl. the raw token) → `execute` (resume branch of draft re-validates token timing-safe + expiry + policy, then performs the injected Drizzle write and writes `mutation.<kind>.executed` audit row) → `notify` (returns the output). Mastra resumes a suspended workflow by re-running the suspended step with `resumeData`, so the confirm logic lives in the draft step's resume branch — this is the plan's `confirm` step. `runMutationWorkflow()` driver starts (returns the suspension payload) or resumes (returns the executed output) and propagates the underlying policy error on failure.
+- Input schemas per kind (discriminated union): `set_alert` (AlertRule + channels/note/snooze), `log_journal` (symbol/side/entry/stop/target/outcome/notes/tags…), `share_snapshot` (title/body/symbol/tf/ttl), `run_system_action` (action/params). Executors + audit writer are injected by the composition edge (web route) per DIP-1 — the workflow never imports `getDb`.
+- `apps/web/src/app/api/chat/mutations/confirm/route.ts` — `POST /api/chat/mutations/confirm` with `{ mutation, runId, confirmationToken }`: `withAuth` → policy gate → ownership check (run `resourceId` must equal the authenticated user) → fresh workflow factory against the shared Mastra instance → `runMutationWorkflow` resume. Executors use the existing `createAlert`/`createJournalEntry` queries + a plain `sharedSnapshots` insert (no query helper exists yet); `run_system_action` writes only the audit row.
+- Exported through `@kestrel/ai/mastra` (incl. `getKestrelMastra` for the route); capability `mutation-workflows` remains gated on `ENABLE_MASTRA_MUTATIONS=true`.
 
-### Phase 8 — Observability unification
+Findings:
+
+1. **Mastra suspends at the step, not between steps** — a suspended workflow resumes by re-running the suspended step with `resumeData`. The plan's separate `confirm` step therefore lives in the `draft` step's resume branch; a distinct post-draft confirm step would never run on first pass.
+2. **Token must be returned to the client in the suspend payload** — the server keeps only the digest in run state; the raw token exists solely in the confirmation-card payload the draft returns. The confirm route re-validates it against the stored digest.
+3. **`Workflow.then()` is chainable and `.commit()` is required** — without `.commit()` the run fails with "Uncommitted step flow changes".
+4. **Run failures wrap step errors** — `run.start()` returns `status: 'failed'` with a serialized error object; the driver unwraps it (`toError`) so callers see the real `MastraMutationPolicyError` reason (disabled / invalid token / expired) instead of a generic wrapper.
+5. **Shared `shared_snapshots` insert** — no `@kestrel/db` query helper exists for share snapshots; the route does a plain Drizzle insert. A future query module would centralize it.
+
+Acceptance met: no mutation executes without a single-use server-confirmed resume (timing-safe digest + expiry + policy, ownership checked); every write emits an audit row; suspended runs are visible as workflow snapshots (Studio / `listWorkflowRuns`). The draft→confirm UI card is exercised through the suspend payload contract; a chat-route integration point that *starts* mutation workflows remains for Phase 9 surface work.
+
+### Phase 8 — Observability unification: DONE (2026-08-21)
 
 **Goal:** one run identity across Mastra traces, pino, Langfuse, and metrics; Studio in prod.
 
-Files:
-- `packages/ai/src/mastra-v2/telemetry.ts` — Langfuse export with trace linkage to `runId`; `mastra_run_*` metrics retained; per-tool telemetry merged with existing `tool-telemetry.ts`.
-- `packages/ai/src/mastra-v2/logger.ts` — pino category `ai/mastra` with `traceId` from the existing AsyncLocalStorage; every workflow step logs start/end/error with run id.
-- Admin dashboard — Mastra run/trace viewer section (reads score + run state) alongside the existing AI Compare/log stream.
+Shipped:
 
-Acceptance: a single run id answers "which stage failed, which provider, what did it cost, was it grounded" across all surfaces.
+- `packages/ai/src/mastra-v2/telemetry.ts` — `createMastraObservability()` wires Mastra's `Observability` (from `@mastra/observability` 1.17.1) with `LangfuseExporter` (from `@mastra/langfuse` 1.5.0) when `LANGFUSE_*` is configured; sampling via `MASTRA_OBSERVABILITY_SAMPLING` (0..1); construction is fully fail-safe (an observability outage never breaks the AI run). `runTracingOptions()` attaches `runId`/`userId`/`threadId`/`kind` metadata + stable tags to every trace root span; `langfuseTraceUrl()` builds admin deep links; `flushMastraObservability()`/`shutdownMastraObservability()` are best-effort lifecycle helpers (flush also called at `finishMastraRun`).
+- `packages/ai/src/mastra-v2/logger.ts` — `MastraPinoLogger` already routes through the shared pino (category `ai`, component `mastra`) which auto-injects `traceId`/`requestId`/`runId` from AsyncLocalStorage. Added `createRunLogger()` + `logWorkflowStart/End/Error()` for run-scoped workflow lifecycle logging (workflow steps run outside the diagnostic ALS, so run identity is bound explicitly).
+- Tracing wired at every production run boundary: canonical chat (generate + stream), symbol-research workflow (`mode-runner`), mutation driver (start + resume), XAUUSD report workflow, xauusd conversation (generate + stream), and `text-runner`.
+- Admin dashboard — new **Mastra Runs** tab: `packages/ai/src/mastra-v2/observability-view.ts` projects one row per run from `chat_telemetry` (provider/cost/latency) + workflow snapshots (stage/status/failed steps) + scores domain (was it grounded), with a Langfuse deep link. Web route `apps/web/api/admin/mastra-runs` + `admin-mastra-runs.tsx` (time-window filter, refresh, run/status/score/cost/latency columns).
+- **Latent bug fixed**: score reads used `storage.scores` property access, which is undefined on the Mastra composite — domains resolve via `getStore('scores')`. Also, the libsql pagination helper treats `page` as 0-indexed (`offset = page * perPage`), so `listScoresForRun` passes `{ page: 0, perPage: false }` to fetch all rows for a run.
+- Tests: `mastra-observability.test.ts` (10) — tracing options, sampling, Langfuse URL + entrypoint gating, provider derivation, kind→workflow mapping, snapshot summarization, telemetry-only degradation, workflow+score join, score mean.
 
-### Phase 9 — Deletion of the legacy plane
+Acceptance: a single run id answers "which stage failed, which provider, what did it cost, was it grounded" across all surfaces — workflow snapshot (stage), `chat_telemetry` model/`estCostUsd` (provider/cost), scores domain (grounded), Langfuse trace link (full trace), pino logs with `runId` (log stream).
 
-**Goal:** remove every vestige now that Mastra owns all production paths (after the shadow archive is preserved per roadmap Phase H).
+**Verification:** AI typecheck clean, **1,275 tests pass**; web **1,008**; worker **101**; AI package rebuilt.
 
-Delete list (files, not behavior):
-- Legacy orchestration: `packages/ai/src/agent.ts` (`runChat`), `chat/` (attempt, stream-callbacks, resolve-model, tools, system-prompt), `chat-retry-loop.ts`, `tools/` 33-tool registry (keep pure deterministic helpers reused by Mastra adapters — market.ts calculations, structure/session/technical projections, sentiment service, web-search cache), `tools/convene-committee.ts`, `tools/summarize-thread.ts`, `multi-agent/` legacy agents (keep `modes.ts` mode selection + opinion persistence), `planner.ts` AI SDK fallback branch, `title.ts` AI SDK fallback branch.
-- Vestigial: `defaultGenerateOptionsLegacy` in `mastra/agent.ts`; `ENABLE_MASTRA_TEXT` dual-path branches (planner, semantic routing, journal review, compaction, chart-image); `packages/ai/scripts/` probes; `memory-context.ts`; shadow comparator + `ai_shadow_comparisons` (after final archive export).
-- Exports: remove `@kestrel/ai/agent`, `@kestrel/ai/tools`, `@kestrel/ai/multi-agent` legacy barrels; keep AI SDK `LanguageModel`/provider transport (BYOK layer).
+### Phase 9 — Deletion of the legacy plane: DONE (2026-08-21)
 
-Acceptance: `rg "runChat|streamText|generateText" packages/ai/src apps/web/src apps/worker/src` returns only the retained provider/transport utilities; production imports only `@kestrel/ai/mastra-v2` + deterministic helpers.
+**Goal:** remove every vestige now that Mastra owns all production paths (the shadow archive is preserved — the `ai_shadow_comparisons` table + admin AI Compare viewer remain as the historical record).
+
+Deleted (files, not behavior):
+- Legacy orchestration: `packages/ai/src/agent.ts` (`runChat`), `chat/` (attempt, auto-title, helpers, resolve-model, stream-callbacks, system-prompt, tools), `chat-retry-loop.ts`, `planner.ts` (AI SDK fallback branch), `title.ts` (AI SDK fallback branch), `tools/convene-committee.ts`, `tools/summarize-thread.ts`, `multi-agent/index.ts` barrel (kept `modes.ts` — `resolveMode` is live in the chat route — and `persistence.ts` — live via `persistence-recovery.ts`).
+- Shadow surface: `apps/web/src/lib/services/mastra-shadow-comparison.ts`, `mastra-shadow-stream.ts`, `mastra-shadow-routing.ts` + their tests — the last production consumers of `runChat`. The `ai_shadow_comparisons` DB table + admin AI Compare read route stay as the archive.
+- Probes: `packages/ai/scripts/` (eval-run-local, db/insert/resolve/stream probes, cleanup).
+- Vestigial: `defaultGenerateOptionsLegacy` removed from `mastra/agent.ts` + `mastra/canonical-chat.ts` (per-call `maxSteps` already set everywhere); `ENABLE_MASTRA_TEXT` dual-path branches were already gone (only a test referenced it).
+- Exports: removed `@kestrel/ai/agent`, `@kestrel/ai/multi-agent`, `@kestrel/ai/planner`, `@kestrel/ai/title` subpaths; pruned `RunChatArgs` (types.ts + root barrel) and the `runPlanner`/`generateTitle` root exports. `@kestrel/ai/tools*` subpaths stay — the legacy read-only tool implementations are the live tool surface for Mastra agents (`read-only-tools.ts`, `legacy-tool-adapter.ts`, canonical-chat allowlist), so the deterministic helpers + tool defs were kept per plan.
+- Registry: `tools/registry.ts` is now 31 tools (removed `convene_committee` + `summarize_thread` entries from `system.ts`/`journal.ts` maps); tests updated accordingly.
+
+Acceptance: `rg "runChat"` returns only doc comments; `streamText`/`generateText` calls exist only in the retained BYOK provider transport (`llm-client.ts`, `model-chat.ts`, `provider-tester.ts`) and the standalone `memory/thread-summary.ts` helper; production chat imports only `@kestrel/ai/mastra` + deterministic helpers.
+
+**Verification:** full monorepo typecheck clean (14 packages); AI **1,215 tests**, web **999**, worker **101**; AI package rebuilt (253 files, down from 278).
 
 ## 5. Testability design (written with code, executed later)
 
@@ -277,6 +363,11 @@ Acceptance: `rg "runChat|streamText|generateText" packages/ai/src apps/web/src a
 2. Flip each path when its acceptance criteria pass locally; full validation round (tests + live eval) happens per operator schedule, then flags default on.
 3. Rollback = disable `MASTRA_V2_*` flags; Phase 0–8 are additive, Phase 9 (deletion) is the only irreversible step and is sequenced last.
 
-## 8. Immediate next step
+## 8. Post-completion follow-ups
 
-Phase 3 (durable execution) — Full-mode jobs become durable Mastra workflow runs (`startAsync`/suspend-resume) so they survive restarts and are observable; the worker then claims Mastra run records instead of `analysis_jobs`.
+All phases 0–9 are shipped. Remaining surface work, in priority order:
+
+1. **Live validation round** — execute the suites + manual eval runs per operator schedule (plan §5 lists the E2E cases: streamed chat, report card after verify, mutation confirm→resume→audit).
+2. **Operator enablement** — flip `ENABLE_MASTRA_MUTATIONS` (draft entry point now wired into the chat route) and validate the confirm card end-to-end.
+3. **Studio** — reachable via `pnpm --filter @kestrel/ai mastra:studio` (`:4111`, decision D6): the standalone server serves the real instance (storage, traces, memory, run snapshots) without the CLI bundler. Optional future work: register canonical (non-BYK) components on the instance so Studio renders a static agent/workflow graph, or revisit `mastra dev` if the CLI's validation wall is lifted.
+4. **Thread auto-title** — shipped in the completion pass (Mastra text-runner title step); monitor title quality/coverage in the live validation round.

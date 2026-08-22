@@ -20,6 +20,7 @@ import { dirname } from 'node:path';
 
 import { redactString } from '../diagnostics/redact';
 import type { PromptResult } from './runner';
+import type { ScoreRecord } from '../mastra-v2/evals/scores';
 
 export const TRAINING_RECORD_SCHEMA = 'kestrel.eval-record.v1' as const;
 export const DATASET_MANIFEST_SCHEMA = 'kestrel.eval-manifest.v1' as const;
@@ -37,6 +38,12 @@ export interface EvaluationAnnotation {
 
 export interface TrainingExportOptions {
   datasetVersion: string;
+  /**
+   * Live scorer records (from the Mastra `scores` domain) joined onto the
+   * export by run id. Only numeric scores are stored — prompts/outputs stay
+   * in the score domain, never duplicated here.
+   */
+  scoreRecords?: ReadonlyMap<string, ScoreRecord[]>;
   annotations?: Readonly<Record<string, EvaluationAnnotation>>;
   /** Include sanitized assistant text only for an explicitly approved export. */
   includeAssistantText?: boolean;
@@ -66,6 +73,8 @@ export interface TrainingExportRecord {
   ttftMs: number | null;
   totalMs: number;
   costUsd: number | null;
+  /** Live scorer scores joined from the Mastra `scores` domain, keyed by scorer id. */
+  liveScores?: Record<string, number>;
   annotation: EvaluationAnnotation;
   split?: DatasetSplit;
   approval?: {
@@ -108,6 +117,13 @@ export function buildTrainingRecords(
     if (options.requireApprovedAnnotations && !explicitAnnotation) {
       throw new Error(`Record ${result.id} is missing an explicit reviewer annotation`);
     }
+    const scoreRecords = options.scoreRecords?.get(result.id) ?? [];
+    const liveScores: Record<string, number> = {};
+    for (const score of scoreRecords) {
+      // Last score per scorer id wins; records are ordered by creation time.
+      liveScores[score.scorerId] = score.score;
+    }
+
     const record: TrainingExportRecord = {
       schemaVersion: TRAINING_RECORD_SCHEMA,
       datasetVersion: options.datasetVersion,
@@ -122,6 +138,7 @@ export function buildTrainingRecords(
       ttftMs: result.ttftMs,
       totalMs: result.totalMs,
       costUsd: result.metadata.totalCostUsd ?? null,
+      ...(Object.keys(liveScores).length > 0 ? { liveScores } : {}),
       annotation,
       ...(options.splitByCaseId ? { split: options.splitByCaseId(result.id) } : {}),
     };

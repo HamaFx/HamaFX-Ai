@@ -10,7 +10,7 @@
  */
 
 import type { IMastraLogger, LogLevel, LoggerTransport, BaseLogMessage } from '@mastra/core/logger';
-import { createCategorizedLogger, logErrorContext } from '@kestrel/shared/logger';
+import { createCategorizedLogger, logErrorContext, type CategorizedLogger } from '@kestrel/shared/logger';
 
 /** Mastra's `LogLevel` is a subset of pino's; route both error-ish levels to error. */
 function pinoLevel(level: LogLevel | undefined): 'debug' | 'info' | 'warn' | 'error' {
@@ -31,6 +31,9 @@ function pinoLevel(level: LogLevel | undefined): 'debug' | 'info' | 'warn' | 'er
  * logger. Mastra's `listLogs`/`listLogsByRunId` surfaces are intentionally
  * empty: Kestrel owns log persistence and streaming (see the admin log
  * stream), so Mastra transports are not registered.
+ *
+ * Correlation: every line carries `traceId`/`requestId`/`runId` from the
+ * shared AsyncLocalStorage when a diagnostic scope is active (Phase 8).
  */
 export class MastraPinoLogger implements IMastraLogger {
   private readonly log = createCategorizedLogger('ai', { component: 'mastra' });
@@ -101,5 +104,76 @@ export class MastraPinoLogger implements IMastraLogger {
       }
     }
     return entries.length > 0 ? Object.fromEntries(entries) : undefined;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Run-scoped workflow logging (Phase 8)
+//
+// Mastra workflow steps execute inside their own async context, so the
+// shared AsyncLocalStorage correlation is not always propagated. These
+// helpers bind run identity explicitly and log the workflow run lifecycle
+// (start / end / error) with the runId, so pino, the log stream, and the
+// admin runs viewer can correlate a log line back to a specific run.
+// ---------------------------------------------------------------------------
+
+export interface RunStepLogIdentity {
+  runId: string;
+  workflowId: string;
+  /** Optional agent id when the step is an agent call. */
+  agentId?: string;
+  /** Optional human-readable stage name (e.g. 'draft', 'execute'). */
+  stepId?: string;
+}
+
+/**
+ * Create a logger bound to a specific Mastra run. Every line carries the
+ * runId (and optional workflowId/stepId) regardless of AsyncLocalStorage
+ * state, so a workflow executing in the worker process still logs under its
+ * run identity.
+ */
+export function createRunLogger(identity: RunStepLogIdentity): CategorizedLogger {
+  const context: Record<string, unknown> = { component: 'mastra-run', runId: identity.runId };
+  if (identity.workflowId) context['workflowId'] = identity.workflowId;
+  if (identity.agentId) context['agentId'] = identity.agentId;
+  if (identity.stepId) context['stepId'] = identity.stepId;
+  return createCategorizedLogger('ai', context);
+}
+
+export interface WorkflowStepLogArgs extends RunStepLogIdentity {
+  /** Human message describing the lifecycle event. */
+  message: string;
+  /** Additional non-sensitive context (e.g. mode, symbol, outcome). */
+  meta?: Record<string, unknown>;
+}
+
+/** Log the start of a workflow run (or step). */
+export function logWorkflowStart(args: WorkflowStepLogArgs): void {
+  createRunLogger(args).info(args.message, args.meta ?? {});
+}
+
+/** Log the successful end of a workflow run (or step) with its duration. */
+export function logWorkflowEnd(
+  args: WorkflowStepLogArgs & { startedAt: number; durationMs?: number },
+): void {
+  const durationMs = args.durationMs ?? Math.max(0, Date.now() - args.startedAt);
+  createRunLogger(args).info(args.message, {
+    ...(args.meta ?? {}),
+    durationMs,
+    outcome: 'success',
+  });
+}
+
+/** Log a workflow failure with the error and its duration. */
+export function logWorkflowError(
+  args: WorkflowStepLogArgs & { startedAt: number; error?: unknown },
+): void {
+  const logger = createRunLogger(args);
+  const durationMs = Math.max(0, Date.now() - args.startedAt);
+  const meta: Record<string, unknown> = { ...(args.meta ?? {}), durationMs, outcome: 'failed' };
+  if (args.error !== undefined) {
+    logErrorContext(args.error, `mastra.workflow.${args.workflowId}`, meta, 'ai');
+  } else {
+    logger.error(args.message, meta);
   }
 }

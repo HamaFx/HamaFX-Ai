@@ -59,8 +59,10 @@ export {
   resolveXauusdMastraModel,
   runXauusdMastra,
   runXauusdMastraConversation,
+  runXauusdMastraConversationStream,
   runXauusdMastraProofWithByok,
   type RunXauusdMastraArgs,
+  type XauusdMastraConversationStream,
   type XauusdMastraModel,
   type XauusdMastraSettings,
   type XauusdMastraRunResult,
@@ -91,12 +93,77 @@ export {
 } from './background-text';
 export {
   assertMastraMutationAllowed,
+  assertMastraMutationDraftAllowed,
   evaluateMastraMutation,
+  issueMutationConfirmationToken,
+  storedConfirmationForToken,
+  verifyMutationConfirmationToken,
+  confirmationSecret,
   MastraMutationNameSchema,
+  MUTATION_TOKEN_TTL_MS,
   type MastraMutationDecision,
   type MastraMutationName,
   type MastraMutationRequest,
+  type MutationConfirmationToken,
+  type StoredMutationConfirmation,
 } from './mutation-policy';
+export {
+  createKestrelMastra,
+  getKestrelMastra,
+  initializeKestrelMastra,
+  _setKestrelMastraForTest,
+  type KestrelMastra,
+} from '../mastra-v2/instance';
+export { pruneMastraStorage } from '../mastra-v2/storage';
+export {
+  createRunLogger,
+  logWorkflowEnd,
+  logWorkflowError,
+  logWorkflowStart,
+  type RunStepLogIdentity,
+  type WorkflowStepLogArgs,
+} from '../mastra-v2/logger';
+export {
+  createMastraObservability,
+  flushMastraObservability,
+  isLangfuseConfigured,
+  langfuseBaseUrl,
+  langfuseSamplingRatio,
+  langfuseTraceUrl,
+  mastraTraceTags,
+  runTracingOptions,
+  shutdownMastraObservability,
+  type MastraRunTraceIdentity,
+} from '../mastra-v2/telemetry';
+export {
+  toMastraRunView,
+  providerFromModel,
+  summarizeWorkflowRunState,
+  workflowIdForKind,
+  MASTRA_WORKFLOW_IDS,
+  type MastraRunScoreView,
+  type MastraRunView,
+  type WorkflowRunStatusView,
+  type RunTelemetryRow,
+} from '../mastra-v2/observability-view';
+export {
+  createMutationWorkflow,
+  runMutationWorkflow,
+  MutationInputSchema,
+  MutationKindSchema,
+  MutationOutputSchema,
+  MutationResumeSchema,
+  MutationSuspendPayloadSchema,
+  type MutationExecutor,
+  type MutationExecutorResult,
+  type MutationInput,
+  type MutationKind,
+  type MutationOutput,
+  type MutationResumeInput,
+  type MutationSuspendPayload,
+  type MutationWorkflowDeps,
+  type RunMutationResult,
+} from '../mastra-v2/workflows/mutation';
 export {
   mastraCotTool,
   mastraKnowledgeTool,
@@ -108,7 +175,9 @@ export {
 export { XauusdResearchPacketSchema, type XauusdResearchPacket } from './research-types';
 export {
   runMastraCanonicalChat,
+  runMastraCanonicalChatStream,
   type MastraCanonicalChatResult,
+  type MastraCanonicalChatStream,
   type RunMastraCanonicalChatArgs,
 } from './canonical-chat';
 export {
@@ -118,6 +187,30 @@ export {
   type MastraTextRunArgs,
   type MastraTextRunResult,
 } from './text-runner';
+export {
+  generateThreadTitle,
+  deterministicFallbackTitle,
+  cleanTitleForPersistence,
+  type GenerateThreadTitleArgs,
+  type GenerateThreadTitleResult,
+} from './title';
+export {
+  maybeGenerateThreadTitle,
+  type MaybeGenerateThreadTitleArgs,
+} from './title-service';
+export {
+  classifyMutationRequest,
+  isMastraMutationEnabled,
+} from './mutation-detect';
+export { resolveModel, type ResolveModelEnv } from '../model';
+export {
+  buildMutationInput,
+  extractMutationInput,
+  mutationExtractionSchemaFor,
+  MutationExtractionError,
+  MUTATION_EXTRACTION_SCHEMAS,
+  type ExtractMutationInputArgs,
+} from './mutation-extract';
 export { XauusdResearchReportSchema, type XauusdResearchReport } from './report-types';
 export {
   requireVerifiedXauusdReport,
@@ -138,6 +231,13 @@ export {
   qualityFromWarnings,
   requireXauusdUserContext,
 } from './evidence';
+export {
+  buildConversationGuardrails,
+  buildGuardrailInputProcessors,
+  buildResearchGuardrails,
+  type GuardrailOptions,
+  type GuardrailStrategy,
+} from '../mastra-v2/guardrails';
 export {
   beginMastraRun,
   errorCodeForMastra,

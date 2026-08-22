@@ -183,3 +183,30 @@ export async function initializeMastraStorage(result: MastraStorageResult): Prom
     mlog.info('Mastra storage initialized', { kind: result.kind });
   }
 }
+
+/**
+ * Run Mastra's age-based retention pruning (Phase 0 config, wired here).
+ * Best-effort: logs failures, never throws. Called from the worker's
+ * daily retention job alongside the Drizzle retention cleanup.
+ */
+export async function pruneMastraStorage(): Promise<{
+  pruned: boolean;
+  error?: string;
+}> {
+  try {
+    const result = createMastraStorage(process.env);
+    const store = result.storage as MastraCompositeStore & { prune?: () => Promise<void> };
+    if (typeof store.prune === 'function') {
+      await store.prune();
+      mlog.info('Mastra storage retention pruning completed', { kind: result.kind });
+      return { pruned: true };
+    }
+    mlog.debug('Mastra storage does not expose prune(); skipping retention', { kind: result.kind });
+    return { pruned: false, error: 'storage.prune() not available' };
+  } catch (error) {
+    mlog.warn('Mastra storage retention pruning failed (non-fatal)', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return { pruned: false, error: error instanceof Error ? error.message : String(error) };
+  }
+}

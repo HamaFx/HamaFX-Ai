@@ -35,6 +35,8 @@ import {
 import {
   AnalysisQueuedEventSchema,
   ChatStreamEventSchema,
+  MutationDraftEventSchema,
+  type MutationDraftEvent,
 } from '@kestrel/shared';
 import { getCsrfToken } from '@/lib/csrf';
 
@@ -427,6 +429,29 @@ function pollJobToStreamResponse(
   return new Response(stream, { headers: { 'content-type': 'text/event-stream; charset=utf-8' } });
 }
 
+/**
+ * Synthesize an AI SDK data stream for a mutation draft: an assistant
+ * message whose only part is the confirmation card (`data-mutation-
+ * confirmation`). The card owns the confirm/resume round-trip, so the
+ * stream carries no text.
+ */
+function mutationDraftToStreamResponse(draft: MutationDraftEvent): Response {
+  const id = crypto.randomUUID();
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(encodeChunk({ type: 'text-start', id }));
+      controller.enqueue(encodeChunk({
+        type: 'data-mutation-confirmation',
+        id,
+        data: draft.payload,
+      }));
+      controller.enqueue(encodeChunk({ type: 'text-end', id }));
+      controller.close();
+    },
+  });
+  return new Response(stream, { headers: { 'content-type': 'text/event-stream; charset=utf-8' } });
+}
+
 /** fetch wrapper that bridges queued jobs and legacy SSE into the AI SDK data stream. */
 async function hamaFxFetch(
   onProgress: (p: AgentProgress | null) => void,
@@ -452,6 +477,10 @@ async function hamaFxFetch(
     const queued = AnalysisQueuedEventSchema.safeParse(json);
     if (queued.success) {
       return pollJobToStreamResponse(queued.data.jobId, init?.signal ?? undefined, onProgress);
+    }
+    const draft = MutationDraftEventSchema.safeParse(json);
+    if (draft.success) {
+      return mutationDraftToStreamResponse(draft.data);
     }
     // Any other JSON response is not a valid chat stream; let it fail downstream.
     return res;

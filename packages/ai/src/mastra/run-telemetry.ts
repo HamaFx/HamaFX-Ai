@@ -5,7 +5,9 @@ import { flushMetrics } from '@kestrel/shared/metrics-export';
 import { estimateCostUsd } from '../cost';
 import { completeStep, recordError, recordStep } from '../diagnostics';
 import { flushLangfuse } from '../instrumentation';
+import { flushMastraObservability } from '../mastra-v2/telemetry';
 import { recordTelemetry } from '../persistence';
+import { getKestrelMastra } from '../mastra-v2/instance';
 import { MASTRA_XAUUSD_AGENT_ID, MASTRA_XAUUSD_AGENT_VERSION } from './constants';
 import type { MastraRunOutcome } from './stats';
 
@@ -157,6 +159,16 @@ export async function finishMastraRun(args: MastraRunObservation): Promise<void>
     await flushLangfuse();
   } catch (error) {
     mlog.warn('Mastra Langfuse flush failed', {
+      runId: args.runId,
+      err: error instanceof Error ? error.name : 'UnknownError',
+    });
+  }
+  // Phase 8: flush the Mastra observability exporters (Langfuse) so the
+  // run's spans land promptly at the request boundary.
+  try {
+    await flushMastraObservability(getKestrelMastra().instance);
+  } catch (error) {
+    mlog.warn('Mastra observability flush failed', {
       runId: args.runId,
       err: error instanceof Error ? error.name : 'UnknownError',
     });

@@ -14,10 +14,31 @@ export {
   initializeMastraStorage,
   mastraDirectConnectionString,
   mastraSslOptions,
+  pruneMastraStorage,
   type MastraStorageKind,
   type MastraStorageResult,
 } from './storage';
-export { MastraPinoLogger } from './logger';
+export {
+  MastraPinoLogger,
+  createRunLogger,
+  logWorkflowEnd,
+  logWorkflowError,
+  logWorkflowStart,
+  type RunStepLogIdentity,
+  type WorkflowStepLogArgs,
+} from './logger';
+export {
+  createMastraObservability,
+  flushMastraObservability,
+  isLangfuseConfigured,
+  langfuseBaseUrl,
+  langfuseSamplingRatio,
+  langfuseTraceUrl,
+  mastraTraceTags,
+  runTracingOptions,
+  shutdownMastraObservability,
+  type MastraRunTraceIdentity,
+} from './telemetry';
 export {
   createKestrelMastra,
   getKestrelMastra,
@@ -29,6 +50,17 @@ export {
   type KestrelMastra,
   type KestrelMastraOptions,
 } from './instance';
+export {
+  MASTRA_WORKFLOW_IDS,
+  providerFromModel,
+  summarizeWorkflowRunState,
+  toMastraRunView,
+  workflowIdForKind,
+  type MastraRunScoreView,
+  type MastraRunView,
+  type RunTelemetryRow,
+  type WorkflowRunStatusView,
+} from './observability-view';
 export {
   createKestrelEmbedder,
   createKestrelMemory,
@@ -52,6 +84,7 @@ export {
   type PreparedKestrelMemory,
   type WorkingMemorySeedArgs,
 } from './context';
+export { tryWorkflowClaimLock } from './advisory-lock';
 export {
   assertMastraRegistryComplete,
   mastraRegistrationFor,
@@ -63,6 +96,55 @@ export {
   type MastraComponentRegistration,
   type MastraCapabilityRegistrationId,
 } from './registry';
+export {
+  buildConversationGuardrails,
+  buildGuardrailInputProcessors,
+  buildResearchGuardrails,
+  type GuardrailOptions,
+  type GuardrailStrategy,
+} from './guardrails';
+export {
+  buildConversationScorers,
+  buildCustomScorers,
+  buildPrebuiltScorers,
+  buildResearchScorers,
+  createDeterministicScorer,
+  resolveJudgeModel,
+  PREBUILT_SCORER_IDS,
+  type BuiltScorers,
+  type BuildScorersOptions,
+  type ScorerId,
+  type ScorerSampling,
+} from './evals/scorers';
+export {
+  createCitationScorer,
+  createGroundingScorer,
+  CUSTOM_SCORER_IDS,
+  type CitationScorerRunInput,
+  type GroundingScorerRunInput,
+} from './evals/custom';
+export {
+  createMastraEvalGate,
+  createScoreThresholdGate,
+  recordsToGateObserved,
+  type MastraGateScoreInput,
+} from './evals/gate';
+export {
+  listScoresForRun,
+  toScoreRecord,
+  type ScoreRecord,
+} from './evals/scores';
+export {
+  loadLegacyEvalCases,
+  migrateLegacyEvalCasesToDatasets,
+  runDatasetExperiment,
+  DATASET_IDS,
+  DATASET_LABELS,
+  type DatasetExperimentSummary,
+  type DatasetMigrationSummary,
+  type EvalDatasetId,
+  type RunDatasetExperimentOptions,
+} from './evals/datasets';
 export {
   createSymbolResearchWorkflow,
   MastraModeStrictFailureError,
@@ -84,3 +166,21 @@ export {
   XauusdReportWorkflowOutputSchema,
   type XauusdReportWorkflowDeps,
 } from './workflows/xauusd-report';
+export {
+  createMutationWorkflow,
+  runMutationWorkflow,
+  MutationInputSchema,
+  MutationKindSchema,
+  MutationOutputSchema,
+  MutationResumeSchema,
+  MutationSuspendPayloadSchema,
+  type MutationExecutor,
+  type MutationExecutorResult,
+  type MutationInput,
+  type MutationKind,
+  type MutationOutput,
+  type MutationResumeInput,
+  type MutationSuspendPayload,
+  type MutationWorkflowDeps,
+  type RunMutationResult,
+} from './workflows/mutation';

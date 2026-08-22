@@ -30,7 +30,7 @@ export interface MastraCapability {
 export const MASTRA_CAPABILITIES = {
   'xauusd-conversation': {
     id: 'xauusd-conversation',
-    version: 'poc-4',
+    version: 'poc-5',
     allowedSymbols: ['XAUUSD'],
     allowedModes: ['single', 'auto'],
     scope: 'read-only',
@@ -53,7 +53,7 @@ export const MASTRA_CAPABILITIES = {
       'search-untrusted-knowledge',
     ],
     requiresConfirmation: false,
-    supportsStreaming: false,
+    supportsStreaming: true,
     supportsAbort: true,
     maxSteps: 3,
     maxDurationMs: 55_000,
@@ -61,7 +61,7 @@ export const MASTRA_CAPABILITIES = {
   },
   'symbol-research': {
     id: 'symbol-research',
-    version: 'mode-1',
+    version: 'mode-2',
     allowedSymbols: ALL_SYMBOLS,
     allowedModes: ['single', 'quick', 'standard', 'full'],
     scope: 'read-only',
@@ -75,7 +75,7 @@ export const MASTRA_CAPABILITIES = {
       'search-untrusted-knowledge',
     ],
     requiresConfirmation: false,
-    supportsStreaming: false,
+    supportsStreaming: true,
     supportsAbort: true,
     maxSteps: 5,
     maxDurationMs: 55_000,
@@ -98,7 +98,7 @@ export const MASTRA_CAPABILITIES = {
   },
   'xauusd-research': {
     id: 'xauusd-research',
-    version: 'poc-4',
+    version: 'poc-5',
     allowedSymbols: ['XAUUSD'],
     allowedModes: ['single', 'auto'],
     scope: 'read-only',
@@ -110,9 +110,9 @@ export const MASTRA_CAPABILITIES = {
       'get_xauusd_indicators',
     ],
     requiresConfirmation: false,
-    // The current route emits an SSE-compatible completed response, but the
-    // underlying Mastra generation is not token-streamed yet.
-    supportsStreaming: false,
+    // Conversational XAUUSD turns use Mastra's token stream; verified reports
+    // remain buffered until their verifier succeeds.
+    supportsStreaming: true,
     supportsAbort: true,
     maxSteps: 1,
     maxDurationMs: 55_000,

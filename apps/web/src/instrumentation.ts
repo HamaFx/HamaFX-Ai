@@ -15,6 +15,12 @@ export async function register() {
     // Edge middleware or client bundles because it depends on Node APIs.
     const { initLangfuse } = await import('@kestrel/ai/instrumentation');
     initLangfuse({ service: 'web' });
+    // Eagerly initialize Mastra storage schema so the first chat request
+    // doesn't pay the one-time DDL cost. Non-fatal: lazy init retries.
+    const { initializeKestrelMastra } = await import('@kestrel/ai/mastra');
+    await initializeKestrelMastra().catch((err: unknown) => {
+      console.warn('[instrumentation] Mastra storage init failed (non-fatal; lazy init will retry)', err);
+    });
     await import('./sentry.server.config');
   }
   if (process.env.NEXT_RUNTIME === 'edge') {

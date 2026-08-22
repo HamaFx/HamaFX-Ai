@@ -19,8 +19,12 @@ import { estimateCostUsd } from '../cost';
 import { resolveChatModel, type ChatModelResolution } from '../model';
 import type { ResolveModelEnv } from '../vertex-factory';
 import { prepareKestrelMemory } from '../mastra-v2/context';
+import { buildResearchGuardrails } from '../mastra-v2/guardrails';
+import { buildResearchScorers } from '../mastra-v2/evals/scorers';
 import { getKestrelMastra } from '../mastra-v2/instance';
-import { createKestrelMemory, type CreateKestrelMemoryArgs } from '../mastra-v2/memory';
+import { logWorkflowEnd, logWorkflowError, logWorkflowStart } from '../mastra-v2/logger';
+import { runTracingOptions } from '../mastra-v2/telemetry';
+import { createKestrelMemory, kestrelMemoryOptions, type CreateKestrelMemoryArgs } from '../mastra-v2/memory';
 import {
   createSymbolResearchWorkflow,
   MastraModeStrictFailureError,
@@ -142,12 +146,20 @@ export async function runMastraMode(args: RunMastraModeArgs): Promise<MastraMode
   });
 
   try {
+    // The worker's durable Full-mode path is long-lived, so observational
+    // memory (background observation agents) is safe to enable there.
+    // Vercel paths keep it off (short-lived functions).
+    const memoryOptions =
+      args.telemetryKind === 'mastra_full_job'
+        ? kestrelMemoryOptions({ env: args.env, forceObservationalMemory: true })
+        : undefined;
     const memory = createKestrelMemory({
       settings: {
         aiApiKeys: args.settings.aiApiKeys,
         embeddingModel: args.settings.embeddingModel ?? null,
       },
       env: args.env,
+      ...(memoryOptions ? { options: memoryOptions } : {}),
     } satisfies CreateKestrelMemoryArgs);
     const prepared = await prepareKestrelMemory({
       memory,
@@ -168,6 +180,14 @@ export async function runMastraMode(args: RunMastraModeArgs): Promise<MastraMode
       options: { readOnly: true },
     };
 
+    const { processors: guardrails } = buildResearchGuardrails(
+      { aiApiKeys: args.settings.aiApiKeys, chatModel: args.settings.chatModel },
+      args.env,
+    );
+    const { entries: researchScorers } = buildResearchScorers(
+      { aiApiKeys: args.settings.aiApiKeys, chatModel: args.settings.chatModel },
+      args.env,
+    );
     const workflow = createSymbolResearchWorkflow(
       {
         model: resolution.model,
@@ -176,6 +196,8 @@ export async function runMastraMode(args: RunMastraModeArgs): Promise<MastraMode
         memory,
         specialistCallOptions: readOnlyCallOptions,
         fusionCallOptions: prepared.callOptions,
+        inputProcessors: guardrails as never,
+        scorers: researchScorers as never,
         ...(args.signal ? { signal: args.signal } : {}),
         mastra: getKestrelMastra().instance,
       },
@@ -183,9 +205,37 @@ export async function runMastraMode(args: RunMastraModeArgs): Promise<MastraMode
       args.workflowId ?? 'symbol-research',
     );
     const run = await workflow.createRun({ runId: args.runId, resourceId: args.userId });
+    logWorkflowStart({
+      runId: args.runId,
+      workflowId: args.workflowId ?? 'symbol-research',
+      stepId: args.mode,
+      message: 'Symbol-research workflow run started',
+      meta: { mode: args.mode, symbol: args.symbol, model: resolution.modelId },
+    });
     const result = await run.start({
       inputData: { prompt: args.prompt, symbol: args.symbol, mode: args.mode },
       requestContext,
+      tracingOptions: runTracingOptions({
+        runId: args.runId,
+        userId: args.userId,
+        threadId: args.threadId,
+        kind: args.telemetryKind ?? 'mastra_mode',
+        tags: ['research', args.mode],
+      }),
+    });
+    logWorkflowEnd({
+      runId: args.runId,
+      workflowId: args.workflowId ?? 'symbol-research',
+      stepId: args.mode,
+      startedAt,
+      message: 'Symbol-research workflow run completed',
+      meta: {
+        mode: args.mode,
+        symbol: args.symbol,
+        status: result.status,
+        resultStatus:
+          (result as { result?: { status?: string } | null }).result?.status ?? null,
+      },
     });
 
     if (result.status !== 'success') {
@@ -274,6 +324,15 @@ export async function runMastraMode(args: RunMastraModeArgs): Promise<MastraMode
       totalLatencyMs: Date.now() - startedAt,
     };
   } catch (error) {
+    logWorkflowError({
+      runId: args.runId,
+      workflowId: args.workflowId ?? 'symbol-research',
+      stepId: args.mode,
+      startedAt,
+      message: 'Symbol-research workflow run failed',
+      meta: { mode: args.mode, symbol: args.symbol },
+      error,
+    });
     await finishMastraRun({
       userId: args.userId,
       threadId: args.threadId,

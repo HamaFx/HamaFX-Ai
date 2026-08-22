@@ -81,7 +81,7 @@ describe('tools registry', () => {
       'forecast_volatility',
       'compute_risk',
       'compute_position_health',
-      // Journal (8)
+      // Journal (7)
       'log_journal',
       'get_journal_stats',
       'get_news',
@@ -89,20 +89,20 @@ describe('tools registry', () => {
       'set_alert',
       'search_knowledge',
       'share_snapshot',
-      'summarize_thread',
-      // System (7)
+      // System (6)
       'get_system_diagnostics',
       'run_system_action',
       'get_portfolio_snapshot',
       'get_social_sentiment',
       'verify_call',
-      'convene_committee',
       'replay_setup',
       // Web (1)
       'web_search',
     ];
     expect(toolRegistry.listNames()).toEqual(expectedKeys);
-    expect(toolRegistry.listNames().length).toBe(33);
+    // 31 tools: convene_committee + summarize_thread removed in Phase 9
+    // (their Mastra workflow equivalents own committee + summary behavior).
+    expect(toolRegistry.listNames().length).toBe(31);
   });
 
   it('every tool has description, inputSchema, and execute', () => {
