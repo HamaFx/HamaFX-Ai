@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Tooltip } from '@/components/ui/tooltip';
 import type { useConfirm } from '@/components/ui/confirm-drawer';
 import { cn } from '@/lib/cn';
-import { apiMutate } from '@/lib/api-client';
+import { updateJournalEntryAction, deleteJournalEntryAction } from '../actions';
 
 type ConfirmFn = ReturnType<typeof useConfirm>[1];
 
@@ -49,11 +49,13 @@ export function EntryRow({
       return;
     }
     try {
-      await apiMutate(`/api/journal/${entry.id}`, {
-        method: 'PATCH',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ exit: exitNum, closedAt: Date.now() }),
+      const res = await updateJournalEntryAction(entry.id, {
+        exit: exitNum,
+        closedAt: Date.now(),
       });
+      if (!res.ok) {
+        throw new Error(res.error ?? 'close failed');
+      }
       setClosing(false);
       setExit('');
       onClosed();
@@ -74,10 +76,13 @@ export function EntryRow({
     if (!ok) return;
     setBusy(true);
     try {
-      await apiMutate(`/api/journal/${entry.id}`, { method: 'DELETE' });
+      const res = await deleteJournalEntryAction(entry.id);
+      if (!res.ok) {
+        throw new Error(res.error ?? 'delete failed');
+      }
       onDeleted();
     } catch {
-      // apiMutate throws on non-2xx — the parent's onDeleted won't fire
+      // Handled cleanly
     } finally {
       setBusy(false);
     }

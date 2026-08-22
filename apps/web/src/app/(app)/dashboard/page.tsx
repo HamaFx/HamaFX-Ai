@@ -1,5 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
-
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 
 import {
@@ -16,6 +15,11 @@ import { auth } from '@/auth';
 import { DashboardCanvas } from './_components/dashboard-canvas';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: 'Dashboard',
+  description: 'Real-time overview of active alerts, market briefings, upcoming economic events, and portfolio risk.',
+};
 
 export default async function DashboardPage() {
   const session = await auth();

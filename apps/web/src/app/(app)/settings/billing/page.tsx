@@ -12,7 +12,10 @@ import { BillingPlans } from './_components/billing-plans';
 import { PaymentHistory } from './_components/payment-history';
 import { SubscriptionStatus } from './_components/subscription-status';
 
-export const metadata: Metadata = { title: 'Billing | Settings | Kestrel' };
+export const metadata: Metadata = {
+  title: 'Billing · Settings',
+  description: 'Manage subscriptions, tier upgrades, and crypto payment invoices.',
+};
 export const revalidate = 0;
 
 export default async function BillingPage() {

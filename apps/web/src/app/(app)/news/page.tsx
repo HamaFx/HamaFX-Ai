@@ -16,7 +16,10 @@ import { NewsView } from './_components/news-view';
 import { SentimentSummary } from './_components/sentiment-summary';
 import { BookmarksProvider } from '@/components/news/bookmarks-context';
 
-export const metadata: Metadata = { title: 'News | Kestrel' };
+export const metadata: Metadata = {
+  title: 'News',
+  description: 'Macroeconomic market news, central bank intelligence, and breaking catalyst coverage.',
+};
 // News is user-scoped database content and must not be fetched during `next build`.
 export const dynamic = 'force-dynamic';
 

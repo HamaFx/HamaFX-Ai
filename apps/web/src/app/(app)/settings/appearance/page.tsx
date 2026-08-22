@@ -6,7 +6,10 @@ import { auth } from '@/auth';
 import { getUserWithSettings } from '@kestrel/db';
 import { AppearanceCard } from '../_components/appearance/appearance-card';
 
-export const metadata: Metadata = { title: 'Appearance | Settings | Kestrel' };
+export const metadata: Metadata = {
+  title: 'Appearance · Settings',
+  description: 'Customize UI theme, visual density, and chart appearance.',
+};
 export const revalidate = 60;
 
 export default async function AppearancePage() {

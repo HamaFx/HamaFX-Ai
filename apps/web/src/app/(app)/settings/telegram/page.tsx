@@ -10,7 +10,10 @@ import { TestTelegramButton } from '../_components/telegram/test-telegram-button
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = { title: 'Telegram | Settings | Kestrel' };
+export const metadata: Metadata = {
+  title: 'Telegram · Settings',
+  description: 'Connect Telegram bot for instant push alerts and market commands.',
+};
 
 export default async function TelegramSettingsPage() {
   const session = await auth();

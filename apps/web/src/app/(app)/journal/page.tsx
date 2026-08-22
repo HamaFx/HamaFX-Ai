@@ -6,7 +6,10 @@ import { PageHeader } from '@/components/layout/page-header';
 
 import { JournalView } from './_components/journal-view';
 
-export const metadata: Metadata = { title: 'Journal | Kestrel' };
+export const metadata: Metadata = {
+  title: 'Journal',
+  description: 'Track trade executions, equity growth, R-multiples, and AI post-trade reviews.',
+};
 
 export default function JournalPage() {
   return (

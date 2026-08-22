@@ -17,7 +17,10 @@ const CalendarHero = nextDynamic(() => import('./_components/calendar-hero').the
 import { CalendarView } from './_components/calendar-view';
 import { RefreshButton } from '../news/_components/refresh-button';
 
-export const metadata: Metadata = { title: 'Calendar | Kestrel' };
+export const metadata: Metadata = {
+  title: 'Calendar',
+  description: 'Economic calendar events, forecast comparisons, and release schedules.',
+};
 export const dynamic = 'force-dynamic';
 
 export default async function CalendarPage() {

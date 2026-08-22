@@ -28,12 +28,12 @@ import { SYMBOLS, TIMEFRAMES, type Symbol, type Timeframe } from '@kestrel/share
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { AlertCreateSchema } from '@/lib/services/alerts.schema';
-
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Segmented } from '@/components/ui/segmented';
 import { apiMutate } from '@/lib/api-client';
 import { cn } from '@/lib/cn';
+import { createAlertAction } from '../actions';
 
 type RuleType = 'priceCross' | 'candleClose' | 'indicatorCross';
 
@@ -192,16 +192,15 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
     const data = validation.data;
 
     try {
-      await apiMutate('/api/alerts', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          rule: data.rule,
-          channels: data.channels,
-          note: data.note,
-          snoozeHours: data.snoozeHours,
-        }),
+      const res = await createAlertAction({
+        rule: data.rule,
+        channels: data.channels,
+        note: data.note,
+        snoozeHours: data.snoozeHours,
       });
+      if (!res.ok) {
+        throw new Error(res.error ?? 'Create failed');
+      }
       setLevel('');
       setNote('');
       toast.success('Alert created', { description: `${symbol} ${direction} ${data.rule.level}` });

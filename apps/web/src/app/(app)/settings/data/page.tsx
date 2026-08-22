@@ -8,7 +8,10 @@ import { DEFAULT_WATCHLIST_SYMBOLS } from '@kestrel/shared';
 import { DataCard } from '../_components/data/data-card';
 import { PreferencesCard } from '../_components/data/preferences-card';
 
-export const metadata: Metadata = { title: 'Data | Settings | Kestrel' };
+export const metadata: Metadata = {
+  title: 'Data · Settings',
+  description: 'Export trade history, clear AI threads, or manage data retention.',
+};
 export const revalidate = 60;
 
 export default async function DataPage() {

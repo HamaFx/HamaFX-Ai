@@ -6,7 +6,10 @@ import { PageHeader } from '@/components/layout/page-header';
 
 import { AlertList } from './_components/alert-list';
 
-export const metadata: Metadata = { title: 'Alerts | Kestrel' };
+export const metadata: Metadata = {
+  title: 'Alerts',
+  description: 'Manage price, candle-close, and technical indicator alerts.',
+};
 
 export default function AlertsPage() {
   return (

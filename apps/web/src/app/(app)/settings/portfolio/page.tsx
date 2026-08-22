@@ -17,7 +17,10 @@ import {IconWallet, IconTrendingUp, IconAlertTriangle, IconShield} from '@tabler
 import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/cn';
 
-export const metadata: Metadata = { title: 'Portfolio | Kestrel' };
+export const metadata: Metadata = {
+  title: 'Portfolio · Settings',
+  description: 'Manage position sizing, maximum risk limits, and account equity.',
+};
 export const dynamic = 'force-dynamic';
 
 export default async function PortfolioPage() {

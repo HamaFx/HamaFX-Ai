@@ -10,7 +10,10 @@ import { TwoFactorSetup } from '../_components/security/two-factor-setup';
 import { LinkedAccountsCard } from '../_components/security/linked-accounts-card';
 import { SessionsCard } from '../_components/security/sessions-card';
 
-export const metadata: Metadata = { title: 'Security | Settings | Kestrel' };
+export const metadata: Metadata = {
+  title: 'Security · Settings',
+  description: 'Two-factor authentication, active sessions, and password management.',
+};
 export const revalidate = 60;
 
 export default async function SecurityPage() {

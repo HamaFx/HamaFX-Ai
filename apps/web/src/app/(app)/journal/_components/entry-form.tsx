@@ -34,8 +34,9 @@ import { Input } from '@/components/ui/input';
 import { Segmented } from '@/components/ui/segmented';
 import { TagInput } from '@/components/ui/tag-input';
 import { cn } from '@/lib/cn';
-import { apiFetch, apiMutate } from '@/lib/api-client';
-import {IconCamera, IconX} from '@tabler/icons-react';
+import { apiFetch } from '@/lib/api-client';
+import { IconCamera, IconX } from '@tabler/icons-react';
+import { createJournalEntryAction } from '../actions';
 
 const entrySchema = z.object({
   symbol: z.string().min(1, 'Symbol is required'),
@@ -163,22 +164,21 @@ export function EntryForm({ onCreated }: EntryFormProps) {
     }
 
     try {
-      await apiMutate('/api/journal', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          symbol: data.symbol,
-          side: data.side,
-          openedAt: Date.now(),
-          entry: data.entry,
-          stop: data.stop,
-          target: data.target,
-          size: data.size,
-          notes: data.notes,
-          tags: data.tags,
-          screenshotUrl: screenshotUrl,
-        }),
+      const res = await createJournalEntryAction({
+        symbol: data.symbol,
+        side: data.side,
+        openedAt: Date.now(),
+        entry: data.entry,
+        stop: data.stop,
+        target: data.target,
+        size: data.size,
+        notes: data.notes,
+        tags: data.tags,
+        screenshotUrl: screenshotUrl ?? undefined,
       });
+      if (!res.ok) {
+        throw new Error(res.error ?? 'Create failed');
+      }
       setEntry('');
       setStop('');
       setTarget('');

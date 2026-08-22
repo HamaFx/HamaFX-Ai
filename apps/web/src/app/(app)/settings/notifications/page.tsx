@@ -16,7 +16,10 @@ import { getServerEnv } from '@/lib/env';
 import { cn } from '@/lib/cn';
 import { listPushSubscriptions } from '@kestrel/ai';
 
-export const metadata: Metadata = { title: 'Notifications | Settings | Kestrel' };
+export const metadata: Metadata = {
+  title: 'Notifications · Settings',
+  description: 'Configure noise control, volatility thresholds, and notification routing.',
+};
 export const revalidate = 60;
 
 export default async function NotificationsPage() {

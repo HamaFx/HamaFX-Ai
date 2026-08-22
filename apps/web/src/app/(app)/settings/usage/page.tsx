@@ -26,7 +26,10 @@ import { formatRelative } from '@/lib/format';
 import { getUserWithSettings, listMtdAgentOpinions, listTelemetry as listDbTelemetry } from '@kestrel/db';
 import { UsageLimitsForm } from './_components/usage-limits-form';
 
-export const metadata: Metadata = { title: 'Usage | Kestrel' };
+export const metadata: Metadata = {
+  title: 'Usage · Settings',
+  description: 'Track daily AI token consumption, API calls, and spending limits.',
+};
 export const revalidate = 60;
 
 export default async function UsagePage() {
