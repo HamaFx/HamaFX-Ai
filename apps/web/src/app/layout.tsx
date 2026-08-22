@@ -140,6 +140,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"
           href="/icons/apple-splash-1179x2556.png"
         />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'WebApplication',
+              name: 'Kestrel',
+              applicationCategory: 'FinanceApplication',
+              operatingSystem: 'All',
+              description: 'AI-driven trading copilot and market intelligence for gold, forex, and crypto.',
+              offers: {
+                '@type': 'Offer',
+                price: '0',
+                priceCurrency: 'USD',
+              },
+            }),
+          }}
+        />
       </head>
       <body className="bg-bg text-fg min-h-svh antialiased">
         <ViewTransitions>
