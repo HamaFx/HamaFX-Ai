@@ -112,6 +112,7 @@ export function DesktopSidebar({
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={true}
                 className={cn(
                   'flex items-center gap-3 rounded-sm px-2.5 py-2 text-sm font-medium transition-colors relative group',
                   active
@@ -133,6 +134,7 @@ export function DesktopSidebar({
         {isAdmin && (
           <Link
             href="/admin"
+            prefetch={true}
             className={cn(
               'flex items-center gap-3 rounded-sm px-2.5 py-2 text-sm font-medium transition-colors relative group',
               pathname.startsWith('/admin')
@@ -148,6 +150,7 @@ export function DesktopSidebar({
 
         <Link
           href="/settings"
+          prefetch={true}
           className={cn(
             'flex items-center gap-3 rounded-sm px-2.5 py-2 text-sm font-medium transition-colors relative group',
             pathname.startsWith('/settings')

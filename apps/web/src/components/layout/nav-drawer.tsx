@@ -245,6 +245,7 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
     <li>
       <Link
         href={item.href}
+        prefetch={true}
         aria-current={active ? 'page' : undefined}
         className={cn(
           'group/nav relative flex min-h-[56px] items-center gap-3 rounded-sm px-3 transition-all focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none',
