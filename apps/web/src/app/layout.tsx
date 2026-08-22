@@ -1,12 +1,17 @@
-// SPDX-License-Identifier: Apache-2.0
-
 import type { Metadata, Viewport } from 'next';
-import { JetBrains_Mono } from 'next/font/google';
+import { Inter, JetBrains_Mono } from 'next/font/google';
 import { ViewTransitions } from 'next-view-transitions';
 
 import { Providers } from '@/components/providers';
+import { cn } from '@/lib/cn';
 
 import './globals.css';
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-sans',
+  display: 'swap',
+});
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
@@ -93,7 +98,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={jetbrainsMono.variable}
+      className={cn(inter.variable, jetbrainsMono.variable)}
       data-brand="kestrel"
       suppressHydrationWarning
     >

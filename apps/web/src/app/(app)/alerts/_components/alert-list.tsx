@@ -66,22 +66,58 @@ export function AlertList() {
         body: JSON.stringify({ active, firedAt: active ? null : undefined }),
       });
     },
-    onSuccess: (_, vars) => {
+    onMutate: async ({ id, active }) => {
+      await qc.cancelQueries({ queryKey: ALERTS_QUERY_KEY });
+      const previousData = qc.getQueryData<{ alerts: Alert[] }>(ALERTS_QUERY_KEY);
+      if (previousData) {
+        qc.setQueryData<{ alerts: Alert[] }>(ALERTS_QUERY_KEY, {
+          alerts: previousData.alerts.map((a) =>
+            a.id === id ? { ...a, active, firedAt: active ? null : a.firedAt } : a,
+          ),
+        });
+      }
+      return { previousData };
+    },
+    onError: (err, _, context) => {
+      if (context?.previousData) {
+        qc.setQueryData(ALERTS_QUERY_KEY, context.previousData);
+      }
+      toast.error('Update failed', { description: (err as Error).message });
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ALERTS_QUERY_KEY });
+    },
+    onSuccess: (_, vars) => {
       toast.success(vars.active ? 'Re-armed' : 'Paused');
     },
-    onError: (err) => toast.error('Update failed', { description: (err as Error).message }),
   });
 
   const remove = useMutation({
     mutationFn: async (id: string) => {
       await apiMutate(`/api/alerts/${id}`, { method: 'DELETE' });
     },
-    onSuccess: () => {
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey: ALERTS_QUERY_KEY });
+      const previousData = qc.getQueryData<{ alerts: Alert[] }>(ALERTS_QUERY_KEY);
+      if (previousData) {
+        qc.setQueryData<{ alerts: Alert[] }>(ALERTS_QUERY_KEY, {
+          alerts: previousData.alerts.filter((a) => a.id !== id),
+        });
+      }
+      return { previousData };
+    },
+    onError: (err, _, context) => {
+      if (context?.previousData) {
+        qc.setQueryData(ALERTS_QUERY_KEY, context.previousData);
+      }
+      toast.error('Delete failed', { description: (err as Error).message });
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ALERTS_QUERY_KEY });
+    },
+    onSuccess: () => {
       toast.success('Alert deleted');
     },
-    onError: (err) => toast.error('Delete failed', { description: (err as Error).message }),
   });
 
   async function handleDelete(alert: Alert) {

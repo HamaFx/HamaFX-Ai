@@ -56,42 +56,113 @@ import {
   type ToolOutput,
 } from '@kestrel/shared';
 import type { ComponentType, ReactElement } from 'react';
+import dynamic from 'next/dynamic';
 import type { z } from 'zod';
 
-import { AnalyzeChartImagePart } from './analyze-chart-image';
 import { AnalyzeFundamentalPart } from './analyze-fundamental';
 import { AnalyzeTechnicalPart } from './analyze-technical';
 import { AnnotateChartPart } from './annotate-chart';
-import { ComputePositionHealthPart } from './compute-position-health';
-import { ComputeRiskPart } from './compute-risk';
-import { ConveneCommitteePart } from './convene-committee';
-import { ForecastVolatilityPart } from './forecast-volatility';
 import { GetCalendarPart } from './get-calendar';
 import { GetCandlesPart } from './get-candles';
-import { GetCorrelationPart } from './get-correlation';
-import { GetCoTPart } from './get-cot';
 import { GetIndicatorsPart } from './get-indicators';
-import { GetIntermarketPart } from './get-intermarket';
 import { GetJournalStatsPart } from './get-journal-stats';
 import { GetMarketStructurePart } from './get-market-structure';
 import { GetNewsPart } from './get-news';
 import { GetPricePart } from './get-price';
-import { GetSeasonalityPart } from './get-seasonality';
 import { GetSessionLevelsPart } from './get-session-levels';
 import { LogJournalPart } from './log-journal';
-import { ReplaySetupPart } from './replay-setup';
 import { SearchKnowledgePart } from './search-knowledge';
 import { SetAlertPart } from './set-alert';
 import { ShareSnapshotPart } from './share-snapshot';
 import { SummarizeThreadPart } from './summarize-thread';
 import { ToolCard } from './tool-card';
 import { VerifyCallPart } from './verify-call';
-import { GetIntermarketResonancePart } from './get-intermarket-resonance';
-import { GetSystemDiagnosticsPart } from './get-system-diagnostics';
 import { RunSystemActionPart } from './run-system-action';
-import { GetPortfolioSnapshotPart } from './get-portfolio-snapshot';
-import { GetSocialSentimentPart } from './get-social-sentiment';
-import { WebSearchPart } from './web-search';
+
+function PartSkeletonFallback() {
+  return (
+    <div className="bg-bg-elev-1 border border-border rounded-sm p-3 flex items-center gap-3 animate-pulse">
+      <div className="size-4 bg-bg-elev-3 rounded-xs" />
+      <div className="h-3 w-28 bg-bg-elev-3 rounded-xs" />
+    </div>
+  );
+}
+
+// Next.js dynamic code splitting for heavy data visualization tool parts
+const AnalyzeChartImagePart = dynamic(
+  () => import('./analyze-chart-image').then((m) => m.AnalyzeChartImagePart),
+  { loading: PartSkeletonFallback },
+) as ComponentType<ToolPartProps<'analyze_chart_image'>>;
+
+const ComputePositionHealthPart = dynamic(
+  () => import('./compute-position-health').then((m) => m.ComputePositionHealthPart),
+  { loading: PartSkeletonFallback },
+) as ComponentType<ToolPartProps<'compute_position_health'>>;
+
+const ComputeRiskPart = dynamic(
+  () => import('./compute-risk').then((m) => m.ComputeRiskPart),
+  { loading: PartSkeletonFallback },
+) as ComponentType<ToolPartProps<'compute_risk'>>;
+
+const ConveneCommitteePart = dynamic(
+  () => import('./convene-committee').then((m) => m.ConveneCommitteePart),
+  { loading: PartSkeletonFallback },
+) as ComponentType<ToolPartProps<'convene_committee'>>;
+
+const ForecastVolatilityPart = dynamic(
+  () => import('./forecast-volatility').then((m) => m.ForecastVolatilityPart),
+  { loading: PartSkeletonFallback },
+) as ComponentType<ToolPartProps<'forecast_volatility'>>;
+
+const GetCorrelationPart = dynamic(
+  () => import('./get-correlation').then((m) => m.GetCorrelationPart),
+  { loading: PartSkeletonFallback },
+) as ComponentType<ToolPartProps<'get_correlation'>>;
+
+const GetCoTPart = dynamic(
+  () => import('./get-cot').then((m) => m.GetCoTPart),
+  { loading: PartSkeletonFallback },
+) as ComponentType<ToolPartProps<'get_cot'>>;
+
+const GetIntermarketPart = dynamic(
+  () => import('./get-intermarket').then((m) => m.GetIntermarketPart),
+  { loading: PartSkeletonFallback },
+) as ComponentType<ToolPartProps<'get_intermarket'>>;
+
+const GetIntermarketResonancePart = dynamic(
+  () => import('./get-intermarket-resonance').then((m) => m.GetIntermarketResonancePart),
+  { loading: PartSkeletonFallback },
+) as ComponentType<ToolPartProps<'get_intermarket_resonance'>>;
+
+const GetPortfolioSnapshotPart = dynamic(
+  () => import('./get-portfolio-snapshot').then((m) => m.GetPortfolioSnapshotPart),
+  { loading: PartSkeletonFallback },
+) as ComponentType<ToolPartProps<'get_portfolio_snapshot'>>;
+
+const GetSeasonalityPart = dynamic(
+  () => import('./get-seasonality').then((m) => m.GetSeasonalityPart),
+  { loading: PartSkeletonFallback },
+) as ComponentType<ToolPartProps<'get_seasonality'>>;
+
+const GetSocialSentimentPart = dynamic(
+  () => import('./get-social-sentiment').then((m) => m.GetSocialSentimentPart),
+  { loading: PartSkeletonFallback },
+) as ComponentType<ToolPartProps<'get_social_sentiment'>>;
+
+const GetSystemDiagnosticsPart = dynamic(
+  () => import('./get-system-diagnostics').then((m) => m.GetSystemDiagnosticsPart),
+  { loading: PartSkeletonFallback },
+) as ComponentType<ToolPartProps<'get_system_diagnostics'>>;
+
+const ReplaySetupPart = dynamic(
+  () => import('./replay-setup').then((m) => m.ReplaySetupPart),
+  { loading: PartSkeletonFallback },
+) as ComponentType<ToolPartProps<'replay_setup'>>;
+
+const WebSearchPart = dynamic(
+  () => import('./web-search').then((m) => m.WebSearchPart),
+  { loading: PartSkeletonFallback },
+) as ComponentType<ToolPartProps<'web_search'>>;
 
 /** State a part is in for the duration of a streamed tool call. */
 export type ToolPartState = 'loading' | 'done' | 'error';

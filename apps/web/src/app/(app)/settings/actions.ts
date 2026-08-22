@@ -45,3 +45,10 @@ export {
   clearChatHistoryAction,
   exportDataAction,
 } from './_actions-data';
+
+// Models & Onboarding
+export {
+  updateChatModelAction,
+  clearChatModelAction,
+  resetOnboardingAction,
+} from './_actions-models';

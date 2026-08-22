@@ -95,7 +95,18 @@ const nextConfig = {
   },
 
   experimental: {
-    optimizePackageImports: ['@tabler/icons-react', 'motion', 'react-markdown', 'dompurify'],
+    optimizePackageImports: [
+      '@tabler/icons-react',
+      'motion',
+      'react-markdown',
+      'dompurify',
+      'shiki',
+      'clsx',
+      'tailwind-merge',
+      'sonner',
+      'nuqs',
+      'zod',
+    ],
     serverActions: { bodySizeLimit: '2mb' },
   },
 
