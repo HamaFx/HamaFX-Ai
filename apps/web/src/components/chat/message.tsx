@@ -115,12 +115,16 @@ function MessageImpl({
   const [copied, triggerCopy] = useCopied(1200);
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(plainText);
-  const [hasPopoverSupport, setHasPopoverSupport] = useState(true);
+  const [hasPopoverSupport, setHasPopoverSupport] = useState(false);
   const [isOpenFallback, setIsOpenFallback] = useState(false);
 
   useEffect(() => {
     setHasPopoverSupport(
-      typeof HTMLElement !== 'undefined' && 'popover' in HTMLElement.prototype
+      typeof HTMLElement !== 'undefined' &&
+        'popover' in HTMLElement.prototype &&
+        typeof CSS !== 'undefined' &&
+        CSS.supports('anchor-name', '--a') &&
+        CSS.supports('position-anchor', '--a'),
     );
   }, []);
 

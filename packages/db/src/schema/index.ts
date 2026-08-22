@@ -76,3 +76,5 @@ export * from './eval-datasets';
 export * from './telegram-updates';
 // H1 — Shared provider health store for cross-instance failover scoring
 export * from './provider-health';
+// Privacy-safe paired comparison data for AI rollout
+export * from './ai-shadow-comparisons';

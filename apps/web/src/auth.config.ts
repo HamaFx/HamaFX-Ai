@@ -66,12 +66,15 @@ export const authConfig: NextAuthConfig = {
       ) return true;
 
       const isLoggedIn = !!auth?.user;
-      const isOnAuth =
-        nextUrl.pathname === '/login' || nextUrl.pathname === '/register' ||
-        nextUrl.pathname === '/forgot-password' || nextUrl.pathname === '/reset-password';
+      const isPublicPage =
+        nextUrl.pathname === '/login' ||
+        nextUrl.pathname === '/register' ||
+        nextUrl.pathname === '/forgot-password' ||
+        nextUrl.pathname === '/reset-password' ||
+        nextUrl.pathname === '/offline';
 
-      // Auth surface (login + register) is always reachable.
-      if (isOnAuth) return true;
+      // Public surface (auth + offline) is always reachable.
+      if (isPublicPage) return true;
 
       // Logged-in user is allowed through; the `authorized` callback is
       // also responsible for the redirect when `isLoggedIn` is false.

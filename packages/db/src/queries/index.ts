@@ -56,3 +56,4 @@ export * as agentOpinions from './agent-opinions';
 export * as aiFeedback from './ai-feedback';
 export * as aiRegressionCases from './ai-regression-cases';
 export * as evalDatasets from './eval-datasets';
+export * as aiShadowComparisons from './ai-shadow-comparisons';

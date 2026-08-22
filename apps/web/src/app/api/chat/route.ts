@@ -28,9 +28,7 @@ import {
   withRateLimit,
 } from '@/lib/services/api-boundary';
 import { startMutationDraft } from '@/lib/services/mastra-mutation-draft';
-import { runMastraCanonicalChatService } from '@/lib/services/mastra-canonical-chat';
 import { runMastraCanonicalChatStreamService } from '@/lib/services/mastra-canonical-chat-stream';
-import { mastraCanonicalResponse } from '@/lib/services/mastra-canonical-response';
 import { runMastraXauusdChat } from '@/lib/services/mastra-chat';
 import { runMastraXauusdConversationStreamChat } from '@/lib/services/mastra-chat-stream';
 import { mastraChatResponse } from '@/lib/services/mastra-chat-response';
@@ -125,9 +123,8 @@ export const POST = withAuth<void>(async (req, { user }) => {
     return errorJson('VALIDATION', 'last message must be from the user', 400);
   }
 
-  let env: ReturnType<typeof getServerEnv>;
   try {
-    env = getServerEnv();
+    getServerEnv();
   } catch (error) {
     return errorResponse(error);
   }

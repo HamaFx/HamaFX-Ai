@@ -28,6 +28,7 @@ import { timingSafeEqual } from 'node:crypto';
 
 import { getAuthEnv } from './env';
 import { createScopedLoggerWithContext } from './logger';
+import { getUserFromRequest } from './api';
 
 // Keep-alive for the legacy signed-cookie auth used by the admin-UI
 // cron trigger path. The crypto primitives live here to avoid dragging
@@ -139,17 +140,19 @@ export async function withCronAuth(
   const expected = `Bearer ${env.CRON_SECRET}`;
   const hasBearerAuth = header.length > 0 && constantTimeEqual(header, expected);
 
-  // Path 2: Session cookie (admin UI refresh buttons).
+  // Path 2: User session (UI refresh buttons) or legacy cookie.
   let hasSessionAuth = false;
   if (!hasBearerAuth) {
-    const cookieHeader = req.headers.get('cookie') ?? '';
-    const token = readCookie(cookieHeader, AUTH_COOKIE_NAME);
-    if (token) {
-      if (!env.AUTH_COOKIE_SECRET) {
-        throw new Error('AUTH_COOKIE_SECRET must be set to verify cron auth cookies');
+    const user = await getUserFromRequest(req);
+    if (user) {
+      hasSessionAuth = true;
+    } else {
+      const cookieHeader = req.headers.get('cookie') ?? '';
+      const token = readCookie(cookieHeader, AUTH_COOKIE_NAME);
+      if (token && env.AUTH_COOKIE_SECRET) {
+        const payload = await verifyAuthToken(token, env.AUTH_COOKIE_SECRET);
+        hasSessionAuth = payload !== null;
       }
-      const payload = await verifyAuthToken(token, env.AUTH_COOKIE_SECRET);
-      hasSessionAuth = payload !== null;
     }
   }
 

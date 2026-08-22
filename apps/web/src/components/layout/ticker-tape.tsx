@@ -33,7 +33,8 @@ function pctChange(prev: number, cur: number): string {
 export function TickerTape() {
   const tickQuery = usePrices(TAPE_SYMBOLS);
   const data = tickQuery.data;
-  const prevRef = useRef<Map<Symbol, number>>(new Map());
+  const currentPricesRef = useRef<Map<Symbol, number>>(new Map());
+  const prevPricesRef = useRef<Map<Symbol, number>>(new Map());
   // Force re-render only when mid prices actually change.
   const [, bump] = useReducer((x: number) => x + 1, 0);
 
@@ -41,9 +42,14 @@ export function TickerTape() {
     if (!data || data.length === 0) return;
     let changed = false;
     for (const t of data) {
-      const prev = prevRef.current.get(t.symbol);
-      if (prev !== t.mid) {
-        prevRef.current.set(t.symbol, t.mid);
+      const current = currentPricesRef.current.get(t.symbol);
+      if (current === undefined) {
+        currentPricesRef.current.set(t.symbol, t.mid);
+        prevPricesRef.current.set(t.symbol, t.mid);
+        changed = true;
+      } else if (current !== t.mid) {
+        prevPricesRef.current.set(t.symbol, current);
+        currentPricesRef.current.set(t.symbol, t.mid);
         changed = true;
       }
     }
@@ -55,7 +61,7 @@ export function TickerTape() {
   // Build the ticker content — repeated twice for seamless looping.
   const items = ticks.map((t) => {
     const decimals = priceDecimals(t.symbol);
-    const prev = prevRef.current.get(t.symbol) ?? t.mid;
+    const prev = prevPricesRef.current.get(t.symbol) ?? t.mid;
     const isBull = t.mid >= prev;
     const changeStr = pctChange(prev, t.mid);
     return { symbol: t.symbol, mid: t.mid.toFixed(decimals), isBull, changeStr };

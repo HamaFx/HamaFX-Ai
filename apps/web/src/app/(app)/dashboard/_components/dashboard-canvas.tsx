@@ -137,27 +137,13 @@ export function DashboardCanvas({ marginUsagePct = 0, marginDetail, ...props }: 
   const [confirmEl, confirm] = useConfirm();
 
   // After hydration, prune any widget types that no longer exist in the
-  // catalogue (forward-compat) and fill missing ones from ALL_WIDGETS.
+  // catalogue (forward-compat).
   const safeLayout = useMemo(() => {
     if (!hydrated) return DEFAULT_LAYOUT;
     const known = new Set<WidgetType>(ALL_WIDGETS);
-    const present = new Set(layout.map((w) => w.type));
-    const pruned = layout
+    return layout
       .filter((w) => known.has(w.type))
-      // re-stamp `order` so newly-added widgets slot in at the end.
       .map((w, i) => ({ ...w, order: i }));
-    const additions: WidgetConfig[] = [];
-    for (const t of ALL_WIDGETS) {
-      if (!present.has(t)) {
-        additions.push({
-          id: `w-${t}-${Math.random().toString(36).slice(2, 8)}`,
-          type: t,
-          span: t === 'today-glance' || t === 'briefing' || t === 'pnl-heatmap' ? 3 : 1,
-          order: pruned.length + additions.length,
-        });
-      }
-    }
-    return [...pruned, ...additions];
   }, [hydrated, layout]);
 
   const persistLayout = useCallback(

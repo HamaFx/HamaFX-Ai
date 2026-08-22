@@ -157,7 +157,7 @@ export function AlertList() {
           description={
             filter === 'past'
               ? 'No triggered or paused alerts in this view yet.'
-              : 'No currently active alerts — pause an alert to see it here.'
+              : 'No currently active alerts — create a new alert or resume a paused one.'
           }
           action={
             filter !== 'all' ? (

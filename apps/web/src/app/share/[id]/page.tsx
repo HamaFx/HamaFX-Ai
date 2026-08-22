@@ -107,7 +107,7 @@ export default async function ShareSnapshotPage({ params, searchParams }: PagePr
                   return (
                     <svg className="size-full" viewBox="0 0 100 48" preserveAspectRatio="none" aria-label="Price lines visualization">
                       {lines.slice(0, 20).map((line, i) => {
-                        const y = ((parseFloat(String(line.price)) - min) / range) * 100;
+                        const y = 100 - (((parseFloat(String(line.price)) - min) / range) * 100);
                         return (
                           <line
                             key={i}

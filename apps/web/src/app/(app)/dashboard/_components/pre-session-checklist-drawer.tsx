@@ -5,8 +5,6 @@
 import { useEffect, useState } from 'react';
 import {
   IconCheck,
-  IconCheckbox,
-  IconFlame,
   IconHeartbeat,
   IconListCheck,
   IconShieldCheck,

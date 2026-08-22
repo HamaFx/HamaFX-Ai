@@ -189,6 +189,6 @@ export const config = {
   // unauthenticated uptime probe, /share is public, /auth is the login
   // surface. /api/billing/webhook is HMAC-signed (not session-auth).
   matcher: [
-    '/((?!auth|share|api/auth|api/dev/login|api/cron|api/telegram|api/billing/webhook|api/health/public|api/health/alerts|debug|sw\\.js|sw-precache\\.json|_next/static|_next/image|favicon\\.ico|manifest\\.webmanifest|icons|robots\\.txt|sitemap\\.xml).*)',
+    '/((?!auth|share|offline|api/auth|api/dev/login|api/cron|api/telegram|api/billing/webhook|api/health/public|api/health/alerts|debug|sw\\.js|sw-precache\\.json|_next/static|_next/image|favicon\\.ico|manifest\\.webmanifest|icons|robots\\.txt|sitemap\\.xml).*)',
   ],
 };

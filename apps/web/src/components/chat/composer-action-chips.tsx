@@ -8,7 +8,6 @@ import {
   IconActivity,
   IconChartBar,
   IconChartLine,
-  IconFlame,
   IconNews,
   IconShieldCheck,
   IconTarget,

@@ -32,7 +32,7 @@ export function SettingsNav() {
   );
 
   return (
-    <>
+    <div className="flex flex-col gap-3 md:w-56 shrink-0">
       {isSubPage && (
         <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm text-fg-subtle">
           <Link
@@ -51,7 +51,7 @@ export function SettingsNav() {
         </nav>
       )}
 
-      <aside className="md:w-56 shrink-0">
+      <aside className="w-full">
         <nav aria-label="Settings" className="flex flex-row md:flex-col gap-1 overflow-x-auto snap-x pb-2 md:pb-0">
           {NAV_ITEMS.map((item) => {
             const active = item.exact
@@ -61,17 +61,17 @@ export function SettingsNav() {
             const Icon = item.icon;
 
             return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-current={active ? 'page' : undefined}
-                  className={cn(
-                    'flex items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap snap-start',
-                    active
-                      ? 'bg-brand/8 ring-1 ring-brand/22 text-brand'
-                      : 'text-fg-subtle hover:bg-bg-elev-2 hover:text-fg'
-                  )}
-                >
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={active ? 'page' : undefined}
+                className={cn(
+                  'flex items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap snap-start',
+                  active
+                    ? 'bg-brand/8 ring-1 ring-brand/22 text-brand'
+                    : 'text-fg-subtle hover:bg-bg-elev-2 hover:text-fg'
+                )}
+              >
                 <Icon className="size-4" />
                 {item.label}
               </Link>
@@ -79,6 +79,6 @@ export function SettingsNav() {
           })}
         </nav>
       </aside>
-    </>
+    </div>
   );
 }

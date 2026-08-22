@@ -2,7 +2,6 @@
 
 'use client';
 
-import { useState } from 'react';
 import {
   IconBell,
   IconBook,
@@ -24,6 +23,8 @@ import { toast } from 'sonner';
 
 import { KestrelBrand } from '@/components/brand/kestrel-brand';
 import { cn } from '@/lib/cn';
+
+import { useSidebarState } from './sidebar-state-context';
 
 interface NavItem {
   href: string;
@@ -51,7 +52,7 @@ export function DesktopSidebar({
   userEmail?: string;
   isAdmin?: boolean;
 }) {
-  const [collapsed, setCollapsed] = useState(true);
+  const { collapsed, toggle: toggleCollapsed } = useSidebarState();
   const pathname = usePathname() ?? '';
 
   function isActive(item: NavItem): boolean {
@@ -93,7 +94,7 @@ export function DesktopSidebar({
           />
           <button
             type="button"
-            onClick={() => setCollapsed((v) => !v)}
+            onClick={toggleCollapsed}
             className="text-fg-subtle hover:text-fg hover:bg-bg-elev-2 rounded-sm p-1 transition-colors"
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}

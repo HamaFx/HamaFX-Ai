@@ -2,6 +2,7 @@
 
 import { IconRefresh } from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
+import { KestrelBrand } from '@/components/brand/kestrel-brand';
 
 export const dynamic = 'force-static';
 
@@ -12,15 +13,7 @@ export default function OfflinePage() {
 
   return (
     <section className="flex min-h-[60svh] flex-col items-center justify-center gap-6 text-center px-4">
-      <span
-        aria-hidden="true"
-        className="inline-flex size-16 items-center justify-center rounded-sm"
-        style={{
-          background: 'none',
-                  }}
-      >
-        <span className="text-fg text-2xl font-bold">H</span>
-      </span>
+      <KestrelBrand variant="lockup" decorative className="w-32" />
       <div className="flex flex-col gap-2">
         <h1 className="text-fg text-xl font-semibold tracking-tight">You&apos;re offline</h1>
         <p className="text-fg-muted text-sm max-w-sm">

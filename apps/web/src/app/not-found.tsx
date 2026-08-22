@@ -5,19 +5,12 @@
 // authed users hit a typo'd URL.
 
 import { Link } from 'next-view-transitions';
+import { KestrelBrand } from '@/components/brand/kestrel-brand';
 
 export default function NotFound() {
   return (
     <main className="bg-bg-elev-1 text-fg flex min-h-svh flex-col items-center justify-center gap-6 px-6 text-center">
-      <span
-        aria-hidden="true"
-        className="inline-flex size-16 items-center justify-center rounded-sm"
-        style={{
-          background: 'none',
-                  }}
-      >
-        <span className="text-fg text-2xl font-bold">H</span>
-      </span>
+      <KestrelBrand variant="lockup" decorative className="w-32" />
       <div className="flex flex-col gap-2" role="alert">
         <h1 className="text-lg font-semibold">Page not found</h1>
         <p className="text-fg-muted text-sm max-w-xs">

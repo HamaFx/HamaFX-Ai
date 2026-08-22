@@ -12,6 +12,8 @@ const getOnboardingStatus = cache(async (userId: string) => {
 });
 
 import { DesktopSidebar } from '@/components/layout/desktop-sidebar';
+import { SidebarStateProvider } from '@/components/layout/sidebar-state-context';
+import { AppShellContainer } from '@/components/layout/app-shell-container';
 import { MarketSessionBar } from '@/components/layout/market-session-bar';
 import { NavDrawer } from '@/components/layout/nav-drawer';
 import { NavDrawerProvider } from '@/components/layout/nav-drawer-context';
@@ -62,18 +64,19 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <MotionRoot>
-      <NavDrawerProvider>
-        <div className="bg-bg text-fg relative min-h-svh">
-          <DesktopSidebar
-            {...(userName !== undefined ? { userName } : {})}
-            {...(userEmail !== undefined ? { userEmail } : {})}
-            isAdmin={isAdmin}
-          />
-          <div className="lg:pl-16 transition-all duration-200">
-            <SkipToContent />
-            <TopBar />
-            <TickerTape />
-            <MarketSessionBar />
+      <SidebarStateProvider>
+        <NavDrawerProvider>
+          <div className="bg-bg text-fg relative min-h-svh">
+            <DesktopSidebar
+              {...(userName !== undefined ? { userName } : {})}
+              {...(userEmail !== undefined ? { userEmail } : {})}
+              isAdmin={isAdmin}
+            />
+            <AppShellContainer>
+              <SkipToContent />
+              <TopBar />
+              <TickerTape />
+              <MarketSessionBar />
             <main
               id="main-content"
               tabIndex={-1}
@@ -93,7 +96,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 {children}
               </Suspense>
             </main>
-          </div>
+          </AppShellContainer>
           <NavDrawer {...(userName !== undefined ? { userName } : {})} {...(userEmail !== undefined ? { userEmail } : {})} {...(userId !== undefined ? { userId } : {})} isAdmin={isAdmin} />
           <OfflineBanner />
           {/* Phase B — UX_UPGRADE_PLAN.md item 11. Global ⌘K / Ctrl-K
@@ -103,6 +106,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <Toaster />
         </div>
       </NavDrawerProvider>
-    </MotionRoot>
+    </SidebarStateProvider>
+  </MotionRoot>
   );
 }
